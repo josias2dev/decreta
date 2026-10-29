@@ -1,0 +1,41 @@
+# Bloco do Decreta para o Caddy da máquina. `decreta.sh preparar` grava este
+# arquivo em /etc/caddy/decreta.caddy, trocando DOMINIO pelo domínio do .env;
+# o Caddyfile principal só ganha a linha `import /etc/caddy/decreta.caddy`.
+DOMINIO {
+	encode zstd gzip
+
+	# As funções do Inngest só são chamadas de dentro da máquina.
+	@inngest path /api/inngest /api/inngest/*
+	respond @inngest 404
+
+	request_body {
+		max_size 45MB
+	}
+
+	reverse_proxy 127.0.0.1:8791 {
+		# A peça e o chat chegam aos poucos: repassa cada pedaço na hora.
+		flush_interval -1
+		# Sem a Cloudflare na frente, este cabeçalho só viria forjado pelo cliente.
+		header_up -Cf-Connecting-Ip
+		transport http {
+			read_timeout 180s
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/decreta.log {
+			roll_size 10MiB
+			roll_keep 3
+		}
+	}
+}

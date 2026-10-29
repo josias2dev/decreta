@@ -1,0 +1,36 @@
+# API do Decreta (Hono), que também serve as telas. Escuta só em 127.0.0.1:8791;
+# a internet chega pelo Caddy. Instalado por deploy/decreta.sh preparar.
+[Unit]
+Description=Decreta API
+After=network-online.target postgresql.service plataforma-inngest.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=appsvc
+Group=appsvc
+WorkingDirectory=/opt/decreta
+EnvironmentFile=/opt/decreta/.env
+# O cache de transpilação do Bun iria para a home, que aqui é só leitura.
+Environment=BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+Environment=NODE_ENV=production
+ExecStart=/usr/local/bin/bun --smol apps/api/src/index.ts
+Restart=on-failure
+RestartSec=5
+# A máquina tem 1,9 GB para todos os sistemas: o Decreta não passa disto.
+MemoryHigh=320M
+MemoryMax=400M
+TasksMax=200
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/decreta/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

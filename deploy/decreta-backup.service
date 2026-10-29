@@ -1,0 +1,23 @@
+# Backup cifrado do banco para o R2 (apps/api/src/scripts/backup.ts).
+# Disparado pelo decreta-backup.timer; à mão: sudo systemctl start decreta-backup.
+[Unit]
+Description=Backup do Decreta
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=appsvc
+Group=appsvc
+WorkingDirectory=/opt/decreta
+EnvironmentFile=/opt/decreta/.env
+Environment=BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+ExecStart=/usr/local/bin/bun --smol apps/api/src/scripts/backup.ts
+Nice=10
+IOSchedulingClass=idle
+MemoryMax=300M
+TimeoutStartSec=30min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only

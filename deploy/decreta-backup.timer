@@ -1,0 +1,11 @@
+# Todo dia às 03:30 de Brasília. No domingo o script também restaura e confere.
+[Unit]
+Description=Backup diário do Decreta
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 America/Sao_Paulo
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

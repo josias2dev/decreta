@@ -4,7 +4,7 @@ const vazioIndefinido = (v: unknown) => (v === "" ? undefined : v);
 
 const schema = z.object({
   PORT: z.coerce.number().int().positive().default(8787),
-  /** Interface de escuta. No servidor, 127.0.0.1: a internet entra só pelo túnel. */
+  /** Interface de escuta. No servidor, 127.0.0.1: a internet entra só pelo Caddy, na 443. */
   HOST: z.string().default("0.0.0.0"),
   /** App compilado (apps/web/dist). Preenchido, a API serve as telas na mesma origem. */
   WEB_DIST: z.string().default(""),

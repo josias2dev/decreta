@@ -40,7 +40,8 @@ export function createApp(deps: AppDeps) {
   if (deps.inngestHandler) {
     const handler = deps.inngestHandler;
     // Só o Inngest da mesma máquina chama esta rota. O que vem da internet passa
-    // pelo túnel, que sempre acrescenta estes cabeçalhos.
+    // pelo Caddy, que sempre acrescenta X-Forwarded-For (e o bloco do Caddy já
+    // responde 404 para /api/inngest; aqui é a segunda trava).
     app.on(["GET", "POST", "PUT"], "/api/inngest", (c) => (c.req.header("cf-connecting-ip") || c.req.header("x-forwarded-for") ? c.notFound() : handler(c)));
   }
 

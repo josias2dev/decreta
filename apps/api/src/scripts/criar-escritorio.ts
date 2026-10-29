@@ -6,7 +6,7 @@
  *     --email beatriz@exemplo.adv.br --pessoa "Beatriz Souza" --oab 12345/SC [--tribunal TJSC]
  *
  * Sem --senha, sai uma senha provisória na tela: a pessoa entra com ela, troca
- * em Configurações › Segurança e liga a verificação em duas etapas.
+ * em Minha conta e liga a verificação em duas etapas.
  */
 import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";

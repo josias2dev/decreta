@@ -1,0 +1,60 @@
+# Deploy no servidor, só quando alguém manda (Actions → Deploy → Run workflow).
+# Compila aqui, manda os arquivos por rsync e roda `deploy/decreta.sh ativar` lá.
+#
+# Segredos do repositório (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST         IP do servidor (201.23.84.78)
+#   DEPLOY_USER         usuário com sudo (ubuntu)
+#   DEPLOY_SSH_KEY      chave privada só para o deploy (a pública em ~/.ssh/authorized_keys)
+#   DEPLOY_KNOWN_HOSTS  saída de `ssh-keyscan 201.23.84.78`
+#   VITE_SENTRY_DSN     opcional: erros das telas no Sentry
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: producao
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - name: Build das telas
+        run: bun run web:build
+        env:
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+      - name: Chave SSH
+        env:
+          CHAVE: ${{ secrets.DEPLOY_SSH_KEY }}
+          CONHECIDOS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$CHAVE" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$CONHECIDOS" > ~/.ssh/known_hosts
+      - name: Enviar
+        env:
+          DESTINO: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+        run: |
+          rsync -az --delete --chown=appsvc:appsvc \
+            --rsync-path="sudo rsync" \
+            -e "ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=yes" \
+            --exclude .git --exclude node_modules --exclude .env --exclude data \
+            --exclude apps/web/test-results --exclude apps/web/playwright-report \
+            ./ "$DESTINO:/opt/decreta/"
+      - name: Ativar
+        env:
+          DESTINO: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+        run: ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=yes "$DESTINO" "sudo /opt/decreta/deploy/decreta.sh ativar"

@@ -1,0 +1,59 @@
+# A cada push e pull request: tipos, testes (com Postgres de verdade, para o
+# RLS), build das telas e os testes de tela no Chromium.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dc_owner
+          POSTGRES_PASSWORD: dc_owner
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dc_owner"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_OWNER_URL: postgres://dc_owner:dc_owner@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - name: Tipos
+        run: bun run typecheck
+      - name: Testes
+        run: bun test
+      - name: Build das telas
+        run: bun run web:build
+      - name: Chromium do Playwright
+        working-directory: apps/web
+        run: bunx playwright install --with-deps chromium
+      - name: Testes de tela
+        run: bun run web:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright
+          path: apps/web/test-results
+          retention-days: 7
