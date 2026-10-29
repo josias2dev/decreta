@@ -112,7 +112,7 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
       },
     });
     expect(r.status).toBe(201);
-    processoId = (await r.json()).id;
+    processoId = ((await r.json()) as { id: string }).id;
     const ficha = await json(call(`/processos/${processoId}`));
     expect(ficha).toMatchObject({ titulo: "Marina Duarte × Seguradora Alfa S.A.", cnj: "5004321-25.2026.8.24.0038", tribunal: "TJSC", responsavel: { apelido: "Beatriz" } });
     expect(pedidos).toContainEqual({ nome: "processo.datajud", organizationId: "org_souza", processoId });
