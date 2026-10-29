@@ -9,7 +9,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
-import { authCall, authClient, papelLabel } from "@/lib/auth";
+import { authCall, authClient } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { telefone } from "@/lib/formato";
@@ -40,7 +40,7 @@ export function ContaPage() {
       <div className="dc-pilha">
         <DuasEtapas ligada={!!(sessao.data?.user as { twoFactorEnabled?: boolean } | undefined)?.twoFactorEnabled} />
         <Painel titulo="Sair">
-          <p className="dc-nota m-0">A sessão dura 30 dias neste aparelho. Saia se o aparelho não for seu.</p>
+          <p className="dc-nota mb-3 mt-0">A sessão dura 30 dias neste aparelho. Saia se o aparelho não for seu.</p>
           <Botao onClick={() => sair.mutate()} ocupado={sair.isPending}>
             <LogOut /> Sair do Decreta
           </Botao>
@@ -48,7 +48,7 @@ export function ContaPage() {
       </div>
     </div>
   );
-  const sub = u ? `${u.nome} · ${papelLabel(u.papel)} em ${eu.data?.escritorio.nome}` : " ";
+  const sub = u ? [u.nome, u.cargo].filter(Boolean).join(" · ") : " ";
   if (celular) {
     return (
       <TelaCelular titulo="Minha conta" sobre={sub} voltar>
@@ -101,7 +101,7 @@ function Perfil() {
           Receber de manhã, no WhatsApp, o que vence no dia
         </label>
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
-        <Botao variante="primaria" onClick={() => salvar.mutate()} ocupado={salvar.isPending} disabled={!f}>
+        <Botao className="md:self-start" variante="primaria" onClick={() => salvar.mutate()} ocupado={salvar.isPending} disabled={!f}>
           Salvar perfil
         </Botao>
       </div>
@@ -143,7 +143,7 @@ function Senha() {
           </Campo>
         </div>
         {trocar.error && <Faixa tipo="erro">{trocar.error.message}</Faixa>}
-        <Botao type="submit" ocupado={trocar.isPending} disabled={!f.atual || f.nova.length < 10 || f.nova !== f.repetir}>
+        <Botao className="md:self-start" type="submit" ocupado={trocar.isPending} disabled={!f.atual || f.nova.length < 10 || f.nova !== f.repetir}>
           Trocar senha
         </Botao>
       </form>
@@ -192,7 +192,7 @@ function DuasEtapas({ ligada }: { ligada: boolean }) {
   const erro = ligar.error ?? confirmar.error ?? desligar.error;
   return (
     <Painel titulo="Verificação em duas etapas" acao={ligada && <span className="dc-selo dc-selo--ok">Ligada</span>}>
-      <p className="dc-nota m-0">
+      <p className="dc-nota mb-3 mt-0">
         {ligada ? "Ao entrar num aparelho novo, o Decreta pede o código do app autenticador." : "Recomendado: o escritório guarda dados de clientes. Além da senha, um código do app autenticador (Google Authenticator, Authy)."}
       </p>
       <Botao onClick={() => setEtapa(ligada ? "desligar" : "senha")}>

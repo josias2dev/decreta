@@ -135,7 +135,7 @@ export function PublicacoesPage() {
     return (
       <TelaCelular
         titulo="Publicações"
-        sobre={sub}
+        sobre={c ? `${c.contagens.nova} ${c.contagens.nova === 1 ? "nova" : "novas"} do DJEN` : " "}
         direita={
           <>
             <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Buscar agora no DJEN" onClick={() => buscar.mutate()} disabled={buscar.isPending}>

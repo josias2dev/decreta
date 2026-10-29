@@ -144,7 +144,10 @@ function AbaTimbre({ e, socio, celular }: { e: Escritorio; socio: boolean; celul
               </select>
             </Campo>
             <Campo rotulo="Cor do timbre" htmlFor="tb-cor">
-              <input id="tb-cor" type="color" value={t.cor} onChange={(ev) => setT({ ...t, cor: ev.target.value })} disabled={!socio} style={{ padding: 2 }} />
+              <span className="flex items-center gap-2">
+                <input id="tb-cor" type="color" value={t.cor} onChange={(ev) => setT({ ...t, cor: ev.target.value })} disabled={!socio} className="dc-cor" />
+                <span className="dc-num text-[13px] uppercase text-[var(--tinta-2)]">{t.cor}</span>
+              </span>
             </Campo>
             <Campo rotulo="Logo (PNG)" htmlFor="tb-logo" ajuda={e.timbre?.logoDocumentoId ? "Logo guardado" : "Sem logo"}>
               <input ref={entrada} id="tb-logo" type="file" accept="image/png" hidden onChange={(ev) => ev.target.files?.[0] && logo.mutate(ev.target.files[0])} />
@@ -163,7 +166,7 @@ function AbaTimbre({ e, socio, celular }: { e: Escritorio; socio: boolean; celul
             </select>
           </Campo>
           {socio && (
-            <Botao variante="primaria" onClick={() => salvar.mutate({ timbre: limpo(t), tribunal })} ocupado={salvar.isPending} disabled={(t.nome ?? "").trim().length < 2}>
+            <Botao className="md:self-start" variante="primaria" onClick={() => salvar.mutate({ timbre: limpo(t), tribunal })} ocupado={salvar.isPending} disabled={(t.nome ?? "").trim().length < 2}>
               Salvar timbre
             </Botao>
           )}

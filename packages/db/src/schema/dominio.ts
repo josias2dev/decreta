@@ -111,7 +111,7 @@ export const equipe = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     /** Como aparece nas listas ("Beatriz"). */
     apelido: text("apelido"),
-    /** "Advogada · sócia", "Estagiário". */
+    /** "Advogada", "Estagiário". */
     cargo: text("cargo"),
     oabNumero: text("oab_numero"),
     oabUf: text("oab_uf"),

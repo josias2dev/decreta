@@ -118,7 +118,9 @@ function Moldura({ eu }: { eu: Eu }) {
 
   if (celular) {
     // O chat do processo tem o campo preso embaixo, no lugar da navegação.
-    const semNav = SEM_NAVEGACAO.some((r) => r.test(caminho)) || (aba === "chat" && /^\/processos\/[^/]+$/.test(caminho));
+    // Dentro de um processo, Perguntar abre o chat daquele processo.
+    const doProcesso = /^\/processos\/([^/]+)$/.exec(caminho)?.[1];
+    const semNav = SEM_NAVEGACAO.some((r) => r.test(caminho)) || (aba === "chat" && !!doProcesso);
     return (
       <div className="dc dc-celular dc-tela">
         <AbrirBusca.Provider value={() => setBuscando(true)}>
@@ -126,9 +128,15 @@ function Moldura({ eu }: { eu: Eu }) {
         </AbrirBusca.Provider>
         {!semNav && (
           <>
-            <Link to="/perguntar" className="dc-perguntar" style={{ textDecoration: "none" }}>
-              <Sparkles /> Perguntar
-            </Link>
+            {doProcesso ? (
+              <Link to="/processos/$id" params={{ id: doProcesso }} search={{ aba: "chat" }} className="dc-perguntar" style={{ textDecoration: "none" }}>
+                <Sparkles /> Perguntar
+              </Link>
+            ) : (
+              <Link to="/perguntar" className="dc-perguntar" style={{ textDecoration: "none" }}>
+                <Sparkles /> Perguntar
+              </Link>
+            )}
             <nav className="dc-nav" aria-label="Navegação">
               {NAV_CELULAR.map((i) => {
                 const on = caminho === i.to || caminho.startsWith(`${i.to}/`) || (i.to === "/mais" && ["/publicacoes", "/agenda", "/negocios", "/alvaras", "/documentos", "/equipe", "/configuracoes", "/conta"].some((p) => caminho.startsWith(p)));

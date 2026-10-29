@@ -11,8 +11,8 @@
 export type Quem = "beatriz" | "rafael" | "tiago" | "camila";
 
 export const EQUIPE: Record<Quem, { nome: string; cargo: string; papel: "owner" | "admin" | "member"; oab?: string }> = {
-  beatriz: { nome: "Beatriz Souza", cargo: "Advogada · sócia", papel: "owner", oab: "41.233" },
-  rafael: { nome: "Rafael Freitas", cargo: "Advogado · sócio", papel: "admin", oab: "45.678" },
+  beatriz: { nome: "Beatriz Souza", cargo: "Advogada", papel: "owner", oab: "41.233" },
+  rafael: { nome: "Rafael Freitas", cargo: "Advogado", papel: "admin", oab: "45.678" },
   tiago: { nome: "Tiago Martins", cargo: "Advogado", papel: "member", oab: "52.104" },
   camila: { nome: "Camila Azevedo", cargo: "Estagiária", papel: "member" },
 };
@@ -695,12 +695,12 @@ export const TAREFAS: { titulo: string; detalhe: string; dia: number; responsave
 
 export const NEGOCIOS: { chave: string; nome: string; telefone: string; assunto: string; area: string; pasta: "completa" | "faltam_documentos" | "sem_pasta"; etapa: "triagem" | "repassado" | "concluido" | "desistiu"; responsavel: Quem | null; feitos: number; observacoes?: string }[] = [
   { chave: "jose", nome: "José Antunes", telefone: "47991208833", assunto: "Revisão de aposentadoria", area: "Previdenciário", pasta: "faltam_documentos", etapa: "triagem", responsavel: "rafael", feitos: 2, observacoes: "Faltam RG e comprovante de residência." },
-  { chave: "luiza", nome: "Luiza Brandt", telefone: "47988014422", assunto: "Indenização por acidente de moto", area: "Cível", pasta: "completa", etapa: "triagem", responsavel: "beatriz", feitos: 4 },
+  { chave: "luiza", nome: "Luiza Brandt", telefone: "47988014422", assunto: "Indenização por acidente de moto", area: "Cível", pasta: "completa", etapa: "triagem", responsavel: "beatriz", feitos: 6 },
   { chave: "paulo", nome: "Paulo Siqueira", telefone: "47999321177", assunto: "Horas extras · motorista", area: "Trabalhista", pasta: "sem_pasta", etapa: "triagem", responsavel: "tiago", feitos: 0 },
   { chave: "teresa", nome: "Teresa Mello", telefone: "48996671200", assunto: "Inventário", area: "Família e sucessões", pasta: "faltam_documentos", etapa: "triagem", responsavel: "beatriz", feitos: 1 },
   { chave: "fabio", nome: "Fábio Krüger", telefone: "47984459011", assunto: "Cobrança de cheques", area: "Cível", pasta: "sem_pasta", etapa: "triagem", responsavel: null, feitos: 0 },
-  { chave: "rosa", nome: "Rosa Lemos", telefone: "47991560032", assunto: "Benefício assistencial (BPC)", area: "Previdenciário", pasta: "completa", etapa: "triagem", responsavel: "camila", feitos: 3 },
-  { chave: "igor", nome: "Igor Paiva", telefone: "47988770011", assunto: "Rescisão de contrato de aluguel", area: "Cível", pasta: "completa", etapa: "repassado", responsavel: "rafael", feitos: 4 },
+  { chave: "rosa", nome: "Rosa Lemos", telefone: "47991560032", assunto: "Benefício assistencial (BPC)", area: "Previdenciário", pasta: "completa", etapa: "triagem", responsavel: "camila", feitos: 6 },
+  { chave: "igor", nome: "Igor Paiva", telefone: "47988770011", assunto: "Rescisão de contrato de aluguel", area: "Cível", pasta: "completa", etapa: "repassado", responsavel: "rafael", feitos: 6 },
 ];
 
 export const ALVARAS: { processo: string; descricao: string; valor: number; etapa: "novo" | "aguardando_saque" | "sacado" | "repassado" | "finalizado"; expedidoHa: number; recebido?: number }[] = [

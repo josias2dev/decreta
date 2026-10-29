@@ -143,16 +143,20 @@ function LinhaDaAgenda({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (f
   ) : i.detalhe ? (
     <span className="dc-celula__2">{i.detalhe}</span>
   ) : null;
-  const pessoa = (
+  const pessoa = i.responsavel ? (
     <span className="dc-pessoa flex-none text-[13px] text-[var(--tinta-2)]">
       <Avatar pessoa={i.responsavel} />
-      <span className="max-md:hidden">{i.responsavel?.apelido ?? "—"}</span>
+      <span className="max-md:hidden">{i.responsavel.apelido}</span>
     </span>
+  ) : (
+    <span className="flex-none text-[13px] text-[var(--tinta-3)] max-md:hidden">Sem responsável</span>
   );
   if (i.tipo === "tarefa") {
     return (
       <label className="dc-linhas__item cursor-pointer items-center">
-        <input type="checkbox" className="dc-checa" checked={!!i.concluida} onChange={(e) => aoMarcar(e.target.checked)} aria-label={`Feita: ${i.titulo}`} />
+        <span className="w-[64px] flex-none md:w-[76px]">
+          <input type="checkbox" className="dc-checa" checked={!!i.concluida} onChange={(e) => aoMarcar(e.target.checked)} aria-label={`Feita: ${i.titulo}`} />
+        </span>
         <span className="dc-celula min-w-0 flex-1">
           <span className={cn("dc-celula__1", i.concluida && "text-[var(--tinta-3)] line-through")}>{i.titulo}</span>
           {processo}
@@ -164,7 +168,7 @@ function LinhaDaAgenda({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (f
   const destino = i.tipo === "audiencia" ? ({ to: "/audiencias/$id", params: { id: i.id } } as const) : ({ to: "/prazos/$id", params: { id: i.id } } as const);
   return (
     <Link {...destino} className="dc-linhas__item items-center">
-      <span className="w-[76px] flex-none">
+      <span className="w-[64px] flex-none md:w-[76px]">
         {i.tipo === "audiencia" ? (
           <span className="dc-selo dc-selo--prazo dc-num">
             {i.porVideo && <Video />}

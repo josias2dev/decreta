@@ -217,7 +217,7 @@
 /* Dados (lista de definição) */
 .dc-dados { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--space-2) var(--space-4); margin: 0; font: 400 14px/20px var(--font-sans); }
 .dc-dados dt { color: var(--tinta-2); }
-.dc-dados dd { margin: 0; color: var(--tinta); min-width: 0; }
+.dc-dados dd { margin: 0; color: var(--tinta); min-width: 0; overflow-wrap: anywhere; }
 
 /* Linha do tempo */
 .dc-tempo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }

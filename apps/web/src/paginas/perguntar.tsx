@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Conversa } from "@/componentes/conversa";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
-import { Abas, Cabecalho, Carregando, Faixa, Painel } from "@/componentes/ui";
+import { Abas, Cabecalho, Carregando, Faixa, Painel, Vazio } from "@/componentes/ui";
 import { aosPoucos, api } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
@@ -34,7 +34,7 @@ export function PerguntarPage() {
   const corpo = !conversa.data ? (
     <Carregando linhas={3} />
   ) : !eu.data?.ia ? (
-    <Faixa tipo="aviso">A IA ainda não está ligada neste escritório.</Faixa>
+    <Vazio titulo="A IA ainda não está ligada">Quando estiver ligada, dá para tirar dúvidas do dia a dia e pesquisar jurisprudência aqui. Quem cuida do sistema do escritório liga.</Vazio>
   ) : (
     <Conversa
       mensagens={conversa.data.mensagens}

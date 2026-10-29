@@ -138,10 +138,11 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-perguntar-campo:focus-within { border-color: var(--foco); box-shadow: 0 0 0 3px var(--anel); }
 
 /* ---------- Quadro (novos negócios, alvarás) ---------- */
-.dc-quadro { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(260px, 1fr); gap: var(--space-4); overflow-x: auto; padding-bottom: 4px; }
+.dc-quadro { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); gap: var(--space-4); overflow-x: auto; padding-bottom: 4px; }
 .dc-quadro__coluna { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .dc-quadro__topo { display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px; font: 600 13px/18px var(--font-sans); color: var(--tinta); }
 .dc-quadro__topo span { font-weight: 500; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.dc-quadro__vazio { border: 1px dashed var(--borda-forte); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; font: 400 13px/18px var(--font-sans); color: var(--tinta-3); }
 
 /* ---------- Entrar ---------- */
 .dc-entrada { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; box-sizing: border-box; background: var(--papel); position: relative; isolation: isolate; }
@@ -242,3 +243,11 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-folha ol { list-style: decimal; }
 .dc-ia__sec li + li { margin-top: 2px; }
 .dc-caixa__lista .dc-aba { padding: 0 9px; }
+
+/* Cor do timbre: só a amostra, com o código ao lado. */
+.dc input.dc-cor { width: 44px; height: 32px; padding: 2px; flex: none; cursor: pointer; }
+/* No celular as abas dividem a largura e cabem sem rolar. */
+.dc-celular .dc-abas, .dc-celular .dc-abas--pagina { gap: 0; }
+.dc-celular .dc-abas .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 4px; }
+/* Na tela estreita, texto justificado abre buracos entre as palavras. */
+.dc-celular .dc-folha p { text-align: left; }

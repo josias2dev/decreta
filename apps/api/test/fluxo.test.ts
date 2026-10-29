@@ -272,6 +272,16 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
     expect((await json(call("/prazos?quando=abertos"))).itens[0].situacao).toBe("peca_em_revisao");
   });
 
+  test("peça escrita à mão, sem a IA, também sai no timbre", async () => {
+    const r = await call("/pecas/manual", { method: "POST", json: { processoId, prazoId, tipo: "manifestacao-laudo", texto: "# Excelentíssimo Senhor Doutor Juiz\n\nManifesta-se sobre o laudo." } });
+    expect(r.status).toBe(201);
+    const { id: pecaId } = (await r.json()) as { id: string };
+    expect(await json(call(`/pecas/${pecaId}`))).toMatchObject({ texto: "# Excelentíssimo Senhor Doutor Juiz\n\nManifesta-se sobre o laudo.", situacao: "rascunho" });
+    const lido = await extrairTexto(new Uint8Array(await (await call(`/pecas/${pecaId}/docx`)).arrayBuffer()), MIME_DOCX);
+    expect(lido).toContain("Manifesta-se sobre o laudo.");
+    expect((await call("/pecas/manual", { method: "POST", json: { processoId, tipo: "nao-existe", texto: "x" } })).status).toBe(422);
+  });
+
   test("Hoje junta vencidos, de hoje e as publicações", async () => {
     const h = await json(call("/hoje"));
     expect(h).toHaveProperty("contadores");

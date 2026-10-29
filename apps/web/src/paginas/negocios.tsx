@@ -37,7 +37,7 @@ export function NegociosPage() {
   const itens = q.data?.itens ?? [];
   const n = (e: EtapaNegocio) => q.data?.contagens[e] ?? 0;
   const selecionado = itens.find((i) => i.id === aberto) ?? null;
-  const sub = q.data ? `${n("triagem")} em triagem · ${n("repassado")} repassados a um advogado` : " ";
+  const sub = q.data ? `${n("triagem")} em triagem · ${n("repassado")} ${n("repassado") === 1 ? "repassado" : "repassados"} a um advogado` : " ";
 
   const cartao = (i: Negocio) => {
     const feitos = i.checklist.filter((c) => c.feito).length;
@@ -76,7 +76,7 @@ export function NegociosPage() {
     return (
       <TelaCelular
         titulo="Novos negócios"
-        sobre={sub}
+        sobre={q.data ? `${n("triagem")} em triagem` : " "}
         voltar
         direita={
           <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo negócio" onClick={() => setNovo(true)}>
@@ -118,7 +118,7 @@ export function NegociosPage() {
                 <div className="dc-quadro__topo">
                   {e.rotulo} <span>{n(e.id)}</span>
                 </div>
-                {daEtapa.length ? daEtapa.map(cartao) : <div className="dc-painel">{vazio(e.id)}</div>}
+                {daEtapa.length ? daEtapa.map(cartao) : e.id === "triagem" ? <div className="dc-painel">{vazio(e.id)}</div> : <div className="dc-quadro__vazio">Nada aqui</div>}
               </section>
             );
           })}

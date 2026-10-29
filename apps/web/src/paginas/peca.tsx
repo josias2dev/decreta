@@ -80,7 +80,14 @@ export function PecaPage() {
   }
 
   const salvar = useMutation({
-    mutationFn: (corpo: { texto?: string; situacao?: "rascunho" | "revisada" }) => api(`/pecas/${pecaId}`, { method: "PUT", json: corpo }),
+    mutationFn: async (corpo: { texto?: string; situacao?: "rascunho" | "revisada" }) => {
+      if (pecaId) return api(`/pecas/${pecaId}`, { method: "PUT", json: corpo });
+      // Primeira vez, escrita à mão: cria a peça.
+      const r = await api<{ id: string }>("/pecas/manual", { json: { processoId: prep.data!.processo.id, prazoId: prep.data!.prazo?.id ?? null, tipo, texto: corpo.texto ?? "" } });
+      await qc.fetchQuery({ queryKey: ["peca", r.id], queryFn: () => api<Peca>(`/pecas/${r.id}`) });
+      void navigate({ search: (s) => ({ ...s, id: r.id }), replace: true });
+      return r;
+    },
     onSuccess: (_r, corpo) => {
       void qc.invalidateQueries({ queryKey: ["peca", pecaId] });
       void qc.invalidateQueries({ queryKey: ["pecas", "preparar"] });
@@ -167,7 +174,7 @@ export function PecaPage() {
       <Folha texto={texto} timbre={timbre} escrevendo={gerando} />
     ) : (
       <div className="dc-folha">
-        <Vazio titulo="Nenhum rascunho ainda">{iaLigada ? "Escolha o tipo, diga o que quer e gere. A IA escreve no timbre do escritório." : "Clique em Editar texto para escrever."}</Vazio>
+        <Vazio titulo="Nenhum rascunho ainda">{iaLigada ? "Escolha o tipo, diga o que quer e gere. A IA escreve no timbre do escritório. Ou escreva à mão em Editar texto." : "Clique em Editar texto para escrever."}</Vazio>
       </div>
     );
   const editar = () => setEdicao(texto || "# Excelentíssimo Senhor Doutor Juiz de Direito\n\n");
@@ -176,7 +183,7 @@ export function PecaPage() {
       <Botao variante="fantasma" onClick={() => setEdicao(null)}>
         Cancelar
       </Botao>
-      <Botao variante="primaria" onClick={() => salvar.mutate({ texto: edicao })} ocupado={salvar.isPending} disabled={!pecaId}>
+      <Botao variante="primaria" onClick={() => salvar.mutate({ texto: edicao })} ocupado={salvar.isPending} disabled={!pecaId && (!prep.data || !tipo || !edicao?.trim())}>
         Salvar texto
       </Botao>
     </>
@@ -216,8 +223,17 @@ export function PecaPage() {
                 {botaoGerar(true)}
               </div>
             </>
+          ) : iaLigada ? (
+            <div className="dc-rodape__par">
+              <Botao bloco onClick={editar} disabled={gerando}>
+                <Pencil /> Escrever
+              </Botao>
+              {botaoGerar(true)}
+            </div>
           ) : (
-            botaoGerar(true)
+            <Botao variante="primaria" bloco onClick={editar}>
+              <Pencil /> Escrever à mão
+            </Botao>
           )
         }
       >
@@ -293,7 +309,7 @@ export function PecaPage() {
                     <Check /> Marcar como revisada
                   </Botao>
                 )}
-                <Botao onClick={editar} disabled={gerando || (!pecaId && iaLigada)}>
+                <Botao onClick={editar} disabled={gerando}>
                   <Pencil /> Editar texto
                 </Botao>
                 {docx ? (

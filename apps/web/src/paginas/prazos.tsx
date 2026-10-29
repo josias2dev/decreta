@@ -95,7 +95,8 @@ export function PrazosPage() {
     void navigate({ search: (s) => ({ ...s, quando: q === "abertos" || q === quando ? undefined : q }) });
   };
   const porPessoa = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, responsavel: id === responsavel ? undefined : id }) });
-  const sub = l ? `${l.chips.abertos} em aberto · ${l.chips.semana} vencem nesta semana${l.chips.vencidos ? ` · ${l.chips.vencidos} ${l.chips.vencidos === 1 ? "vencido" : "vencidos"}` : ""}` : " ";
+  const vencidos = l?.chips.vencidos ? ` · ${l.chips.vencidos} ${l.chips.vencidos === 1 ? "vencido" : "vencidos"}` : "";
+  const sub = l ? `${l.chips.abertos} em aberto · ${l.chips.semana} vencem nesta semana${vencidos}` : " ";
 
   const chips = l && (
     <div className="dc-chips">
@@ -137,7 +138,7 @@ export function PrazosPage() {
     return (
       <TelaCelular
         titulo="Prazos"
-        sobre={sub}
+        sobre={l ? `${l.chips.abertos} em aberto${vencidos}` : " "}
         direita={
           <>
             <BotaoBuscar />

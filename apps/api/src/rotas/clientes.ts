@@ -7,6 +7,8 @@ import { registrar } from "../auditoria.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { corpo, ehSocio, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
+const CANAL: Record<string, string> = { presencial: "presencial", telefone: "telefone", whatsapp: "WhatsApp", video: "vídeo", email: "e-mail" };
+
 const POR_PAGINA = 50;
 
 const dadosDoCliente = z.object({
@@ -97,7 +99,7 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         tx.select({ id: documentos.id, nome: documentos.nome, mime: documentos.mime, tamanho: documentos.tamanho, em: documentos.createdAt, processoId: documentos.processoId }).from(documentos).where(eq(documentos.clienteId, clienteId)).orderBy(desc(documentos.createdAt)),
       ]);
       const linhaDoTempo = [
-        ...ats.map((a) => ({ em: a.em.toISOString(), titulo: `Atendimento · ${a.canal}`, detalhe: a.resumo.slice(0, 200), tipo: "atendimento" as const })),
+        ...ats.map((a) => ({ em: a.em.toISOString(), titulo: `Atendimento · ${CANAL[a.canal] ?? a.canal}`, detalhe: a.resumo.slice(0, 200), tipo: "atendimento" as const })),
         ...ps.map((p) => ({ em: p.createdAt.toISOString(), titulo: "Processo cadastrado", detalhe: p.titulo, tipo: "processo" as const })),
         ...docs.map((d) => ({ em: d.em.toISOString(), titulo: "Documento anexado", detalhe: d.nome, tipo: "documento" as const })),
       ].sort((a, b) => b.em.localeCompare(a.em));

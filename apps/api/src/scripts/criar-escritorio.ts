@@ -22,7 +22,7 @@ const { values: a } = parseArgs({
     email: { type: "string" },
     pessoa: { type: "string" },
     oab: { type: "string" },
-    cargo: { type: "string", default: "Advogada · sócia" },
+    cargo: { type: "string" },
     tribunal: { type: "string", default: "TJSC" },
     senha: { type: "string" },
   },

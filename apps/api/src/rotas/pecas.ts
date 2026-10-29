@@ -104,6 +104,24 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return transmitirPeca(c, deps, ia, preparado.pecaId, preparado.pedido);
   });
 
+  /** Peça escrita à mão, sem a IA: guarda o texto e devolve o id. */
+  app.post("/pecas/manual", async (c) => {
+    const b = await corpo(c, z.object({ processoId: z.string().uuid(), prazoId: z.string().uuid().nullable().optional(), tipo: z.string().min(1).max(60), texto: z.string().max(400_000) }));
+    const tipo = tipoDePeca(b.tipo) ?? falha(422, "tipo_desconhecido");
+    const pecaId = await tenant(c, deps, async (tx) => {
+      const [p] = await tx.select().from(processos).where(eq(processos.id, b.processoId));
+      if (!p) falha(404, "processo_nao_encontrado");
+      const [prazo] = b.prazoId ? await tx.select({ id: prazos.id }).from(prazos).where(eq(prazos.id, b.prazoId)) : [];
+      const [linha] = await tx
+        .insert(pecas)
+        .values({ organizationId: c.get("orgId"), processoId: p.id, prazoId: prazo?.id ?? null, tipo: tipo.id, titulo: `${tipo.nome} · ${p.titulo.split(" × ")[0]}`, instrucoes: "", texto: b.texto, situacao: "rascunho", criadaPor: c.get("userId") })
+        .returning({ id: pecas.id });
+      return linha!.id;
+    });
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "peca.escrita", detalhes: { pecaId, tipo: tipo.id }, ip: ip(c) }, deps.log);
+    return c.json({ id: pecaId }, 201);
+  });
+
   app.put("/pecas/:id", async (c) => {
     const pecaId = id(c);
     const b = await corpo(c, z.object({ texto: z.string().max(400_000).optional(), titulo: z.string().trim().min(2).max(300).optional(), situacao: z.enum(["rascunho", "revisada"]).optional() }));

@@ -279,7 +279,7 @@ export function ClientePage() {
   );
 
   const apagar = ehSocio(eu.data?.usuario.papel) && (
-    <button type="button" className="dc-link inline-flex items-center gap-1.5 self-start text-[13px] text-[var(--vencido)]" onClick={() => setDialogo("apagar")}>
+    <button type="button" className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-[var(--vencido)] hover:underline" onClick={() => setDialogo("apagar")}>
       <Trash2 className="size-3.5" /> Apagar cliente (LGPD)
     </button>
   );

@@ -31,10 +31,8 @@ export function AlvarasPage() {
 
   const cartao = (a: Alvara & { etapa: EtapaAlvara }) => (
     <button key={a.id} type="button" className="dc-cartao w-full cursor-pointer text-left" onClick={() => setAberto(a.id)}>
-      <span className="flex items-start justify-between gap-2">
-        <span className="dc-cartao__titulo">{a.descricao}</span>
-        <span className="dc-num flex-none font-semibold">{dinheiro(a.valor)}</span>
-      </span>
+      <span className="dc-cartao__titulo">{a.descricao}</span>
+      <span className="dc-num text-[15px] font-semibold">{dinheiro(a.valor)}</span>
       <span className="dc-cartao__linha">{[a.cliente, a.processo.titulo].filter(Boolean)[0]}</span>
       <span className="dc-nota dc-num">
         {a.repassadoEm ? `Repassado em ${diaCurto(a.repassadoEm)}` : a.sacadoEm ? `Sacado em ${diaCurto(a.sacadoEm)}` : a.expedidoEm ? `Expedido em ${diaCurto(a.expedidoEm)}` : (a.processo.cnj ?? "")}
@@ -53,7 +51,7 @@ export function AlvarasPage() {
     return (
       <TelaCelular
         titulo="Alvarás"
-        sobre={sub}
+        sobre={d ? `${dinheiro(d.totais.pendente)} a receber` : " "}
         voltar
         direita={
           <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo alvará" onClick={() => setNovo(true)}>
@@ -105,9 +103,7 @@ export function AlvarasPage() {
               {e.itens.length ? (
                 e.itens.map((i) => cartao({ ...i, etapa: e.etapa }))
               ) : (
-                <div className="dc-painel">
-                  <Vazio titulo="Nada aqui" />
-                </div>
+                <div className="dc-quadro__vazio">Nada aqui</div>
               )}
             </section>
           ))}

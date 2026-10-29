@@ -61,10 +61,11 @@ export function ProcessoPage() {
       aoMudar={irPara}
       abas={[
         { id: "resumo", rotulo: celular ? "Resumo" : "Resumo IA" },
-        { id: "movimentacoes", rotulo: "Movimentações", n: p.contadores.movimentacoes },
-        { id: "prazos", rotulo: "Prazos", n: p.contadores.prazos },
-        { id: "documentos", rotulo: "Documentos", n: p.contadores.documentos },
-        { id: "chat", rotulo: celular ? "Chat" : "Chat do processo" },
+        { id: "movimentacoes", rotulo: "Movimentações", n: celular ? undefined : p.contadores.movimentacoes },
+        { id: "prazos", rotulo: "Prazos", n: celular ? undefined : p.contadores.prazos },
+        { id: "documentos", rotulo: "Documentos", n: celular ? undefined : p.contadores.documentos },
+        // No celular o chat abre pelo botão Perguntar, em tela própria.
+        ...(celular ? [] : [{ id: "chat" as const, rotulo: "Chat do processo" }]),
       ]}
     />
   );
@@ -81,6 +82,13 @@ export function ProcessoPage() {
       <AbaChat p={p} celular={celular} />
     );
 
+  if (celular && aba === "chat") {
+    return (
+      <TelaCelular titulo="Perguntar" sobre={p.titulo} voltar={() => irPara("resumo")}>
+        {conteudo}
+      </TelaCelular>
+    );
+  }
   if (celular) {
     return (
       <TelaCelular titulo="Processos" voltar>
@@ -436,26 +444,22 @@ function AbaMovimentacoes({ p, celular }: { p: Processo; celular: boolean }) {
   const itens = lista.data?.pages.flatMap((x) => x.itens) ?? [];
   const k = lista.data?.pages[0]?.contagens;
   const totalDoFiltro = k ? k[filtro] : 0;
-  return (
-    <Painel
-      titulo={
-        <div className="dc-chips">
-          {(["todas", "juizo", "partes", "documento"] as const).map((f) => (
-            <Chip key={f} ligado={filtro === f} n={k?.[f]} onClick={() => setFiltro(f)}>
-              {f === "todas" ? "Todas" : f === "juizo" ? "Do juízo" : f === "partes" ? "Das partes" : "Com documento"}
-            </Chip>
-          ))}
-        </div>
-      }
-      acao={
-        p.cnj && (
-          <Botao variante="fantasma" pequeno onClick={() => datajud.mutate()} ocupado={datajud.isPending} title={p.datajudEm ? `Última consulta ${diaCurto(diaDoInstante(p.datajudEm))} ${hora(p.datajudEm)}` : undefined}>
-            <RefreshCw /> {celular ? "DataJud" : "Atualizar do DataJud"}
-          </Botao>
-        )
-      }
-      corpo={false}
-    >
+  const filtros = (
+    <div className="dc-chips">
+      {(["todas", "juizo", "partes", "documento"] as const).map((f) => (
+        <Chip key={f} ligado={filtro === f} n={k?.[f]} onClick={() => setFiltro(f)}>
+          {f === "todas" ? "Todas" : f === "juizo" ? "Do juízo" : f === "partes" ? "Das partes" : "Com documento"}
+        </Chip>
+      ))}
+    </div>
+  );
+  const botaoDatajud = p.cnj && (
+    <Botao variante="fantasma" pequeno onClick={() => datajud.mutate()} ocupado={datajud.isPending} title={p.datajudEm ? `Última consulta ${diaCurto(diaDoInstante(p.datajudEm))} ${hora(p.datajudEm)}` : undefined}>
+      <RefreshCw /> Atualizar do DataJud
+    </Botao>
+  );
+  const painel = (
+    <Painel titulo={celular ? undefined : filtros} acao={celular ? undefined : botaoDatajud} corpo={false}>
       {!lista.data ? (
         <div className="p-4">
           <Carregando linhas={3} />
@@ -478,6 +482,15 @@ function AbaMovimentacoes({ p, celular }: { p: Processo; celular: boolean }) {
         </>
       )}
     </Painel>
+  );
+  if (!celular) return painel;
+  // No celular os filtros ganham a largura toda, acima da lista.
+  return (
+    <>
+      {filtros}
+      {painel}
+      {botaoDatajud && <div className="flex justify-center">{botaoDatajud}</div>}
+    </>
   );
 }
 
@@ -753,7 +766,7 @@ function AbaChat({ p, celular }: { p: Processo; celular: boolean }) {
   const corpo = !chat.data ? (
     <Carregando linhas={3} />
   ) : !eu.data?.ia ? (
-    <Faixa tipo="aviso">A IA ainda não está ligada neste escritório.</Faixa>
+    <Vazio titulo="A IA ainda não está ligada">Quando estiver ligada, dá para perguntar sobre este processo e a IA responde com base nos autos. Quem cuida do sistema do escritório liga.</Vazio>
   ) : (
     <Conversa
       mensagens={chat.data.mensagens}

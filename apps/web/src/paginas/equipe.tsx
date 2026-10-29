@@ -55,8 +55,9 @@ export function EquipePage() {
               <span className="dc-celula__1">
                 {p.nome}
                 {p.id === eu.data?.usuario.id && <span className="ml-1.5 font-normal text-[var(--tinta-3)]">(você)</span>}
+                <span className="dc-selo dc-selo--prazo ml-2 align-[1px]">{papelLabel(p.papel)}</span>
               </span>
-              <span className="dc-celula__2 truncate">{[p.cargo, papelLabel(p.papel), p.oab].filter(Boolean).join(" · ")}</span>
+              <span className="dc-celula__2 truncate">{[p.cargo, p.oab].filter(Boolean).join(" · ")}</span>
               {!celular && <span className="dc-celula__2 truncate">{[p.email, p.whatsapp && `WhatsApp ${telefone(p.whatsapp)}${p.avisoManha ? " · resumo da manhã" : ""}`].filter(Boolean).join(" · ")}</span>}
             </span>
             {(socio || p.id === eu.data?.usuario.id) && (
@@ -291,7 +292,7 @@ function EditarPessoa({ p, aoFechar, socio, eu }: { p: PessoaDaEquipe; aoFechar:
               <input id="ep-apelido" value={f.apelido} onChange={(e) => setF({ ...f, apelido: e.target.value })} />
             </Campo>
             <Campo rotulo="Cargo" htmlFor="ep-cargo">
-              <input id="ep-cargo" value={f.cargo} onChange={(e) => setF({ ...f, cargo: e.target.value })} placeholder="Advogada · sócia" />
+              <input id="ep-cargo" value={f.cargo} onChange={(e) => setF({ ...f, cargo: e.target.value })} placeholder="Advogada" />
             </Campo>
             <Campo rotulo="OAB" htmlFor="ep-oab" ajuda="O DJEN é buscado por este número">
               <input id="ep-oab" inputMode="numeric" value={f.oabNumero} onChange={(e) => setF({ ...f, oabNumero: e.target.value })} placeholder="41233" />
