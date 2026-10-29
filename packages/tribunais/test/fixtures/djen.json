@@ -1,0 +1,47 @@
+{
+  "status": "success",
+  "message": "Sucesso",
+  "count": 2,
+  "items": [
+    {
+      "id": 412345678,
+      "data_disponibilizacao": "2026-10-28",
+      "siglaTribunal": "TJSC",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "2ª Vara Cível da Comarca de Joinville",
+      "texto": "<p>Intimem-se as partes para, querendo, manifestarem-se sobre o laudo pericial juntado no evento 87, no prazo comum de 15 (quinze) dias.</p><p>Após, voltem conclusos para sentença.</p>",
+      "numero_processo": "50043212520268240038",
+      "meio": "D",
+      "link": "https://eproc1g.tjsc.jus.br/eproc/externo_controlador.php?acao=processo_consulta_publica",
+      "tipoDocumento": "Despacho",
+      "nomeClasse": "PROCEDIMENTO COMUM CÍVEL",
+      "codigoClasse": "7",
+      "numeroComunicacao": 1,
+      "ativo": true,
+      "hash": "a1b2c3",
+      "datadisponibilizacao": "28/10/2026",
+      "meiocompleto": "Diário de Justiça Eletrônico Nacional",
+      "numeroprocessocommascara": "5004321-25.2026.8.24.0038",
+      "destinatarios": [
+        { "nome": "MARINA DUARTE", "polo": "A", "comunicacao_id": 412345678 },
+        { "nome": "SEGURADORA ALFA S.A.", "polo": "P", "comunicacao_id": 412345678 }
+      ],
+      "destinatarioadvogados": [
+        { "id": 1, "comunicacao_id": 412345678, "advogado_id": 9, "advogado": { "id": 9, "nome": "BEATRIZ SOUZA", "numero_oab": "45678", "uf_oab": "SC" } }
+      ]
+    },
+    {
+      "id": "412345999",
+      "datadisponibilizacao": "27/10/2026",
+      "siglaTribunal": "TJSC",
+      "tipoComunicacao": "Intimação",
+      "nomeOrgao": "1ª Vara Cível da Comarca de Itajaí",
+      "texto": "",
+      "numero_processo": "5000000",
+      "ativo": true,
+      "destinatarios": null,
+      "destinatarioadvogados": []
+    },
+    { "id": 1, "ativo": false, "data_disponibilizacao": "2026-10-28", "texto": "cancelada" }
+  ]
+}

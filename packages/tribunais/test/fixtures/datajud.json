@@ -1,0 +1,29 @@
+{
+  "took": 12,
+  "hits": {
+    "total": { "value": 1 },
+    "hits": [
+      {
+        "_index": "api_publica_tjsc",
+        "_source": {
+          "numeroProcesso": "50043212520268240038",
+          "classe": { "codigo": 7, "nome": "Procedimento Comum Cível" },
+          "sistema": { "codigo": 4, "nome": "Eproc" },
+          "tribunal": "TJSC",
+          "dataHoraUltimaAtualizacao": "2026-10-28T14:12:03.000Z",
+          "grau": "G1",
+          "dataAjuizamento": "20260210093000",
+          "nivelSigilo": 0,
+          "orgaoJulgador": { "codigo": 1234, "nome": "2ª VARA CÍVEL DA COMARCA DE JOINVILLE" },
+          "assuntos": [{ "codigo": 7621, "nome": "Seguro" }],
+          "movimentos": [
+            { "codigo": 85, "nome": "Petição", "dataHora": "2026-10-28T13:40:00.000Z" },
+            { "codigo": 581, "nome": "Juntada de laudo pericial", "dataHora": "2026-10-21T10:00:00.000Z", "complementosTabelados": [{ "nome": "Laudo", "valor": 1 }] },
+            { "codigo": 26, "nome": "DISTRIBUIÇÃO", "dataHora": "2026-02-10T09:30:00.000Z", "complementosTabelados": [{ "descricao": "SORTEIO" }] },
+            { "nome": "sem data" }
+          ]
+        }
+      }
+    ]
+  }
+}

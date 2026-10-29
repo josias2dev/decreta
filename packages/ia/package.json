@@ -1,0 +1,14 @@
+{
+  "name": "@decreta/ia",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "3.0.78",
+    "@decreta/core": "workspace:*",
+    "ai": "7.0.153",
+    "zod": "4.6.7"
+  }
+}

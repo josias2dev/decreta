@@ -1,0 +1,13 @@
+{
+  "name": "@decreta/documentos",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "docx": "9.11.0",
+    "mammoth": "1.13.0",
+    "unpdf": "1.8.1"
+  }
+}

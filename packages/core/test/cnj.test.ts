@@ -1,0 +1,82 @@
+import { describe, expect, test } from "bun:test";
+import {
+  cnjValido,
+  cnpjValido,
+  cpfValido,
+  diaPorExtenso,
+  diaPorExtensoCurto,
+  dvCnj,
+  formatarCnj,
+  formatarDocumento,
+  formatarTelefone,
+  nomeProprio,
+  hojeEm,
+  indiceDataJud,
+  lerCnj,
+  telefoneWhatsapp,
+  tribunalDoCnj,
+} from "../src/index.ts";
+
+describe("número CNJ", () => {
+  test("dígito verificador", () => {
+    expect(dvCnj("5004321", "2026", "8", "24", "0038")).toBe("25");
+    expect(cnjValido("5004321-25.2026.8.24.0038")).toBe(true);
+    expect(cnjValido("50043212520268240038")).toBe(true);
+    expect(cnjValido("5004321-18.2026.8.24.0038")).toBe(false);
+    expect(cnjValido("123")).toBe(false);
+  });
+
+  test("lê e formata", () => {
+    const n = lerCnj("50043212520268240038")!;
+    expect(n.formatado).toBe("5004321-25.2026.8.24.0038");
+    expect(n.ano).toBe("2026");
+    expect(n.origem).toBe("0038");
+    expect(formatarCnj(" 00008124420265120005 ")).toBe("0000812-44.2026.5.12.0005");
+  });
+
+  test("tribunal e índice do DataJud", () => {
+    expect(tribunalDoCnj("5004321-25.2026.8.24.0038")).toBe("TJSC");
+    expect(tribunalDoCnj("0000812-44.2026.5.12.0005")).toBe("TRT12");
+    expect(tribunalDoCnj("5000000-00.2026.4.04.7200")).toBe("TRF4");
+    expect(tribunalDoCnj("0700000-00.2026.8.07.0001")).toBe("TJDFT");
+    expect(indiceDataJud("5004321-25.2026.8.24.0038")).toBe("api_publica_tjsc");
+    expect(indiceDataJud("0000812-44.2026.5.12.0005")).toBe("api_publica_trt12");
+  });
+});
+
+describe("documentos e telefone", () => {
+  test("CPF e CNPJ", () => {
+    expect(cpfValido("529.982.247-25")).toBe(true);
+    expect(cpfValido("111.111.111-11")).toBe(false);
+    expect(cnpjValido("11.222.333/0001-81")).toBe(true);
+    expect(cnpjValido("11.222.333/0001-80")).toBe(false);
+    expect(formatarDocumento("52998224725")).toBe("529.982.247-25");
+    expect(formatarDocumento("11222333000181")).toBe("11.222.333/0001-81");
+  });
+
+  test("WhatsApp", () => {
+    expect(telefoneWhatsapp("(47) 99123-4567")).toBe("5547991234567");
+    expect(telefoneWhatsapp("+55 47 99123-4567")).toBe("5547991234567");
+    expect(telefoneWhatsapp("1234")).toBeNull();
+    expect(formatarTelefone("5547991234567")).toBe("(47) 99123-4567");
+  });
+
+  test("nomes em caixa alta do tribunal", () => {
+    expect(nomeProprio("SEGURADORA ALFA S.A.")).toBe("Seguradora Alfa S.A.");
+    expect(nomeProprio("PADARIA BOM GRÃO LTDA")).toBe("Padaria Bom Grão Ltda");
+    expect(nomeProprio("2ª VARA CÍVEL DA COMARCA DE JOINVILLE")).toBe("2ª Vara Cível da Comarca de Joinville");
+    expect(nomeProprio("Banco Horizonte S.A.")).toBe("Banco Horizonte S.A.");
+  });
+});
+
+describe("datas", () => {
+  test("hoje no fuso do escritório", () => {
+    // 01:30 UTC do dia 30 ainda é dia 29 em São Paulo.
+    expect(hojeEm("America/Sao_Paulo", new Date("2026-10-30T01:30:00Z"))).toBe("2026-10-29");
+  });
+  test("por extenso", () => {
+    expect(diaPorExtenso("2026-10-29")).toBe("quinta, 29 de outubro");
+    expect(diaPorExtensoCurto("2026-10-28", "2026-10-29")).toBe("28 out");
+    expect(diaPorExtensoCurto("2025-12-01", "2026-10-29")).toBe("1 dez 2025");
+  });
+});

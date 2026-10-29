@@ -1,0 +1,26 @@
+{
+  "name": "@decreta/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --env-file=../../.env --watch src/index.ts",
+    "start": "bun src/index.ts"
+  },
+  "dependencies": {
+    "@decreta/core": "workspace:*",
+    "@decreta/db": "workspace:*",
+    "@decreta/documentos": "workspace:*",
+    "@decreta/ia": "workspace:*",
+    "@decreta/tribunais": "workspace:*",
+    "ai": "7.0.153",
+    "better-auth": "1.7.13",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.14",
+    "inngest": "4.26.0",
+    "qrcode": "1.5.4",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/qrcode": "1.5.5"
+  }
+}

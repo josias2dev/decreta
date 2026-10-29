@@ -1,0 +1,27 @@
+{
+  "name": "decreta",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter @decreta/api dev",
+    "web": "bun --filter @decreta/web dev",
+    "web:build": "bun --filter @decreta/web build",
+    "web:e2e": "bun --filter @decreta/web e2e",
+    "typecheck": "tsc -p . && tsc -p apps/web",
+    "test": "bun test",
+    "db:generate": "bun --filter @decreta/db generate",
+    "db:migrate": "bun --filter @decreta/db migrate",
+    "demonstracao": "bun --env-file=.env apps/api/src/scripts/demonstracao.ts",
+    "escritorio:criar": "bun --env-file=.env apps/api/src/scripts/criar-escritorio.ts",
+    "backup": "bun --env-file=.env apps/api/src/scripts/backup.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.4",
+    "typescript": "7.0.2"
+  },
+  "packageManager": "bun@1.4.4"
+}
