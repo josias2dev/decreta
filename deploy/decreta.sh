@@ -59,9 +59,9 @@ preparar() {
 
   local d
   d=$(dominio)
-  [ -n "$d" ] && [ "$d" != "decreta.exemplo.com.br" ] || falha "preencha BETTER_AUTH_URL no .env com o domínio de verdade"
+  [ -n "$d" ] || falha "preencha BETTER_AUTH_URL no .env com o domínio"
   passo "bloco do Caddy para $d em /etc/caddy/decreta.caddy"
-  sed "s/^DOMINIO {/$d {/" deploy/Caddyfile.decreta >/etc/caddy/decreta.caddy
+  sed "s/DOMINIO/$d/g" deploy/Caddyfile.decreta >/etc/caddy/decreta.caddy
   chmod 644 /etc/caddy/decreta.caddy
 
   if grep -qE '^\s*import\s+/etc/caddy/decreta\.caddy' /etc/caddy/Caddyfile; then

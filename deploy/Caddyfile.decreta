@@ -39,3 +39,8 @@ DOMINIO {
 		}
 	}
 }
+
+# O www (CNAME para o domínio) só redireciona.
+www.DOMINIO {
+	redir https://DOMINIO{uri} permanent
+}

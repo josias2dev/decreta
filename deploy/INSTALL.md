@@ -19,8 +19,9 @@ AgenteHost hoje.
 
 ## 1. Domínio
 
-Na Hostinger, no DNS do domínio, um registro **A** apontando para `201.23.84.78`
-(TTL 300). Para um subdomínio (por exemplo `app.`), o nome do registro é o
+O domínio é `decreta.site`. Na Hostinger, no DNS dele, o registro **A** de `@`
+aponta para `201.23.84.78` (TTL 300); o `www` já é um CNAME para o domínio e o
+Caddy redireciona para ele. Para um subdomínio (por exemplo `app.`), o nome do registro é o
 subdomínio. Se já existir um registro AAAA para o mesmo nome apontando para outro
 lugar, ele sai, senão parte das pessoas cai no endereço errado.
 
