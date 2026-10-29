@@ -2,7 +2,8 @@ import * as schema from "@decreta/db";
 import type { Database } from "@decreta/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createAuthMiddleware, isAPIError } from "better-auth/api";
+import { APIError, createAuthMiddleware, isAPIError } from "better-auth/api";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { organization, twoFactor } from "better-auth/plugins";
 import { registrar } from "./auditoria.ts";
 import { PAPEL, type Mailer } from "./email.ts";
@@ -31,6 +32,8 @@ const REGISTRADAS: Record<string, string> = {
  *
  * Escritório novo nasce pelo script `escritorio:criar`, nunca pelo `create` do
  * plugin. Quem entra depois chega por convite (e-mail com o link /convite/:id).
+ * Conta nova só abre para um e-mail com convite pendente: o Decreta não tem
+ * cadastro aberto.
  */
 export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEmailError?: (err: unknown) => void; log?: Log } = {}) {
   const telas = env.WEB_ORIGIN.replace(/\/$/, "");
@@ -46,6 +49,13 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
     baseURL: env.BETTER_AUTH_URL,
     trustedOrigins: [env.WEB_ORIGIN],
     hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-up/email") return;
+        const email = String((ctx.body as { email?: unknown } | undefined)?.email ?? "").trim().toLowerCase();
+        if (!email || !(await temConvite(db, email))) {
+          throw new APIError("FORBIDDEN", { code: "SEM_CONVITE", message: "Conta nova só por convite do escritório." });
+        }
+      }),
       after: createAuthMiddleware(async (ctx) => {
         const acao = REGISTRADAS[ctx.path];
         const devolvido = ctx.context.returned;
@@ -122,3 +132,12 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+
+async function temConvite(db: Database, email: string): Promise<boolean> {
+  const [c] = await db
+    .select({ id: schema.invitation.id })
+    .from(schema.invitation)
+    .where(and(sql`lower(${schema.invitation.email}) = ${email}`, eq(schema.invitation.status, "pending"), gt(schema.invitation.expiresAt, new Date())))
+    .limit(1);
+  return !!c;
+}

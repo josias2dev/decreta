@@ -176,7 +176,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const pecasDoPrazo = await tx.select({ id: pecas.id, titulo: pecas.titulo, situacao: pecas.situacao, atualizadaEm: pecas.updatedAt }).from(pecas).where(eq(pecas.prazoId, prazo.id)).orderBy(desc(pecas.updatedAt));
 
       const historico: { em: string; titulo: string; detalhe: string | null }[] = [];
-      if (pub) historico.push({ em: pub.createdAt.toISOString(), titulo: "Publicação capturada", detalhe: pub.fonte === "djen" ? `DJEN${pub.advogados[0]?.oab ? `, pela OAB ${pub.advogados[0].oab}` : ""}` : null });
+      if (pub) historico.push({ em: pub.createdAt.toISOString(), titulo: "Publicação capturada", detalhe: pub.fonte === "djen" ? `DJEN${pub.advogados[0]?.oab ? `, pela OAB${pub.advogados[0].uf ? `/${pub.advogados[0].uf}` : ""} ${pub.advogados[0].oab}` : ""}` : null });
       if (sugestao) historico.push({ em: sugestao.createdAt.toISOString(), titulo: "IA sugeriu o prazo", detalhe: "Lido do teor da intimação" });
       if (!pub) historico.push({ em: prazo.createdAt.toISOString(), titulo: "Prazo criado à mão", detalhe: null });
       if (prazo.confirmadoEm) historico.push({ em: prazo.confirmadoEm.toISOString(), titulo: `${resumir(pessoas, prazo.confirmadoPor)?.apelido ?? "Alguém"} confirmou o prazo`, detalhe: prazo.observacoes });

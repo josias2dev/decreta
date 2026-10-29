@@ -102,7 +102,7 @@ export async function sugerirPrazoDaPublicacao(deps: Deps, organizationId: strin
 }
 
 /** O prazo "Confirmar sugestão". Se a pessoa já confirmou, a sugestão nova não mexe nele. */
-async function criarPrazoSugerido(db: Database, organizationId: string, publicacaoId: string, s: SugestaoNaTela) {
+export async function criarPrazoSugerido(db: Database, organizationId: string, publicacaoId: string, s: SugestaoNaTela) {
   await withTenant(db, organizationId, async (tx) => {
     const [pub] = await tx.select().from(publicacoes).where(eq(publicacoes.id, publicacaoId));
     if (!pub?.processoId) return;

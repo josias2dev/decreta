@@ -12,6 +12,7 @@ import { createAuth } from "../src/auth.ts";
 import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import type { Pedido } from "../src/rotas/base.ts";
+import { criarEscritorio } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { gravarComunicacoes } from "../src/servicos/captura.ts";
 import { sugerirPrazoDaPublicacao } from "../src/servicos/prazos.ts";
@@ -36,6 +37,8 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
   let publicacaoId = "";
   let prazoId = "";
   let userId = "";
+  let orgId = "";
+  let auth: ReturnType<typeof createAuth>;
 
   const call = (path: string, init: RequestInit & { json?: unknown } = {}, comCookie = cookie) =>
     app.request(`/api/app${path}`, {
@@ -45,29 +48,35 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
     });
   const json = async <T = any>(r: Response | Promise<Response>): Promise<T> => (await r).json() as Promise<T>;
 
-  async function entrar(email: string, nome: string, orgId: string, orgNome: string): Promise<string> {
-    const r = await app.request("/api/auth/sign-up/email", {
+  async function entrarCom(email: string, senha = "senha-bem-longa-123"): Promise<string> {
+    const r = await app.request("/api/auth/sign-in/email", {
       method: "POST",
       headers: { "content-type": "application/json", origin: env.WEB_ORIGIN },
-      body: JSON.stringify({ email, password: "senha-bem-longa-123", name: nome }),
+      body: JSON.stringify({ email, password: senha }),
     });
     expect(r.status).toBe(200);
-    const c = r.headers.get("set-cookie")?.split(";")[0] ?? "";
-    await t.owner`insert into organization (id, name, slug) values (${orgId}, ${orgNome}, ${orgId}) on conflict do nothing`;
-    await t.owner`insert into escritorios (organization_id) values (${orgId}) on conflict do nothing`;
-    await t.owner`insert into member (id, organization_id, user_id, role) select ${`m_${email}`}, ${orgId}, id, 'owner' from "user" where email = ${email}`;
+    return r.headers.get("set-cookie")?.split(";")[0] ?? "";
+  }
+
+  async function ativar(c: string, organizationId: string) {
     const ativa = await app.request("/api/auth/organization/set-active", {
       method: "POST",
       headers: { "content-type": "application/json", cookie: c, origin: env.WEB_ORIGIN },
-      body: JSON.stringify({ organizationId: orgId }),
+      body: JSON.stringify({ organizationId }),
     });
     expect(ativa.status).toBe(200);
-    return c;
+  }
+
+  async function entrar(email: string, nome: string, slug: string, orgNome: string): Promise<{ cookie: string; orgId: string }> {
+    const { organizationId } = await criarEscritorio(t.db, auth, { nome: orgNome, slug, dono: { email, nome, senha: "senha-bem-longa-123", cargo: "Advogada · sócia", oabNumero: "41.233", oabUf: "SC" } });
+    const c = await entrarCom(email);
+    await ativar(c, organizationId);
+    return { cookie: c, orgId: organizationId };
   }
 
   beforeAll(async () => {
     t = await createTestDatabase();
-    const auth = createAuth(t.db, env);
+    auth = createAuth(t.db, env);
     const rotas = createRotas({
       db: t.db,
       auth,
@@ -81,8 +90,8 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
       log: () => {},
     });
     app = createApp({ db: t.db, env, auth, rotas, log: () => {} });
-    cookie = await entrar("beatriz@souza.adv.br", "Beatriz Souza", "org_souza", "Souza & Mendes Advocacia");
-    cookieOutro = await entrar("tiago@outro.adv.br", "Tiago Martins", "org_outro", "Outro Escritório");
+    ({ cookie, orgId } = await entrar("beatriz@souza.adv.br", "Beatriz Souza", "souza-mendes", "Souza & Mendes Advocacia"));
+    ({ cookie: cookieOutro } = await entrar("tiago@outro.adv.br", "Tiago Martins", "outro", "Outro Escritório"));
     userId = (await t.owner<{ id: string }[]>`select id from "user" where email = 'beatriz@souza.adv.br'`)[0]!.id;
   });
 
@@ -92,6 +101,38 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
 
   test("sem sessão é 401", async () => {
     expect((await call("/eu", {}, "")).status).toBe(401);
+  });
+
+  test("conta nova só com convite", async () => {
+    const cadastro = (email: string) =>
+      app.request("/api/auth/sign-up/email", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: env.WEB_ORIGIN },
+        body: JSON.stringify({ email, password: "senha-bem-longa-123", name: "Rafael Lima" }),
+      });
+    expect((await cadastro("rafael@souza.adv.br")).status).toBe(403);
+
+    const convite = await app.request("/api/auth/organization/invite-member", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie, origin: env.WEB_ORIGIN },
+      body: JSON.stringify({ email: "rafael@souza.adv.br", role: "member" }),
+    });
+    expect(convite.status).toBe(200);
+    const { id: conviteId } = (await convite.json()) as { id: string };
+    expect(await json(app.request(`/api/convites/${conviteId}`))).toMatchObject({ escritorio: "Souza & Mendes Advocacia", status: "pending", papel: "member" });
+
+    const r = await cadastro("Rafael@Souza.adv.br");
+    expect(r.status).toBe(200);
+    const c = r.headers.get("set-cookie")?.split(";")[0] ?? "";
+    const aceite = await app.request("/api/auth/organization/accept-invitation", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: c, origin: env.WEB_ORIGIN },
+      body: JSON.stringify({ invitationId: conviteId }),
+    });
+    expect(aceite.status).toBe(200);
+    await ativar(c, orgId);
+    const eu = await json(call("/eu", {}, c));
+    expect(eu).toMatchObject({ usuario: { nome: "Rafael Lima", papel: "member" }, escritorio: { nome: "Souza & Mendes Advocacia", pessoas: 2 } });
   });
 
   test("cadastra cliente e processo; número CNJ errado é recusado", async () => {
@@ -115,12 +156,12 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
     processoId = ((await r.json()) as { id: string }).id;
     const ficha = await json(call(`/processos/${processoId}`));
     expect(ficha).toMatchObject({ titulo: "Marina Duarte × Seguradora Alfa S.A.", cnj: "5004321-25.2026.8.24.0038", tribunal: "TJSC", responsavel: { apelido: "Beatriz" } });
-    expect(pedidos).toContainEqual({ nome: "processo.datajud", organizationId: "org_souza", processoId });
+    expect(pedidos).toContainEqual({ nome: "processo.datajud", organizationId: orgId, processoId });
   });
 
   test("publicação do DJEN entra vinculada pelo número e publicada no dia útil seguinte", async () => {
-    const novas = await withTenant(t.db, "org_souza", (tx) =>
-      gravarComunicacoes(tx, "org_souza", "45678/SC", [
+    const novas = await withTenant(t.db, orgId, (tx) =>
+      gravarComunicacoes(tx, orgId, "45678/SC", [
         {
           idExterno: "412345678",
           disponibilizadaEm: "2026-10-28",
@@ -140,7 +181,7 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
     expect(novas).toHaveLength(1);
     publicacaoId = novas[0]!;
     // A mesma comunicação de novo não entra.
-    const repetida = await withTenant(t.db, "org_souza", (tx) => gravarComunicacoes(tx, "org_souza", null, [{ idExterno: "412345678", disponibilizadaEm: "2026-10-28", tribunal: "TJSC", orgao: null, tipoComunicacao: null, tipoDocumento: null, classe: null, cnj: null, texto: "x", link: null, destinatarios: [], advogados: [] }]));
+    const repetida = await withTenant(t.db, orgId, (tx) => gravarComunicacoes(tx, orgId, null, [{ idExterno: "412345678", disponibilizadaEm: "2026-10-28", tribunal: "TJSC", orgao: null, tipoComunicacao: null, tipoDocumento: null, classe: null, cnj: null, texto: "x", link: null, destinatarios: [], advogados: [] }]));
     expect(repetida).toEqual([]);
     const pub = await json(call(`/publicacoes/${publicacaoId}`));
     expect(pub).toMatchObject({ publicadaEm: "2026-10-29", processo: { id: processoId }, situacao: "nova", sugestao: null });
@@ -158,7 +199,7 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
       assunto: "laudo pericial",
       recusa: null,
     };
-    const a = await sugerirPrazoDaPublicacao({ db: t.db, ia }, "org_souza", publicacaoId);
+    const a = await sugerirPrazoDaPublicacao({ db: t.db, ia }, orgId, publicacaoId);
     expect(a?.situacao).toBe("pronto");
     expect(a?.conteudo).toMatchObject({ contagemCalculada: { inicio: "2026-10-30", fim: "2026-11-23" }, responsavelId: userId });
 
