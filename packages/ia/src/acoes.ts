@@ -84,6 +84,7 @@ export const sugestaoDePrazoSchema = z.object({
     .nullable()
     .describe("Se a publicação designa audiência, os dados dela. Nulo caso contrário."),
   resumo: z.string().describe('Uma linha sobre o que a publicação diz, ex.: "Intimação para falar do laudo pericial do evento 87."'),
+  assunto: z.string().describe('O assunto em duas ou três palavras, em minúsculas, ex.: "laudo pericial", "sentença", "audiência designada", "cumpra-se".'),
   recusa,
 });
 export type SugestaoDePrazo = z.infer<typeof sugestaoDePrazoSchema>;

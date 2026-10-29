@@ -1,0 +1,58 @@
+import { z } from "zod";
+
+const vazioIndefinido = (v: unknown) => (v === "" ? undefined : v);
+
+const schema = z.object({
+  PORT: z.coerce.number().int().positive().default(8787),
+  /** Interface de escuta. No servidor, 127.0.0.1: a internet entra só pelo túnel. */
+  HOST: z.string().default("0.0.0.0"),
+  /** App compilado (apps/web/dist). Preenchido, a API serve as telas na mesma origem. */
+  WEB_DIST: z.string().default(""),
+  /** Usuário da aplicação, membro de `app_user` (sujeito a RLS). */
+  DATABASE_URL: z.string().url(),
+  BETTER_AUTH_SECRET: z.string().min(32),
+  BETTER_AUTH_URL: z.string().url(),
+  /** Origem das telas, para CORS e cookies. */
+  WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
+  /** openrouter-gateway (compatível com a API da OpenAI), projeto "decreta". */
+  LLM_BASE_URL: z.string().url().default("http://127.0.0.1:8799/v1"),
+  /** Chave gw_ do projeto no gateway. Vazia: as ações de IA respondem "IA não configurada". */
+  LLM_API_KEY: z.string().default(""),
+  /** Aliases do gateway. O modelo de verdade por trás de cada um é configurado lá. */
+  MODELO_JURIDICO: z.string().default("juridico"),
+  MODELO_AUTOS: z.string().default("autos"),
+  MODELO_DOCUMENTOS: z.string().default("documentos"),
+  MODELO_PDF: z.string().default("pdf"),
+  MODELO_VISION: z.string().default("vision"),
+  MODELO_TRANSCRICAO: z.string().default("openai/whisper-1"),
+  /** Chave pública da API do DataJud (wiki do DataJud). Vazia: os andamentos não são atualizados. */
+  DATAJUD_API_KEY: z.string().default(""),
+  /** wameow: o número do Decreta que manda o resumo da manhã. Vazio: o resumo não sai. */
+  WAMEOW_URL: z.string().default(""),
+  WAMEOW_TOKEN: z.string().default(""),
+  /** Onde ficam os arquivos: pasta local (dev, VPS com volume) ou R2. */
+  ARQUIVOS: z.enum(["disco", "r2"]).default("disco"),
+  ARQUIVOS_DIR: z.string().default("./data/arquivos"),
+  /** Teto de cada arquivo enviado, em MB. */
+  ARQUIVO_MAX_MB: z.coerce.number().positive().default(40),
+  R2_ENDPOINT: z.preprocess(vazioIndefinido, z.string().url().optional()),
+  R2_BUCKET: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  /** Projeto da API no Sentry. Vazio desliga o envio de erros. */
+  SENTRY_DSN: z.string().default(""),
+  /** Resend (e-mail transacional). Vazio: os e-mails só vão para o log e a tela mostra o link para copiar. */
+  RESEND_API_KEY: z.string().default(""),
+  EMAIL_FROM: z.string().default("Decreta <nao-responda@decreta.app>"),
+});
+
+export type Env = z.infer<typeof schema>;
+
+export function readEnv(source: Record<string, string | undefined> = process.env): Env {
+  const parsed = schema.safeParse(source);
+  if (!parsed.success) {
+    const campos = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n  ");
+    throw new Error(`Variáveis de ambiente inválidas:\n  ${campos}`);
+  }
+  return parsed.data;
+}

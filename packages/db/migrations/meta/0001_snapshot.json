@@ -1,6 +1,6 @@
 {
-  "id": "90aee0f8-d678-48de-89dc-7c3c80270297",
-  "prevId": "250bb2bb-55e5-4383-98d1-14f0f5719f83",
+  "id": "ac19b056-8bd3-4216-a930-94d4248f7af2",
+  "prevId": "607df54c-7a9f-40bb-9a00-3c9642624e30",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2018,6 +2018,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "paginas": {
+          "name": "paginas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "chave": {
           "name": "chave",
           "type": "text",
@@ -2588,6 +2594,13 @@
         "descricao": {
           "name": "descricao",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "autor": {
+          "name": "autor",
+          "type": "autor_movimentacao",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -3612,6 +3625,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "sistema": {
+          "name": "sistema",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fase": {
+          "name": "fase",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "situacao": {
           "name": "situacao",
           "type": "situacao_processo",
@@ -4406,6 +4431,15 @@
         "audiencia",
         "cliente",
         "atendimento"
+      ]
+    },
+    "public.autor_movimentacao": {
+      "name": "autor_movimentacao",
+      "schema": "public",
+      "values": [
+        "juizo",
+        "partes",
+        "cartorio"
       ]
     },
     "public.canal_atendimento": {

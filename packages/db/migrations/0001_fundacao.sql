@@ -1,4 +1,5 @@
 CREATE TYPE "public"."alvo_ia" AS ENUM('processo', 'prazo', 'publicacao', 'audiencia', 'cliente', 'atendimento');--> statement-breakpoint
+CREATE TYPE "public"."autor_movimentacao" AS ENUM('juizo', 'partes', 'cartorio');--> statement-breakpoint
 CREATE TYPE "public"."canal_atendimento" AS ENUM('presencial', 'telefone', 'whatsapp', 'video', 'email');--> statement-breakpoint
 CREATE TYPE "public"."contagem" AS ENUM('uteis', 'corridos');--> statement-breakpoint
 CREATE TYPE "public"."etapa_alvara" AS ENUM('novo', 'aguardando_saque', 'sacado', 'repassado', 'finalizado');--> statement-breakpoint
@@ -230,6 +231,7 @@ CREATE TABLE "documentos" (
 	"nome" text NOT NULL,
 	"mime" text NOT NULL,
 	"tamanho" integer NOT NULL,
+	"paginas" integer,
 	"chave" text NOT NULL,
 	"texto" text,
 	"origem" "origem_documento" DEFAULT 'upload' NOT NULL,
@@ -284,6 +286,7 @@ CREATE TABLE "movimentacoes" (
 	"evento" integer,
 	"titulo" text NOT NULL,
 	"descricao" text,
+	"autor" "autor_movimentacao",
 	"fonte" "fonte" DEFAULT 'manual' NOT NULL,
 	"codigo" integer,
 	"chave" text NOT NULL,
@@ -378,6 +381,8 @@ CREATE TABLE "processos" (
 	"orgao" text,
 	"comarca" text,
 	"valor_causa" numeric(14, 2),
+	"sistema" text,
+	"fase" text,
 	"situacao" "situacao_processo" DEFAULT 'ativo' NOT NULL,
 	"cliente_id" uuid,
 	"polo_cliente" "polo" DEFAULT 'ativo' NOT NULL,

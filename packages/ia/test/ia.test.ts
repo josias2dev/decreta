@@ -55,6 +55,7 @@ describe("sugestão de prazo", () => {
           fundamento: "art. 477, § 1º, CPC",
           audiencia: null,
           resumo: "Intimação para falar do laudo do evento 87.",
+          assunto: "laudo pericial",
           recusa: null,
         },
       },

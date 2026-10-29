@@ -80,3 +80,11 @@ describe("datas", () => {
     expect(diaPorExtensoCurto("2025-12-01", "2026-10-29")).toBe("1 dez 2025");
   });
 });
+
+describe("fuso", () => {
+  test("instante local e hora", async () => {
+    const { instanteLocal, horaLocal } = await import("../src/index.ts");
+    expect(instanteLocal("2026-10-29", "14:30").toISOString()).toBe("2026-10-29T17:30:00.000Z");
+    expect(horaLocal("2026-10-29T17:30:00.000Z")).toBe("14:30");
+  });
+});

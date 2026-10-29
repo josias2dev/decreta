@@ -16,9 +16,16 @@ export const MIMES_COM_TEXTO = new Set([
 export const TETO_DO_TEXTO = 400_000;
 
 export async function extrairTexto(bytes: Uint8Array, mime: string): Promise<string | null> {
+  return (await lerDocumento(bytes, mime)).texto;
+}
+
+/** Texto e número de páginas (só PDF diz as páginas). */
+export async function lerDocumento(bytes: Uint8Array, mime: string): Promise<{ texto: string | null; paginas: number | null }> {
   let texto: string | null = null;
+  let paginas: number | null = null;
   if (mime === "application/pdf") {
     const pdf = await getDocumentProxy(bytes.slice());
+    paginas = pdf.numPages;
     const r = await extractText(pdf, { mergePages: true });
     texto = Array.isArray(r.text) ? r.text.join("\n") : r.text;
   } else if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
@@ -27,7 +34,7 @@ export async function extrairTexto(bytes: Uint8Array, mime: string): Promise<str
   } else if (mime === "text/plain") {
     texto = new TextDecoder().decode(bytes);
   }
-  if (texto === null) return null;
+  if (texto === null) return { texto: null, paginas };
   const limpo = texto.replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-  return limpo.slice(0, TETO_DO_TEXTO);
+  return { texto: limpo.slice(0, TETO_DO_TEXTO), paginas };
 }

@@ -1,0 +1,130 @@
+import { chaveDoDocumento, lerDocumento, MIMES_COM_TEXTO } from "@decreta/documentos";
+import { clientes, documentos, processos } from "@decreta/db";
+import { and, desc, eq, ilike, type SQL } from "drizzle-orm";
+import type { Hono } from "hono";
+import { registrar } from "../auditoria.ts";
+import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
+import { falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+
+/** O que a equipe anexa: autos, documentos do cliente, áudio de atendimento, logo do timbre. */
+const MIMES_ACEITOS = new Set([
+  ...MIMES_COM_TEXTO,
+  "application/msword",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "audio/ogg",
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/webm",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
+export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
+  const { db } = deps;
+
+  app.get("/documentos", async (c) => {
+    const processoId = c.req.query("processo");
+    const clienteId = c.req.query("cliente");
+    const busca = (c.req.query("busca") ?? "").trim();
+    return tenant(c, deps, async (tx) => {
+      const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
+      const onde: SQL[] = [];
+      if (processoId) onde.push(eq(documentos.processoId, processoId));
+      if (clienteId) onde.push(eq(documentos.clienteId, clienteId));
+      if (busca) onde.push(ilike(documentos.nome, `%${busca.replace(/[%_]/g, "")}%`));
+      const linhas = await tx
+        .select({ d: documentos, processo: processos.titulo, cliente: clientes.nome })
+        .from(documentos)
+        .leftJoin(processos, eq(processos.id, documentos.processoId))
+        .leftJoin(clientes, eq(clientes.id, documentos.clienteId))
+        .where(onde.length ? and(...onde) : undefined)
+        .orderBy(desc(documentos.createdAt))
+        .limit(200);
+      return c.json({
+        itens: linhas.map(({ d, processo, cliente }) => ({
+          id: d.id,
+          nome: d.nome,
+          mime: d.mime,
+          tamanho: d.tamanho,
+          paginas: d.paginas,
+          evento: d.evento,
+          origem: d.origem,
+          lido: d.texto !== null && d.texto.length > 0,
+          semTexto: MIMES_COM_TEXTO.has(d.mime) && !d.texto,
+          em: d.createdAt.toISOString(),
+          processo: d.processoId ? { id: d.processoId, titulo: processo } : null,
+          cliente: d.clienteId ? { id: d.clienteId, nome: cliente } : null,
+          enviadoPor: resumir(pessoas, d.enviadoPor),
+        })),
+      });
+    });
+  });
+
+  app.post("/documentos", async (c) => {
+    const form = await c.req.formData().catch(() => null);
+    const arquivo = form?.get("arquivo");
+    if (!(arquivo instanceof File)) falha(400, "sem_arquivo");
+    if (arquivo.size > deps.maxArquivoBytes) falha(422, "arquivo_grande", `O arquivo passa de ${Math.round(deps.maxArquivoBytes / 1e6)} MB.`);
+    const mime = arquivo.type || "application/octet-stream";
+    if (!MIMES_ACEITOS.has(mime)) falha(422, "tipo_nao_aceito", "Envie PDF, Word, imagem, planilha ou áudio.");
+    const processoId = (form!.get("processoId") as string | null) || null;
+    const clienteId = (form!.get("clienteId") as string | null) || null;
+    const eventoBruto = form!.get("evento");
+    const evento = typeof eventoBruto === "string" && /^\d+$/.test(eventoBruto) ? Number(eventoBruto) : null;
+    const bytes = new Uint8Array(await arquivo.arrayBuffer());
+    // PDF quebrado ou protegido não impede de guardar: fica sem texto e a tela avisa.
+    const lido = await lerDocumento(bytes, mime).catch(() => ({ texto: null, paginas: null }));
+    const docId = crypto.randomUUID();
+    const chave = chaveDoDocumento(c.get("orgId"), docId);
+    await tenant(c, deps, async (tx) => {
+      if (processoId && !(await tx.select({ id: processos.id }).from(processos).where(eq(processos.id, processoId))).length) falha(404, "processo_nao_encontrado");
+      if (clienteId && !(await tx.select({ id: clientes.id }).from(clientes).where(eq(clientes.id, clienteId))).length) falha(404, "cliente_nao_encontrado");
+      await deps.arquivos.put(chave, bytes, mime);
+      await tx.insert(documentos).values({
+        id: docId,
+        organizationId: c.get("orgId"),
+        processoId,
+        clienteId,
+        nome: arquivo.name.slice(0, 250) || "documento",
+        mime,
+        tamanho: arquivo.size,
+        paginas: lido.paginas,
+        chave,
+        texto: lido.texto,
+        evento,
+        enviadoPor: c.get("userId"),
+      });
+    });
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "documento.enviado", detalhes: { documentoId: docId, nome: arquivo.name }, ip: ip(c) }, deps.log);
+    return c.json({ id: docId, lido: !!lido.texto, paginas: lido.paginas }, 201);
+  });
+
+  app.get("/documentos/:id/arquivo", async (c) => {
+    const docId = id(c);
+    const [d] = await tenant(c, deps, (tx) => tx.select().from(documentos).where(eq(documentos.id, docId)));
+    if (!d) falha(404, "nao_encontrado");
+    const bytes = await deps.arquivos.read(d.chave);
+    const inline = c.req.query("ver") === "1" && (d.mime === "application/pdf" || d.mime.startsWith("image/"));
+    return new Response(bytes, {
+      headers: {
+        "content-type": d.mime,
+        "content-disposition": `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(d.nome)}`,
+        "cache-control": "private, no-store",
+        "x-content-type-options": "nosniff",
+      },
+    });
+  });
+
+  app.delete("/documentos/:id", async (c) => {
+    const docId = id(c);
+    const chave = await tenant(c, deps, async (tx) => {
+      const [d] = await tx.delete(documentos).where(eq(documentos.id, docId)).returning({ chave: documentos.chave });
+      return d?.chave ?? null;
+    });
+    if (!chave) falha(404, "nao_encontrado");
+    await deps.arquivos.delete(chave).catch(() => {});
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "documento.apagado", detalhes: { documentoId: docId }, ip: ip(c) }, deps.log);
+    return c.json({ ok: true });
+  });
+}

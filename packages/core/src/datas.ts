@@ -88,3 +88,24 @@ export function diaPorExtenso(dia: Dia): string {
 export function nomeDoDiaDaSemana(dia: Dia): string {
   return SEMANA[diaDaSemana(dia)]!;
 }
+
+/** Deslocamento do fuso no instante, em minutos (São Paulo: -180). */
+function deslocamento(timeZone: string, instante: Date): number {
+  const nome = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" }).formatToParts(instante).find((p) => p.type === "timeZoneName")?.value ?? "GMT";
+  const m = /GMT([+-])(\d{2}):?(\d{2})?/.exec(nome);
+  if (!m) return 0;
+  return (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] ?? 0));
+}
+
+/** O instante de `dia` às `hora` ("14:30") no fuso do escritório. */
+export function instanteLocal(dia: Dia, hora = "00:00", timeZone = "America/Sao_Paulo"): Date {
+  const [h, mi] = hora.split(":").map(Number);
+  const utc = Date.UTC(Number(dia.slice(0, 4)), Number(dia.slice(5, 7)) - 1, Number(dia.slice(8, 10)), h ?? 0, mi ?? 0);
+  const off = deslocamento(timeZone, new Date(utc));
+  return new Date(utc - off * 60_000);
+}
+
+/** "14:30" no fuso do escritório. */
+export function horaLocal(instante: Date | string, timeZone = "America/Sao_Paulo"): string {
+  return new Intl.DateTimeFormat("pt-BR", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(typeof instante === "string" ? new Date(instante) : instante);
+}

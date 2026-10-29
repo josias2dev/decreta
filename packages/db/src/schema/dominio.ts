@@ -194,6 +194,10 @@ export const processos = pgTable(
     orgao: text("orgao"),
     comarca: text("comarca"),
     valorCausa: numeric("valor_causa", { precision: 14, scale: 2 }),
+    /** Sistema do tribunal ("eproc", "PJe"), para o link "Abrir no ...". */
+    sistema: text("sistema"),
+    /** "Instrução · laudo juntado": escrito pela equipe. */
+    fase: text("fase"),
     situacao: situacaoProcesso("situacao").notNull().default("ativo"),
     clienteId: uuid("cliente_id").references(() => clientes.id, { onDelete: "set null" }),
     /** De que lado o cliente está. */
@@ -237,6 +241,7 @@ export const partes = pgTable(
 ).enableRLS();
 
 export const fonte = pgEnum("fonte", ["djen", "datajud", "manual"]);
+export const autorMovimentacao = pgEnum("autor_movimentacao", ["juizo", "partes", "cartorio"]);
 
 export const movimentacoes = pgTable(
   "movimentacoes",
@@ -251,6 +256,8 @@ export const movimentacoes = pgTable(
     evento: integer("evento"),
     titulo: text("titulo").notNull(),
     descricao: text("descricao"),
+    /** Quem praticou o ato: o juízo (decisão, despacho, intimação) ou as partes (petições). */
+    autor: autorMovimentacao("autor"),
     fonte: fonte("fonte").notNull().default("manual"),
     /** Código da tabela processual unificada do CNJ. */
     codigo: integer("codigo"),
@@ -436,6 +443,7 @@ export const documentos = pgTable(
     nome: text("nome").notNull(),
     mime: text("mime").notNull(),
     tamanho: integer("tamanho").notNull(),
+    paginas: integer("paginas"),
     /** Onde o arquivo está no armazenamento (disco ou R2). */
     chave: text("chave").notNull(),
     /** Texto extraído (PDF, DOCX), para a IA e a busca. */

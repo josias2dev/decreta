@@ -1,0 +1,172 @@
+import { cnpjValido, cpfValido, formatarDocumento, formatarTelefone, telefoneWhatsapp } from "@decreta/core";
+import { atendimentos, clientes, documentos, processos } from "@decreta/db";
+import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import type { Hono } from "hono";
+import { z } from "zod";
+import { registrar } from "../auditoria.ts";
+import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
+import { corpo, ehSocio, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+
+const POR_PAGINA = 50;
+
+const dadosDoCliente = z.object({
+  nome: z.string().trim().min(2).max(300),
+  tipo: z.enum(["pf", "pj"]).default("pf"),
+  documento: z.string().max(20).nullable().optional(),
+  telefone: z.string().max(30).nullable().optional(),
+  email: z.string().email().max(200).nullable().optional().or(z.literal("").transform(() => null)),
+  endereco: z.string().max(500).nullable().optional(),
+  observacoes: z.string().max(5000).nullable().optional(),
+});
+
+function documentoLimpo(tipo: "pf" | "pj", documento: string | null | undefined): string | null {
+  const d = (documento ?? "").replace(/\D/g, "");
+  if (!d) return null;
+  if (tipo === "pf" ? !cpfValido(d) : !cnpjValido(d)) falha(422, "documento_invalido", tipo === "pf" ? "Confira o CPF." : "Confira o CNPJ.");
+  return d;
+}
+
+export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
+  const { db } = deps;
+
+  app.get("/clientes", async (c) => {
+    const busca = (c.req.query("busca") ?? "").trim();
+    const pagina = Math.max(1, Number(c.req.query("pagina") ?? 1) || 1);
+    return tenant(c, deps, async (tx) => {
+      const termo = `%${busca.replace(/[%_]/g, "")}%`;
+      const digitos = busca.replace(/\D/g, "");
+      const filtro = busca
+        ? or(
+            ilike(clientes.nome, termo),
+            ilike(clientes.email, termo),
+            digitos.length >= 3 ? or(ilike(clientes.documento, `%${digitos}%`), sql`regexp_replace(coalesce(${clientes.telefone}, ''), '\\D', '', 'g') like ${`%${digitos}%`}`) : sql`false`,
+          )
+        : undefined;
+      const [{ total } = { total: 0 }] = await tx.select({ total: sql<number>`count(*)::int` }).from(clientes).where(filtro);
+      const linhas = await tx
+        .select({
+          c: clientes,
+          processos: sql<number>`(select count(*)::int from ${processos} p where p.cliente_id = ${clientes.id})`,
+          ultimoAtendimento: sql<string | null>`(select max(a.em)::text from ${atendimentos} a where a.cliente_id = ${clientes.id})`,
+        })
+        .from(clientes)
+        .where(filtro)
+        .orderBy(sql`lower(${clientes.nome})`)
+        .limit(POR_PAGINA)
+        .offset((pagina - 1) * POR_PAGINA);
+      return c.json({
+        total,
+        pagina,
+        porPagina: POR_PAGINA,
+        itens: linhas.map(({ c: cl, processos: n, ultimoAtendimento }) => ({
+          id: cl.id,
+          nome: cl.nome,
+          tipo: cl.tipo,
+          documento: cl.documento ? formatarDocumento(cl.documento) : null,
+          telefone: cl.telefone ? formatarTelefone(cl.telefone) : null,
+          whatsapp: cl.telefone ? telefoneWhatsapp(cl.telefone) : null,
+          email: cl.email,
+          processos: n,
+          ultimoAtendimento: ultimoAtendimento ? new Date(ultimoAtendimento).toISOString() : null,
+        })),
+      });
+    });
+  });
+
+  app.post("/clientes", async (c) => {
+    const b = await corpo(c, dadosDoCliente);
+    const novo = await tenant(c, deps, async (tx) => {
+      const documento = documentoLimpo(b.tipo, b.documento);
+      if (documento && (await tx.select({ id: clientes.id }).from(clientes).where(eq(clientes.documento, documento))).length) falha(409, "cliente_existe", "Já existe um cliente com este documento.");
+      const [cl] = await tx.insert(clientes).values({ organizationId: c.get("orgId"), ...b, documento }).returning({ id: clientes.id });
+      return cl!;
+    });
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "cliente.criado", detalhes: { clienteId: novo.id }, ip: ip(c) }, deps.log);
+    return c.json(novo, 201);
+  });
+
+  app.get("/clientes/:id", async (c) => {
+    const clienteId = id(c);
+    return tenant(c, deps, async (tx) => {
+      const [cl] = await tx.select().from(clientes).where(eq(clientes.id, clienteId));
+      if (!cl) falha(404, "nao_encontrado");
+      const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
+      const [ps, ats, docs] = await Promise.all([
+        tx.select().from(processos).where(eq(processos.clienteId, clienteId)).orderBy(desc(processos.ultimaMovimentacaoEm)),
+        tx.select().from(atendimentos).where(eq(atendimentos.clienteId, clienteId)).orderBy(desc(atendimentos.em)),
+        tx.select({ id: documentos.id, nome: documentos.nome, mime: documentos.mime, tamanho: documentos.tamanho, em: documentos.createdAt, processoId: documentos.processoId }).from(documentos).where(eq(documentos.clienteId, clienteId)).orderBy(desc(documentos.createdAt)),
+      ]);
+      const linhaDoTempo = [
+        ...ats.map((a) => ({ em: a.em.toISOString(), titulo: `Atendimento · ${a.canal}`, detalhe: a.resumo.slice(0, 200), tipo: "atendimento" as const })),
+        ...ps.map((p) => ({ em: p.createdAt.toISOString(), titulo: "Processo cadastrado", detalhe: p.titulo, tipo: "processo" as const })),
+        ...docs.map((d) => ({ em: d.em.toISOString(), titulo: "Documento anexado", detalhe: d.nome, tipo: "documento" as const })),
+      ].sort((a, b) => b.em.localeCompare(a.em));
+      return c.json({
+        id: cl.id,
+        nome: cl.nome,
+        tipo: cl.tipo,
+        documento: cl.documento ? formatarDocumento(cl.documento) : null,
+        telefone: cl.telefone ? formatarTelefone(cl.telefone) : null,
+        whatsapp: cl.telefone ? telefoneWhatsapp(cl.telefone) : null,
+        email: cl.email,
+        endereco: cl.endereco,
+        observacoes: cl.observacoes,
+        criadoEm: cl.createdAt.toISOString(),
+        processos: ps.map((p) => ({ id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, situacao: p.situacao, responsavel: resumir(pessoas, p.responsavelId) })),
+        atendimentos: ats.map((a) => ({ id: a.id, em: a.em.toISOString(), canal: a.canal, resumo: a.resumo, autor: resumir(pessoas, a.autorId), processoId: a.processoId })),
+        documentos: docs.map((d) => ({ ...d, em: d.em.toISOString() })),
+        linhaDoTempo,
+      });
+    });
+  });
+
+  app.put("/clientes/:id", async (c) => {
+    const clienteId = id(c);
+    const b = await corpo(c, dadosDoCliente.partial());
+    await tenant(c, deps, async (tx) => {
+      const [cl] = await tx.select({ tipo: clientes.tipo }).from(clientes).where(eq(clientes.id, clienteId));
+      if (!cl) falha(404, "nao_encontrado");
+      const valores: Partial<typeof clientes.$inferInsert> = Object.fromEntries(Object.entries(b).filter(([, v]) => v !== undefined));
+      if (b.documento !== undefined) valores.documento = documentoLimpo(b.tipo ?? cl.tipo, b.documento);
+      await tx.update(clientes).set(valores).where(eq(clientes.id, clienteId));
+    });
+    return c.json({ ok: true });
+  });
+
+  /** LGPD: apagar o cliente e o que é só dele (atendimentos, documentos). Os processos ficam, sem o vínculo. */
+  app.delete("/clientes/:id", async (c) => {
+    if (!ehSocio(c.get("papel"))) falha(403, "so_socios", "Só os sócios apagam clientes.");
+    const clienteId = id(c);
+    await tenant(c, deps, async (tx) => {
+      const docs = await tx.select({ chave: documentos.chave }).from(documentos).where(and(eq(documentos.clienteId, clienteId), sql`${documentos.processoId} is null`));
+      await tx.delete(clientes).where(eq(clientes.id, clienteId));
+      for (const d of docs) await deps.arquivos.delete(d.chave).catch(() => {});
+    });
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "cliente.apagado", detalhes: { clienteId }, ip: ip(c) }, deps.log);
+    return c.json({ ok: true });
+  });
+
+  app.post("/clientes/:id/atendimentos", async (c) => {
+    const clienteId = id(c);
+    const b = await corpo(
+      c,
+      z.object({
+        em: z.string().datetime({ offset: true }).optional(),
+        canal: z.enum(["presencial", "telefone", "whatsapp", "video", "email"]).default("presencial"),
+        resumo: z.string().trim().min(3).max(20_000),
+        processoId: z.string().uuid().nullable().optional(),
+      }),
+    );
+    const r = await tenant(c, deps, async (tx) => {
+      const [cl] = await tx.select({ id: clientes.id }).from(clientes).where(eq(clientes.id, clienteId));
+      if (!cl) falha(404, "nao_encontrado");
+      return (
+        await tx
+          .insert(atendimentos)
+          .values({ organizationId: c.get("orgId"), clienteId, em: b.em ? new Date(b.em) : new Date(), canal: b.canal, resumo: b.resumo, processoId: b.processoId ?? null, autorId: c.get("userId") })
+          .returning({ id: atendimentos.id })
+      )[0];
+    });
+    return c.json(r, 201);
+  });
+}
