@@ -4,6 +4,8 @@
  *   06:40, 12:40, 18:40 (dias úteis) ── capturar-djen ──► publicação nova ──► sugerir-prazo
  *   05:00 (todo dia) ── atualizar-datajud ──► processo.datajud (no ritmo que o DataJud aguenta)
  *   06:00 às 10:45, de 15 em 15 min ── resumo-da-manha (cada escritório na hora dele)
+ *   publicação nova que é sentença ou acórdão ── ler-sentenca
+ *   foto ou PDF escaneado enviado ── ler-documento
  *
  * A captura de um escritório roda uma por vez; a sugestão da IA, duas por vez
  * por escritório. Repetir uma rodada é inócuo: publicação e movimentação
@@ -11,6 +13,7 @@
  */
 import { diaDaSemana, hojeEm } from "@decreta/core";
 import { avisosEnviados, escritorios, organization, withTenant, type Database } from "@decreta/db";
+import type { Armazenamento } from "@decreta/documentos";
 import type { Ia } from "@decreta/ia";
 import { and, eq, ne } from "drizzle-orm";
 import { eventType, Inngest, staticSchema } from "inngest";
@@ -20,7 +23,9 @@ import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./serv
 import { atualizarDoDataJud, capturarDjen, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
+import { lerDocumentoComIa } from "./servicos/leitura.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
+import { lerSentencaDaPublicacao } from "./servicos/sentencas.ts";
 import { silentReporter, type Reporter } from "./sentry.ts";
 
 export const inngest = new Inngest({ id: "decreta" });
@@ -30,6 +35,7 @@ export const capturaPedida = eventType("decreta/captura.djen", { schema: staticS
 export const publicacaoNova = eventType("decreta/publicacao.nova", { schema: staticSchema<Org & { publicacaoId: string }>() });
 export const datajudDoEscritorio = eventType("decreta/datajud.escritorio", { schema: staticSchema<Org>() });
 export const processoDataJud = eventType("decreta/processo.datajud", { schema: staticSchema<Org & { processoId: string }>() });
+export const documentoParaLer = eventType("decreta/documento.ler", { schema: staticSchema<Org & { documentoId: string }>() });
 
 /** O pedido de uma rota vira o evento certo. */
 export function eventoDoPedido(p: Pedido) {
@@ -40,6 +46,8 @@ export function eventoDoPedido(p: Pedido) {
       return capturaPedida.create({ organizationId: p.organizationId });
     case "processo.datajud":
       return processoDataJud.create({ organizationId: p.organizationId, processoId: p.processoId });
+    case "documento.ler":
+      return documentoParaLer.create({ organizationId: p.organizationId, documentoId: p.documentoId });
   }
 }
 
@@ -47,6 +55,7 @@ export interface DepsDasRotinas {
   db: Database;
   ia: Ia | null;
   captura: DepsDaCaptura;
+  arquivos: Armazenamento;
   wameow?: Wameow;
   telas: string;
   log: (msg: string, extra?: Record<string, unknown>) => void;
@@ -111,6 +120,39 @@ export function createFunctions(deps: DepsDasRotinas) {
           throw err;
         }
       }),
+  );
+
+  const sentenca = inngest.createFunction(
+    {
+      id: "ler-sentenca",
+      triggers: [publicacaoNova],
+      concurrency: { limit: 2, key: "event.data.organizationId" },
+      retries: 2,
+      onFailure: async ({ event, error }) => reporter.error(error, { funcao: "ler-sentenca", ...(event.data.event.data as Org) }),
+    },
+    async ({ event, step }) =>
+      step.run("ler", async () => {
+        try {
+          // Só lê o que parece sentença ou acórdão; o resto passa direto.
+          const a = await lerSentencaDaPublicacao(deps, event.data.organizationId, event.data.publicacaoId);
+          return a?.situacao ?? "nao-e-decisao";
+        } catch (err) {
+          if (err instanceof IaDesligada) return "ia-desligada";
+          throw err;
+        }
+      }),
+  );
+
+  const lerDocumento = inngest.createFunction(
+    {
+      id: "ler-documento",
+      triggers: [documentoParaLer],
+      concurrency: { limit: 2, key: "event.data.organizationId" },
+      // A falha fica gravada no documento ("Não deu para ler"); a pessoa pede de novo pela tela.
+      retries: 1,
+      onFailure: async ({ event, error }) => reporter.error(error, { funcao: "ler-documento", ...(event.data.event.data as Org) }),
+    },
+    async ({ event, step }) => step.run("ler", () => lerDocumentoComIa({ db, ia: deps.ia, arquivos: deps.arquivos, log }, event.data.organizationId, event.data.documentoId)),
   );
 
   const agendarDataJud = inngest.createFunction(
@@ -198,5 +240,5 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [agendarCaptura, capturar, sugerir, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn];
+  return [agendarCaptura, capturar, sugerir, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn];
 }

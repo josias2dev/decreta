@@ -408,6 +408,40 @@ export const audiencias = pgTable(
   (t) => [index("audiencias_em_idx").on(t.organizationId, t.em), index("audiencias_processo_idx").on(t.organizationId, t.processoId), tenantPolicy("audiencias")],
 ).enableRLS();
 
+/** Como o juízo decidiu, do ponto de vista do nosso cliente. */
+export const resultadoDecisao = pgEnum("resultado_decisao", ["procedente", "parcialmente_procedente", "improcedente", "sem_merito", "acordo_homologado", "outro"]);
+export const tipoDecisao = pgEnum("tipo_decisao", ["sentenca", "acordao"]);
+
+/**
+ * Sentença ou acórdão do processo, com o resultado confirmado por uma pessoa.
+ * A IA lê a decisão e sugere; aqui fica só o que alguém confirmou.
+ */
+export const resultados = pgTable(
+  "resultados",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    processoId: uuid("processo_id")
+      .notNull()
+      .references(() => processos.id, { onDelete: "cascade" }),
+    publicacaoId: uuid("publicacao_id").references(() => publicacoes.id, { onDelete: "set null" }),
+    tipo: tipoDecisao("tipo").notNull().default("sentenca"),
+    resultado: resultadoDecisao("resultado").notNull(),
+    /** Data da publicação da decisão. */
+    decididoEm: date("decidido_em", { mode: "string" }).notNull(),
+    /** Uma ou duas frases: o que ganhamos e o que perdemos. */
+    resumo: text("resumo"),
+    confirmadoPor: pessoa("confirmado_por"),
+    confirmadoEm: timestamp("confirmado_em", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("resultados_publicacao_uq").on(t.organizationId, t.publicacaoId),
+    index("resultados_processo_idx").on(t.organizationId, t.processoId, t.decididoEm),
+    tenantPolicy("resultados"),
+  ],
+).enableRLS();
+
 export const tarefas = pgTable(
   "tarefas",
   {
@@ -433,6 +467,9 @@ export const tarefas = pgTable(
 
 export const origemDocumento = pgEnum("origem_documento", ["upload", "peca", "captura"]);
 
+/** Leitura pela IA de foto ou PDF escaneado. Vazio: o texto saiu direto do arquivo, ou o arquivo não tem texto para ler. */
+export const leituraDocumento = pgEnum("leitura_documento", ["pendente", "pronta", "falhou"]);
+
 export const documentos = pgTable(
   "documentos",
   {
@@ -440,6 +477,8 @@ export const documentos = pgTable(
     organizationId: organizationId(),
     processoId: uuid("processo_id").references(() => processos.id, { onDelete: "cascade" }),
     clienteId: uuid("cliente_id").references(() => clientes.id, { onDelete: "cascade" }),
+    /** Pasta de quem ainda está na triagem; ao virar cliente, o documento passa para o cliente. */
+    negocioId: uuid("negocio_id").references((): AnyPgColumn => negocios.id, { onDelete: "cascade" }),
     nome: text("nome").notNull(),
     mime: text("mime").notNull(),
     tamanho: integer("tamanho").notNull(),
@@ -448,6 +487,7 @@ export const documentos = pgTable(
     chave: text("chave").notNull(),
     /** Texto extraído (PDF, DOCX), para a IA e a busca. */
     texto: text("texto"),
+    leitura: leituraDocumento("leitura"),
     origem: origemDocumento("origem").notNull().default("upload"),
     evento: integer("evento"),
     enviadoPor: pessoa("enviado_por"),
@@ -456,6 +496,7 @@ export const documentos = pgTable(
   (t) => [
     index("documentos_processo_idx").on(t.organizationId, t.processoId),
     index("documentos_cliente_idx").on(t.organizationId, t.clienteId),
+    index("documentos_negocio_idx").on(t.organizationId, t.negocioId),
     tenantPolicy("documentos"),
   ],
 ).enableRLS();
@@ -479,14 +520,49 @@ export const pecas = pgTable(
     texto: text("texto").notNull().default(""),
     situacao: situacaoPeca("situacao").notNull().default("rascunho"),
     criadaPor: pessoa("criada_por"),
+    /** Quem marcou como revisada e quando. Mudou o texto depois, volta a rascunho e isto se apaga. */
+    revisadaPor: pessoa("revisada_por"),
+    revisadaEm: timestamp("revisada_em", { withTimezone: true }),
+    /** Modelos do escritório que a IA seguiu na última geração. */
+    modelos: jsonb("modelos").$type<string[]>().notNull().default([]),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [index("pecas_processo_idx").on(t.organizationId, t.processoId), tenantPolicy("pecas")],
 ).enableRLS();
 
+/**
+ * Banco de teses: as peças que o escritório escolheu como modelo. Ao gerar uma
+ * peça, a IA recebe as mais parecidas e segue a estrutura e os argumentos.
+ */
+export const modelos = pgTable(
+  "modelos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    titulo: text("titulo").notNull(),
+    /** Do catálogo ("contestacao"). */
+    tipo: text("tipo").notNull(),
+    /** A tese em uma ou duas frases ("Seguro de vida: doença preexistente não alegada na proposta"). */
+    tese: text("tese"),
+    /** "Seguro de vida", "Revisional de aposentadoria". */
+    assunto: text("assunto"),
+    texto: text("texto").notNull(),
+    /** A peça do Decreta de onde veio, quando veio de uma. */
+    pecaId: uuid("peca_id").references(() => pecas.id, { onDelete: "set null" }),
+    criadoPor: pessoa("criado_por"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("modelos_tipo_idx").on(t.organizationId, t.tipo),
+    index("modelos_busca_idx").using("gin", sql`to_tsvector('portuguese', ${t.titulo} || ' ' || coalesce(${t.tese}, '') || ' ' || coalesce(${t.assunto}, '') || ' ' || ${t.texto})`),
+    tenantPolicy("modelos"),
+  ],
+).enableRLS();
+
 /** De quem é a análise: a IA sempre fala de alguma coisa do escritório. */
-export const alvoIa = pgEnum("alvo_ia", ["processo", "prazo", "publicacao", "audiencia", "cliente", "atendimento"]);
+export const alvoIa = pgEnum("alvo_ia", ["processo", "prazo", "publicacao", "audiencia", "cliente", "atendimento", "negocio"]);
 export const situacaoIa = pgEnum("situacao_ia", ["pronto", "recusa", "erro"]);
 
 /**
@@ -532,6 +608,36 @@ export const mensagensIa = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("mensagens_ia_processo_idx").on(t.organizationId, t.processoId, t.createdAt), index("mensagens_ia_user_idx").on(t.organizationId, t.userId, t.createdAt), tenantPolicy("mensagens_ia")],
+).enableRLS();
+
+/**
+ * "Útil" ou "errado" de quem usou uma saída da IA (uma análise ou uma peça).
+ * Os "errado" de cada mês viram ajuste nas instruções da IA.
+ */
+export const retornosIa = pgTable(
+  "retornos_ia",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    /** A ação da IA avaliada ("briefing-prazo", "gerar-documento"). */
+    acao: text("acao").notNull(),
+    analiseId: uuid("analise_id").references(() => analises.id, { onDelete: "cascade" }),
+    pecaId: uuid("peca_id").references(() => pecas.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    util: boolean("util").notNull(),
+    /** O que estava errado, nas palavras de quem viu. */
+    comentario: text("comentario"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex("retornos_ia_analise_uq").on(t.organizationId, t.analiseId, t.userId),
+    uniqueIndex("retornos_ia_peca_uq").on(t.organizationId, t.pecaId, t.userId),
+    index("retornos_ia_criado_idx").on(t.organizationId, t.createdAt),
+    tenantPolicy("retornos_ia"),
+  ],
 ).enableRLS();
 
 /* ------------------------------------------------------------------ */

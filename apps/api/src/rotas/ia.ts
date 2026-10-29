@@ -1,5 +1,5 @@
 import { horaLocal, diaPorExtenso, diaDoInstante } from "@decreta/core";
-import { audiencias, clientes, mensagensIa, prazos, processos, publicacoes, withTenant, type Tx } from "@decreta/db";
+import { analises, audiencias, clientes, mensagensIa, pecas, prazos, processos, publicacoes, retornosIa, withTenant, type Tx } from "@decreta/db";
 import {
   briefingDoPrazo,
   conversar,
@@ -11,13 +11,24 @@ import {
   type Ia,
   type MensagemDaConversa,
 } from "@decreta/ia";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { analisar } from "../servicos/analises.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { corpo, falha, id, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { corpo, ehSocio, falha, id, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+
+/** O nome de cada ação da IA como a equipe reconhece. */
+export const ROTULO_DA_ACAO: Record<string, string> = {
+  "sugerir-prazo": "Prazo sugerido da publicação",
+  "briefing-prazo": "Briefing do prazo",
+  "resumo-autos": "Resumo dos autos",
+  "preparar-audiencia": "Preparação de audiência",
+  "ler-sentenca": "Leitura da sentença",
+  "conferir-pasta": "Conferência da pasta",
+  "gerar-documento": "Peça gerada",
+};
 
 export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
@@ -99,6 +110,71 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       });
     }
     return c.json(a);
+  });
+
+  /* ---------------- Retorno sobre a IA ---------------- */
+
+  /** "Útil" ou "errado" numa análise ou numa peça. Votar de novo troca o voto. */
+  app.post("/ia/retorno", async (c) => {
+    const b = await corpo(
+      c,
+      z
+        .object({ analiseId: z.string().uuid().optional(), pecaId: z.string().uuid().optional(), util: z.boolean(), comentario: z.string().trim().max(2000).nullable().optional() })
+        .refine((x) => !!x.analiseId !== !!x.pecaId, "Diga a análise ou a peça."),
+    );
+    await tenant(c, deps, async (tx) => {
+      let acao: string;
+      if (b.analiseId) {
+        const [a] = await tx.select({ acao: analises.acao }).from(analises).where(eq(analises.id, b.analiseId));
+        if (!a) falha(404, "nao_encontrado");
+        acao = a.acao;
+      } else {
+        const [p] = await tx.select({ id: pecas.id }).from(pecas).where(eq(pecas.id, b.pecaId!));
+        if (!p) falha(404, "nao_encontrado");
+        acao = "gerar-documento";
+      }
+      const valores = { util: b.util, comentario: b.util ? null : (b.comentario ?? null) };
+      await tx
+        .insert(retornosIa)
+        .values({ organizationId: c.get("orgId"), acao, analiseId: b.analiseId ?? null, pecaId: b.pecaId ?? null, userId: c.get("userId"), ...valores })
+        .onConflictDoUpdate({ target: b.analiseId ? [retornosIa.organizationId, retornosIa.analiseId, retornosIa.userId] : [retornosIa.organizationId, retornosIa.pecaId, retornosIa.userId], set: valores });
+    });
+    return c.json({ ok: true });
+  });
+
+  /** Para os sócios: como a IA foi avaliada nos últimos 90 dias e o que disseram que estava errado. */
+  app.get("/ia/retornos", async (c) => {
+    if (!ehSocio(c.get("papel"))) falha(403, "so_socios", "Só os sócios veem o retorno sobre a IA.");
+    const desde = new Date(Date.now() - 90 * 86_400_000);
+    return tenant(c, deps, async (tx) => {
+      const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
+      const porAcao = await tx
+        .select({ acao: retornosIa.acao, uteis: sql<number>`count(*) filter (where ${retornosIa.util})::int`, errados: sql<number>`count(*) filter (where not ${retornosIa.util})::int` })
+        .from(retornosIa)
+        .where(gt(retornosIa.updatedAt, desde))
+        .groupBy(retornosIa.acao);
+      const errados = await tx
+        .select({ r: retornosIa, alvo: analises.alvo, alvoId: analises.alvoId, processoId: pecas.processoId })
+        .from(retornosIa)
+        .leftJoin(analises, eq(analises.id, retornosIa.analiseId))
+        .leftJoin(pecas, eq(pecas.id, retornosIa.pecaId))
+        .where(and(eq(retornosIa.util, false), gt(retornosIa.updatedAt, desde)))
+        .orderBy(desc(retornosIa.updatedAt))
+        .limit(50);
+      return c.json({
+        porAcao: porAcao.map((x) => ({ ...x, rotulo: ROTULO_DA_ACAO[x.acao] ?? x.acao })).sort((a, b) => b.errados - a.errados),
+        errados: errados.map(({ r, alvo, alvoId, processoId }) => ({
+          id: r.id,
+          acao: r.acao,
+          rotulo: ROTULO_DA_ACAO[r.acao] ?? r.acao,
+          comentario: r.comentario,
+          em: r.updatedAt.toISOString(),
+          pessoa: resumir(pessoas, r.userId),
+          /** Onde a saída está, para abrir e ver. */
+          onde: r.pecaId ? { tipo: "peca" as const, id: r.pecaId, processoId } : alvo && alvoId ? { tipo: alvo, id: alvoId } : null,
+        })),
+      });
+    });
   });
 
   /* ---------------- Chat do processo (compartilhado pela equipe) ---------------- */

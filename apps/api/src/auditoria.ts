@@ -38,6 +38,10 @@ export const ROTULO: Record<string, string> = {
   "documento.enviado": "Anexou um documento",
   "documento.apagado": "Apagou um documento",
   "escritorio.alterado": "Alterou os dados do escritório",
+  "resultado.confirmado": "Confirmou o resultado de uma sentença",
+  "peca.revisada": "Marcou uma peça como revisada",
+  "modelo.criado": "Guardou um modelo de peça",
+  "modelo.apagado": "Apagou um modelo de peça",
 };
 
 export async function registrar(db: Database, r: Registro, log?: (msg: string, extra?: Record<string, unknown>) => void): Promise<void> {

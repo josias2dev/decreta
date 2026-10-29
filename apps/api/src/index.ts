@@ -60,7 +60,7 @@ const app = createApp({
   env,
   auth,
   rotas,
-  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, wameow, telas, log, reporter }) }),
+  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter }) }),
   log,
   reporter,
 });

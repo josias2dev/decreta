@@ -15,8 +15,9 @@ export interface ModelosDoGateway {
   autos: string;
   /** Redação de peças. */
   documentos: string;
-  /** Leitura de PDF anexado. */
+  /** Leitura de PDF escaneado (sem camada de texto). */
   pdf: string;
+  /** Leitura de foto de documento. */
   vision: string;
 }
 
@@ -31,6 +32,10 @@ export const METODOS = [
   "resumo-atendimento",
   "perguntar",
   "transcription",
+  "ler-sentenca",
+  "conferir-pasta",
+  "ler-imagem",
+  "ler-pdf",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -45,6 +50,10 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "resumo-atendimento": "juridico",
   perguntar: "juridico",
   transcription: "juridico",
+  "ler-sentenca": "autos",
+  "conferir-pasta": "autos",
+  "ler-imagem": "vision",
+  "ler-pdf": "pdf",
 };
 
 export interface Ia {

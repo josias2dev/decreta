@@ -1,8 +1,9 @@
 import { chaveDoDocumento, lerDocumento, MIMES_COM_TEXTO } from "@decreta/documentos";
-import { clientes, documentos, processos } from "@decreta/db";
+import { clientes, documentos, negocios, processos } from "@decreta/db";
 import { and, desc, eq, ilike, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
 import { registrar } from "../auditoria.ts";
+import { precisaDeLeitura } from "../servicos/leitura.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
@@ -26,12 +27,14 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.get("/documentos", async (c) => {
     const processoId = c.req.query("processo");
     const clienteId = c.req.query("cliente");
+    const negocioId = c.req.query("negocio");
     const busca = (c.req.query("busca") ?? "").trim();
     return tenant(c, deps, async (tx) => {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const onde: SQL[] = [];
       if (processoId) onde.push(eq(documentos.processoId, processoId));
       if (clienteId) onde.push(eq(documentos.clienteId, clienteId));
+      if (negocioId) onde.push(eq(documentos.negocioId, negocioId));
       if (busca) onde.push(ilike(documentos.nome, `%${busca.replace(/[%_]/g, "")}%`));
       const linhas = await tx
         .select({ d: documentos, processo: processos.titulo, cliente: clientes.nome })
@@ -51,7 +54,9 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
           evento: d.evento,
           origem: d.origem,
           lido: d.texto !== null && d.texto.length > 0,
-          semTexto: MIMES_COM_TEXTO.has(d.mime) && !d.texto,
+          semTexto: (MIMES_COM_TEXTO.has(d.mime) || d.mime.startsWith("image/")) && !d.texto,
+          /** Leitura pela IA (foto, PDF escaneado): pendente, pronta, falhou; vazio quando não precisou. */
+          leitura: d.leitura,
           em: d.createdAt.toISOString(),
           processo: d.processoId ? { id: d.processoId, titulo: processo } : null,
           cliente: d.clienteId ? { id: d.clienteId, nome: cliente } : null,
@@ -66,10 +71,12 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const arquivo = form?.get("arquivo");
     if (!(arquivo instanceof File)) falha(400, "sem_arquivo");
     if (arquivo.size > deps.maxArquivoBytes) falha(422, "arquivo_grande", `O arquivo passa de ${Math.round(deps.maxArquivoBytes / 1e6)} MB.`);
-    const mime = arquivo.type || "application/octet-stream";
+    // "text/plain;charset=utf-8" é text/plain.
+    const mime = (arquivo.type || "application/octet-stream").split(";")[0]!.trim().toLowerCase();
     if (!MIMES_ACEITOS.has(mime)) falha(422, "tipo_nao_aceito", "Envie PDF, Word, imagem, planilha ou áudio.");
     const processoId = (form!.get("processoId") as string | null) || null;
     const clienteId = (form!.get("clienteId") as string | null) || null;
+    const negocioId = (form!.get("negocioId") as string | null) || null;
     const eventoBruto = form!.get("evento");
     const evento = typeof eventoBruto === "string" && /^\d+$/.test(eventoBruto) ? Number(eventoBruto) : null;
     const bytes = new Uint8Array(await arquivo.arrayBuffer());
@@ -77,27 +84,47 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const lido = await lerDocumento(bytes, mime).catch(() => ({ texto: null, paginas: null }));
     const docId = crypto.randomUUID();
     const chave = chaveDoDocumento(c.get("orgId"), docId);
+    // Foto e PDF escaneado: a IA transcreve em segundo plano.
+    const lendo = !!deps.ia && precisaDeLeitura(mime, lido.texto);
     await tenant(c, deps, async (tx) => {
       if (processoId && !(await tx.select({ id: processos.id }).from(processos).where(eq(processos.id, processoId))).length) falha(404, "processo_nao_encontrado");
       if (clienteId && !(await tx.select({ id: clientes.id }).from(clientes).where(eq(clientes.id, clienteId))).length) falha(404, "cliente_nao_encontrado");
+      if (negocioId && !(await tx.select({ id: negocios.id }).from(negocios).where(eq(negocios.id, negocioId))).length) falha(404, "nao_encontrado");
       await deps.arquivos.put(chave, bytes, mime);
       await tx.insert(documentos).values({
         id: docId,
         organizationId: c.get("orgId"),
         processoId,
         clienteId,
+        negocioId,
         nome: arquivo.name.slice(0, 250) || "documento",
         mime,
         tamanho: arquivo.size,
         paginas: lido.paginas,
         chave,
         texto: lido.texto,
+        leitura: lendo ? "pendente" : null,
         evento,
         enviadoPor: c.get("userId"),
       });
     });
+    if (lendo) await deps.enfileirar({ nome: "documento.ler", organizationId: c.get("orgId"), documentoId: docId });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "documento.enviado", detalhes: { documentoId: docId, nome: arquivo.name }, ip: ip(c) }, deps.log);
-    return c.json({ id: docId, lido: !!lido.texto, paginas: lido.paginas }, 201);
+    return c.json({ id: docId, lido: !!lido.texto, lendo, paginas: lido.paginas }, 201);
+  });
+
+  /** Pede de novo a leitura pela IA (a anterior falhou, ou a IA foi ligada depois do envio). */
+  app.post("/documentos/:id/ler", async (c) => {
+    const docId = id(c);
+    if (!deps.ia) falha(503, "ia_desligada", "A IA ainda não foi ligada neste servidor.");
+    await tenant(c, deps, async (tx) => {
+      const [d] = await tx.select({ mime: documentos.mime, texto: documentos.texto, leitura: documentos.leitura }).from(documentos).where(eq(documentos.id, docId));
+      if (!d) falha(404, "nao_encontrado");
+      if (!precisaDeLeitura(d.mime, d.leitura === "pronta" ? null : d.texto)) falha(422, "nao_precisa", "Este arquivo já tem texto ou não é foto nem PDF.");
+      await tx.update(documentos).set({ leitura: "pendente", ...(d.leitura === "pronta" ? { texto: null } : {}) }).where(eq(documentos.id, docId));
+    });
+    await deps.enfileirar({ nome: "documento.ler", organizationId: c.get("orgId"), documentoId: docId });
+    return c.json({ ok: true });
   });
 
   app.get("/documentos/:id/arquivo", async (c) => {

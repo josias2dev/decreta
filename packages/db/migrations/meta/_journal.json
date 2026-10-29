@@ -15,6 +15,13 @@
       "when": 1793307552577,
       "tag": "0001_fundacao",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793317363291,
+      "tag": "0002_leitura_resultados_modelos",
+      "breakpoints": true
     }
   ]
 }

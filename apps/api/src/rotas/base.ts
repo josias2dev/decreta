@@ -25,11 +25,12 @@ export type Vars = {
 export type Ambiente = { Variables: Vars };
 export type C = Context<Ambiente>;
 
-/** Evento para as rotinas de fundo (Inngest): sugerir prazo, capturar agora, atualizar do DataJud. */
+/** Evento para as rotinas de fundo (Inngest): sugerir prazo, capturar agora, atualizar do DataJud, ler um documento. */
 export type Pedido =
   | { nome: "publicacao.nova"; organizationId: string; publicacaoId: string }
   | { nome: "captura.djen"; organizationId: string }
-  | { nome: "processo.datajud"; organizationId: string; processoId: string };
+  | { nome: "processo.datajud"; organizationId: string; processoId: string }
+  | { nome: "documento.ler"; organizationId: string; documentoId: string };
 
 export interface DepsDasRotas {
   db: Database;

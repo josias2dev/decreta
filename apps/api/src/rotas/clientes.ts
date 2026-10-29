@@ -4,7 +4,9 @@ import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
+import { conferirPastaDe, ultimaConferencia } from "../servicos/conferencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
+import { IaDesligada } from "../servicos/prazos.ts";
 import { corpo, ehSocio, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 const CANAL: Record<string, string> = { presencial: "presencial", telefone: "telefone", whatsapp: "WhatsApp", video: "vídeo", email: "e-mail" };
@@ -96,8 +98,13 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [ps, ats, docs] = await Promise.all([
         tx.select().from(processos).where(eq(processos.clienteId, clienteId)).orderBy(desc(processos.ultimaMovimentacaoEm)),
         tx.select().from(atendimentos).where(eq(atendimentos.clienteId, clienteId)).orderBy(desc(atendimentos.em)),
-        tx.select({ id: documentos.id, nome: documentos.nome, mime: documentos.mime, tamanho: documentos.tamanho, em: documentos.createdAt, processoId: documentos.processoId }).from(documentos).where(eq(documentos.clienteId, clienteId)).orderBy(desc(documentos.createdAt)),
+        tx
+          .select({ id: documentos.id, nome: documentos.nome, mime: documentos.mime, tamanho: documentos.tamanho, em: documentos.createdAt, processoId: documentos.processoId, leitura: documentos.leitura, lido: sql<boolean>`coalesce(length(${documentos.texto}), 0) > 0` })
+          .from(documentos)
+          .where(eq(documentos.clienteId, clienteId))
+          .orderBy(desc(documentos.createdAt)),
       ]);
+      const conferencia = await ultimaConferencia(tx, { clienteId }, c.get("timezone"));
       const linhaDoTempo = [
         ...ats.map((a) => ({ em: a.em.toISOString(), titulo: `Atendimento · ${CANAL[a.canal] ?? a.canal}`, detalhe: a.resumo.slice(0, 200), tipo: "atendimento" as const })),
         ...ps.map((p) => ({ em: p.createdAt.toISOString(), titulo: "Processo cadastrado", detalhe: p.titulo, tipo: "processo" as const })),
@@ -117,9 +124,25 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         processos: ps.map((p) => ({ id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, situacao: p.situacao, responsavel: resumir(pessoas, p.responsavelId) })),
         atendimentos: ats.map((a) => ({ id: a.id, em: a.em.toISOString(), canal: a.canal, resumo: a.resumo, autor: resumir(pessoas, a.autorId), processoId: a.processoId })),
         documentos: docs.map((d) => ({ ...d, em: d.em.toISOString() })),
+        conferencia,
         linhaDoTempo,
       });
     });
+  });
+
+  /** Conferência da pasta do cliente antes de protocolar um caso novo. */
+  app.post("/clientes/:id/conferir", async (c) => {
+    const clienteId = id(c);
+    // Sem corpo também vale: confere sem assunto.
+    const b = await corpo(c, z.object({ assunto: z.string().trim().max(300).nullable().optional() }).nullable());
+    try {
+      const a = await conferirPastaDe(deps, c.get("orgId"), { clienteId }, { userId: c.get("userId"), timezone: c.get("timezone"), assunto: b?.assunto ?? null });
+      if (!a) falha(404, "nao_encontrado");
+      return c.json(a);
+    } catch (err) {
+      if (err instanceof IaDesligada) falha(503, "ia_desligada", err.message);
+      throw err;
+    }
   });
 
   app.put("/clientes/:id", async (c) => {

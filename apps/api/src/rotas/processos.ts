@@ -1,5 +1,5 @@
 import { formatarCnj, hojeEm, lerCnj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
-import { alvaras, audiencias, clientes, documentos, movimentacoes, partes, pecas, prazos, processos, type Tx } from "@decreta/db";
+import { alvaras, audiencias, clientes, documentos, movimentacoes, partes, pecas, prazos, processos, resultados, type Tx } from "@decreta/db";
 import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, or, sql, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -178,7 +178,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const contexto = await carregarContexto(tx, p.id);
       const resumo = await ultimaAnalise(tx, "processo", p.id, "resumo-autos");
       const n = sql<number>`count(*)::int`;
-      const [pts, [nMov], [nPrazos], [nDocs], ultimas, proximoPrazo, auds, alvs, novidades] = await Promise.all([
+      const [pts, [nMov], [nPrazos], [nDocs], ultimas, proximoPrazo, auds, alvs, novidades, decisoes] = await Promise.all([
         tx.select().from(partes).where(eq(partes.processoId, p.id)).orderBy(asc(partes.ordem)),
         tx.select({ n }).from(movimentacoes).where(eq(movimentacoes.processoId, p.id)),
         tx.select({ n }).from(prazos).where(eq(prazos.processoId, p.id)),
@@ -188,6 +188,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         tx.select().from(audiencias).where(eq(audiencias.processoId, p.id)).orderBy(desc(audiencias.em)).limit(10),
         tx.select().from(alvaras).where(eq(alvaras.processoId, p.id)).orderBy(desc(alvaras.createdAt)),
         resumo ? tx.select({ titulo: movimentacoes.titulo, evento: movimentacoes.evento }).from(movimentacoes).where(and(eq(movimentacoes.processoId, p.id), gt(movimentacoes.createdAt, resumo.createdAt))).orderBy(desc(movimentacoes.em)) : Promise.resolve([]),
+        tx.select().from(resultados).where(eq(resultados.processoId, p.id)).orderBy(desc(resultados.decididoEm)),
       ]);
       const docsDosEventos = await docsPorEvento(tx, p.id, ultimas.map((m) => m.evento).filter((e): e is number => e != null));
       const pp = proximoPrazo[0];
@@ -222,6 +223,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         proximoPrazo: pp && pu ? { id: pp.id, tipo: pp.tipo, fim: pp.fim, dias: pp.dias, contagem: pp.contagem, urgencia: pu, quando: quandoDoPrazo(pu, pp.fim, hoje), confirmado: !!pp.confirmadoEm, responsavel: resumir(pessoas, pp.responsavelId) } : null,
         audiencias: auds.map((a) => ({ id: a.id, em: a.em.toISOString(), tipo: a.tipo, porVideo: a.porVideo, local: a.local, situacao: a.situacao, responsavel: resumir(pessoas, a.responsavelId) })),
         alvaras: alvs.map((a) => ({ id: a.id, descricao: a.descricao, valor: a.valor, etapa: a.etapa })),
+        resultados: decisoes.map((r) => ({ id: r.id, tipo: r.tipo, resultado: r.resultado, decididoEm: r.decididoEm, resumo: r.resumo, publicacaoId: r.publicacaoId })),
       });
     });
   });

@@ -1,5 +1,6 @@
 import { dataDaPublicacao, ehDia, formatarCnj, formatarDiaCurto, hojeEm, horaLocal, instanteLocal, lerCnj, tribunalDoCnj } from "@decreta/core";
-import { analises, audiencias, capturas, prazos, processos, publicacoes } from "@decreta/db";
+import { analises, audiencias, capturas, prazos, processos, publicacoes, resultados } from "@decreta/db";
+import { ehDecisaoFinal } from "@decreta/ia";
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -8,6 +9,7 @@ import { naTela, ultimaAnalise } from "../servicos/analises.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
+import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
 import { corpo, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { tituloDaPublicacao } from "../servicos/publicacoes.ts";
 
@@ -90,6 +92,8 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [audiencia] = await tx.select().from(audiencias).where(eq(audiencias.publicacaoId, pub.id));
       const sugestao = naTela(await ultimaAnalise(tx, "publicacao", pub.id, "sugerir-prazo"));
       const conteudo = sugestao?.conteudo as Partial<SugestaoNaTela> | undefined;
+      const sentenca = naTela(await ultimaAnalise(tx, "publicacao", pub.id, "ler-sentenca"));
+      const [resultado] = await tx.select().from(resultados).where(eq(resultados.publicacaoId, pub.id));
       return c.json({
         id: pub.id,
         situacao: pub.situacao,
@@ -109,6 +113,12 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         sugestao: sugestao && { ...sugestao, responsavel: resumir(pessoas, conteudo?.responsavelId ?? processo?.responsavelId) },
         prazo: prazo ? { id: prazo.id, confirmado: !!prazo.confirmadoEm, fim: prazo.fim, tipo: prazo.tipo } : null,
         audiencia: audiencia ? { id: audiencia.id, em: audiencia.em.toISOString(), tipo: audiencia.tipo } : null,
+        /** É sentença ou acórdão: a tela espera a leitura da sentença. */
+        decisao: ehDecisaoFinal(pub),
+        sentenca,
+        resultado: resultado
+          ? { id: resultado.id, tipo: resultado.tipo, resultado: resultado.resultado, resumo: resultado.resumo, confirmadoPor: resumir(pessoas, resultado.confirmadoPor), confirmadoEm: resultado.confirmadoEm.toISOString() }
+          : null,
       });
     });
   });
@@ -124,6 +134,46 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       if (err instanceof IaDesligada) falha(503, "ia_desligada", err.message);
       throw err;
     }
+  });
+
+  /** Lê (ou relê) a publicação como sentença ou acórdão, esperando a resposta. */
+  app.post("/publicacoes/:id/sentenca", async (c) => {
+    const pubId = id(c);
+    try {
+      const a = await lerSentencaDaPublicacao(deps, c.get("orgId"), pubId, { userId: c.get("userId"), forcar: true });
+      if (!a) falha(404, "nao_encontrado");
+      return c.json(a);
+    } catch (err) {
+      if (err instanceof IaDesligada) falha(503, "ia_desligada", err.message);
+      throw err;
+    }
+  });
+
+  /** A pessoa confirma como o juízo decidiu: o resultado entra no processo. */
+  app.post("/publicacoes/:id/resultado", async (c) => {
+    const pubId = id(c);
+    const b = await corpo(
+      c,
+      z.object({
+        tipo: z.enum(["sentenca", "acordao"]),
+        resultado: z.enum(["procedente", "parcialmente_procedente", "improcedente", "sem_merito", "acordo_homologado", "outro"]),
+        resumo: z.string().trim().max(1000).nullable().optional(),
+      }),
+    );
+    const r = await tenant(c, deps, async (tx) => {
+      const [pub] = await tx.select().from(publicacoes).where(eq(publicacoes.id, pubId));
+      if (!pub) falha(404, "nao_encontrado");
+      if (!pub.processoId) falha(422, "sem_processo", "Vincule a publicação a um processo antes de confirmar o resultado.");
+      const valores = { processoId: pub.processoId, tipo: b.tipo, resultado: b.resultado, resumo: b.resumo ?? null, decididoEm: pub.publicadaEm, confirmadoPor: c.get("userId"), confirmadoEm: new Date() };
+      const [linha] = await tx
+        .insert(resultados)
+        .values({ organizationId: c.get("orgId"), publicacaoId: pub.id, ...valores })
+        .onConflictDoUpdate({ target: [resultados.organizationId, resultados.publicacaoId], set: valores })
+        .returning({ id: resultados.id });
+      return { resultadoId: linha!.id, processoId: pub.processoId };
+    });
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "resultado.confirmado", detalhes: { ...r, publicacaoId: pubId, resultado: b.resultado }, ip: ip(c) }, deps.log);
+    return c.json(r);
   });
 
   app.post("/publicacoes/:id/confirmar", async (c) => {

@@ -266,3 +266,196 @@ Diga as teses e os termos de busca para o site do TJSC, STJ e STF, e avise que c
     maxRetries: 1,
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* Leitura da sentença                                                  */
+/* ------------------------------------------------------------------ */
+
+const RESULTADOS = ["procedente", "parcialmente_procedente", "improcedente", "sem_merito", "acordo_homologado", "outro"] as const;
+export type ResultadoDaDecisao = (typeof RESULTADOS)[number];
+
+export const leituraDaSentencaSchema = z.object({
+  tipo: z.enum(["sentenca", "acordao"]).describe("Sentença (primeiro grau) ou acórdão (tribunal)."),
+  resultado: z
+    .enum(RESULTADOS)
+    .describe("O dispositivo, pelo pedido do autor: procedente, parcialmente_procedente, improcedente, sem_merito (extinção sem resolução de mérito), acordo_homologado, outro. No acórdão, o resultado do processo depois do recurso."),
+  resumo: z.string().describe("O que foi decidido e o que isso significa para o nosso cliente, em 2 ou 3 frases."),
+  pedidos: z
+    .array(
+      z.object({
+        pedido: z.string().describe('O pedido, curto: "Danos morais", "Indenização securitária de R$ 80.000,00".'),
+        decisao: z.enum(["acolhido", "parcial", "rejeitado", "nao_apreciado"]),
+        detalhe: z.string().describe("O que o juízo deu ou negou e por quê, em uma frase, com o valor quando houver."),
+      }),
+    )
+    .describe("Cada pedido e o que o juízo decidiu sobre ele."),
+  valores: z.array(z.string()).describe('Valores da condenação com correção e juros como estão na decisão, ex.: "R$ 80.000,00, com correção pelo IPCA desde 12/03/2025 e juros desde a citação".'),
+  honorarios: z.string().nullable().describe('Honorários de sucumbência e custas, ex.: "Ré paga 15% do valor da condenação". Nulo se a decisão não fala.'),
+  recurso: z
+    .object({
+      cabivel: z.string().describe('"Apelação", "Recurso inominado", "Recurso especial", "Embargos de declaração".'),
+      dias: z.number().int().min(1).max(60).nullable().describe("Prazo em dias, só se for de conhecimento seguro (ex.: 15 dias úteis para apelar, CPC art. 1.003, § 5º)."),
+      fundamento: z.string().nullable(),
+    })
+    .nullable()
+    .describe("O recurso que cabe contra esta decisão para quem perdeu algo. Nulo se não couber recurso."),
+  recorrer: z.array(z.string()).describe("Se o nosso cliente perdeu algo: os pontos da decisão que dá para atacar no recurso, com o trecho de onde saiu. Vazio se ganhamos tudo."),
+  manter: z.array(z.string()).describe("Se o nosso cliente ganhou algo: os fundamentos para defender a decisão nas contrarrazões. Vazio se perdemos tudo."),
+  recusa,
+});
+export type LeituraDaSentenca = z.infer<typeof leituraDaSentencaSchema>;
+
+/** A publicação é uma sentença ou um acórdão? Pelo tipo do documento e pelas palavras do dispositivo. */
+export function ehDecisaoFinal(pub: { tipoDocumento: string | null; texto: string }): boolean {
+  if (pub.tipoDocumento && /senten[çc]a|ac[óo]rd[ãa]o/i.test(pub.tipoDocumento)) return true;
+  return /julgo\s+(parcialmente\s+)?(im)?procedentes?|homologo\s+(o\s+)?acordo|julgo\s+extint|ac[óo]rd[ãa]o\s*:|acordam\s+os/i.test(pub.texto);
+}
+
+export async function lerSentenca(
+  ia: Ia,
+  entrada: { publicacao: { texto: string; tipoDocumento: string | null; orgao: string | null; publicadaEm: string }; contextoDoProcesso?: string },
+  signal?: AbortSignal,
+): Promise<LeituraDaSentenca> {
+  if (semTeor(entrada.publicacao.texto)) throw new IaRecusou("Falta o teor da decisão. Abra a íntegra no sistema do tribunal e cole aqui, ou anexe a sentença.");
+  const pub = entrada.publicacao;
+  const prompt = [
+    "## Decisão publicada",
+    `Tipo: ${pub.tipoDocumento ?? "não informado"}`,
+    ...(pub.orgao ? [`Órgão: ${pub.orgao}`] : []),
+    `Publicada em: ${pub.publicadaEm}`,
+    "",
+    pub.texto.trim(),
+    entrada.contextoDoProcesso ? `\n\n${entrada.contextoDoProcesso}` : "",
+  ].join("\n");
+  return exigir(
+    await gerarObjeto(
+      ia,
+      "ler-sentenca",
+      leituraDaSentencaSchema,
+      `Leia a sentença ou o acórdão e diga, do ponto de vista do nosso cliente, o que foi decidido pedido a pedido, os valores, os honorários, o recurso cabível e os pontos para recorrer ou para manter a decisão.
+O resultado segue o pedido do autor: se o nosso cliente é réu e a ação foi julgada improcedente, o resultado é "improcedente" e isso é bom para nós; diga isso no resumo.
+Não calcule datas. Se o teor trouxer só o dispositivo, sem a fundamentação, leia o que houver e diga no resumo que falta a fundamentação.`,
+      prompt,
+      signal,
+    ),
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Conferência da pasta antes de protocolar                             */
+/* ------------------------------------------------------------------ */
+
+export const ITENS_DA_CONFERENCIA = ["procuracao", "comprovante_residencia", "documento_identidade", "cpf", "hipossuficiencia", "contrato_honorarios", "litispendencia"] as const;
+export type ItemDaConferencia = (typeof ITENS_DA_CONFERENCIA)[number];
+
+export const conferenciaSchema = z.object({
+  itens: z
+    .array(
+      z.object({
+        item: z.enum(ITENS_DA_CONFERENCIA),
+        situacao: z.enum(["certo", "atencao", "falta"]).describe("certo: o documento está na pasta e serve; atencao: está, mas tem problema; falta: não está na pasta."),
+        detalhe: z.string().describe("Uma frase: o que se viu, ou o que falta e por que importa."),
+        documento: z.string().nullable().describe("Nome do arquivo de onde saiu, como está na lista. Nulo quando falta."),
+      }),
+    )
+    .describe("Um item para cada conferência da lista, na mesma ordem."),
+  outros: z.array(z.string()).describe("Outros problemas vistos nos documentos (documento ilegível, de outra pessoa, rasura). Vazio se nada."),
+  resumo: z.string().describe("Uma frase: a pasta está pronta para protocolar ou o que falta primeiro."),
+  recusa,
+});
+export type Conferencia = z.infer<typeof conferenciaSchema>;
+
+export interface PedidoDeConferencia {
+  /** Quem será a parte: o cliente ou quem está na triagem. */
+  pessoa: { nome: string; documento: string | null; endereco: string | null };
+  assunto: string | null;
+  /** AAAA-MM-DD, para a IA medir a idade dos documentos. */
+  hoje: string;
+  documentos: { nome: string; texto: string }[];
+  /** Processos que o escritório já tem com esta pessoa, para a litispendência. */
+  processos: { titulo: string; cnj: string | null; assunto: string | null; situacao: string }[];
+}
+
+export async function conferirPasta(ia: Ia, pedido: PedidoDeConferencia, signal?: AbortSignal): Promise<Conferencia> {
+  const comTexto = pedido.documentos.filter((d) => d.texto.trim());
+  if (!comTexto.length) throw new IaRecusou("Nenhum documento da pasta tem texto que eu consiga ler. Envie os documentos (PDF, DOCX ou foto) e espere a leitura terminar.");
+  const teto = 100_000;
+  let usado = 0;
+  const docs: string[] = [];
+  for (const d of comTexto) {
+    const sobra = teto - usado;
+    if (sobra < 500) break;
+    const t = d.texto.length > sobra ? `${d.texto.slice(0, sobra)}\n[documento cortado aqui]` : d.texto;
+    usado += t.length;
+    docs.push(`### Arquivo: ${d.nome}\n${t}`);
+  }
+  const p = pedido.pessoa;
+  const prompt = [
+    "## Quem é a parte",
+    `Nome: ${p.nome}`,
+    `CPF ou CNPJ no cadastro: ${p.documento ?? "não informado"}`,
+    `Endereço no cadastro: ${p.endereco ?? "não informado"}`,
+    `Assunto do caso: ${pedido.assunto ?? "não informado"}`,
+    `Hoje: ${pedido.hoje}`,
+    "",
+    "## Processos que o escritório já tem com esta pessoa",
+    ...(pedido.processos.length ? pedido.processos.map((x) => `- ${x.titulo} (${x.cnj ?? "sem número"}; assunto: ${x.assunto ?? "não informado"}; ${x.situacao})`) : ["Nenhum."]),
+    "",
+    "## Documentos da pasta",
+    ...docs,
+  ].join("\n");
+  return exigir(
+    await gerarObjeto(
+      ia,
+      "conferir-pasta",
+      conferenciaSchema,
+      `Confira a pasta antes de protocolar, como faria o advogado da parte contrária procurando motivo para pedir a extinção ou a emenda da inicial.
+Juízes têm exigido estes documentos quando suspeitam de litigância abusiva (STJ, Tema 1198). Confira, nesta ordem:
+- procuracao: assinada, com data, outorgada por quem será a parte (nome igual ao do cadastro), com poderes para o foro; atenção se tiver mais de 12 meses ou se faltar poder especial que o caso pede.
+- comprovante_residencia: no nome da parte; atenção se tiver mais de 90 dias, se estiver no nome de outra pessoa sem declaração explicando, ou se o endereço não bater com o cadastro.
+- documento_identidade: RG, CNH ou outro documento com foto, legível e dentro da validade, da própria parte.
+- cpf: o número nos documentos é o mesmo do cadastro (CNPJ, se for empresa).
+- hipossuficiencia: declaração de hipossuficiência assinada, para pedir justiça gratuita; atenção se outros documentos (contracheque, extrato) mostram renda que contradiz a declaração.
+- contrato_honorarios: assinado pela parte.
+- litispendencia: algum processo da lista parece ser sobre o mesmo fato e o mesmo pedido? "certo" se nenhum; "atencao" citando qual.
+Meça a idade dos documentos pela data de hoje. Não invente: se um documento não está na lista, a situação é "falta".`,
+      prompt,
+      signal,
+    ),
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Leitura de foto e PDF escaneado                                      */
+/* ------------------------------------------------------------------ */
+
+/** Tipos que a IA lê pela imagem: fotos e PDF sem camada de texto. */
+export const MIMES_PARA_LER = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
+
+const SEM_TEXTO = "SEM TEXTO";
+
+/** Transcreve uma foto ou um PDF escaneado. Devolve vazio quando não há texto. */
+export async function transcreverDocumento(ia: Ia, arquivo: { bytes: Uint8Array; mime: string; nome: string }, signal?: AbortSignal): Promise<string> {
+  const pdf = arquivo.mime === "application/pdf";
+  const r = await generateText({
+    model: ia.modelo(pdf ? "ler-pdf" : "ler-imagem"),
+    instructions: `Você transcreve documentos para um escritório de advocacia brasileiro.
+Transcreva todo o texto do documento, na ordem em que aparece, sem resumir, comentar nem corrigir.
+Em documentos pessoais (RG, CNH, CPF, comprovante de residência, holerite, CTPS), transcreva todos os campos com o rótulo: nome, números, datas, endereço, valores.
+Assinaturas viram [assinatura]; carimbos, [carimbo]; trechos que não dá para ler, [ilegível].
+Se não houver nenhum texto, responda só ${SEM_TEXTO}.`,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: `Arquivo: ${arquivo.nome}` },
+          { type: "file", data: arquivo.bytes, mediaType: arquivo.mime, filename: arquivo.nome },
+        ],
+      },
+    ],
+    abortSignal: signal,
+    maxRetries: 1,
+  });
+  const texto = r.text.trim();
+  return texto === SEM_TEXTO || texto.startsWith(`${SEM_TEXTO}.`) ? "" : texto;
+}

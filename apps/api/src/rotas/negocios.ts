@@ -1,9 +1,11 @@
 import { ehDia } from "@decreta/core";
-import { alvaras, clientes, negocios, processos } from "@decreta/db";
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { alvaras, clientes, documentos, negocios, processos } from "@decreta/db";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
+import { conferirPastaDe, ultimaConferencia } from "../servicos/conferencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
+import { IaDesligada } from "../servicos/prazos.ts";
 import { corpo, falha, id, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 /** Checklist padrão da triagem: o que a pasta de quem chega precisa ter. */
@@ -98,9 +100,41 @@ export function rotasDosNegocios(app: Hono<Ambiente>, deps: DepsDasRotas) {
       if (!n) falha(404, "nao_encontrado");
       const clienteId = b.clienteId ?? n.clienteId ?? (await tx.insert(clientes).values({ organizationId: c.get("orgId"), nome: n.nome, telefone: n.telefone, observacoes: n.assunto }).returning({ id: clientes.id }))[0]!.id;
       await tx.update(negocios).set({ etapa: "concluido", clienteId }).where(eq(negocios.id, negocioId));
+      // A pasta da triagem passa a ser do cliente.
+      await tx.update(documentos).set({ clienteId }).where(and(eq(documentos.negocioId, negocioId), isNull(documentos.clienteId)));
       return { clienteId };
     });
     return c.json(r);
+  });
+
+  /** A pasta de quem está na triagem: os documentos enviados e a última conferência da IA. */
+  app.get("/negocios/:id/pasta", async (c) => {
+    const negocioId = id(c);
+    return tenant(c, deps, async (tx) => {
+      const [n] = await tx.select({ id: negocios.id }).from(negocios).where(eq(negocios.id, negocioId));
+      if (!n) falha(404, "nao_encontrado");
+      const docs = await tx
+        .select({ id: documentos.id, nome: documentos.nome, mime: documentos.mime, tamanho: documentos.tamanho, texto: documentos.texto, leitura: documentos.leitura, em: documentos.createdAt })
+        .from(documentos)
+        .where(eq(documentos.negocioId, negocioId))
+        .orderBy(asc(documentos.createdAt));
+      return c.json({
+        documentos: docs.map(({ texto, em, ...d }) => ({ ...d, lido: !!texto, em: em.toISOString() })),
+        conferencia: await ultimaConferencia(tx, { negocioId }, c.get("timezone")),
+      });
+    });
+  });
+
+  app.post("/negocios/:id/conferir", async (c) => {
+    const negocioId = id(c);
+    try {
+      const a = await conferirPastaDe(deps, c.get("orgId"), { negocioId }, { userId: c.get("userId"), timezone: c.get("timezone") });
+      if (!a) falha(404, "nao_encontrado");
+      return c.json(a);
+    } catch (err) {
+      if (err instanceof IaDesligada) falha(503, "ia_desligada", err.message);
+      throw err;
+    }
   });
 
   /* ---------------- Alvarás ---------------- */

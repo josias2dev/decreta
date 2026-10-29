@@ -81,6 +81,28 @@ export interface PedidoDePeca {
   prazo?: { tipo: string; fim: string; fundamento: string | null; briefing?: string };
   contextoDoProcesso: string;
   escritorio: { nome: string; advogado: string; oab: string | null; cidade: string | null };
+  /** Peças que o escritório escolheu como modelo, as mais parecidas com esta. */
+  modelos?: ModeloParaIa[];
+}
+
+export interface ModeloParaIa {
+  titulo: string;
+  tese: string | null;
+  texto: string;
+}
+
+/** Teto de cada modelo no pedido: o bastante para a estrutura e os argumentos, sem tomar o lugar dos autos. */
+export const TETO_DO_MODELO = 24_000;
+
+function textoDosModelos(modelos: ModeloParaIa[]): string {
+  return [
+    "## Modelos do escritório",
+    "Peças do próprio escritório para casos parecidos. Siga a estrutura, a linha de argumentação e o estilo delas quando servirem a este caso. Não copie delas fatos, nomes, números, valores, datas nem eventos: esses saem só do processo abaixo.",
+    ...modelos.map((m, i) => {
+      const t = m.texto.length > TETO_DO_MODELO ? `${m.texto.slice(0, TETO_DO_MODELO)}\n[modelo cortado aqui]` : m.texto;
+      return `### Modelo ${i + 1}: ${m.titulo}${m.tese ? `\nTese: ${m.tese}` : ""}\n${t}`;
+    }),
+  ].join("\n\n");
 }
 
 export function gerarPeca(ia: Ia, pedido: PedidoDePeca, signal?: AbortSignal) {
@@ -102,6 +124,7 @@ Estrutura usual: ${tipo.estrutura}`,
       prazo && `## Prazo que esta peça cumpre\n${prazo.tipo}, vence em ${prazo.fim}${prazo.fundamento ? ` (${prazo.fundamento})` : ""}.`,
       prazo?.briefing && `## Briefing do prazo\n${prazo.briefing}`,
       pedido.instrucoes.trim() && `## Instruções de quem pediu\n${pedido.instrucoes.trim()}`,
+      pedido.modelos?.length && textoDosModelos(pedido.modelos),
       `## Quem assina\n${escritorio.advogado}${escritorio.oab ? `, ${escritorio.oab}` : ""}, ${escritorio.nome}${escritorio.cidade ? `, ${escritorio.cidade}` : ""}.`,
       pedido.contextoDoProcesso,
     ]

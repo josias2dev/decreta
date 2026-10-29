@@ -2,7 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { MockLanguageModelV4 } from "ai/test";
 import {
   briefingDoPrazo,
+  conferirPasta,
   createGatewayIa,
+  ehDecisaoFinal,
+  gerarPeca,
+  tipoDePeca,
+  transcreverDocumento,
   IaRecusou,
   impressao,
   pecaParaPrazo,
@@ -154,5 +159,65 @@ describe("contexto", () => {
     expect(pecaParaPrazo("Contrarrazões de apelação").id).toBe("contrarrazoes");
     expect(pecaParaPrazo("Contestação trabalhista").id).toBe("contestacao-trabalhista");
     expect(pecaParaPrazo("Algo diferente").id).toBe("outro");
+  });
+});
+
+describe("leitura da sentença, conferência e leitura de foto", () => {
+  test("reconhece sentença e acórdão pelo tipo ou pelo dispositivo", () => {
+    expect(ehDecisaoFinal({ tipoDocumento: "Sentença", texto: "x" })).toBe(true);
+    expect(ehDecisaoFinal({ tipoDocumento: "Acórdão", texto: "x" })).toBe(true);
+    expect(ehDecisaoFinal({ tipoDocumento: null, texto: "Ante o exposto, JULGO IMPROCEDENTE o pedido." })).toBe(true);
+    expect(ehDecisaoFinal({ tipoDocumento: null, texto: "Homologo o acordo celebrado entre as partes." })).toBe(true);
+    expect(ehDecisaoFinal({ tipoDocumento: "Despacho", texto: PUBLICACAO.texto })).toBe(false);
+  });
+
+  test("conferência sem documento com texto recusa sem chamar o modelo", async () => {
+    const chamadas: MetodoIa[] = [];
+    const pedido = { pessoa: { nome: "Carlos Pereira", documento: null, endereco: null }, assunto: null, hoje: "2026-10-29", documentos: [{ nome: "foto.jpg", texto: "" }], processos: [] };
+    await expect(conferirPasta(iaFalsa({}, chamadas), pedido)).rejects.toBeInstanceOf(IaRecusou);
+    expect(chamadas).toEqual([]);
+  });
+
+  test("foto sem texto volta vazia; com texto, a transcrição", async () => {
+    const ia = (texto: string, chamadas: MetodoIa[]): Ia => ({
+      modelo: (metodo) =>
+        new MockLanguageModelV4({
+          doGenerate: async () => {
+            chamadas.push(metodo);
+            return responde(texto);
+          },
+        }),
+      transcrever: async () => "",
+    });
+    const chamadas: MetodoIa[] = [];
+    const foto = { bytes: new Uint8Array([1, 2, 3]), mime: "image/jpeg", nome: "rg.jpg" };
+    expect(await transcreverDocumento(ia("SEM TEXTO", chamadas), foto)).toBe("");
+    expect(await transcreverDocumento(ia("Nome: MARINA DUARTE", chamadas), { ...foto, mime: "application/pdf", nome: "rg.pdf" })).toBe("Nome: MARINA DUARTE");
+    expect(chamadas).toEqual(["ler-imagem", "ler-pdf"]);
+  });
+
+  test("a peça leva os modelos do escritório, sem os fatos deles", async () => {
+    let prompt = "";
+    const ia: Ia = {
+      modelo: () =>
+        new MockLanguageModelV4({
+          doStream: async (o) => {
+            prompt = JSON.stringify(o.prompt);
+            return { stream: new ReadableStream({ start: (c) => (c.enqueue({ type: "finish", finishReason: { unified: "stop", raw: "stop" }, usage: responde("").usage }), c.close()) }) };
+          },
+        }),
+      transcrever: async () => "",
+    };
+    const r = gerarPeca(ia, {
+      tipo: tipoDePeca("contrarrazoes")!,
+      instrucoes: "",
+      contextoDoProcesso: "## Processo",
+      escritorio: { nome: "Souza & Mendes", advogado: "Beatriz Souza", oab: null, cidade: null },
+      modelos: [{ titulo: "Contrarrazões · seguro", tese: "Laudo basta", texto: "Texto do modelo." }],
+    });
+    await r.text;
+    expect(prompt).toContain("Modelos do escritório");
+    expect(prompt).toContain("Tese: Laudo basta");
+    expect(prompt).toContain("Não copie delas fatos");
   });
 });
