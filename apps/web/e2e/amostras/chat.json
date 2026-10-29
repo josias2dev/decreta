@@ -1,22 +1,22 @@
 {
-  "path": "/ia/chat/e29cc2e7-6922-43ce-b4dc-541010e52cb3",
+  "path": "/ia/chat/12106326-1310-4e97-b3ca-cc941812d31f",
   "corpo": {
     "rodape": "Gerado por IA. Confira nos autos.",
     "mensagens": [
       {
-        "id": "59386d73-f0ab-4978-925f-8283e4cd86f2",
+        "id": "ae185b41-5c47-4b4a-a161-35543b68706c",
         "papel": "pessoa",
         "texto": "A seguradora já fez proposta de acordo?",
         "em": "2026-10-28T19:02:00.000Z",
         "autor": {
-          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
         }
       },
       {
-        "id": "cd5faf62-3080-4050-9707-2dbc564dd853",
+        "id": "32cbca0f-1ff1-48b4-8344-c1a33b74ebcb",
         "papel": "ia",
         "texto": "Sim, uma vez. Na audiência de conciliação (evento 18) a ré ofereceu R$ 18.000,00, recusados pela autora. Não há proposta posterior nos autos.\n\nFonte: Ata da audiência · evento 18",
         "em": "2026-10-28T19:02:09.000Z",

@@ -1,7 +1,7 @@
 {
-  "path": "/clientes/de92ae1e-a016-4f23-a8de-3ffecaa25214",
+  "path": "/clientes/ed866ff7-ff43-476f-a3d6-7b797927f716",
   "corpo": {
-    "id": "de92ae1e-a016-4f23-a8de-3ffecaa25214",
+    "id": "ed866ff7-ff43-476f-a3d6-7b797927f716",
     "nome": "Marina Duarte",
     "tipo": "pf",
     "documento": "318.204.567-90",
@@ -13,13 +13,13 @@
     "criadoEm": "2025-09-24T12:00:00.000Z",
     "processos": [
       {
-        "id": "e29cc2e7-6922-43ce-b4dc-541010e52cb3",
+        "id": "12106326-1310-4e97-b3ca-cc941812d31f",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "orgao": "2ª Vara Cível",
         "situacao": "ativo",
         "responsavel": {
-          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -28,37 +28,37 @@
     ],
     "atendimentos": [
       {
-        "id": "2f69f638-09eb-4ec7-bcf7-a12987687a03",
+        "id": "7b8b3166-84d9-42f9-af47-7b1423e49d2a",
         "em": "2026-10-20T18:30:00.000Z",
         "canal": "whatsapp",
         "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
         "autor": {
-          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
         },
-        "processoId": "e29cc2e7-6922-43ce-b4dc-541010e52cb3"
+        "processoId": "12106326-1310-4e97-b3ca-cc941812d31f"
       },
       {
-        "id": "79a7446d-00df-42fb-87e9-dc4e881f5a84",
+        "id": "610652ee-cda3-4136-9a47-84fac7baa06f",
         "em": "2026-08-30T18:30:00.000Z",
         "canal": "presencial",
         "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
         "autor": {
-          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
         },
-        "processoId": "e29cc2e7-6922-43ce-b4dc-541010e52cb3"
+        "processoId": "12106326-1310-4e97-b3ca-cc941812d31f"
       }
     ],
     "documentos": [],
     "linhaDoTempo": [
       {
         "em": "2026-10-20T18:30:00.000Z",
-        "titulo": "Atendimento · whatsapp",
+        "titulo": "Atendimento · WhatsApp",
         "detalhe": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
         "tipo": "atendimento"
       },

@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/f585dc99-a9dc-4e8b-9a3b-41994d3d0560",
+  "path": "/prazos/77389371-cc60-4c1b-b5d6-80ce3698bd7d",
   "corpo": {
-    "id": "f585dc99-a9dc-4e8b-9a3b-41994d3d0560",
+    "id": "77389371-cc60-4c1b-b5d6-80ce3698bd7d",
     "tipo": "Alegações finais",
     "fundamento": "art. 364, § 2º, CPC",
     "dias": 15,
@@ -21,13 +21,13 @@
     "origem": "ia",
     "confirmado": true,
     "confirmadoPor": {
-      "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+      "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS"
     },
     "responsavel": {
-      "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+      "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS"
@@ -35,15 +35,17 @@
     "observacoes": null,
     "motivoDescarte": null,
     "processo": {
-      "id": "477170d2-9733-4ab9-845d-93b6ad13ddef",
+      "id": "43dd1d9a-48eb-4431-b2b8-23d316421104",
       "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
       "cnj": "5009876-57.2025.8.24.0038",
       "orgao": "4ª Vara Cível",
       "comarca": "Joinville",
-      "tribunal": "TJSC"
+      "tribunal": "TJSC",
+      "poloCliente": "ativo"
     },
     "publicacao": {
-      "id": "f4647f98-33b2-413e-a24b-87a3ca9e8227",
+      "id": "7383dd25-3962-4e2b-b915-5e1121941abd",
+      "fonte": "djen",
       "texto": "Encerrada a instrução, concedo às partes o prazo sucessivo de 15 (quinze) dias para apresentação de alegações finais por memoriais.",
       "disponibilizadaEm": "2026-10-06",
       "publicadaEm": "2026-10-07",
@@ -54,10 +56,10 @@
     "briefing": null,
     "pecas": [
       {
-        "id": "cede2cd7-2874-4fe5-97b5-74db6f262654",
+        "id": "70afd8bd-b410-44aa-b5cb-6ed890895b06",
         "titulo": "Alegações finais · Roberto Kühn",
         "situacao": "rascunho",
-        "atualizadaEm": "2026-10-29T22:01:35.927Z"
+        "atualizadaEm": "2026-10-29T22:47:21.569Z"
       }
     ],
     "historico": [

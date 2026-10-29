@@ -66,6 +66,7 @@ try {
   await guardar("registro", "/registro");
   await guardar("catalogo", "/pecas/catalogo");
   await guardar("preparar", `/pecas/preparar?prazo=${marina.id}`);
+  await guardar("prepararComPeca", `/pecas/preparar?prazo=${alegacoes.id}`);
   const pecaId = (await get(`/prazos/${alegacoes.id}`)).pecas[0].id;
   await guardar("peca", `/pecas/${pecaId}`);
   await guardar("perguntar", "/ia/perguntar");

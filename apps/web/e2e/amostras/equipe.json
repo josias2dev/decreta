@@ -3,12 +3,12 @@
   "corpo": {
     "pessoas": [
       {
-        "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+        "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
         "email": "beatriz@demo.decreta.app",
-        "cargo": "Advogada · sócia",
+        "cargo": "Advogada",
         "papel": "owner",
         "oab": "OAB/SC 41.233",
         "whatsapp": null,
@@ -17,12 +17,12 @@
         "oabUf": "SC"
       },
       {
-        "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
+        "id": "WLhw1Rm7nqAt2UD6NPhRitFswwkLsyGh",
         "nome": "Rafael Freitas",
         "apelido": "Rafael",
         "iniciais": "RF",
         "email": "rafael@demo.decreta.app",
-        "cargo": "Advogado · sócio",
+        "cargo": "Advogado",
         "papel": "admin",
         "oab": "OAB/SC 45.678",
         "whatsapp": null,
@@ -31,7 +31,7 @@
         "oabUf": "SC"
       },
       {
-        "id": "85UWGs8166NBiIJ5syh4p7MUr5tEr8Zl",
+        "id": "zANDd4n4FHEFpyfVeNf6nIKBML0mbeqJ",
         "nome": "Tiago Martins",
         "apelido": "Tiago",
         "iniciais": "TM",
@@ -45,7 +45,7 @@
         "oabUf": "SC"
       },
       {
-        "id": "lUPcGHKkhLHH6le4yRf8yk383gTS2dka",
+        "id": "HGaBXCi2fJf8Gf9ojWYD1Ck5GSRgObFX",
         "nome": "Camila Azevedo",
         "apelido": "Camila",
         "iniciais": "CA",

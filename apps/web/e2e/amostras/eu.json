@@ -2,15 +2,15 @@
   "path": "/eu",
   "corpo": {
     "usuario": {
-      "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+      "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
-      "cargo": "Advogada · sócia",
+      "cargo": "Advogada",
       "papel": "owner"
     },
     "escritorio": {
-      "id": "c0522517-606b-406a-bcb6-5351d5cd190f",
+      "id": "fa012946-5a3e-4dd3-8687-4b89cf812a50",
       "nome": "Souza & Freitas Advocacia",
       "pessoas": 4,
       "timezone": "America/Sao_Paulo"
@@ -19,23 +19,23 @@
     "ia": false,
     "equipe": [
       {
-        "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+        "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
-        "cargo": "Advogada · sócia",
+        "cargo": "Advogada",
         "papel": "owner"
       },
       {
-        "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
+        "id": "WLhw1Rm7nqAt2UD6NPhRitFswwkLsyGh",
         "nome": "Rafael Freitas",
         "apelido": "Rafael",
         "iniciais": "RF",
-        "cargo": "Advogado · sócio",
+        "cargo": "Advogado",
         "papel": "admin"
       },
       {
-        "id": "85UWGs8166NBiIJ5syh4p7MUr5tEr8Zl",
+        "id": "zANDd4n4FHEFpyfVeNf6nIKBML0mbeqJ",
         "nome": "Tiago Martins",
         "apelido": "Tiago",
         "iniciais": "TM",
@@ -43,7 +43,7 @@
         "papel": "member"
       },
       {
-        "id": "lUPcGHKkhLHH6le4yRf8yk383gTS2dka",
+        "id": "HGaBXCi2fJf8Gf9ojWYD1Ck5GSRgObFX",
         "nome": "Camila Azevedo",
         "apelido": "Camila",
         "iniciais": "CA",

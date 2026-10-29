@@ -1,7 +1,7 @@
 {
-  "path": "/processos/e29cc2e7-6922-43ce-b4dc-541010e52cb3",
+  "path": "/processos/12106326-1310-4e97-b3ca-cc941812d31f",
   "corpo": {
-    "id": "e29cc2e7-6922-43ce-b4dc-541010e52cb3",
+    "id": "12106326-1310-4e97-b3ca-cc941812d31f",
     "titulo": "Marina Duarte × Seguradora Alfa S.A.",
     "cnj": "5004321-25.2026.8.24.0038",
     "tipo": "judicial",
@@ -20,11 +20,11 @@
     "observacoes": null,
     "datajudEm": "2026-10-29T08:12:00.000Z",
     "cliente": {
-      "id": "de92ae1e-a016-4f23-a8de-3ffecaa25214",
+      "id": "ed866ff7-ff43-476f-a3d6-7b797927f716",
       "nome": "Marina Duarte"
     },
     "responsavel": {
-      "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+      "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS"
@@ -35,7 +35,7 @@
     },
     "partes": [
       {
-        "id": "a85ced02-31b9-4c01-90e5-49a6bf081bef",
+        "id": "38d0a7c7-2f71-45e9-90ce-8284747927ef",
         "nome": "Marina Duarte",
         "polo": "ativo",
         "papel": "Autora",
@@ -44,7 +44,7 @@
         "documento": "31820456790"
       },
       {
-        "id": "e70049fc-e9df-457d-879f-32ca43955eac",
+        "id": "73d2eeb8-56c5-493b-a5df-c64dd7a0a604",
         "nome": "Seguradora Alfa S.A.",
         "polo": "passivo",
         "papel": "Ré",
@@ -59,7 +59,7 @@
       "documentos": 8
     },
     "resumo": {
-      "id": "be958b28-f68b-491a-bb3e-fba17900d70d",
+      "id": "b4ee79b0-3f14-4fa0-b0c1-a9a9e1b31ac6",
       "acao": "resumo-autos",
       "situacao": "pronto",
       "conteudo": {
@@ -80,20 +80,11 @@
       "erro": null
     },
     "novidades": [
-      "petição da ré, evento 89",
-      "intimação, evento 88",
-      "laudo pericial, evento 87",
-      "perícia realizada, evento 79",
-      "petição da autora, evento 44",
-      "decisão, evento 38",
-      "réplica, evento 31",
-      "contestação, evento 24",
-      "audiência de conciliação, evento 18",
-      "distribuição, evento 1"
+      "petição da ré, evento 89"
     ],
     "ultimasMovimentacoes": [
       {
-        "id": "0d196f58-e338-4ec1-ae72-7546c2193a05",
+        "id": "9d9320d1-d0d3-4f78-ba16-2561bda7e5df",
         "em": "2026-10-28T20:20:00.000Z",
         "evento": 89,
         "titulo": "Petição da ré",
@@ -102,66 +93,66 @@
         "fonte": "datajud",
         "nova": true,
         "documento": {
-          "id": "ad305618-064c-4675-8183-a79af4834d63",
+          "id": "6f606852-4487-46a7-9866-f20ef37ed289",
           "nome": "Petição da ré · pedido de esclarecimentos.docx",
           "paginas": 4
         }
       },
       {
-        "id": "bc2bc61f-9eb1-4a69-b696-6bad9ce3e555",
+        "id": "4db0d06d-53b6-46e5-96e5-5577209b4d90",
         "em": "2026-10-28T17:05:00.000Z",
         "evento": 88,
         "titulo": "Intimação",
         "descricao": "Manifestação das partes sobre o laudo em 15 dias",
         "autor": "juizo",
         "fonte": "datajud",
-        "nova": true,
+        "nova": false,
         "documento": null
       },
       {
-        "id": "c015b742-b245-417b-9217-37b345e1b646",
+        "id": "e7d377a1-70d1-44bf-9eee-7ace6fda0957",
         "em": "2026-10-21T17:05:00.000Z",
         "evento": 87,
         "titulo": "Laudo pericial",
         "descricao": "Incapacidade parcial permanente de 40%; nexo confirmado",
         "autor": "juizo",
         "fonte": "datajud",
-        "nova": true,
+        "nova": false,
         "documento": {
-          "id": "8891f0c6-fa84-43e3-8f94-40e6024531cf",
+          "id": "cd2658a0-b253-43d6-bc8b-efaf764222ee",
           "nome": "Laudo pericial.docx",
           "paginas": 18
         }
       },
       {
-        "id": "5d0f9339-2356-44e5-b676-178ab1d1dd6d",
+        "id": "b69b6a9f-347c-4ac0-8783-4ea0bfb2f44c",
         "em": "2026-09-30T17:05:00.000Z",
         "evento": 79,
         "titulo": "Perícia realizada",
         "descricao": "Exame clínico da autora no consultório do perito",
         "autor": "cartorio",
         "fonte": "datajud",
-        "nova": true,
+        "nova": false,
         "documento": null
       },
       {
-        "id": "94202d85-fd1f-465d-99fb-8cf04bcc7574",
+        "id": "ed8d9799-7098-4f68-af25-6f82154b11c1",
         "em": "2026-09-02T20:20:00.000Z",
         "evento": 44,
         "titulo": "Petição da autora",
         "descricao": "Quesitos e indicação de assistente técnico",
         "autor": "partes",
         "fonte": "datajud",
-        "nova": true,
+        "nova": false,
         "documento": {
-          "id": "652599fa-5662-43e6-b7ed-035ea0503300",
+          "id": "138c5b22-ccfb-45af-b069-31d84aa7981a",
           "nome": "Quesitos da autora.docx",
           "paginas": 3
         }
       }
     ],
     "proximoPrazo": {
-      "id": "ff87f0ab-ee7a-4749-a028-36c305a455e2",
+      "id": "f8b6f730-cc75-41c3-a50b-e2e9502833c2",
       "tipo": "Manifestação sobre laudo pericial",
       "fim": "2026-11-23",
       "dias": 15,
@@ -170,7 +161,7 @@
       "quando": "23 nov",
       "confirmado": false,
       "responsavel": {
-        "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
+        "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS"
