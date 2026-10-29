@@ -4,7 +4,7 @@
  * daqui.
  */
 import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, somarDias, urgenciaDoPrazo, type Calendario, type Dia, type Urgencia } from "@decreta/core";
-import { alvaras, analises, audiencias, prazos, processos, publicacoes, tarefas, type Database, type Tx } from "@decreta/db";
+import { alvaras, analises, audiencias, negocios, prazos, processos, publicacoes, tarefas, type Database, type Tx } from "@decreta/db";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { pessoasDoEscritorio, resumir, type PessoaResumida } from "./pessoas.ts";
@@ -35,7 +35,7 @@ export interface PublicacaoDoDia {
 export interface PainelDoDia {
   hoje: Dia;
   rotulo: string;
-  contadores: { vencemHoje: number; vencidos: number; publicacoesNovas: number; audienciasHoje: number; alvarasAguardando: number };
+  contadores: { vencemHoje: number; vencidos: number; publicacoesNovas: number; publicacoesComPrazo: number; audienciasHoje: number; alvarasAguardando: number };
   itens: ItemDoDia[];
   publicacoes: PublicacaoDoDia[];
   porResponsavel: { pessoa: PessoaResumida | null; hoje: number; semana: number }[];
@@ -83,8 +83,10 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       .where(and(eq(audiencias.situacao, "marcada"), gte(audiencias.em, inicio), lt(audiencias.em, fim)))
       .orderBy(asc(audiencias.em)),
     tx
-      .select()
+      .select({ t: tarefas, processo: processos.titulo, negocio: negocios.nome })
       .from(tarefas)
+      .leftJoin(processos, eq(processos.id, tarefas.processoId))
+      .leftJoin(negocios, eq(negocios.id, tarefas.negocioId))
       .where(and(isNull(tarefas.concluidaEm), lte(tarefas.dia, hoje)))
       .orderBy(asc(tarefas.dia)),
     tx
@@ -100,7 +102,7 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
     ? await tx
         .select({ alvoId: analises.alvoId, situacao: analises.situacao, conteudo: analises.conteudo, em: analises.createdAt })
         .from(analises)
-        .where(and(eq(analises.alvo, "publicacao"), eq(analises.acao, "sugerir-prazo"), inArray(analises.alvoId, pubs.slice(0, 3).map((p) => p.id))))
+        .where(and(eq(analises.alvo, "publicacao"), eq(analises.acao, "sugerir-prazo"), inArray(analises.alvoId, pubs.slice(0, 200).map((p) => p.id))))
         .orderBy(desc(analises.createdAt))
     : [];
   const ultimaSugestao = new Map<string, (typeof sugestoes)[number]>();
@@ -146,14 +148,15 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       responsavel: resumir(pessoas, a.responsavelId),
     });
   }
-  for (const t of tars) {
+  for (const { t, processo, negocio } of tars) {
     itens.push({
       tipo: "tarefa",
       id: t.id,
       urgencia: "tarefa",
       quando: t.dia < hoje ? `Tarefa · ${diaPorExtensoCurto(t.dia, hoje)}` : "Tarefa",
       titulo: t.titulo,
-      detalhe: t.detalhe ?? "",
+      // "José Antunes · Novos negócios · faltam RG e comprovante de residência"
+      detalhe: [processo, negocio && `${negocio} · Novos negócios`, t.detalhe].filter(Boolean).join(" · "),
       cnj: null,
       processoId: t.processoId,
       responsavel: resumir(pessoas, t.responsavelId),
@@ -169,7 +172,15 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
   return {
     hoje,
     rotulo: diaPorExtenso(hoje),
-    contadores: { vencemHoje, vencidos, publicacoesNovas: pubs.length, audienciasHoje: auds.length, alvarasAguardando: alv?.n ?? 0 },
+    contadores: {
+      vencemHoje,
+      vencidos,
+      publicacoesNovas: pubs.length,
+      // Das novas, quantas a IA já leu e disse que abrem prazo (falta a pessoa confirmar).
+      publicacoesComPrazo: [...ultimaSugestao.values()].filter((s) => s.situacao === "pronto" && (s.conteudo as { geraPrazo?: boolean }).geraPrazo).length,
+      audienciasHoje: auds.length,
+      alvarasAguardando: alv?.n ?? 0,
+    },
     itens,
     publicacoes: pubs.slice(0, 3).map((p) => {
       const s = ultimaSugestao.get(p.id);

@@ -70,7 +70,7 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     const processo = await call(`/processos/${marina.processoId}`);
     expect(processo.cnj).toBe("5004321-25.2026.8.24.0038");
     expect(processo.resumo).toMatchObject({ situacao: "pronto", desatualizada: true });
-    const docs = await call(`/documentos?processoId=${marina.processoId}`);
+    const docs = await call(`/documentos?processo=${marina.processoId}`);
     expect(docs.itens.length).toBeGreaterThanOrEqual(8);
   });
 
