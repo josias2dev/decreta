@@ -1,0 +1,126 @@
+{
+  "path": "/pecas/catalogo",
+  "corpo": {
+    "total": 22,
+    "grupos": [
+      {
+        "nome": "Petições iniciais",
+        "tipos": [
+          {
+            "id": "inicial-civel",
+            "nome": "Petição inicial cível"
+          },
+          {
+            "id": "inicial-trabalhista",
+            "nome": "Reclamação trabalhista"
+          },
+          {
+            "id": "inicial-jec",
+            "nome": "Inicial do Juizado Especial"
+          }
+        ]
+      },
+      {
+        "nome": "Defesas",
+        "tipos": [
+          {
+            "id": "contestacao",
+            "nome": "Contestação"
+          },
+          {
+            "id": "contestacao-trabalhista",
+            "nome": "Contestação trabalhista"
+          },
+          {
+            "id": "replica",
+            "nome": "Réplica à contestação"
+          }
+        ]
+      },
+      {
+        "nome": "Recursos",
+        "tipos": [
+          {
+            "id": "apelacao",
+            "nome": "Apelação"
+          },
+          {
+            "id": "contrarrazoes",
+            "nome": "Contrarrazões de apelação"
+          },
+          {
+            "id": "embargos-declaracao",
+            "nome": "Embargos de declaração"
+          },
+          {
+            "id": "agravo-instrumento",
+            "nome": "Agravo de instrumento"
+          },
+          {
+            "id": "recurso-ordinario",
+            "nome": "Recurso ordinário trabalhista"
+          }
+        ]
+      },
+      {
+        "nome": "Manifestações",
+        "tipos": [
+          {
+            "id": "manifestacao-laudo",
+            "nome": "Manifestação sobre laudo pericial"
+          },
+          {
+            "id": "manifestacao-documentos",
+            "nome": "Manifestação sobre documentos"
+          },
+          {
+            "id": "alegacoes-finais",
+            "nome": "Alegações finais"
+          },
+          {
+            "id": "especificacao-provas",
+            "nome": "Especificação de provas"
+          },
+          {
+            "id": "cumprimento-sentenca",
+            "nome": "Cumprimento de sentença"
+          },
+          {
+            "id": "juntada",
+            "nome": "Petição de juntada"
+          }
+        ]
+      },
+      {
+        "nome": "Extrajudicial e consultivo",
+        "tipos": [
+          {
+            "id": "notificacao",
+            "nome": "Notificação extrajudicial"
+          },
+          {
+            "id": "parecer",
+            "nome": "Parecer"
+          },
+          {
+            "id": "contrato-honorarios",
+            "nome": "Contrato de honorários"
+          },
+          {
+            "id": "acordo",
+            "nome": "Minuta de acordo"
+          }
+        ]
+      },
+      {
+        "nome": "Outro",
+        "tipos": [
+          {
+            "id": "outro",
+            "nome": "Outra peça"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "path": "/alvaras",
+  "corpo": {
+    "totais": {
+      "pendente": "34190.95",
+      "recebido": "3500.00"
+    },
+    "etapas": [
+      {
+        "etapa": "novo",
+        "total": "7420.55",
+        "itens": [
+          {
+            "id": "ef8c030a-6d2c-4ba5-b557-0f7281ef8ec7",
+            "descricao": "Valor bloqueado via Sisbajud",
+            "valor": "7420.55",
+            "valorRecebido": null,
+            "expedidoEm": "2026-10-28",
+            "sacadoEm": null,
+            "repassadoEm": null,
+            "observacoes": null,
+            "processo": {
+              "id": "4f47abff-27fb-44a7-9b02-2a4c19a7760f",
+              "titulo": "Auto Center Pioneiro Ltda. × Distribuidora Peças Sul",
+              "cnj": "5012450-53.2025.8.24.0038"
+            },
+            "cliente": "Auto Center Pioneiro Ltda."
+          }
+        ]
+      },
+      {
+        "etapa": "aguardando_saque",
+        "total": "22590.40",
+        "itens": [
+          {
+            "id": "9c956278-87ed-4755-aa15-a6bfe6348db6",
+            "descricao": "Depósito recursal liberado",
+            "valor": "12978.00",
+            "valorRecebido": null,
+            "expedidoEm": "2026-10-23",
+            "sacadoEm": null,
+            "repassadoEm": null,
+            "observacoes": null,
+            "processo": {
+              "id": "1826519c-ea67-47e1-96ea-0cfa573f5047",
+              "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
+              "cnj": "0000977-14.2026.5.12.0004"
+            },
+            "cliente": "Jorge Batista"
+          },
+          {
+            "id": "32f08f54-09bd-4a98-b6f6-a11f036d37bb",
+            "descricao": "RPV · salário-maternidade",
+            "valor": "9612.40",
+            "valorRecebido": null,
+            "expedidoEm": "2026-10-20",
+            "sacadoEm": null,
+            "repassadoEm": null,
+            "observacoes": null,
+            "processo": {
+              "id": "243f54ba-33bf-4f3c-8e57-e2153f4e0c1a",
+              "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
+              "cnj": "5020176-80.2026.4.04.7201"
+            },
+            "cliente": "Vanessa Hoffmann"
+          }
+        ]
+      },
+      {
+        "etapa": "sacado",
+        "total": "4180.00",
+        "itens": [
+          {
+            "id": "a5e4cf2c-63dd-4574-8b4d-50970871a507",
+            "descricao": "Depósito judicial do réu",
+            "valor": "4180.00",
+            "valorRecebido": "4180.00",
+            "expedidoEm": "2026-10-15",
+            "sacadoEm": "2026-10-19",
+            "repassadoEm": null,
+            "observacoes": null,
+            "processo": {
+              "id": "ab6efd08-5299-404b-9389-111c7e61234e",
+              "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
+              "cnj": "5011873-86.2026.8.24.0023"
+            },
+            "cliente": "Ana Lúcia Ferraz"
+          }
+        ]
+      },
+      {
+        "etapa": "repassado",
+        "total": "3500.00",
+        "itens": [
+          {
+            "id": "20215ba8-9c9f-4031-b689-7e2166198b8b",
+            "descricao": "Acordo homologado · 1ª parcela",
+            "valor": "3500.00",
+            "valorRecebido": "3500.00",
+            "expedidoEm": "2026-09-29",
+            "sacadoEm": "2026-10-03",
+            "repassadoEm": "2026-10-05",
+            "observacoes": null,
+            "processo": {
+              "id": "b6404582-8eff-4fa7-b17c-9cf18b92a0a7",
+              "titulo": "João Pedro Antunes × Banco Horizonte S.A.",
+              "cnj": "5000981-79.2026.8.24.0036"
+            },
+            "cliente": "João Pedro Antunes"
+          }
+        ]
+      },
+      {
+        "etapa": "finalizado",
+        "total": "0.00",
+        "itens": []
+      }
+    ]
+  }
+}

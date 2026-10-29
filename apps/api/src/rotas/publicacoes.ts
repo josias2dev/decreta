@@ -9,6 +9,7 @@ import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.t
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { corpo, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { tituloDaPublicacao } from "../servicos/publicacoes.ts";
 
 const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
 type Situacao = (typeof SITUACOES)[number];
@@ -67,7 +68,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
           const assunto = s?.situacao === "pronto" ? (s.conteudo as { assunto?: string }).assunto : s?.situacao === "recusa" ? "sem teor" : null;
           return {
             id: pub.id,
-            titulo: [pub.tipoComunicacao ?? "Comunicação", assunto ?? pub.tipoDocumento?.toLocaleLowerCase("pt-BR")].filter(Boolean).join(" · "),
+            titulo: tituloDaPublicacao(pub.tipoComunicacao, assunto ?? pub.tipoDocumento?.toLocaleLowerCase("pt-BR") ?? null),
             disponibilizadaEm: pub.disponibilizadaEm,
             partes: processo?.titulo ?? (pub.destinatarios.map((d) => d.nome).join(" × ") || pub.cnj || "Sem processo vinculado"),
             processoId: processo?.id ?? null,

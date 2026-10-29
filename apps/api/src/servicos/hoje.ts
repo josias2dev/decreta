@@ -8,6 +8,7 @@ import { alvaras, analises, audiencias, prazos, processos, publicacoes, tarefas,
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { pessoasDoEscritorio, resumir, type PessoaResumida } from "./pessoas.ts";
+import { tituloDaPublicacao } from "./publicacoes.ts";
 
 export interface ItemDoDia {
   tipo: "prazo" | "audiencia" | "tarefa";
@@ -172,9 +173,10 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
     itens,
     publicacoes: pubs.slice(0, 3).map((p) => {
       const s = ultimaSugestao.get(p.id);
-      const tipo = s?.situacao === "pronto" && (s.conteudo as { geraPrazo?: boolean; tipo?: string }).geraPrazo ? (s.conteudo as { tipo?: string }).tipo : null;
+      const lida = s?.situacao === "pronto" ? (s.conteudo as { geraPrazo?: boolean; tipo?: string; assunto?: string }) : null;
       const quem = p.processo?.split(" × ")[0] ?? p.destinatarios[0]?.nome ?? "Sem processo";
-      return { id: p.id, titulo: tipo || [p.tipoComunicacao, p.tipoDocumento].filter(Boolean).join(" · ") || "Publicação", detalhe: `${quem} · ${resumoDaSugestao(s)}` };
+      const titulo = lida?.geraPrazo && lida.tipo ? lida.tipo : tituloDaPublicacao(p.tipoComunicacao, lida?.assunto ?? p.tipoDocumento?.toLocaleLowerCase("pt-BR") ?? null);
+      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s)}` };
     }),
     porResponsavel,
   };

@@ -1,0 +1,81 @@
+{
+  "path": "/prazos/f120dbcd-3a01-4fb1-bd3d-772f01476a4c",
+  "corpo": {
+    "id": "f120dbcd-3a01-4fb1-bd3d-772f01476a4c",
+    "tipo": "Alegações finais",
+    "fundamento": "art. 364, § 2º, CPC",
+    "dias": 15,
+    "contagem": "uteis",
+    "publicadoEm": "2026-10-07",
+    "inicio": "2026-10-08",
+    "fim": "2026-10-29",
+    "desconsiderados": [
+      {
+        "dia": "2026-10-12",
+        "nome": "Nossa Senhora Aparecida",
+        "tipo": "nacional"
+      }
+    ],
+    "situacao": "aberto",
+    "urgencia": "hoje",
+    "origem": "ia",
+    "confirmado": true,
+    "confirmadoPor": {
+      "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+      "nome": "Beatriz Souza",
+      "apelido": "Beatriz",
+      "iniciais": "BS"
+    },
+    "responsavel": {
+      "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+      "nome": "Beatriz Souza",
+      "apelido": "Beatriz",
+      "iniciais": "BS"
+    },
+    "observacoes": null,
+    "motivoDescarte": null,
+    "processo": {
+      "id": "f028bff1-2ebd-4249-9152-0810293dadd9",
+      "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
+      "cnj": "5009876-57.2025.8.24.0038",
+      "orgao": "4ª Vara Cível",
+      "comarca": "Joinville",
+      "tribunal": "TJSC"
+    },
+    "publicacao": {
+      "id": "091d055b-2dab-4c5a-bfad-8764349c7e1e",
+      "texto": "Encerrada a instrução, concedo às partes o prazo sucessivo de 15 (quinze) dias para apresentação de alegações finais por memoriais.",
+      "disponibilizadaEm": "2026-10-06",
+      "publicadaEm": "2026-10-07",
+      "tipoComunicacao": "Intimação",
+      "tipoDocumento": "Despacho",
+      "link": null
+    },
+    "briefing": null,
+    "pecas": [
+      {
+        "id": "dcc9c39d-f5f6-490d-aeb1-52e0254c6b3c",
+        "titulo": "Alegações finais · Roberto Kühn",
+        "situacao": "rascunho",
+        "atualizadaEm": "2026-10-29T21:45:09.154Z"
+      }
+    ],
+    "historico": [
+      {
+        "em": "2026-10-07T12:12:00.000Z",
+        "titulo": "Beatriz confirmou o prazo",
+        "detalhe": null
+      },
+      {
+        "em": "2026-10-07T09:41:00.000Z",
+        "titulo": "IA sugeriu o prazo",
+        "detalhe": "Lido do teor da intimação"
+      },
+      {
+        "em": "2026-10-07T09:39:46.000Z",
+        "titulo": "Publicação capturada",
+        "detalhe": "DJEN, pela OAB/SC 41.233"
+      }
+    ]
+  }
+}

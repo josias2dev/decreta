@@ -278,6 +278,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     // Publicações da caixa, com a leitura da IA
     const oab = (q: Quem | null) => (q && EQUIPE[q].oab ? [{ nome: EQUIPE[q].nome, oab: EQUIPE[q].oab!, uf: "SC" }] : [{ nome: EQUIPE.beatriz.nome, oab: EQUIPE.beatriz.oab!, uf: "SC" }]);
     let idExterno = 512_300_000;
+    let ordem = 0;
     const novaPublicacao = async (x: { processo: string; disponibilizadaEm: Dia; tipoComunicacao: string; tipoDocumento: string; teor: string; situacao: "nova" | "pendente" | "lida" | "vinculada"; tratadaPor?: string | null }) => {
       const p = PROCESSOS[x.processo]!;
       const cal = calDe(p.tribunal);
@@ -303,7 +304,8 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           situacao: x.situacao,
           tratadaPor: x.tratadaPor ?? null,
           tratadaEm: x.tratadaPor ? em(publicadaEm, "09:12") : null,
-          createdAt: em(publicadaEm, "06:40"),
+          // Na caixa, a ordem do dado: a primeira da lista é a mais recente.
+          createdAt: new Date(em(publicadaEm, "06:40").getTime() - ++ordem * 1000),
         })
         .returning();
       return pub!;

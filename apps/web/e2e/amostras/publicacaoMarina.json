@@ -1,0 +1,98 @@
+{
+  "path": "/publicacoes/9fd7af84-ec88-4121-8c34-f7cde48cc683",
+  "corpo": {
+    "id": "9fd7af84-ec88-4121-8c34-f7cde48cc683",
+    "situacao": "nova",
+    "fonte": "djen",
+    "disponibilizadaEm": "2026-10-28",
+    "publicadaEm": "2026-10-29",
+    "tribunal": "TJSC",
+    "orgao": "2ª Vara Cível de Joinville",
+    "tipoComunicacao": "Intimação",
+    "tipoDocumento": "Despacho",
+    "cnj": "5004321-25.2026.8.24.0038",
+    "texto": "Intimem-se as partes para, querendo, manifestarem-se sobre o laudo pericial juntado no evento 87, no prazo comum de 15 (quinze) dias. Após, voltem conclusos para sentença.",
+    "link": null,
+    "destinatarios": [
+      {
+        "nome": "Marina Duarte",
+        "polo": "ativo"
+      }
+    ],
+    "advogados": [
+      {
+        "uf": "SC",
+        "oab": "41.233",
+        "nome": "Beatriz Souza"
+      }
+    ],
+    "processo": {
+      "id": "58a4599a-e85e-44da-860a-e96ead0a9a58",
+      "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+      "cnj": "5004321-25.2026.8.24.0038",
+      "orgao": "2ª Vara Cível",
+      "comarca": "Joinville",
+      "responsavel": {
+        "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+        "nome": "Beatriz Souza",
+        "apelido": "Beatriz",
+        "iniciais": "BS"
+      }
+    },
+    "sugestao": {
+      "id": "7f06c7cf-9b8d-49f0-b8fe-f209a0b1148e",
+      "acao": "sugerir-prazo",
+      "situacao": "pronto",
+      "conteudo": {
+        "dias": 15,
+        "tipo": "Manifestação sobre laudo pericial",
+        "recusa": null,
+        "resumo": "Intimação para falar do laudo pericial do evento 87.",
+        "assunto": "laudo pericial",
+        "contagem": "uteis",
+        "audiencia": null,
+        "geraPrazo": true,
+        "fundamento": "art. 477, § 1º, CPC",
+        "responsavelId": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+        "contagemCalculada": {
+          "fim": "2026-11-23",
+          "dias": 15,
+          "inicio": "2026-10-30",
+          "contagem": "uteis",
+          "explicacao": "Começa em 30/10, primeiro dia útil depois da publicação. Fora da conta: fins de semana, 02/11 (Finados) e 20/11 (Consciência Negra).",
+          "publicacao": "2026-10-29",
+          "prorrogadoDe": null,
+          "desconsiderados": [
+            {
+              "dia": "2026-11-02",
+              "nome": "Finados",
+              "tipo": "nacional"
+            },
+            {
+              "dia": "2026-11-20",
+              "nome": "Consciência Negra",
+              "tipo": "nacional"
+            }
+          ]
+        }
+      },
+      "fonte": "DJEN · 28/10/2026",
+      "em": "2026-10-29T09:41:00.000Z",
+      "desatualizada": false,
+      "erro": null,
+      "responsavel": {
+        "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+        "nome": "Beatriz Souza",
+        "apelido": "Beatriz",
+        "iniciais": "BS"
+      }
+    },
+    "prazo": {
+      "id": "8a8109e6-e13c-4503-9c9e-d1c92d967007",
+      "confirmado": false,
+      "fim": "2026-11-23",
+      "tipo": "Manifestação sobre laudo pericial"
+    },
+    "audiencia": null
+  }
+}

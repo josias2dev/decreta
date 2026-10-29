@@ -1,0 +1,42 @@
+{
+  "path": "/escritorio",
+  "corpo": {
+    "nome": "Souza & Freitas Advocacia",
+    "tribunal": "TJSC",
+    "timbre": {
+      "cor": "#3346C4",
+      "nome": "Souza & Freitas Advocacia",
+      "fonte": "Arial",
+      "contato": "(47) 3433-0000 · contato@souzafreitas.adv.br",
+      "endereco": "Rua das Palmeiras, 120, sala 804 · Centro · Joinville/SC · 89201-000",
+      "registro": "OAB/SC 9.876"
+    },
+    "avisos": {
+      "hora": "07:30",
+      "manha": false
+    },
+    "capturaDjen": true,
+    "capturaDatajud": true,
+    "whatsappLigado": false,
+    "datajudLigado": false,
+    "iaLigada": false,
+    "suspensoes": [
+      {
+        "id": "32e019e7-33d9-434b-8fc5-320192e04849",
+        "dia": "2026-11-25",
+        "motivo": "Instabilidade do eproc (portaria da Presidência)",
+        "tipo": "forense",
+        "tribunal": "TJSC",
+        "comarca": null
+      },
+      {
+        "id": "96d0ad28-d98b-4d7b-95e3-414215231d5b",
+        "dia": "2027-03-09",
+        "motivo": "Aniversário de Joinville",
+        "tipo": "local",
+        "tribunal": null,
+        "comarca": "Joinville"
+      }
+    ]
+  }
+}

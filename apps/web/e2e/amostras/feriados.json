@@ -1,0 +1,116 @@
+{
+  "path": "/feriados",
+  "corpo": {
+    "ano": 2026,
+    "tribunal": "TJSC",
+    "dias": [
+      {
+        "dia": "2026-01-01",
+        "nome": "Confraternização Universal",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-02-16",
+        "nome": "Carnaval",
+        "tipo": "forense",
+        "origem": "TJSC"
+      },
+      {
+        "dia": "2026-02-17",
+        "nome": "Carnaval",
+        "tipo": "forense",
+        "origem": "TJSC"
+      },
+      {
+        "dia": "2026-02-18",
+        "nome": "Quarta-feira de Cinzas (expediente a partir das 14h)",
+        "tipo": "reduzido",
+        "origem": "TJSC"
+      },
+      {
+        "dia": "2026-04-02",
+        "nome": "Quinta-feira Santa",
+        "tipo": "forense",
+        "origem": "TJSC"
+      },
+      {
+        "dia": "2026-04-03",
+        "nome": "Sexta-feira da Paixão",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-04-21",
+        "nome": "Tiradentes",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-05-01",
+        "nome": "Dia do Trabalho",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-06-04",
+        "nome": "Corpus Christi",
+        "tipo": "forense",
+        "origem": "TJSC"
+      },
+      {
+        "dia": "2026-09-07",
+        "nome": "Independência",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-10-12",
+        "nome": "Nossa Senhora Aparecida",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-11-02",
+        "nome": "Finados",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-11-15",
+        "nome": "Proclamação da República",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-11-20",
+        "nome": "Consciência Negra",
+        "tipo": "nacional",
+        "origem": "lei"
+      },
+      {
+        "dia": "2026-11-25",
+        "nome": "Instabilidade do eproc (portaria da Presidência)",
+        "tipo": "forense",
+        "origem": "escritório",
+        "id": "32e019e7-33d9-434b-8fc5-320192e04849"
+      },
+      {
+        "dia": "2026-12-08",
+        "nome": "Dia da Justiça",
+        "tipo": "forense",
+        "origem": "TJSC"
+      },
+      {
+        "dia": "2026-12-25",
+        "nome": "Natal",
+        "tipo": "nacional",
+        "origem": "lei"
+      }
+    ],
+    "suspensaoDeFimDeAno": {
+      "de": "2026-12-20",
+      "ate": "2027-01-20"
+    }
+  }
+}

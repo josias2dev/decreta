@@ -1,0 +1,230 @@
+{
+  "path": "/clientes",
+  "corpo": {
+    "total": 20,
+    "pagina": 1,
+    "porPagina": 50,
+    "itens": [
+      {
+        "id": "824e90cd-3496-4b9b-b2b8-231823ec76ed",
+        "nome": "Ana Lúcia Ferraz",
+        "tipo": "pf",
+        "documento": "512.398.746-00",
+        "telefone": "(48) 99654-1230",
+        "whatsapp": "5548996541230",
+        "email": "analucia.ferraz@exemplo.com.br",
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "2b4cc461-621b-4271-8d4b-da6f12aaf597",
+        "nome": "Antônio Reis",
+        "tipo": "pf",
+        "documento": "248.150.937-41",
+        "telefone": "(47) 98845-1230",
+        "whatsapp": "5547988451230",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "5c875df5-3932-4982-9be3-5adcabd31a2c",
+        "nome": "Auto Center Pioneiro Ltda.",
+        "tipo": "pj",
+        "documento": "33.451.287/0001-25",
+        "telefone": "(47) 93422-1100",
+        "whatsapp": "5547934221100",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "c2946843-037f-417b-98ad-de04b390597e",
+        "nome": "Carlos Henrique Prado",
+        "tipo": "pf",
+        "documento": "674.120.385-08",
+        "telefone": "(47) 99981-2345",
+        "whatsapp": "5547999812345",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": "2026-10-27T18:30:00.000Z"
+      },
+      {
+        "id": "01dcab11-df52-408c-b9c0-a0288d17abba",
+        "nome": "Cooperativa Mista Rio Novo",
+        "tipo": "pj",
+        "documento": "51.234.098/0001-82",
+        "telefone": "(47) 93521-2000",
+        "whatsapp": "5547935212000",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "465e0f02-a4a5-46d9-917e-361b72f30cd3",
+        "nome": "Eduardo Lima",
+        "tipo": "pf",
+        "documento": "145.786.320-08",
+        "telefone": "(47) 98445-6712",
+        "whatsapp": "5547984456712",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "7ff1b92a-2d80-419c-b419-ca40f37dab75",
+        "nome": "Gilberto Weiss",
+        "tipo": "pf",
+        "documento": "389.012.457-79",
+        "telefone": "(47) 99112-7788",
+        "whatsapp": "5547991127788",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "4652f2da-a6b0-4213-9d29-ce6b52838f49",
+        "nome": "Helena Vieira",
+        "tipo": "pf",
+        "documento": "731.025.846-08",
+        "telefone": "(47) 98412-0933",
+        "whatsapp": "5547984120933",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "b9004477-cc3d-4cce-8000-f2f1a7ad80dd",
+        "nome": "Hotel Mar Azul Ltda.",
+        "tipo": "pj",
+        "documento": "27.984.512/0001-96",
+        "telefone": "(47) 93367-4000",
+        "whatsapp": "5547933674000",
+        "email": "rh@hotelmarazul.com.br",
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "3711263c-8018-401a-baec-4820cdfcec32",
+        "nome": "Jorge Batista",
+        "tipo": "pf",
+        "documento": "602.314.785-26",
+        "telefone": "(47) 99902-4411",
+        "whatsapp": "5547999024411",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "6f7ffe29-aaa1-44b3-89d9-cb5cf5c41203",
+        "nome": "João Pedro Antunes",
+        "tipo": "pf",
+        "documento": "290.346.187-22",
+        "telefone": "(47) 98890-3344",
+        "whatsapp": "5547988903344",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "e018d73d-b9e0-48cd-a02a-da7403e9d77d",
+        "nome": "Lúcia Matos",
+        "tipo": "pf",
+        "documento": "456.321.789-19",
+        "telefone": "(47) 98834-1290",
+        "whatsapp": "5547988341290",
+        "email": null,
+        "processos": 2,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "eb5190d1-cd98-4678-8e01-a76ad373092f",
+        "nome": "Marcos Tavares",
+        "tipo": "pf",
+        "documento": "417.306.925-16",
+        "telefone": "(47) 98450-1122",
+        "whatsapp": "5547984501122",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "d66b5a8b-8485-425e-be3a-d1ad0081e897",
+        "nome": "Marina Duarte",
+        "tipo": "pf",
+        "documento": "318.204.567-90",
+        "telefone": "(47) 99123-4567",
+        "whatsapp": "5547991234567",
+        "email": "marina.duarte@exemplo.com.br",
+        "processos": 1,
+        "ultimoAtendimento": "2026-10-20T18:30:00.000Z"
+      },
+      {
+        "id": "c7a684e1-3fdc-435f-9cb0-4a14d04b0eaf",
+        "nome": "Padaria Bom Grão Ltda.",
+        "tipo": "pj",
+        "documento": "41.827.365/0001-71",
+        "telefone": "(47) 93345-1200",
+        "whatsapp": "5547933451200",
+        "email": "financeiro@bomgrao.com.br",
+        "processos": 1,
+        "ultimoAtendimento": "2026-10-24T18:30:00.000Z"
+      },
+      {
+        "id": "4a0a30ec-edb1-4732-bce7-ba38e70d22e7",
+        "nome": "Renata Cordeiro",
+        "tipo": "pf",
+        "documento": "538.102.764-80",
+        "telefone": "(48) 99910-4456",
+        "whatsapp": "5548999104456",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "bde32a06-0d88-4c96-bcc0-80091583cfff",
+        "nome": "Roberto Kühn",
+        "tipo": "pf",
+        "documento": "207.415.398-88",
+        "telefone": "(47) 98812-7744",
+        "whatsapp": "5547988127744",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "e59e8e72-54b0-45f0-b7bb-9f87ff688db7",
+        "nome": "Sandra Petry",
+        "tipo": "pf",
+        "documento": "815.230.476-07",
+        "telefone": "(47) 99178-2210",
+        "whatsapp": "5547991782210",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "709eceb1-db22-46c1-958d-649dd5a119f6",
+        "nome": "Simone Gaspar",
+        "tipo": "pf",
+        "documento": "376.214.059-61",
+        "telefone": "(47) 99134-0021",
+        "whatsapp": "5547991340021",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      },
+      {
+        "id": "face8a72-4a6a-4ddf-9ba4-849d409161b0",
+        "nome": "Vanessa Hoffmann",
+        "tipo": "pf",
+        "documento": "693.027.415-16",
+        "telefone": "(47) 99923-7788",
+        "whatsapp": "5547999237788",
+        "email": null,
+        "processos": 1,
+        "ultimoAtendimento": null
+      }
+    ]
+  }
+}

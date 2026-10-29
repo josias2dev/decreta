@@ -1,0 +1,71 @@
+{
+  "path": "/audiencias/be6cc8f4-393e-495e-a657-45f4d87e5881",
+  "corpo": {
+    "id": "be6cc8f4-393e-495e-a657-45f4d87e5881",
+    "dia": "2026-10-29",
+    "hora": "14:30",
+    "em": "2026-10-29T17:30:00.000Z",
+    "tipo": "Conciliação",
+    "porVideo": true,
+    "local": "https://videoconf.tjsc.jus.br/sala/jec-blumenau-3",
+    "situacao": "marcada",
+    "checklist": [
+      {
+        "feito": true,
+        "texto": "Testar o link da sala com o cliente 15 minutos antes"
+      },
+      {
+        "feito": false,
+        "texto": "Ter à mão os recibos de aluguel de março a setembro"
+      },
+      {
+        "feito": false,
+        "texto": "Combinar com o cliente o valor mínimo para acordo"
+      },
+      {
+        "feito": false,
+        "texto": "Procuração e documento com foto do cliente"
+      }
+    ],
+    "responsavel": {
+      "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+      "nome": "Rafael Freitas",
+      "apelido": "Rafael",
+      "iniciais": "RF"
+    },
+    "processo": {
+      "id": "f339d64e-58d0-4820-8073-38fd9f356a80",
+      "titulo": "Carlos Henrique Prado × Construtora Vale Norte",
+      "cnj": "5007745-68.2026.8.24.0008",
+      "orgao": "Juizado Especial Cível",
+      "comarca": "Blumenau"
+    },
+    "preparacao": {
+      "id": "c974b661-9a37-43c2-b899-dad0f9053dfc",
+      "acao": "preparar-audiencia",
+      "situacao": "pronto",
+      "conteudo": {
+        "oQueE": "Audiência de conciliação do Juizado Especial, por vídeo. Não há produção de provas; é a chance de acordo antes da instrução.",
+        "criticos": [
+          "O cliente assinou aditivo prorrogando a entrega por 60 dias; a ré vai usar isso.",
+          "Sem comprovante dos aluguéis pagos no período, o dano material fica fraco."
+        ],
+        "objetivo": "Sair com proposta de indenização pelos 7 meses de atraso ou com a instrução marcada, sem abrir mão do dano moral.",
+        "checklist": [
+          "Testar o link da sala com o cliente 15 minutos antes",
+          "Ter à mão os recibos de aluguel de março a setembro",
+          "Combinar com o cliente o valor mínimo para acordo",
+          "Procuração e documento com foto do cliente"
+        ],
+        "controvertidos": [
+          "Se o atraso passou do prazo de tolerância de 180 dias do contrato (cláusula 9ª).",
+          "Se a falta de mão de obra na pandemia afasta a culpa da construtora (contestação)."
+        ]
+      },
+      "fonte": "Dados do processo",
+      "em": "2026-10-28T20:45:00.000Z",
+      "desatualizada": false,
+      "erro": null
+    }
+  }
+}

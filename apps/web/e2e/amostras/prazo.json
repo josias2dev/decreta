@@ -1,0 +1,90 @@
+{
+  "path": "/prazos/8a8109e6-e13c-4503-9c9e-d1c92d967007",
+  "corpo": {
+    "id": "8a8109e6-e13c-4503-9c9e-d1c92d967007",
+    "tipo": "Manifestação sobre laudo pericial",
+    "fundamento": "art. 477, § 1º, CPC",
+    "dias": 15,
+    "contagem": "uteis",
+    "publicadoEm": "2026-10-29",
+    "inicio": "2026-10-30",
+    "fim": "2026-11-23",
+    "desconsiderados": [
+      {
+        "dia": "2026-11-02",
+        "nome": "Finados",
+        "tipo": "nacional"
+      },
+      {
+        "dia": "2026-11-20",
+        "nome": "Consciência Negra",
+        "tipo": "nacional"
+      }
+    ],
+    "situacao": "aberto",
+    "urgencia": "prazo",
+    "origem": "ia",
+    "confirmado": false,
+    "confirmadoPor": null,
+    "responsavel": {
+      "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+      "nome": "Beatriz Souza",
+      "apelido": "Beatriz",
+      "iniciais": "BS"
+    },
+    "observacoes": null,
+    "motivoDescarte": null,
+    "processo": {
+      "id": "58a4599a-e85e-44da-860a-e96ead0a9a58",
+      "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+      "cnj": "5004321-25.2026.8.24.0038",
+      "orgao": "2ª Vara Cível",
+      "comarca": "Joinville",
+      "tribunal": "TJSC"
+    },
+    "publicacao": {
+      "id": "9fd7af84-ec88-4121-8c34-f7cde48cc683",
+      "texto": "Intimem-se as partes para, querendo, manifestarem-se sobre o laudo pericial juntado no evento 87, no prazo comum de 15 (quinze) dias. Após, voltem conclusos para sentença.",
+      "disponibilizadaEm": "2026-10-28",
+      "publicadaEm": "2026-10-29",
+      "tipoComunicacao": "Intimação",
+      "tipoDocumento": "Despacho",
+      "link": null
+    },
+    "briefing": {
+      "id": "e5c511a2-e0d5-452e-ab01-8114905587d6",
+      "acao": "briefing-prazo",
+      "situacao": "pronto",
+      "conteudo": {
+        "fazer": [
+          "Protocolar manifestação até 23/11 concordando com a conclusão do laudo, pedindo o julgamento e reforçando o pedido de correção desde o pagamento administrativo."
+        ],
+        "aFavor": [
+          "O perito confirmou o nexo entre o acidente e a incapacidade parcial (laudo, evento 87).",
+          "O percentual de 40% fica acima do que a seguradora pagou administrativamente (contestação, evento 24)."
+        ],
+        "contra": [
+          "O laudo não fez vistoria no veículo; a seguradora já pediu esclarecimentos sobre isso (evento 89)."
+        ],
+        "decidiu": "Juntou o laudo pericial e abriu prazo comum de 15 dias úteis para as duas partes se manifestarem. Depois disso o processo vai concluso para sentença, sem nova audiência."
+      },
+      "fonte": "DJEN · 28/10/2026 · laudo do evento 87",
+      "em": "2026-10-29T09:42:00.000Z",
+      "desatualizada": false,
+      "erro": null
+    },
+    "pecas": [],
+    "historico": [
+      {
+        "em": "2026-10-29T09:41:00.000Z",
+        "titulo": "IA sugeriu o prazo",
+        "detalhe": "Lido do teor da intimação"
+      },
+      {
+        "em": "2026-10-29T09:39:59.000Z",
+        "titulo": "Publicação capturada",
+        "detalhe": "DJEN, pela OAB/SC 41.233"
+      }
+    ]
+  }
+}

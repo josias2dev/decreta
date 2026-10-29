@@ -1,0 +1,270 @@
+{
+  "path": "/negocios",
+  "corpo": {
+    "contagens": {
+      "triagem": 6,
+      "repassado": 1
+    },
+    "itens": [
+      {
+        "id": "a1c565e3-d8b1-4e01-86ab-8be0bbd01ba5",
+        "nome": "José Antunes",
+        "telefone": "47991208833",
+        "assunto": "Revisão de aposentadoria",
+        "area": "Previdenciário",
+        "pasta": "faltam_documentos",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": true,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": true,
+            "texto": "CPF"
+          },
+          {
+            "feito": false,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": false,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": "Faltam RG e comprovante de residência.",
+        "responsavel": {
+          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF"
+        },
+        "clienteId": null,
+        "em": "2026-10-27T14:00:00.000Z"
+      },
+      {
+        "id": "9b28c6fd-db77-417d-99ba-bb8f479b66e9",
+        "nome": "Luiza Brandt",
+        "telefone": "47988014422",
+        "assunto": "Indenização por acidente de moto",
+        "area": "Cível",
+        "pasta": "completa",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": true,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": true,
+            "texto": "CPF"
+          },
+          {
+            "feito": true,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": true,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": null,
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "clienteId": null,
+        "em": "2026-10-26T14:00:00.000Z"
+      },
+      {
+        "id": "ca22d66a-f712-40f7-8037-cd5fc59fc1b2",
+        "nome": "Paulo Siqueira",
+        "telefone": "47999321177",
+        "assunto": "Horas extras · motorista",
+        "area": "Trabalhista",
+        "pasta": "sem_pasta",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": false,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": false,
+            "texto": "CPF"
+          },
+          {
+            "feito": false,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": false,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": null,
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "clienteId": null,
+        "em": "2026-10-25T14:00:00.000Z"
+      },
+      {
+        "id": "940a7b7b-4f6b-4c79-b5da-cccad61e6ead",
+        "nome": "Teresa Mello",
+        "telefone": "48996671200",
+        "assunto": "Inventário",
+        "area": "Família e sucessões",
+        "pasta": "faltam_documentos",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": true,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": false,
+            "texto": "CPF"
+          },
+          {
+            "feito": false,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": false,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": null,
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "clienteId": null,
+        "em": "2026-10-24T14:00:00.000Z"
+      },
+      {
+        "id": "ed2c0568-0424-4f1e-859d-53c38b64db81",
+        "nome": "Fábio Krüger",
+        "telefone": "47984459011",
+        "assunto": "Cobrança de cheques",
+        "area": "Cível",
+        "pasta": "sem_pasta",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": false,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": false,
+            "texto": "CPF"
+          },
+          {
+            "feito": false,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": false,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": null,
+        "responsavel": null,
+        "clienteId": null,
+        "em": "2026-10-23T14:00:00.000Z"
+      },
+      {
+        "id": "57fab214-30b3-4195-aa1b-b23d2289aca4",
+        "nome": "Rosa Lemos",
+        "telefone": "47991560032",
+        "assunto": "Benefício assistencial (BPC)",
+        "area": "Previdenciário",
+        "pasta": "completa",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": true,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": true,
+            "texto": "CPF"
+          },
+          {
+            "feito": true,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": false,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": null,
+        "responsavel": {
+          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "nome": "Camila Azevedo",
+          "apelido": "Camila",
+          "iniciais": "CA"
+        },
+        "clienteId": null,
+        "em": "2026-10-22T14:00:00.000Z"
+      }
+    ]
+  }
+}

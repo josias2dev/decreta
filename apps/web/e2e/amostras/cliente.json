@@ -1,0 +1,79 @@
+{
+  "path": "/clientes/d66b5a8b-8485-425e-be3a-d1ad0081e897",
+  "corpo": {
+    "id": "d66b5a8b-8485-425e-be3a-d1ad0081e897",
+    "nome": "Marina Duarte",
+    "tipo": "pf",
+    "documento": "318.204.567-90",
+    "telefone": "(47) 99123-4567",
+    "whatsapp": "5547991234567",
+    "email": "marina.duarte@exemplo.com.br",
+    "endereco": "Rua Itajaí, 455, apto 302 · América · Joinville/SC",
+    "observacoes": null,
+    "criadoEm": "2025-09-24T12:00:00.000Z",
+    "processos": [
+      {
+        "id": "58a4599a-e85e-44da-860a-e96ead0a9a58",
+        "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+        "cnj": "5004321-25.2026.8.24.0038",
+        "orgao": "2ª Vara Cível",
+        "situacao": "ativo",
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        }
+      }
+    ],
+    "atendimentos": [
+      {
+        "id": "f68c7070-7e35-41a0-9a38-692ee373d556",
+        "em": "2026-10-20T18:30:00.000Z",
+        "canal": "whatsapp",
+        "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
+        "autor": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "processoId": "58a4599a-e85e-44da-860a-e96ead0a9a58"
+      },
+      {
+        "id": "e4151ab8-5276-4e03-812a-f165342f258f",
+        "em": "2026-08-30T18:30:00.000Z",
+        "canal": "presencial",
+        "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
+        "autor": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "processoId": "58a4599a-e85e-44da-860a-e96ead0a9a58"
+      }
+    ],
+    "documentos": [],
+    "linhaDoTempo": [
+      {
+        "em": "2026-10-20T18:30:00.000Z",
+        "titulo": "Atendimento · whatsapp",
+        "detalhe": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
+        "tipo": "atendimento"
+      },
+      {
+        "em": "2026-08-30T18:30:00.000Z",
+        "titulo": "Atendimento · presencial",
+        "detalhe": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
+        "tipo": "atendimento"
+      },
+      {
+        "em": "2026-03-13T12:00:00.000Z",
+        "titulo": "Processo cadastrado",
+        "detalhe": "Marina Duarte × Seguradora Alfa S.A.",
+        "tipo": "processo"
+      }
+    ]
+  }
+}

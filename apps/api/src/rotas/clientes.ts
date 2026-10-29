@@ -46,8 +46,8 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const linhas = await tx
         .select({
           c: clientes,
-          processos: sql<number>`(select count(*)::int from ${processos} p where p.cliente_id = ${clientes.id})`,
-          ultimoAtendimento: sql<string | null>`(select max(a.em)::text from ${atendimentos} a where a.cliente_id = ${clientes.id})`,
+          processos: sql<number>`(select count(*)::int from processos p where p.cliente_id = "clientes"."id")`,
+          ultimoAtendimento: sql<string | null>`(select max(a.em)::text from atendimentos a where a.cliente_id = "clientes"."id")`,
         })
         .from(clientes)
         .where(filtro)

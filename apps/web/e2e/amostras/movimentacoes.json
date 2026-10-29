@@ -1,0 +1,157 @@
+{
+  "path": "/processos/58a4599a-e85e-44da-860a-e96ead0a9a58/movimentacoes",
+  "corpo": {
+    "contagens": {
+      "todas": 10,
+      "juizo": 4,
+      "partes": 5,
+      "documento": 8
+    },
+    "pagina": 1,
+    "porPagina": 50,
+    "itens": [
+      {
+        "id": "97ae44db-75bd-4135-8a84-673d7cd60f36",
+        "em": "2026-10-28T20:20:00.000Z",
+        "evento": 89,
+        "titulo": "Petição da ré",
+        "descricao": "Pede esclarecimentos ao perito sobre a falta de vistoria",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "013599a4-1ade-4997-86ee-6337198827fb",
+          "nome": "Petição da ré · pedido de esclarecimentos.docx",
+          "paginas": 4
+        }
+      },
+      {
+        "id": "5cf1ed8c-fd9b-4ed2-8453-618854c311d4",
+        "em": "2026-10-28T17:05:00.000Z",
+        "evento": 88,
+        "titulo": "Intimação",
+        "descricao": "Manifestação das partes sobre o laudo em 15 dias",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": null
+      },
+      {
+        "id": "e7e3328d-b900-4455-93d1-c7988eb3bcda",
+        "em": "2026-10-21T17:05:00.000Z",
+        "evento": 87,
+        "titulo": "Laudo pericial",
+        "descricao": "Incapacidade parcial permanente de 40%; nexo confirmado",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "83018899-6663-4daa-a29a-96db18daa13c",
+          "nome": "Laudo pericial.docx",
+          "paginas": 18
+        }
+      },
+      {
+        "id": "5a5a6032-7fea-43d1-8326-9361f12ecc98",
+        "em": "2026-09-30T17:05:00.000Z",
+        "evento": 79,
+        "titulo": "Perícia realizada",
+        "descricao": "Exame clínico da autora no consultório do perito",
+        "autor": "cartorio",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": null
+      },
+      {
+        "id": "44a09d97-40aa-4349-a79f-e8d2a4b9d776",
+        "em": "2026-09-02T20:20:00.000Z",
+        "evento": 44,
+        "titulo": "Petição da autora",
+        "descricao": "Quesitos e indicação de assistente técnico",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "73532e56-2ae1-4597-8996-e00d4f5c1598",
+          "nome": "Quesitos da autora.docx",
+          "paginas": 3
+        }
+      },
+      {
+        "id": "0790fc75-ae1f-41e9-8caa-47b8e4e0043c",
+        "em": "2026-08-12T17:05:00.000Z",
+        "evento": 38,
+        "titulo": "Decisão",
+        "descricao": "Saneamento: perícia médica deferida e perito nomeado",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "755318a4-87cc-46b6-b5a8-407a6c21edb0",
+          "nome": "Decisão de saneamento.docx",
+          "paginas": 2
+        }
+      },
+      {
+        "id": "8261b1e7-c754-451b-9723-900aba58f88b",
+        "em": "2026-06-30T20:20:00.000Z",
+        "evento": 31,
+        "titulo": "Réplica",
+        "descricao": "Autora rebate a tese de quitação administrativa",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "54bd5f51-9228-4eed-bf2b-f06a1612e917",
+          "nome": "Réplica.docx",
+          "paginas": 9
+        }
+      },
+      {
+        "id": "a96076cd-14f7-4f54-bf8a-c6d2340ed012",
+        "em": "2026-06-05T20:20:00.000Z",
+        "evento": 24,
+        "titulo": "Contestação",
+        "descricao": "Ré alega pagamento integral na via administrativa",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "caf6b6d9-abeb-46d0-ac19-c0a901183bb7",
+          "nome": "Contestação.docx",
+          "paginas": 21
+        }
+      },
+      {
+        "id": "9d142e65-ce43-4223-8221-039ecc3cd99f",
+        "em": "2026-05-14T17:05:00.000Z",
+        "evento": 18,
+        "titulo": "Audiência de conciliação",
+        "descricao": "Sem acordo; proposta de R$ 18.000,00 recusada",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "29014e5e-0ecf-4746-aabc-937a68ee52aa",
+          "nome": "Ata da audiência de conciliação.docx",
+          "paginas": 2
+        }
+      },
+      {
+        "id": "9896ece4-06e3-4860-8e9d-a4554aaa434e",
+        "em": "2026-03-12T20:20:00.000Z",
+        "evento": 1,
+        "titulo": "Distribuição",
+        "descricao": "Petição inicial · procedimento comum cível",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "e66a72a3-8ebf-4867-8505-d21651b9cf0f",
+          "nome": "Petição inicial.docx",
+          "paginas": 14
+        }
+      }
+    ]
+  }
+}

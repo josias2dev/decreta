@@ -1,0 +1,182 @@
+{
+  "path": "/processos/58a4599a-e85e-44da-860a-e96ead0a9a58",
+  "corpo": {
+    "id": "58a4599a-e85e-44da-860a-e96ead0a9a58",
+    "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+    "cnj": "5004321-25.2026.8.24.0038",
+    "tipo": "judicial",
+    "tribunal": "TJSC",
+    "sistema": "eproc",
+    "classe": "Procedimento comum cível",
+    "assunto": "Seguro · indenização por invalidez",
+    "orgao": "2ª Vara Cível",
+    "comarca": "Joinville",
+    "valorCausa": "86400.00",
+    "fase": "Instrução · laudo juntado",
+    "situacao": "ativo",
+    "poloCliente": "ativo",
+    "distribuidoEm": "2026-03-13",
+    "segredo": false,
+    "observacoes": null,
+    "datajudEm": "2026-10-29T08:12:00.000Z",
+    "cliente": {
+      "id": "d66b5a8b-8485-425e-be3a-d1ad0081e897",
+      "nome": "Marina Duarte"
+    },
+    "responsavel": {
+      "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+      "nome": "Beatriz Souza",
+      "apelido": "Beatriz",
+      "iniciais": "BS"
+    },
+    "link": {
+      "rotulo": "Abrir no eproc",
+      "url": "https://eproc1g.tjsc.jus.br/eproc/externo_controlador.php?acao=processo_consulta_publica"
+    },
+    "partes": [
+      {
+        "id": "9ec61548-1511-4815-9a72-4eba5485afff",
+        "nome": "Marina Duarte",
+        "polo": "ativo",
+        "papel": "Autora",
+        "advogados": null,
+        "cliente": true,
+        "documento": "31820456790"
+      },
+      {
+        "id": "504e5cce-336b-43d0-8d94-0229b14c0b48",
+        "nome": "Seguradora Alfa S.A.",
+        "polo": "passivo",
+        "papel": "Ré",
+        "advogados": null,
+        "cliente": false,
+        "documento": null
+      }
+    ],
+    "contadores": {
+      "movimentacoes": 10,
+      "prazos": 2,
+      "documentos": 8
+    },
+    "resumo": {
+      "id": "1cac8e78-42e3-4370-9785-92911dddec97",
+      "acao": "resumo-autos",
+      "situacao": "pronto",
+      "conteudo": {
+        "oQueFazer": [
+          "Protocolar a manifestação sobre o laudo até 23/11 e, em seguida, preparar memoriais.",
+          "Depois das manifestações o processo vai concluso para sentença."
+        ],
+        "ultimoAto": "28/10 · Intimação das partes para manifestação sobre o laudo em 15 dias úteis (evento 88).",
+        "estrategia": "Apoiar o laudo, pedir o julgamento e cobrar a diferença entre os 40% do laudo e os 15% pagos pela ré, com correção desde o pagamento administrativo.",
+        "pontosDeAtencao": [
+          "O laudo não fez vistoria no veículo; é o ponto que a ré tende a explorar.",
+          "A cliente ainda não entregou o comprovante das despesas médicas de agosto."
+        ]
+      },
+      "fonte": "Autos · eventos 1 a 88",
+      "em": "2026-10-28T21:30:00.000Z",
+      "desatualizada": true,
+      "erro": null
+    },
+    "novidades": [
+      "petição da ré, evento 89",
+      "intimação, evento 88",
+      "laudo pericial, evento 87",
+      "perícia realizada, evento 79",
+      "petição da autora, evento 44",
+      "decisão, evento 38",
+      "réplica, evento 31",
+      "contestação, evento 24",
+      "audiência de conciliação, evento 18",
+      "distribuição, evento 1"
+    ],
+    "ultimasMovimentacoes": [
+      {
+        "id": "97ae44db-75bd-4135-8a84-673d7cd60f36",
+        "em": "2026-10-28T20:20:00.000Z",
+        "evento": 89,
+        "titulo": "Petição da ré",
+        "descricao": "Pede esclarecimentos ao perito sobre a falta de vistoria",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "013599a4-1ade-4997-86ee-6337198827fb",
+          "nome": "Petição da ré · pedido de esclarecimentos.docx",
+          "paginas": 4
+        }
+      },
+      {
+        "id": "5cf1ed8c-fd9b-4ed2-8453-618854c311d4",
+        "em": "2026-10-28T17:05:00.000Z",
+        "evento": 88,
+        "titulo": "Intimação",
+        "descricao": "Manifestação das partes sobre o laudo em 15 dias",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": null
+      },
+      {
+        "id": "e7e3328d-b900-4455-93d1-c7988eb3bcda",
+        "em": "2026-10-21T17:05:00.000Z",
+        "evento": 87,
+        "titulo": "Laudo pericial",
+        "descricao": "Incapacidade parcial permanente de 40%; nexo confirmado",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "83018899-6663-4daa-a29a-96db18daa13c",
+          "nome": "Laudo pericial.docx",
+          "paginas": 18
+        }
+      },
+      {
+        "id": "5a5a6032-7fea-43d1-8326-9361f12ecc98",
+        "em": "2026-09-30T17:05:00.000Z",
+        "evento": 79,
+        "titulo": "Perícia realizada",
+        "descricao": "Exame clínico da autora no consultório do perito",
+        "autor": "cartorio",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": null
+      },
+      {
+        "id": "44a09d97-40aa-4349-a79f-e8d2a4b9d776",
+        "em": "2026-09-02T20:20:00.000Z",
+        "evento": 44,
+        "titulo": "Petição da autora",
+        "descricao": "Quesitos e indicação de assistente técnico",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": true,
+        "documento": {
+          "id": "73532e56-2ae1-4597-8996-e00d4f5c1598",
+          "nome": "Quesitos da autora.docx",
+          "paginas": 3
+        }
+      }
+    ],
+    "proximoPrazo": {
+      "id": "8a8109e6-e13c-4503-9c9e-d1c92d967007",
+      "tipo": "Manifestação sobre laudo pericial",
+      "fim": "2026-11-23",
+      "dias": 15,
+      "contagem": "uteis",
+      "urgencia": "prazo",
+      "quando": "23 nov",
+      "confirmado": false,
+      "responsavel": {
+        "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+        "nome": "Beatriz Souza",
+        "apelido": "Beatriz",
+        "iniciais": "BS"
+      }
+    },
+    "audiencias": [],
+    "alvaras": []
+  }
+}

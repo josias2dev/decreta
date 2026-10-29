@@ -1,0 +1,96 @@
+{
+  "path": "/publicacoes",
+  "corpo": {
+    "contagens": {
+      "nova": 7,
+      "pendente": 3,
+      "lida": 2,
+      "vinculada": 15
+    },
+    "ultimaCaptura": {
+      "em": "2026-10-29T09:40:00.000Z",
+      "hora": "06:40",
+      "novas": 7,
+      "erro": null
+    },
+    "itens": [
+      {
+        "id": "9fd7af84-ec88-4121-8c34-f7cde48cc683",
+        "titulo": "Intimação · laudo pericial",
+        "disponibilizadaEm": "2026-10-28",
+        "partes": "Marina Duarte × Seguradora Alfa S.A.",
+        "processoId": "58a4599a-e85e-44da-860a-e96ead0a9a58",
+        "selo": {
+          "tipo": "prazo",
+          "texto": "Prazo sugerido · 23/11"
+        }
+      },
+      {
+        "id": "bbf89f1d-9e3b-4145-88b3-5b405399063a",
+        "titulo": "Intimação · sentença",
+        "disponibilizadaEm": "2026-10-28",
+        "partes": "Lúcia Matos × Instituto de Previdência de Brusque",
+        "processoId": "8057967e-277b-4431-b25d-0bf2cb8e0f74",
+        "selo": {
+          "tipo": "prazo",
+          "texto": "Prazo sugerido · 23/11"
+        }
+      },
+      {
+        "id": "3eae7757-0e83-4dc0-a527-144a28c23e1c",
+        "titulo": "Intimação · cumpra-se",
+        "disponibilizadaEm": "2026-10-28",
+        "partes": "Eduardo Lima × Unimed Litoral",
+        "processoId": "43b3f827-b75f-445c-8389-9ff46276f75d",
+        "selo": {
+          "tipo": "sem_prazo",
+          "texto": "Não gera prazo"
+        }
+      },
+      {
+        "id": "dd20712c-1bbc-42e7-bd4e-8ee3a79f355c",
+        "titulo": "Citação",
+        "disponibilizadaEm": "2026-10-28",
+        "partes": "Construtora Litoral Norte × Marcos Tavares",
+        "processoId": "4345103c-089c-401a-a5a3-33d4d23325fa",
+        "selo": {
+          "tipo": "prazo",
+          "texto": "Prazo sugerido · 23/11"
+        }
+      },
+      {
+        "id": "4e0aff99-bb07-4407-975b-26a3f00ec024",
+        "titulo": "Intimação · audiência designada",
+        "disponibilizadaEm": "2026-10-27",
+        "partes": "Carlos Henrique Prado × Construtora Vale Norte",
+        "processoId": "f339d64e-58d0-4820-8073-38fd9f356a80",
+        "selo": {
+          "tipo": "audiencia",
+          "texto": "Audiência · 13/11 às 15:00"
+        }
+      },
+      {
+        "id": "557594ed-eb64-4488-9ecc-f6eda301f427",
+        "titulo": "Intimação · sem teor",
+        "disponibilizadaEm": "2026-10-27",
+        "partes": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+        "processoId": "95df783e-ac08-411f-9674-559b1dea0243",
+        "selo": {
+          "tipo": "sem_teor",
+          "texto": "Falta o teor: abrir no sistema do tribunal"
+        }
+      },
+      {
+        "id": "3c788ea4-ffa6-4091-8c3c-bd0e632b1f1e",
+        "titulo": "Intimação · rol de testemunhas",
+        "disponibilizadaEm": "2026-10-27",
+        "partes": "Jorge Batista × Mercado Bom Preço Ltda.",
+        "processoId": "1826519c-ea67-47e1-96ea-0cfa573f5047",
+        "selo": {
+          "tipo": "prazo",
+          "texto": "Prazo sugerido · 05/11"
+        }
+      }
+    ]
+  }
+}

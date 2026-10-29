@@ -1,0 +1,65 @@
+{
+  "path": "/equipe",
+  "corpo": {
+    "pessoas": [
+      {
+        "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+        "nome": "Beatriz Souza",
+        "apelido": "Beatriz",
+        "iniciais": "BS",
+        "email": "beatriz@demo.decreta.app",
+        "cargo": "Advogada · sócia",
+        "papel": "owner",
+        "oab": "OAB/SC 41.233",
+        "whatsapp": null,
+        "avisoManha": false,
+        "oabNumero": "41.233",
+        "oabUf": "SC"
+      },
+      {
+        "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+        "nome": "Rafael Freitas",
+        "apelido": "Rafael",
+        "iniciais": "RF",
+        "email": "rafael@demo.decreta.app",
+        "cargo": "Advogado · sócio",
+        "papel": "admin",
+        "oab": "OAB/SC 45.678",
+        "whatsapp": null,
+        "avisoManha": false,
+        "oabNumero": "45.678",
+        "oabUf": "SC"
+      },
+      {
+        "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+        "nome": "Tiago Martins",
+        "apelido": "Tiago",
+        "iniciais": "TM",
+        "email": "tiago@demo.decreta.app",
+        "cargo": "Advogado",
+        "papel": "member",
+        "oab": "OAB/SC 52.104",
+        "whatsapp": null,
+        "avisoManha": false,
+        "oabNumero": "52.104",
+        "oabUf": "SC"
+      },
+      {
+        "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+        "nome": "Camila Azevedo",
+        "apelido": "Camila",
+        "iniciais": "CA",
+        "email": "camila@demo.decreta.app",
+        "cargo": "Estagiária",
+        "papel": "member",
+        "oab": null,
+        "whatsapp": null,
+        "avisoManha": false,
+        "oabNumero": null,
+        "oabUf": null
+      }
+    ],
+    "convites": [],
+    "emailLigado": false
+  }
+}

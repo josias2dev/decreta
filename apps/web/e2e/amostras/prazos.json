@@ -1,0 +1,673 @@
+{
+  "path": "/prazos?quando=abertos",
+  "corpo": {
+    "hoje": "2026-10-29",
+    "chips": {
+      "hoje": 4,
+      "semana": 11,
+      "vencidos": 1,
+      "abertos": 23,
+      "cumpridos": 3
+    },
+    "responsaveis": [
+      {
+        "pessoa": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "n": 7
+      },
+      {
+        "pessoa": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "n": 7
+      },
+      {
+        "pessoa": {
+          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF"
+        },
+        "n": 4
+      },
+      {
+        "pessoa": {
+          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "nome": "Camila Azevedo",
+          "apelido": "Camila",
+          "iniciais": "CA"
+        },
+        "n": 4
+      },
+      {
+        "pessoa": null,
+        "n": 1
+      }
+    ],
+    "itens": [
+      {
+        "id": "c209d7a0-722a-4e76-8159-6fe0412d2387",
+        "tipo": "Contestação trabalhista",
+        "dias": 10,
+        "contagem": "uteis",
+        "fundamento": "art. 847, CLT",
+        "fim": "2026-10-28",
+        "urgencia": "vencido",
+        "quando": "Vencido · 28 out",
+        "processo": {
+          "id": "d1262e6b-e909-49d0-a7d7-f48381056824",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005",
+          "orgao": "1ª Vara do Trabalho",
+          "comarca": "Itajaí"
+        },
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 13/10"
+      },
+      {
+        "id": "6bf21241-7ad1-40c6-a91c-eac03e257c50",
+        "tipo": "Réplica à contestação",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 351, CPC",
+        "fim": "2026-10-29",
+        "urgencia": "hoje",
+        "quando": "Hoje",
+        "processo": {
+          "id": "ab6efd08-5299-404b-9389-111c7e61234e",
+          "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
+          "cnj": "5011873-86.2026.8.24.0023",
+          "orgao": "3ª Vara Cível",
+          "comarca": "Florianópolis"
+        },
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 06/10"
+      },
+      {
+        "id": "f120dbcd-3a01-4fb1-bd3d-772f01476a4c",
+        "tipo": "Alegações finais",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 364, § 2º, CPC",
+        "fim": "2026-10-29",
+        "urgencia": "hoje",
+        "quando": "Hoje",
+        "processo": {
+          "id": "f028bff1-2ebd-4249-9152-0810293dadd9",
+          "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
+          "cnj": "5009876-57.2025.8.24.0038",
+          "orgao": "4ª Vara Cível",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "situacao": "peca_em_revisao",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 06/10"
+      },
+      {
+        "id": "602e9dff-12ce-4c89-8ab3-3a2adf6e9a0b",
+        "tipo": "Juntar procuração atualizada",
+        "dias": 5,
+        "contagem": "uteis",
+        "fundamento": "art. 76, CPC",
+        "fim": "2026-10-29",
+        "urgencia": "hoje",
+        "quando": "Hoje",
+        "processo": {
+          "id": "43b3f827-b75f-445c-8389-9ff46276f75d",
+          "titulo": "Eduardo Lima × Unimed Litoral",
+          "cnj": "5003390-24.2026.8.24.0005",
+          "orgao": "1ª Vara Cível",
+          "comarca": "Balneário Camboriú"
+        },
+        "responsavel": null,
+        "situacao": "a_confirmar",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 21/10"
+      },
+      {
+        "id": "3c196efe-7893-4320-888f-ce675b812a99",
+        "tipo": "Embargos de declaração",
+        "dias": 5,
+        "contagem": "uteis",
+        "fundamento": "art. 897-A, CLT",
+        "fim": "2026-10-30",
+        "urgencia": "breve",
+        "quando": "Amanhã",
+        "processo": {
+          "id": "95df783e-ac08-411f-9674-559b1dea0243",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045",
+          "orgao": "2ª Vara do Trabalho",
+          "comarca": "Balneário Camboriú"
+        },
+        "responsavel": {
+          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 22/10"
+      },
+      {
+        "id": "5084398b-a033-4b0f-b294-704cc20a8230",
+        "tipo": "Recolher custas do recurso",
+        "dias": 5,
+        "contagem": "uteis",
+        "fundamento": "art. 1.007, CPC",
+        "fim": "2026-10-30",
+        "urgencia": "breve",
+        "quando": "Amanhã",
+        "processo": {
+          "id": "650bd248-08a5-476d-8ebe-eacebd4573f6",
+          "titulo": "Gilberto Weiss × Cooperativa Agro Vale",
+          "cnj": "5000456-14.2024.8.24.0054",
+          "orgao": "1ª Vara Cível",
+          "comarca": "Rio do Sul"
+        },
+        "responsavel": {
+          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "nome": "Camila Azevedo",
+          "apelido": "Camila",
+          "iniciais": "CA"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "Manual · 23/10"
+      },
+      {
+        "id": "cd0792b4-a0c5-45c7-b18d-7984e33295ad",
+        "tipo": "Manifestação sobre documentos",
+        "dias": 5,
+        "contagem": "uteis",
+        "fundamento": null,
+        "fim": "2026-11-03",
+        "urgencia": "breve",
+        "quando": "3 nov",
+        "processo": {
+          "id": "1826519c-ea67-47e1-96ea-0cfa573f5047",
+          "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
+          "cnj": "0000977-14.2026.5.12.0004",
+          "orgao": "4ª Vara do Trabalho",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 23/10"
+      },
+      {
+        "id": "659caabc-55cc-4359-ba80-9bcda576f67b",
+        "tipo": "Quesitos e assistente técnico",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 465, § 1º, CPC",
+        "fim": "2026-11-04",
+        "urgencia": "breve",
+        "quando": "4 nov",
+        "processo": {
+          "id": "a8ec26c6-427c-405d-a077-4e75c5258664",
+          "titulo": "Helena Vieira × Instituto Nacional do Seguro Social",
+          "cnj": "5018822-20.2026.4.04.7201",
+          "orgao": "2ª Vara Federal",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 09/10"
+      },
+      {
+        "id": "4514d3d5-bbbe-45c5-b108-e9b98f797853",
+        "tipo": "Razões finais",
+        "dias": 5,
+        "contagem": "uteis",
+        "fundamento": "art. 850, CLT",
+        "fim": "2026-11-04",
+        "urgencia": "breve",
+        "quando": "4 nov",
+        "processo": {
+          "id": "584df1e8-419a-4c57-8486-4ad95cafe8ae",
+          "titulo": "Antônio Reis × Transportadora Vale Verde",
+          "cnj": "0000533-40.2025.5.12.0028",
+          "orgao": "Vara do Trabalho",
+          "comarca": "Rio do Sul"
+        },
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "Manual · 28/10"
+      },
+      {
+        "id": "0512eb72-0f2d-48a4-8017-ef9886e9169e",
+        "tipo": "Indicar bens à penhora",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": null,
+        "fim": "2026-11-05",
+        "urgencia": "prazo",
+        "quando": "5 nov",
+        "processo": {
+          "id": "4f47abff-27fb-44a7-9b02-2a4c19a7760f",
+          "titulo": "Auto Center Pioneiro Ltda. × Distribuidora Peças Sul",
+          "cnj": "5012450-53.2025.8.24.0038",
+          "orgao": "1ª Vara Cível",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "nome": "Camila Azevedo",
+          "apelido": "Camila",
+          "iniciais": "CA"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 13/10"
+      },
+      {
+        "id": "467a603a-1722-4ad3-9a42-9d8ac55906aa",
+        "tipo": "Rol de testemunhas",
+        "dias": 5,
+        "contagem": "uteis",
+        "fundamento": "art. 825, CLT",
+        "fim": "2026-11-05",
+        "urgencia": "prazo",
+        "quando": "5 nov",
+        "processo": {
+          "id": "1826519c-ea67-47e1-96ea-0cfa573f5047",
+          "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
+          "cnj": "0000977-14.2026.5.12.0004",
+          "orgao": "4ª Vara do Trabalho",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "situacao": "a_confirmar",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 27/10"
+      },
+      {
+        "id": "d29f35fb-478d-4820-8c3e-390a359a5c54",
+        "tipo": "Contrarrazões de apelação",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 1.010, § 1º, CPC",
+        "fim": "2026-11-06",
+        "urgencia": "prazo",
+        "quando": "6 nov",
+        "processo": {
+          "id": "91cc4324-38af-4ad3-8d03-238b6afcfc0c",
+          "titulo": "Lúcia Matos × Município de Brusque",
+          "cnj": "5002210-86.2025.8.24.0011",
+          "orgao": "Vara da Fazenda Pública",
+          "comarca": "Brusque"
+        },
+        "responsavel": {
+          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 14/10"
+      },
+      {
+        "id": "83724245-b6ce-4100-9fd1-931c5e520cb8",
+        "tipo": "Manifestação sobre estudo social",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": null,
+        "fim": "2026-11-09",
+        "urgencia": "prazo",
+        "quando": "9 nov",
+        "processo": {
+          "id": "0bd8c321-848a-4bcb-857e-e3a692f97f40",
+          "titulo": "Sandra Petry × Gilmar Petry",
+          "cnj": "5006671-83.2026.8.24.0038",
+          "orgao": "1ª Vara da Família",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 15/10"
+      },
+      {
+        "id": "19a9ee5e-96d8-4811-ba5e-20dae706301d",
+        "tipo": "Recurso inominado",
+        "dias": 10,
+        "contagem": "uteis",
+        "fundamento": "art. 42, Lei 9.099/95",
+        "fim": "2026-11-10",
+        "urgencia": "prazo",
+        "quando": "10 nov",
+        "processo": {
+          "id": "b6404582-8eff-4fa7-b17c-9cf18b92a0a7",
+          "titulo": "João Pedro Antunes × Banco Horizonte S.A.",
+          "cnj": "5000981-79.2026.8.24.0036",
+          "orgao": "Juizado Especial Cível",
+          "comarca": "Jaraguá do Sul"
+        },
+        "responsavel": {
+          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 23/10"
+      },
+      {
+        "id": "e58adcc1-fa5e-4070-971d-faa4389bdb24",
+        "tipo": "Juntar CNIS atualizado",
+        "dias": 10,
+        "contagem": "uteis",
+        "fundamento": null,
+        "fim": "2026-11-11",
+        "urgencia": "prazo",
+        "quando": "11 nov",
+        "processo": {
+          "id": "243f54ba-33bf-4f3c-8e57-e2153f4e0c1a",
+          "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
+          "cnj": "5020176-80.2026.4.04.7201",
+          "orgao": "Juizado Especial Federal",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "nome": "Camila Azevedo",
+          "apelido": "Camila",
+          "iniciais": "CA"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "Manual · 30/10"
+      },
+      {
+        "id": "462dde5c-bd51-4afb-8334-9fe00c2cf14b",
+        "tipo": "Impugnação ao laudo",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 477, § 1º, CPC",
+        "fim": "2026-11-12",
+        "urgencia": "prazo",
+        "quando": "12 nov",
+        "processo": {
+          "id": "5530fb39-0ed4-4c8a-879e-b9f00c73f4bf",
+          "titulo": "Renata Cordeiro × Clínica Sorriso Pleno",
+          "cnj": "5021334-19.2025.8.24.0023",
+          "orgao": "5ª Vara Cível",
+          "comarca": "Florianópolis"
+        },
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 20/10"
+      },
+      {
+        "id": "3ba5700c-6cc0-4908-91e5-46860308409a",
+        "tipo": "Manifestação sobre contestação",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": null,
+        "fim": "2026-11-17",
+        "urgencia": "prazo",
+        "quando": "17 nov",
+        "processo": {
+          "id": "1ed5b603-bed3-49c5-bfac-2f365df96982",
+          "titulo": "Simone Gaspar × Condomínio Residencial Atlântico",
+          "cnj": "5004418-25.2026.8.24.0038",
+          "orgao": "Juizado Especial Cível",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "nome": "Camila Azevedo",
+          "apelido": "Camila",
+          "iniciais": "CA"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 23/10"
+      },
+      {
+        "id": "d6cf5c2f-2c7c-4911-93ff-b468a9b2113d",
+        "tipo": "Réplica à contestação",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 351, CPC",
+        "fim": "2026-11-17",
+        "urgencia": "prazo",
+        "quando": "17 nov",
+        "processo": {
+          "id": "a8ec26c6-427c-405d-a077-4e75c5258664",
+          "titulo": "Helena Vieira × Instituto Nacional do Seguro Social",
+          "cnj": "5018822-20.2026.4.04.7201",
+          "orgao": "2ª Vara Federal",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "situacao": "a_confirmar",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 23/10"
+      },
+      {
+        "id": "d48fde25-8631-4f17-9e82-0a4ea9069d98",
+        "tipo": "Especificação de provas",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": null,
+        "fim": "2026-11-18",
+        "urgencia": "prazo",
+        "quando": "18 nov",
+        "processo": {
+          "id": "5530fb39-0ed4-4c8a-879e-b9f00c73f4bf",
+          "titulo": "Renata Cordeiro × Clínica Sorriso Pleno",
+          "cnj": "5021334-19.2025.8.24.0023",
+          "orgao": "5ª Vara Cível",
+          "comarca": "Florianópolis"
+        },
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "situacao": "a_confirmar",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 26/10"
+      },
+      {
+        "id": "8c16daaa-952a-4c71-b5c2-3b9eda5e7da7",
+        "tipo": "Juntar documentos da defesa",
+        "dias": 10,
+        "contagem": "uteis",
+        "fundamento": null,
+        "fim": "2026-11-19",
+        "urgencia": "prazo",
+        "quando": "19 nov",
+        "processo": {
+          "id": "d1262e6b-e909-49d0-a7d7-f48381056824",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005",
+          "orgao": "1ª Vara do Trabalho",
+          "comarca": "Itajaí"
+        },
+        "responsavel": {
+          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "situacao": "confirmado",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "Manual · 07/11"
+      },
+      {
+        "id": "8a8109e6-e13c-4503-9c9e-d1c92d967007",
+        "tipo": "Manifestação sobre laudo pericial",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 477, § 1º, CPC",
+        "fim": "2026-11-23",
+        "urgencia": "prazo",
+        "quando": "23 nov",
+        "processo": {
+          "id": "58a4599a-e85e-44da-860a-e96ead0a9a58",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+          "cnj": "5004321-25.2026.8.24.0038",
+          "orgao": "2ª Vara Cível",
+          "comarca": "Joinville"
+        },
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "situacao": "a_confirmar",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 28/10"
+      },
+      {
+        "id": "7b369619-8b0f-47f1-a69e-fc891257a5b4",
+        "tipo": "Apelação",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 1.003, § 5º, CPC",
+        "fim": "2026-11-23",
+        "urgencia": "prazo",
+        "quando": "23 nov",
+        "processo": {
+          "id": "8057967e-277b-4431-b25d-0bf2cb8e0f74",
+          "titulo": "Lúcia Matos × Instituto de Previdência de Brusque",
+          "cnj": "5003114-09.2025.8.24.0011",
+          "orgao": "Vara da Fazenda Pública",
+          "comarca": "Brusque"
+        },
+        "responsavel": {
+          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF"
+        },
+        "situacao": "a_confirmar",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 28/10"
+      },
+      {
+        "id": "6367c22a-c692-4ef3-a4f4-20a60d4e4c7a",
+        "tipo": "Contestação",
+        "dias": 15,
+        "contagem": "uteis",
+        "fundamento": "art. 335, CPC",
+        "fim": "2026-11-23",
+        "urgencia": "prazo",
+        "quando": "23 nov",
+        "processo": {
+          "id": "4345103c-089c-401a-a5a3-33d4d23325fa",
+          "titulo": "Construtora Litoral Norte × Marcos Tavares",
+          "cnj": "5008890-71.2026.8.24.0005",
+          "orgao": "2ª Vara Cível",
+          "comarca": "Balneário Camboriú"
+        },
+        "responsavel": {
+          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "situacao": "a_confirmar",
+        "confirmadoHoje": false,
+        "cumpridoEm": null,
+        "origem": "DJEN · 28/10"
+      }
+    ]
+  }
+}

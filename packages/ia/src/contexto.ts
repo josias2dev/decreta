@@ -133,5 +133,5 @@ export function fonteDosAutos(movimentacoes: MovimentacaoParaIa[]): string {
   if (!eventos.length) return movimentacoes.length ? `Autos · ${movimentacoes.length} andamentos` : "Dados do processo";
   const min = Math.min(...eventos);
   const max = Math.max(...eventos);
-  return min === max ? `Autos · evento ${max}` : `Autos · eventos ${Math.max(min, max - 20)} a ${max}`;
+  return min === max ? `Autos · evento ${max}` : `Autos · eventos ${min} a ${max}`;
 }
