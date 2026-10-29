@@ -103,6 +103,12 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
     expect((await call("/eu", {}, "")).status).toBe(401);
   });
 
+  test("quem entra já cai no próprio escritório, sem escolher", async () => {
+    const c = await entrarCom("beatriz@souza.adv.br");
+    const eu = await json(call("/eu", {}, c));
+    expect(eu.escritorio.id).toBe(orgId);
+  });
+
   test("conta nova só com convite", async () => {
     const cadastro = (email: string) =>
       app.request("/api/auth/sign-up/email", {

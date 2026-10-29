@@ -3,7 +3,7 @@ import type { Database } from "@decreta/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware, isAPIError } from "better-auth/api";
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { organization, twoFactor } from "better-auth/plugins";
 import { registrar } from "./auditoria.ts";
 import { PAPEL, type Mailer } from "./email.ts";
@@ -92,6 +92,23 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
         invitation: schema.invitation,
       },
     }),
+    databaseHooks: {
+      session: {
+        create: {
+          // Quem entra já cai no próprio escritório: a sessão nasce com ele ativo.
+          before: async (sessao) => {
+            if ((sessao as { activeOrganizationId?: string | null }).activeOrganizationId) return;
+            const [m] = await db
+              .select({ organizationId: schema.member.organizationId })
+              .from(schema.member)
+              .where(eq(schema.member.userId, sessao.userId))
+              .orderBy(asc(schema.member.createdAt))
+              .limit(1);
+            return m ? { data: { ...sessao, activeOrganizationId: m.organizationId } } : undefined;
+          },
+        },
+      },
+    },
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 10,

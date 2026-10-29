@@ -1,0 +1,10 @@
+{
+  "name": "Decreta",
+  "short_name": "Decreta",
+  "start_url": "/hoje",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#fafafa",
+  "lang": "pt-BR",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

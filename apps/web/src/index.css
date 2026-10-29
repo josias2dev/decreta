@@ -1,0 +1,46 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "./estilos/tokens.css";
+@import "./estilos/componentes.css";
+@import "./estilos/app.css";
+
+/*
+ * O design system do Decreta (estilos/tokens.css e estilos/componentes.css,
+ * classes dc-*) vem do Claude Design e fica como está. O Tailwind entra só
+ * para o layout que as telas montam em volta dos componentes.
+ */
+@theme inline {
+  --font-sans: var(--font-sans);
+  --color-papel: var(--papel);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-borda: var(--borda);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-tinta-3: var(--tinta-3);
+  --color-acento: var(--acento);
+  --color-vencido: var(--vencido);
+  --color-hoje: var(--hoje);
+  --color-cumprido: var(--cumprido);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 21px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--acento);
+}

@@ -6,6 +6,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@decreta/core": "workspace:*",
     "docx": "9.11.0",
     "mammoth": "1.13.0",
     "unpdf": "1.8.1"

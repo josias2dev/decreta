@@ -6,7 +6,7 @@
     "porPagina": 50,
     "itens": [
       {
-        "id": "58a4599a-e85e-44da-860a-e96ead0a9a58",
+        "id": "e29cc2e7-6922-43ce-b4dc-541010e52cb3",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "tipo": "judicial",
@@ -16,7 +16,7 @@
         "situacao": "ativo",
         "cliente": "Marina Duarte",
         "responsavel": {
-          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -30,7 +30,7 @@
         }
       },
       {
-        "id": "4345103c-089c-401a-a5a3-33d4d23325fa",
+        "id": "5d37cb38-1ecb-4adb-9289-997883ab7f79",
         "titulo": "Construtora Litoral Norte × Marcos Tavares",
         "cnj": "5008890-71.2026.8.24.0005",
         "tipo": "judicial",
@@ -40,7 +40,7 @@
         "situacao": "ativo",
         "cliente": "Marcos Tavares",
         "responsavel": {
-          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -54,7 +54,7 @@
         }
       },
       {
-        "id": "363026ed-487e-47fd-9126-708d1f486eda",
+        "id": "6c1124a9-5006-494e-a265-76ee47566276",
         "titulo": "Cooperativa Mista Rio Novo · revisão do estatuto",
         "cnj": null,
         "tipo": "extrajudicial",
@@ -64,7 +64,7 @@
         "situacao": "ativo",
         "cliente": "Cooperativa Mista Rio Novo",
         "responsavel": {
-          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF"
@@ -73,7 +73,7 @@
         "proximoPrazo": null
       },
       {
-        "id": "43b3f827-b75f-445c-8389-9ff46276f75d",
+        "id": "b80394c3-effe-44ae-aa2d-aaa31dd00507",
         "titulo": "Eduardo Lima × Unimed Litoral",
         "cnj": "5003390-24.2026.8.24.0005",
         "tipo": "judicial",
@@ -92,7 +92,7 @@
         }
       },
       {
-        "id": "1ed5b603-bed3-49c5-bfac-2f365df96982",
+        "id": "e2d8f4f7-568a-4fbb-a18c-f2bdc10c3c7d",
         "titulo": "Simone Gaspar × Condomínio Residencial Atlântico",
         "cnj": "5004418-25.2026.8.24.0038",
         "tipo": "judicial",
@@ -102,7 +102,7 @@
         "situacao": "ativo",
         "cliente": "Simone Gaspar",
         "responsavel": {
-          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "id": "lUPcGHKkhLHH6le4yRf8yk383gTS2dka",
           "nome": "Camila Azevedo",
           "apelido": "Camila",
           "iniciais": "CA"
@@ -116,7 +116,7 @@
         }
       },
       {
-        "id": "d1262e6b-e909-49d0-a7d7-f48381056824",
+        "id": "e177e994-ca68-476b-89d3-3325d7c720a6",
         "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
         "cnj": "0000812-61.2026.5.12.0005",
         "tipo": "judicial",
@@ -126,7 +126,7 @@
         "situacao": "ativo",
         "cliente": "Padaria Bom Grão Ltda.",
         "responsavel": {
-          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "id": "85UWGs8166NBiIJ5syh4p7MUr5tEr8Zl",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM"
@@ -140,7 +140,7 @@
         }
       },
       {
-        "id": "b6404582-8eff-4fa7-b17c-9cf18b92a0a7",
+        "id": "2954cf1b-f619-4804-8e4c-0939b287a3f6",
         "titulo": "João Pedro Antunes × Banco Horizonte S.A.",
         "cnj": "5000981-79.2026.8.24.0036",
         "tipo": "judicial",
@@ -150,7 +150,7 @@
         "situacao": "ativo",
         "cliente": "João Pedro Antunes",
         "responsavel": {
-          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF"
@@ -164,7 +164,7 @@
         }
       },
       {
-        "id": "243f54ba-33bf-4f3c-8e57-e2153f4e0c1a",
+        "id": "7b70396a-7009-412a-a87f-a49f9b434a71",
         "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
         "cnj": "5020176-80.2026.4.04.7201",
         "tipo": "judicial",
@@ -174,7 +174,7 @@
         "situacao": "ativo",
         "cliente": "Vanessa Hoffmann",
         "responsavel": {
-          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "id": "lUPcGHKkhLHH6le4yRf8yk383gTS2dka",
           "nome": "Camila Azevedo",
           "apelido": "Camila",
           "iniciais": "CA"
@@ -188,7 +188,7 @@
         }
       },
       {
-        "id": "f339d64e-58d0-4820-8073-38fd9f356a80",
+        "id": "cbc07304-6193-4496-ad8c-9de2e4127f0c",
         "titulo": "Carlos Henrique Prado × Construtora Vale Norte",
         "cnj": "5007745-68.2026.8.24.0008",
         "tipo": "judicial",
@@ -198,7 +198,7 @@
         "situacao": "ativo",
         "cliente": "Carlos Henrique Prado",
         "responsavel": {
-          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF"
@@ -207,7 +207,7 @@
         "proximoPrazo": null
       },
       {
-        "id": "1826519c-ea67-47e1-96ea-0cfa573f5047",
+        "id": "96235893-3fca-43d6-ab54-f8748e933aac",
         "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
         "cnj": "0000977-14.2026.5.12.0004",
         "tipo": "judicial",
@@ -217,7 +217,7 @@
         "situacao": "ativo",
         "cliente": "Jorge Batista",
         "responsavel": {
-          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "id": "85UWGs8166NBiIJ5syh4p7MUr5tEr8Zl",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM"
@@ -231,7 +231,7 @@
         }
       },
       {
-        "id": "0bd8c321-848a-4bcb-857e-e3a692f97f40",
+        "id": "fb2338c1-d73d-457d-bec2-2601ac06b6a0",
         "titulo": "Sandra Petry × Gilmar Petry",
         "cnj": "5006671-83.2026.8.24.0038",
         "tipo": "judicial",
@@ -241,7 +241,7 @@
         "situacao": "ativo",
         "cliente": "Sandra Petry",
         "responsavel": {
-          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -255,7 +255,7 @@
         }
       },
       {
-        "id": "ab6efd08-5299-404b-9389-111c7e61234e",
+        "id": "56be624e-39e4-4009-99d6-56809071615d",
         "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
         "cnj": "5011873-86.2026.8.24.0023",
         "tipo": "judicial",
@@ -265,7 +265,7 @@
         "situacao": "ativo",
         "cliente": "Ana Lúcia Ferraz",
         "responsavel": {
-          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -279,7 +279,7 @@
         }
       },
       {
-        "id": "95df783e-ac08-411f-9674-559b1dea0243",
+        "id": "034e8fea-81d9-408f-ab6e-ef96332f8dda",
         "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
         "cnj": "0001145-87.2026.5.12.0045",
         "tipo": "judicial",
@@ -289,7 +289,7 @@
         "situacao": "ativo",
         "cliente": "Hotel Mar Azul Ltda.",
         "responsavel": {
-          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF"
@@ -303,7 +303,7 @@
         }
       },
       {
-        "id": "a8ec26c6-427c-405d-a077-4e75c5258664",
+        "id": "894b6191-3752-46ac-8601-ea3dc9e7ac89",
         "titulo": "Helena Vieira × Instituto Nacional do Seguro Social",
         "cnj": "5018822-20.2026.4.04.7201",
         "tipo": "judicial",
@@ -313,7 +313,7 @@
         "situacao": "ativo",
         "cliente": "Helena Vieira",
         "responsavel": {
-          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -327,7 +327,7 @@
         }
       },
       {
-        "id": "584df1e8-419a-4c57-8486-4ad95cafe8ae",
+        "id": "3abd032c-0ffe-48e0-a73f-b9d5e1237db5",
         "titulo": "Antônio Reis × Transportadora Vale Verde",
         "cnj": "0000533-40.2025.5.12.0028",
         "tipo": "judicial",
@@ -337,7 +337,7 @@
         "situacao": "ativo",
         "cliente": "Antônio Reis",
         "responsavel": {
-          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "id": "85UWGs8166NBiIJ5syh4p7MUr5tEr8Zl",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM"
@@ -351,7 +351,7 @@
         }
       },
       {
-        "id": "5530fb39-0ed4-4c8a-879e-b9f00c73f4bf",
+        "id": "48d5fdb0-d08d-47f2-8ce5-d03c8cab08a9",
         "titulo": "Renata Cordeiro × Clínica Sorriso Pleno",
         "cnj": "5021334-19.2025.8.24.0023",
         "tipo": "judicial",
@@ -361,7 +361,7 @@
         "situacao": "ativo",
         "cliente": "Renata Cordeiro",
         "responsavel": {
-          "id": "54vEtqLMe0AkxoUpQDHoWNR7BHMUWdi5",
+          "id": "85UWGs8166NBiIJ5syh4p7MUr5tEr8Zl",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM"
@@ -375,7 +375,7 @@
         }
       },
       {
-        "id": "8057967e-277b-4431-b25d-0bf2cb8e0f74",
+        "id": "123a8ddd-8200-4448-b871-f786c7b38cb9",
         "titulo": "Lúcia Matos × Instituto de Previdência de Brusque",
         "cnj": "5003114-09.2025.8.24.0011",
         "tipo": "judicial",
@@ -385,7 +385,7 @@
         "situacao": "ativo",
         "cliente": "Lúcia Matos",
         "responsavel": {
-          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF"
@@ -399,7 +399,7 @@
         }
       },
       {
-        "id": "4f47abff-27fb-44a7-9b02-2a4c19a7760f",
+        "id": "bfb75db5-5956-4c12-9528-ebb604cbf522",
         "titulo": "Auto Center Pioneiro Ltda. × Distribuidora Peças Sul",
         "cnj": "5012450-53.2025.8.24.0038",
         "tipo": "judicial",
@@ -409,7 +409,7 @@
         "situacao": "ativo",
         "cliente": "Auto Center Pioneiro Ltda.",
         "responsavel": {
-          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "id": "lUPcGHKkhLHH6le4yRf8yk383gTS2dka",
           "nome": "Camila Azevedo",
           "apelido": "Camila",
           "iniciais": "CA"
@@ -423,7 +423,7 @@
         }
       },
       {
-        "id": "91cc4324-38af-4ad3-8d03-238b6afcfc0c",
+        "id": "d311f213-0a13-488a-a80b-b03ea79bed0f",
         "titulo": "Lúcia Matos × Município de Brusque",
         "cnj": "5002210-86.2025.8.24.0011",
         "tipo": "judicial",
@@ -433,7 +433,7 @@
         "situacao": "ativo",
         "cliente": "Lúcia Matos",
         "responsavel": {
-          "id": "U8DJveigpv9hYDZoKWta6IOsV1fqbvFp",
+          "id": "IakLrtlCOdIdw2ObPsCjEtcfSCC1Isiw",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF"
@@ -447,7 +447,7 @@
         }
       },
       {
-        "id": "f028bff1-2ebd-4249-9152-0810293dadd9",
+        "id": "477170d2-9733-4ab9-845d-93b6ad13ddef",
         "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
         "cnj": "5009876-57.2025.8.24.0038",
         "tipo": "judicial",
@@ -457,7 +457,7 @@
         "situacao": "ativo",
         "cliente": "Roberto Kühn",
         "responsavel": {
-          "id": "lHm8UkUvruBE1oHOCn9ulqXZ0VtNvPuE",
+          "id": "yRzgE0n04IX0Dw7P8l1fdcOxx21QKpsr",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -471,7 +471,7 @@
         }
       },
       {
-        "id": "650bd248-08a5-476d-8ebe-eacebd4573f6",
+        "id": "cef59b66-7043-4253-862a-4d33ba392449",
         "titulo": "Gilberto Weiss × Cooperativa Agro Vale",
         "cnj": "5000456-14.2024.8.24.0054",
         "tipo": "judicial",
@@ -481,7 +481,7 @@
         "situacao": "ativo",
         "cliente": "Gilberto Weiss",
         "responsavel": {
-          "id": "M0RGbxefDGSnwOepz5mSGzlzcO6tUqRh",
+          "id": "lUPcGHKkhLHH6le4yRf8yk383gTS2dka",
           "nome": "Camila Azevedo",
           "apelido": "Camila",
           "iniciais": "CA"

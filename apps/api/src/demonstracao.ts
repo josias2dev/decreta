@@ -215,7 +215,8 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     }
 
     const ultimaDisp = util(-1);
-    const gravarMovimentacoes = async (chave: string, filtro: (evento: number) => boolean) => {
+    /** `capturadaAs`: a hora em que o DataJud trouxe a movimentação (o resumo da Marina é das 18:30). */
+    const gravarMovimentacoes = async (chave: string, filtro: (evento: number) => boolean, capturadaAs = "18:10") => {
       const p = PROCESSOS[chave]!;
       for (const m of p.movimentacoes ?? []) {
         if (!filtro(m.evento)) continue;
@@ -230,6 +231,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           autor: m.autor,
           fonte: "datajud",
           chave: `demo:${m.evento}`,
+          createdAt: em(dia, capturadaAs),
         });
         if (m.documento) {
           const documentoId = crypto.randomUUID();
@@ -272,7 +274,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
       pedidaPor: ids.beatriz,
       createdAt: em(ultimaDisp, "18:30"),
     });
-    await gravarMovimentacoes("marina", (e) => e > 88);
+    await gravarMovimentacoes("marina", (e) => e > 88, "19:40");
     for (const chave of Object.keys(PROCESSOS)) if (chave !== "marina") await gravarMovimentacoes(chave, () => true);
 
     // Publicações da caixa, com a leitura da IA

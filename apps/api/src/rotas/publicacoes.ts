@@ -105,10 +105,10 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         link: pub.link,
         destinatarios: pub.destinatarios,
         advogados: pub.advogados,
-        processo: processo ? { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, responsavel: resumir(pessoas, processo.responsavelId) } : null,
+        processo: processo ? { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, classe: processo.classe, orgao: processo.orgao, comarca: processo.comarca, responsavel: resumir(pessoas, processo.responsavelId) } : null,
         sugestao: sugestao && { ...sugestao, responsavel: resumir(pessoas, conteudo?.responsavelId ?? processo?.responsavelId) },
         prazo: prazo ? { id: prazo.id, confirmado: !!prazo.confirmadoEm, fim: prazo.fim, tipo: prazo.tipo } : null,
-        audiencia: audiencia ? { id: audiencia.id, em: audiencia.em.toISOString() } : null,
+        audiencia: audiencia ? { id: audiencia.id, em: audiencia.em.toISOString(), tipo: audiencia.tipo } : null,
       });
     });
   });
