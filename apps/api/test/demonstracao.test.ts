@@ -103,6 +103,22 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     expect(docs.itens.length).toBeGreaterThanOrEqual(8);
   });
 
+  test("a busca dos documentos acha por parte do nome, sem acento e por de quem é", async () => {
+    const achados = async (busca: string) => (await call(`/documentos?busca=${encodeURIComponent(busca)}`)).itens as { id: string; nome: string; processo: { titulo: string } | null; negocio: { nome: string } | null }[];
+    const nomes = async (busca: string) => (await achados(busca)).map((d) => d.nome);
+    expect(await nomes("esclarec")).toEqual(["Petição da ré · pedido de esclarecimentos.docx"]);
+    expect(await nomes("PETICAO DA RE")).toContain("Petição da ré · pedido de esclarecimentos.docx");
+    // Palavras em qualquer ordem, e o processo conta: "laudo marina" é o laudo do processo da Marina.
+    const laudo = await achados("pericial marina laudo");
+    expect(laudo.map((d) => d.nome)).toContain("Laudo pericial.docx");
+    expect(laudo.every((d) => d.processo?.titulo.startsWith("Marina"))).toBe(true);
+    // Os da pasta da triagem dizem de quem são.
+    expect(await achados("conta de luz")).toMatchObject([{ nome: "Conta de luz março.docx", negocio: { nome: "José Antunes" } }]);
+    expect(await nomes("% _")).toHaveLength((await call("/documentos")).itens.length);
+    // O painel do documento aberto pede um só, igual ao da lista.
+    expect(await call(`/documentos/${laudo[0]!.id}`)).toEqual(laudo[0]);
+  });
+
   test("tem o volume de um escritório de verdade", async () => {
     expect((await call("/clientes")).total).toBeGreaterThan(120);
     expect((await call("/processos")).total).toBeGreaterThan(130);

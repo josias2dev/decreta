@@ -1,11 +1,11 @@
 import { chaveDoDocumento, lerDocumento, MIMES_COM_TEXTO } from "@decreta/documentos";
-import { clientes, documentos, negocios, processos } from "@decreta/db";
-import { and, desc, eq, ilike, type SQL } from "drizzle-orm";
+import { clientes, documentos, negocios, processos, type Tx } from "@decreta/db";
+import { and, desc, eq, like, type SQL, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { registrar } from "../auditoria.ts";
 import { precisaDeLeitura } from "../servicos/leitura.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { falha, id, ip, palavrasDaBusca, semAcentoNoBanco, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 /** O que a equipe anexa: autos, documentos do cliente, áudio de atendimento, logo do timbre. */
 const MIMES_ACEITOS = new Set([
@@ -35,34 +35,24 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       if (processoId) onde.push(eq(documentos.processoId, processoId));
       if (clienteId) onde.push(eq(documentos.clienteId, clienteId));
       if (negocioId) onde.push(eq(documentos.negocioId, negocioId));
-      if (busca) onde.push(ilike(documentos.nome, `%${busca.replace(/[%_]/g, "")}%`));
-      const linhas = await tx
-        .select({ d: documentos, processo: processos.titulo, cliente: clientes.nome })
-        .from(documentos)
-        .leftJoin(processos, eq(processos.id, documentos.processoId))
-        .leftJoin(clientes, eq(clientes.id, documentos.clienteId))
+      // Cada palavra no nome do arquivo ou em de quem ele é (processo, cliente, pasta da triagem).
+      const alvo = semAcentoNoBanco(sql`${documentos.nome} || ' ' || coalesce(${processos.titulo}, '') || ' ' || coalesce(${clientes.nome}, '') || ' ' || coalesce(${negocios.nome}, '')`);
+      for (const p of palavrasDaBusca(busca)) onde.push(like(alvo, `%${p}%`));
+      const linhas = await comDeQuem(tx)
         .where(onde.length ? and(...onde) : undefined)
         .orderBy(desc(documentos.createdAt))
         .limit(200);
-      return c.json({
-        itens: linhas.map(({ d, processo, cliente }) => ({
-          id: d.id,
-          nome: d.nome,
-          mime: d.mime,
-          tamanho: d.tamanho,
-          paginas: d.paginas,
-          evento: d.evento,
-          origem: d.origem,
-          lido: d.texto !== null && d.texto.length > 0,
-          semTexto: (MIMES_COM_TEXTO.has(d.mime) || d.mime.startsWith("image/")) && !d.texto,
-          /** Leitura pela IA (foto, PDF escaneado): pendente, pronta, falhou; vazio quando não precisou. */
-          leitura: d.leitura,
-          em: d.createdAt.toISOString(),
-          processo: d.processoId ? { id: d.processoId, titulo: processo } : null,
-          cliente: d.clienteId ? { id: d.clienteId, nome: cliente } : null,
-          enviadoPor: resumir(pessoas, d.enviadoPor),
-        })),
-      });
+      return c.json({ itens: linhas.map((l) => naLista(l, pessoas)) });
+    });
+  });
+
+  /** Um documento, como na lista: o que o painel do arquivo aberto mostra. */
+  app.get("/documentos/:id", async (c) => {
+    const docId = id(c);
+    return tenant(c, deps, async (tx) => {
+      const [l] = await comDeQuem(tx).where(eq(documentos.id, docId));
+      if (!l) falha(404, "nao_encontrado");
+      return c.json(naLista(l, await pessoasDoEscritorio(db, tx, c.get("orgId"))));
     });
   });
 
@@ -154,4 +144,36 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "documento.apagado", detalhes: { documentoId: docId }, ip: ip(c) }, deps.log);
     return c.json({ ok: true });
   });
+}
+
+/** O documento com o nome de quem ele é: processo, cliente ou pasta da triagem. */
+const comDeQuem = (tx: Tx) =>
+  tx
+    .select({ d: documentos, processo: processos.titulo, cliente: clientes.nome, negocio: negocios.nome })
+    .from(documentos)
+    .leftJoin(processos, eq(processos.id, documentos.processoId))
+    .leftJoin(clientes, eq(clientes.id, documentos.clienteId))
+    .leftJoin(negocios, eq(negocios.id, documentos.negocioId));
+
+type ComDeQuem = Awaited<ReturnType<typeof comDeQuem>>[number];
+
+function naLista({ d, processo, cliente, negocio }: ComDeQuem, pessoas: Awaited<ReturnType<typeof pessoasDoEscritorio>>) {
+  return {
+    id: d.id,
+    nome: d.nome,
+    mime: d.mime,
+    tamanho: d.tamanho,
+    paginas: d.paginas,
+    evento: d.evento,
+    origem: d.origem,
+    lido: d.texto !== null && d.texto.length > 0,
+    semTexto: (MIMES_COM_TEXTO.has(d.mime) || d.mime.startsWith("image/")) && !d.texto,
+    /** Leitura pela IA (foto, PDF escaneado): pendente, pronta, falhou; vazio quando não precisou. */
+    leitura: d.leitura,
+    em: d.createdAt.toISOString(),
+    processo: d.processoId ? { id: d.processoId, titulo: processo } : null,
+    cliente: d.clienteId ? { id: d.clienteId, nome: cliente } : null,
+    negocio: d.negocioId ? { id: d.negocioId, nome: negocio } : null,
+    enviadoPor: resumir(pessoas, d.enviadoPor),
+  };
 }

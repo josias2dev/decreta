@@ -3,6 +3,7 @@ import type { Database, Tx } from "@decreta/db";
 import { withTenant } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
 import type { Ia } from "@decreta/ia";
+import { type SQL, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
@@ -77,4 +78,25 @@ export const ehSocio = (papel: string) => papel === "owner" || papel === "admin"
 
 export function ip(c: C): string | null {
   return c.req.header("cf-connecting-ip") ?? c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+}
+
+const COM_ACENTO = "áàâãäéèêëíìîïóòôõöúùûüçñ";
+const SEM_ACENTO = "aaaaaeeeeiiiiooooouuuucn";
+
+/** O texto no banco em minúsculas e sem acento, para comparar com `palavrasDaBusca`. */
+export const semAcentoNoBanco = (texto: SQL) => sql`translate(lower(${texto}), ${COM_ACENTO}, ${SEM_ACENTO})`;
+
+/**
+ * O que a pessoa digitou, em palavras sem acento e em minúsculas: cada uma
+ * precisa aparecer, em qualquer ordem ("laudo marina" acha "Laudo pericial"
+ * do processo da Marina). Tira os curingas do LIKE e os separadores comuns.
+ */
+export function palavrasDaBusca(busca: string): string[] {
+  return busca
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .split(/[\s%_\\·•,;:()\[\]"'/–—-]+/)
+    .filter(Boolean)
+    .slice(0, 8);
 }
