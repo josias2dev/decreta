@@ -1,4 +1,4 @@
-import { createRootRoute, createRoute, createRouter, Outlet } from "@tanstack/react-router";
+import { createHashHistory, createRootRoute, createRoute, createRouter, Outlet } from "@tanstack/react-router";
 import { AppLayout } from "./componentes/moldura";
 import { FOLHA, VOLTAM_AO_TOPO } from "./componentes/rolagem";
 import { NaoEncontrada } from "./componentes/nao-encontrada";
@@ -164,7 +164,14 @@ const routeTree = rootRoute.addChildren([
   ]),
 ]);
 
-export const router = createRouter({ routeTree, defaultPreload: "intent", scrollRestoration: true, scrollToTopSelectors: [...VOLTAM_AO_TOPO, FOLHA] });
+export const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  scrollRestoration: true,
+  scrollToTopSelectors: [...VOLTAM_AO_TOPO, FOLHA],
+  // A prévia (vite build --mode previa) vive num arquivo só, então as rotas vão no #.
+  ...(import.meta.env.MODE === "previa" ? { history: createHashHistory() } : {}),
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

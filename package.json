@@ -10,6 +10,7 @@
     "dev": "bun --filter @decreta/api dev",
     "web": "bun --filter @decreta/web dev",
     "web:build": "bun --filter @decreta/web build",
+    "web:previa": "bun --filter @decreta/web previa",
     "web:e2e": "bun --filter @decreta/web e2e",
     "typecheck": "tsc -p . && tsc -p apps/web",
     "test": "bun test",

@@ -7,3 +7,4 @@ dist
 data/
 apps/web/test-results
 apps/web/playwright-report
+dist-previa

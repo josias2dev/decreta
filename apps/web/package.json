@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "previa": "vite build --mode previa && bun scripts/previa.ts",
     "preview": "vite preview",
     "e2e": "playwright test"
   },
