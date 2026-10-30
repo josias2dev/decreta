@@ -6,7 +6,7 @@ import { blocos, trechos, type Bloco } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { BookMarked, Check, Download, FileText, Pencil, RefreshCw } from "lucide-react";
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
@@ -53,10 +53,20 @@ export function PecaPage() {
   const [edicao, setEdicao] = useState<string | null>(null);
   const [trocando, setTrocando] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  // No computador só o papel do rascunho rola (no celular, a tela toda).
+  const papel = useRef<HTMLDivElement>(null);
+  const lido = useRef(0);
 
   const tipo = tipoEscolhido ?? peca?.tipo ?? prep.data?.tipoSugerido ?? "";
   const instrucoes = instrucoesDigitadas ?? peca?.instrucoes ?? "";
   const texto = aoVivo ?? peca?.texto ?? "";
+  const editando = edicao !== null;
+  useAcompanharAIa(papel, gerando, texto);
+  // Lendo ou editando, o papel fica no mesmo ponto do texto, e não volta ao começo.
+  useLayoutEffect(() => {
+    const el = papel.current;
+    if (el) el.scrollTop = lido.current * (el.scrollHeight - el.clientHeight);
+  }, [editando]);
   const tipos = catalogo.data?.grupos.flatMap((g) => g.tipos) ?? [];
   const nomeDoTipo = tipos.find((t) => t.id === tipo)?.nome ?? "Escolha o tipo";
 
@@ -76,7 +86,8 @@ export function PecaPage() {
         await qc.fetchQuery({ queryKey: ["peca", id], queryFn: () => api<Peca>(`/pecas/${id}`) });
         void qc.invalidateQueries({ queryKey: ["pecas", "preparar"] });
         void qc.invalidateQueries({ queryKey: ["prazo"] });
-        void navigate({ search: (s) => ({ ...s, id }), replace: true });
+        // O endereço ganha o id sem levar a tela ao começo. Esperar a troca evita que o rascunho suma por um instante.
+        await navigate({ search: (s) => ({ ...s, id }), replace: true, resetScroll: false });
       }
     } catch (err) {
       avisar(mensagemDoErro(err), { erro: true });
@@ -92,7 +103,7 @@ export function PecaPage() {
       // Primeira vez, escrita à mão: cria a peça.
       const r = await api<{ id: string }>("/pecas/manual", { json: { processoId: prep.data!.processo.id, prazoId: prep.data!.prazo?.id ?? null, tipo, texto: corpo.texto ?? "" } });
       await qc.fetchQuery({ queryKey: ["peca", r.id], queryFn: () => api<Peca>(`/pecas/${r.id}`) });
-      void navigate({ search: (s) => ({ ...s, id: r.id }), replace: true });
+      void navigate({ search: (s) => ({ ...s, id: r.id }), replace: true, resetScroll: false });
       return r;
     },
     onSuccess: (_r, corpo) => {
@@ -185,9 +196,7 @@ export function PecaPage() {
 
   const folha =
     edicao !== null ? (
-      <div className="dc-folha">
-        <textarea aria-label="Texto da peça" value={edicao} onChange={(e) => setEdicao(e.target.value)} autoFocus />
-      </div>
+      <Editor valor={edicao} aoMudar={setEdicao} focar={!texto || (!celular && lido.current < 0.01)} />
     ) : texto ? (
       <Folha texto={texto} timbre={timbre} escrevendo={gerando} />
     ) : (
@@ -320,7 +329,7 @@ export function PecaPage() {
   }
 
   return (
-    <Pagina>
+    <Pagina cheia>
       <div className="dc-topo-pagina">
         <Trilha>
           {p.prazo ? <Link to="/prazos">Prazos</Link> : <Link to="/processos">Processos</Link>}
@@ -376,8 +385,8 @@ export function PecaPage() {
         />
       </div>
       {semIa}
-      <div className="dc-colunas dc-colunas--esquerda">
-        <div className="dc-pilha">
+      <div className="dc-colunas dc-colunas--esquerda dc-peca">
+        <div className="dc-pilha dc-rola dc-peca__lado">
           <Painel titulo="Tipo de peça" acao={catalogo.data && <span className="dc-nota">{catalogo.data.total} modelos</span>} corpo={false}>
             <EscolherTipo catalogo={catalogo.data} tipo={tipo} aoEscolher={setTipo} />
           </Painel>
@@ -389,7 +398,7 @@ export function PecaPage() {
             {botaoGerar(true)}
           </Painel>
         </div>
-        <section className="dc-painel">
+        <section className="dc-painel dc-peca__rascunho">
           <div className="dc-painel__topo">
             <span className="inline-flex min-w-0 items-center gap-2">
               <MarcaIa />
@@ -407,13 +416,82 @@ export function PecaPage() {
               </span>
             )}
           </div>
-          <div className="dc-folha-fundo">{folha}</div>
+          <div
+            ref={papel}
+            className="dc-folha-fundo dc-rola"
+            data-scroll-restoration-id="rascunho"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const fim = el.scrollHeight - el.clientHeight;
+              lido.current = fim > 0 ? el.scrollTop / fim : 0;
+            }}
+          >
+            {folha}
+          </div>
           {pe(false)}
         </section>
       </div>
       {trocar}
       {guardar}
     </Pagina>
+  );
+}
+
+/**
+ * Enquanto a IA escreve, a rolagem acompanha o fim do texto, como quem lê
+ * junto. Subindo para reler, para de acompanhar; voltando ao fim, acompanha de
+ * novo. Sem o papel (celular), quem rola é a tela.
+ */
+function useAcompanharAIa(papel: RefObject<HTMLElement | null>, escrevendo: boolean, texto: string) {
+  const noFim = useRef(true);
+  const alvo = () => papel.current ?? (document.scrollingElement as HTMLElement | null);
+  useEffect(() => {
+    const el = alvo();
+    if (!escrevendo || !el) return;
+    const fonte: HTMLElement | Window = el === document.scrollingElement ? window : el;
+    const medir = () => {
+      noFim.current = el.scrollHeight - el.scrollTop - el.clientHeight < 96;
+    };
+    // Roda, dedo ou tecla para cima param na hora, antes do próximo pedaço de texto puxar para baixo.
+    const subiu = (e: Event) => {
+      if (e instanceof WheelEvent ? e.deltaY < 0 : e instanceof KeyboardEvent ? ["ArrowUp", "PageUp", "Home"].includes(e.key) : true) noFim.current = false;
+    };
+    medir();
+    fonte.addEventListener("scroll", medir, { passive: true });
+    fonte.addEventListener("wheel", subiu, { passive: true });
+    fonte.addEventListener("touchmove", subiu, { passive: true });
+    window.addEventListener("keydown", subiu);
+    return () => {
+      fonte.removeEventListener("scroll", medir);
+      fonte.removeEventListener("wheel", subiu);
+      fonte.removeEventListener("touchmove", subiu);
+      window.removeEventListener("keydown", subiu);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [escrevendo]);
+  useLayoutEffect(() => {
+    const el = alvo();
+    if (escrevendo && el && noFim.current) el.scrollTop = el.scrollHeight;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [escrevendo, texto]);
+}
+
+/**
+ * O texto da peça para editar. A caixa cresce com o texto (a cópia escondida
+ * ao lado dá a altura), então quem rola é o papel, sem rolagem dentro de rolagem.
+ */
+function Editor({ valor, aoMudar, focar }: { valor: string; aoMudar: (v: string) => void; focar: boolean }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const focarAoAbrir = useRef(focar);
+  useEffect(() => {
+    if (focarAoAbrir.current) ref.current?.focus({ preventScroll: true });
+  }, []);
+  return (
+    <div className="dc-folha">
+      <div className="dc-folha__editor" data-texto={valor}>
+        <textarea ref={ref} aria-label="Texto da peça" value={valor} onChange={(e) => aoMudar(e.target.value)} />
+      </div>
+    </div>
   );
 }
 

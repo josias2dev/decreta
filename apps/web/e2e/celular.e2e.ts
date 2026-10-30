@@ -80,6 +80,19 @@ test("peça sem a IA: o botão de baixo é escrever à mão", async ({ page }) =
   await expect(page.getByRole("button", { name: "Escrever à mão" })).toBeInViewport();
 });
 
+test("peça: o editor cresce com o texto e só a tela rola, sem caixa rolando dentro", async ({ page }) => {
+  const peca = amostras.peca!.corpo;
+  const longa = { ...peca, texto: Array.from({ length: 8 }, () => peca.texto).join("\n\n") };
+  await abrir(page, `/pecas?id=${ids.peca}`, new ApiFalsa().responder(`/pecas/${ids.peca}`, longa));
+  await page.getByRole("button", { name: /^Editar$/ }).tap();
+  const editor = page.getByLabel("Texto da peça");
+  await expect(editor).toBeVisible();
+  expect(await editor.evaluate((e) => e.scrollHeight - e.clientHeight)).toBe(0);
+  // 16px: com menos, o iPhone dá zoom ao tocar.
+  expect(await editor.evaluate((e) => getComputedStyle(e).fontSize)).toBe("16px");
+  expect(await page.evaluate(() => document.documentElement.scrollHeight > document.documentElement.clientHeight * 2)).toBe(true);
+});
+
 test("sentença: leitura pedido a pedido, decisão alinhada à direita e confirmar", async ({ page }) => {
   const api = await abrir(page, `/publicacoes/${ids.sentenca}`, new ApiFalsa().responder("/eu", euComIa));
   await expect(page.getByText("Leitura da sentença")).toBeVisible();

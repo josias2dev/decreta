@@ -4,6 +4,8 @@
  * Endereço sem amostra própria usa a do mesmo tipo (qualquer processo abre o
  * processo de amostra). O que muda algo responde "ok" e não guarda nada.
  */
+import { PECA_LONGA } from "./peca-longa";
+
 type Amostra = { path: string; corpo: unknown };
 
 const amostras = Object.values(import.meta.glob<Amostra>("../../e2e/amostras/*.json", { eager: true, import: "default" }));
@@ -14,9 +16,13 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
 const molde = (caminho: string) => caminho.replace(UUID, ":id");
 const semAcento = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
 
-/** As fotos da equipe vêm como /demonstracao/x.jpg; na prévia vão embutidas. */
+/** A peça de amostra (meia página): toda resposta que a traz leva a de tamanho de verdade. */
+const pecaDeAmostra = amostras.find((a) => /^\/pecas\/[0-9a-f-]{36}$/.test(a.path))!.corpo as { id: string; texto: string };
+const PECA_CURTA = JSON.stringify(pecaDeAmostra.texto);
+
+/** As fotos da equipe vêm como /demonstracao/x.jpg; na prévia vão embutidas. A peça vai no tamanho de verdade. */
 function comFotos(corpo: unknown): unknown {
-  const texto = JSON.stringify(corpo).replace(/"\/demonstracao\/([a-z]+\.jpg)"/g, (tudo, nome: string) => {
+  const texto = JSON.stringify(corpo).replaceAll(PECA_CURTA, JSON.stringify(PECA_LONGA)).replace(/"\/demonstracao\/([a-z]+\.jpg)"/g, (tudo, nome: string) => {
     const foto = fotos[`../../public/demonstracao/${nome}`];
     return foto ? JSON.stringify(foto) : tudo;
   });

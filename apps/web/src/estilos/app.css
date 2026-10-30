@@ -166,7 +166,14 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-folha h2 { margin: 18px 0 8px; font: 600 14px/1.5 var(--font-sans); }
 .dc-folha ul, .dc-folha ol { margin: 0 0 12px; padding-left: 2.2em; }
 .dc-folha mark { background: #fff3b0; color: inherit; padding: 0 2px; border-radius: 2px; }
-.dc-folha textarea { width: 100%; min-height: 60vh; border: 0; outline: none; resize: vertical; font: 400 14px/1.6 ui-monospace, "SFMono-Regular", Menlo, monospace; color: #1c1c22; background: transparent; }
+/* Editor da peça: a caixa cresce com o texto. A cópia escondida (::after) ocupa a mesma célula e dá a
+   altura, então a caixa nunca rola por dentro; quem rola é o papel (ou a tela, no celular). */
+.dc-folha__editor { display: grid; }
+.dc-folha__editor::after { content: attr(data-texto) " "; visibility: hidden; }
+.dc-folha__editor > textarea, .dc-folha__editor::after { grid-area: 1 / 1; box-sizing: border-box; width: 100%; min-height: 50vh; margin: 0; padding: 0; border: 0; white-space: pre-wrap; overflow-wrap: break-word; font: 400 14px/1.6 ui-monospace, "SFMono-Regular", Menlo, monospace; color: #1c1c22; }
+.dc-folha__editor > textarea { overflow: hidden; outline: none; resize: none; background: transparent; }
+/* No celular, 16px (abaixo disso o iPhone dá zoom ao tocar na caixa) e a letra do app, que cabe mais por linha. */
+.dc-celular .dc-folha__editor > textarea, .dc-celular .dc-folha__editor::after { min-height: 40vh; font: 400 16px/24px var(--font-sans); }
 
 /* ---------- Conversa com a IA ---------- */
 .dc-conversa { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -352,6 +359,16 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-peca__pe > .dc-retorno:last-child { margin-right: -7px; }
 .dc-peca__pe--solto { padding: 0; border-top: 0; font-size: 13px; line-height: 18px; }
 .dc-painel > .dc-folha-fundo:not(:last-child) { border-radius: 0; }
+/* No computador a tela fica parada e cada coluna rola por si. No rascunho só o papel rola: o título
+   do rascunho fica em cima e o aviso da IA embaixo, sempre à vista. */
+.dc-pagina--cheia > .dc-peca { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+.dc-peca__lado { min-height: 0; overflow-y: auto; }
+.dc-peca__rascunho { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-peca__rascunho > * { flex: none; }
+.dc-peca__rascunho > .dc-folha-fundo { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.dc-peca__rascunho > .dc-folha-fundo > .dc-folha { margin: 0 auto; }
+/* O rodapé tem a altura de quando mostra o retorno, para o papel não pular ao editar. */
+.dc-peca__rascunho > .dc-peca__pe { box-sizing: border-box; min-height: 41px; }
 
 /* ---------- Modelos ---------- */
 .dc-filtro-tipo { flex: 0 1 260px; }
@@ -397,10 +414,11 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-pagina--cheia > .dc-quadro { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); margin: 0 -4px; padding: 0 4px; scroll-padding: 0 4px; overscroll-behavior-x: contain; }
 .dc-quadro__coluna { min-height: 0; }
 .dc-quadro__corpo { display: flex; flex-direction: column; gap: var(--space-2); min-height: 0; overflow-y: auto; margin: 0 -4px; padding: 0 4px 4px; }
-/* Coluna com mais cartões do que cabem: o último esmaece embaixo, avisando que tem mais (some ao chegar no fim). */
+/* Coluna com mais cartões do que cabem: o último esmaece embaixo, avisando que tem mais (some ao chegar no fim).
+   O pedido da peça (à esquerda do rascunho) faz o mesmo. */
 @property --dc-esmaece { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @supports (animation-timeline: scroll()) {
-  .dc-quadro__corpo { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); animation: dc-esmaece linear both; animation-timeline: scroll(self block); animation-range: calc(100% - 32px) 100%; }
+  .dc-quadro__corpo, .dc-peca__lado { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); animation: dc-esmaece linear both; animation-timeline: scroll(self block); animation-range: calc(100% - 32px) 100%; }
 }
 @keyframes dc-esmaece { from { --dc-esmaece: 32px; } to { --dc-esmaece: 0px; } }
 

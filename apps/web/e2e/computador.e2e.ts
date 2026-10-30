@@ -116,6 +116,32 @@ test("peça sem a IA: escreve à mão e guarda", async ({ page }) => {
   await expect.poll(() => api.mudancas("/pecas/manual")[0]?.corpo).toMatchObject({ processoId: ids.processo, prazoId: ids.prazo, tipo: "manifestacao-laudo" });
 });
 
+test("peça: só o papel do rascunho rola, e o editor cresce com o texto em vez de rolar por dentro", async ({ page }) => {
+  const peca = amostras.peca!.corpo;
+  const longa = { ...peca, texto: Array.from({ length: 8 }, () => peca.texto).join("\n\n") };
+  await abrir(page, `/pecas?id=${ids.peca}`, new ApiFalsa().responder("/eu", euComIa).responder(`/pecas/${ids.peca}`, longa));
+  const papel = page.locator('[data-scroll-restoration-id="rascunho"]');
+  await expect(papel.getByText("Souza & Freitas Advocacia")).toBeVisible();
+  await papel.hover();
+  await page.mouse.wheel(0, 1500);
+  await expect.poll(() => papel.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+  // A folha branca não rola: o título, os botões, o topo do rascunho e o aviso da IA ficam à vista.
+  expect(await page.locator('[data-scroll-restoration-id="folha"]').evaluate((e) => e.scrollTop)).toBe(0);
+  await expect(page.getByRole("heading", { name: "Gerar peça" })).toBeInViewport();
+  await expect(page.getByRole("link", { name: /Baixar DOCX no timbre/ })).toBeInViewport();
+  await expect(page.getByText(/Gerado por IA\. Confira nos autos/)).toBeInViewport();
+  // Editando, o papel fica no mesmo ponto do texto e a caixa não tem rolagem própria.
+  const onde = await papel.evaluate((e) => e.scrollTop / (e.scrollHeight - e.clientHeight));
+  await page.getByRole("button", { name: "Editar texto" }).click();
+  const editor = page.getByLabel("Texto da peça");
+  await expect(editor).toBeVisible();
+  expect(await editor.evaluate((e) => e.scrollHeight - e.clientHeight)).toBe(0);
+  expect(await papel.evaluate((e) => e.scrollTop / (e.scrollHeight - e.clientHeight))).toBeCloseTo(onde, 2);
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  await expect(papel.getByText("Souza & Freitas Advocacia")).toBeAttached();
+  expect(await papel.evaluate((e) => e.scrollTop / (e.scrollHeight - e.clientHeight))).toBeCloseTo(onde, 2);
+});
+
 test("cliente: dados, processos e a linha do tempo", async ({ page }) => {
   await abrir(page, `/clientes/${ids.cliente}`);
   await expect(page.getByRole("heading", { name: "Marina Duarte" })).toBeVisible();
