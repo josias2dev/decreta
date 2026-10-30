@@ -8,6 +8,8 @@ export interface Pessoa {
   /** Como aparece nas listas ("Beatriz"). */
   apelido: string;
   iniciais: string;
+  /** Foto de perfil (endereço da imagem); sem ela, as telas mostram as iniciais. */
+  foto: string | null;
   email: string;
   cargo: string | null;
   papel: string;
@@ -27,7 +29,7 @@ export function iniciais(nome: string): string {
 /** Membros (sem RLS, filtrados pelo escritório) com o perfil de `equipe` (com RLS, na transação). */
 export async function pessoasDoEscritorio(db: Database | Tx, tx: Tx, organizationId: string): Promise<Map<string, Pessoa>> {
   const membros = await db
-    .select({ id: user.id, nome: user.name, email: user.email, papel: member.role })
+    .select({ id: user.id, nome: user.name, email: user.email, foto: user.image, papel: member.role })
     .from(member)
     .innerJoin(user, eq(user.id, member.userId))
     .where(eq(member.organizationId, organizationId));
@@ -42,6 +44,7 @@ export async function pessoasDoEscritorio(db: Database | Tx, tx: Tx, organizatio
       nome: m.nome || m.email,
       apelido,
       iniciais: iniciais(m.nome || m.email),
+      foto: m.foto ?? null,
       email: m.email,
       cargo: p?.cargo ?? null,
       papel: m.papel,
@@ -53,12 +56,12 @@ export async function pessoasDoEscritorio(db: Database | Tx, tx: Tx, organizatio
   return mapa;
 }
 
-export type PessoaResumida = Pick<Pessoa, "id" | "nome" | "apelido" | "iniciais">;
+export type PessoaResumida = Pick<Pessoa, "id" | "nome" | "apelido" | "iniciais" | "foto">;
 
 export function resumir(pessoas: Map<string, Pessoa>, id: string | null | undefined): PessoaResumida | null {
   if (!id) return null;
   const p = pessoas.get(id);
-  return p ? { id: p.id, nome: p.nome, apelido: p.apelido, iniciais: p.iniciais } : { id, nome: "Ex-integrante", apelido: "Ex-integrante", iniciais: "?" };
+  return p ? { id: p.id, nome: p.nome, apelido: p.apelido, iniciais: p.iniciais, foto: p.foto } : { id, nome: "Ex-integrante", apelido: "Ex-integrante", iniciais: "?", foto: null };
 }
 
 export async function ehMembro(db: Database, organizationId: string, userId: string): Promise<string | null> {

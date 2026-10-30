@@ -27,10 +27,10 @@ export const Botao = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButt
   },
 );
 
-export function Avatar({ pessoa, grande }: { pessoa: Pick<Pessoa, "iniciais"> | null | undefined; grande?: boolean }) {
+export function Avatar({ pessoa, grande }: { pessoa: Pick<Pessoa, "iniciais" | "foto"> | null | undefined; grande?: boolean }) {
   return (
     <span className="dc-avatar" style={grande ? { width: 36, height: 36, fontSize: 13 } : undefined} aria-hidden>
-      {pessoa?.iniciais ?? "—"}
+      {pessoa?.foto ? <img src={pessoa.foto} alt="" /> : (pessoa?.iniciais ?? "—")}
     </span>
   );
 }

@@ -7,12 +7,12 @@
  * hoje, `fim: -1` venceu no dia útil anterior, `disp: -1` foi disponibilizada
  * no último dia útil. Assim a tela "Hoje" sempre tem o que mostrar.
  */
-import { SLUG_DA_DEMONSTRACAO } from "./slug.ts";
+import { LOGIN_DA_DEMONSTRACAO, SLUG_DA_DEMONSTRACAO } from "./slug.ts";
 
 export type Quem = "beatriz" | "rafael" | "tiago" | "camila";
 
-export const EQUIPE: Record<Quem, { nome: string; cargo: string; papel: "owner" | "admin" | "member"; oab?: string }> = {
-  beatriz: { nome: "Beatriz Souza", cargo: "Advogada", papel: "owner", oab: "41.233" },
+export const EQUIPE: Record<Quem, { nome: string; cargo: string; papel: "owner" | "admin" | "member"; oab?: string; email?: string }> = {
+  beatriz: { nome: "Beatriz Souza", cargo: "Advogada", papel: "owner", oab: "41.233", email: LOGIN_DA_DEMONSTRACAO },
   rafael: { nome: "Rafael Freitas", cargo: "Advogado", papel: "admin", oab: "45.678" },
   tiago: { nome: "Tiago Martins", cargo: "Advogado", papel: "member", oab: "52.104" },
   camila: { nome: "Camila Azevedo", cargo: "Estagiária", papel: "member" },

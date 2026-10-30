@@ -88,6 +88,19 @@ test("cliente: dados, processos e a linha do tempo", async ({ page }) => {
   expect(await sobraNaLateral(page)).toBe(0);
 });
 
+test("minha conta: o tema escolhido vale na hora e fica no aparelho", async ({ page }) => {
+  await abrir(page, "/conta");
+  await page.getByRole("button", { name: "Escuro" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "escuro");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "escuro");
+  await page.getByRole("button", { name: "Automático" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "claro");
+  // A conta da demonstração é de todos: não troca a senha.
+  await expect(page.getByText("Esta é a conta de demonstração")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Trocar senha" })).toHaveCount(0);
+});
+
 test("equipe: convidar manda e-mail e papel", async ({ page }) => {
   const api = await abrir(page, "/equipe");
   await expect(page.getByText("Beatriz Souza")).toBeVisible();

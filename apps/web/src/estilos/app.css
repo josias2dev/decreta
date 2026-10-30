@@ -118,6 +118,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-celular .dc-folha { padding: 20px 18px; font-size: 14px; }
 .dc-folha__timbre { display: flex; flex-direction: column; gap: 2px; padding-bottom: 12px; margin-bottom: 20px; border-bottom: 1px solid #d4d4dc; }
 .dc-folha__timbre strong { font: 600 15px/20px var(--font-sans); }
+.dc-folha__logo { height: 36px; width: auto; align-self: flex-start; margin-bottom: 6px; }
+.dc-logo-previa { height: 36px; width: 36px; object-fit: contain; border: 1px solid var(--borda); border-radius: 8px; background: #ffffff; padding: 3px; box-sizing: border-box; }
 .dc-folha__timbre span { font: 400 12px/16px var(--font-sans); color: #6b6a76; }
 .dc-folha p { margin: 0 0 12px; text-align: justify; text-indent: 2.5em; }
 .dc-folha p.dc-folha__sem-recuo { text-indent: 0; }

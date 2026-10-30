@@ -1,5 +1,6 @@
 import { diaDoInstante, ehDia, hojeEm, horaLocal, instanteLocal, somarDias, urgenciaDoPrazo } from "@decreta/core";
 import { audiencias, prazos, processos, tarefas } from "@decreta/db";
+import { itemDoChecklist } from "@decreta/ia";
 import { and, asc, eq, gte, isNull, lt, lte, ne } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -11,6 +12,13 @@ import { corpo, falha, id, tenant, type Ambiente, type DepsDasRotas } from "./ba
 
 const dia = z.string().refine(ehDia, "data inválida");
 const hora = z.string().regex(/^\d{2}:\d{2}$/, "hora inválida");
+
+/** Preparações antigas vinham com "[ ]" em cada item do checklist. */
+function preparacaoNaTela(a: ReturnType<typeof naTela>) {
+  const checklist = (a?.conteudo as { checklist?: unknown } | undefined)?.checklist;
+  if (!a || !Array.isArray(checklist)) return a;
+  return { ...a, conteudo: { ...a.conteudo, checklist: checklist.map((t) => itemDoChecklist(String(t))) } };
+}
 
 export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
@@ -73,10 +81,10 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
         porVideo: a.porVideo,
         local: a.local,
         situacao: a.situacao,
-        checklist: a.checklist,
+        checklist: a.checklist.map((i) => ({ ...i, texto: itemDoChecklist(i.texto) })),
         responsavel: resumir(pessoas, a.responsavelId),
         processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca },
-        preparacao: naTela(await ultimaAnalise(tx, "audiencia", a.id, "preparar-audiencia"), ctx?.base),
+        preparacao: preparacaoNaTela(naTela(await ultimaAnalise(tx, "audiencia", a.id, "preparar-audiencia"), ctx?.base)),
       });
     });
   });

@@ -571,6 +571,7 @@ export function Folha({ texto, timbre, escrevendo }: { texto: string; timbre: Ti
   return (
     <article className="dc-folha" aria-busy={escrevendo || undefined}>
       <header className="dc-folha__timbre" style={cor ? { borderColor: cor } : undefined}>
+        {timbre.logoDocumentoId && <img src={`/api/app/escritorio/logo?v=${timbre.logoDocumentoId}`} alt="" className="dc-folha__logo" />}
         <strong style={cor ? { color: cor } : undefined}>{timbre.nome}</strong>
         {linha && <span>{linha}</span>}
       </header>

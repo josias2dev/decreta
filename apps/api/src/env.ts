@@ -30,6 +30,8 @@ const schema = z.object({
   /** wameow: o número do Decreta que manda o resumo da manhã. Vazio: o resumo não sai. */
   WAMEOW_URL: z.string().default(""),
   WAMEOW_TOKEN: z.string().default(""),
+  /** Senha da conta de demonstração: a renovação de toda madrugada volta para ela. */
+  DEMONSTRACAO_SENHA: z.string().default(""),
   /** Onde ficam os arquivos: pasta local (dev, VPS com volume) ou R2. */
   ARQUIVOS: z.enum(["disco", "r2"]).default("disco"),
   ARQUIVOS_DIR: z.string().default("./data/arquivos"),

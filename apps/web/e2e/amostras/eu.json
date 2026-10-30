@@ -2,51 +2,58 @@
   "path": "/eu",
   "corpo": {
     "usuario": {
-      "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+      "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
+      "foto": "/demonstracao/beatriz.jpg",
       "cargo": "Advogada",
       "papel": "owner"
     },
     "escritorio": {
-      "id": "771b101e-4007-404b-8ca6-b4e068bacdb6",
+      "id": "4ccaf329-6ae3-4d69-b80f-a95c244b3478",
       "nome": "Souza & Freitas Advocacia",
       "pessoas": 4,
-      "timezone": "America/Sao_Paulo"
+      "timezone": "America/Sao_Paulo",
+      "logo": true,
+      "demonstracao": true
     },
     "hoje": "2026-10-29",
     "ia": false,
     "equipe": [
       {
-        "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+        "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
+        "foto": "/demonstracao/beatriz.jpg",
         "cargo": "Advogada",
         "papel": "owner"
       },
       {
-        "id": "2jeG4bq1ORZYmOsuAVfr3An9fG1EMrJq",
+        "id": "UuR8wZ2Hx3zGy4oGAm1ZLspfqGyiZGLd",
         "nome": "Rafael Freitas",
         "apelido": "Rafael",
         "iniciais": "RF",
+        "foto": "/demonstracao/rafael.jpg",
         "cargo": "Advogado",
         "papel": "admin"
       },
       {
-        "id": "u2r4XT3PFUcyTOdS8ijwE2LSW17u78Uz",
+        "id": "NJEVyCpwVedca4kQEkl3QSIz8wiR7swN",
         "nome": "Tiago Martins",
         "apelido": "Tiago",
         "iniciais": "TM",
+        "foto": "/demonstracao/tiago.jpg",
         "cargo": "Advogado",
         "papel": "member"
       },
       {
-        "id": "vCylBi39VKf7RXjMVhfuwW1Jd8wsQk99",
+        "id": "jJmfzvhxEFo4umhKf9ENjST0TlrsCROj",
         "nome": "Camila Azevedo",
         "apelido": "Camila",
         "iniciais": "CA",
+        "foto": "/demonstracao/camila.jpg",
         "cargo": "Estagiária",
         "papel": "member"
       }

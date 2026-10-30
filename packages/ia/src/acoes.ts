@@ -200,23 +200,29 @@ export const preparacaoDeAudienciaSchema = z.object({
   objetivo: z.string().describe("O que o nosso cliente precisa sair dela tendo conseguido."),
   controvertidos: z.array(z.string()).describe("Pontos controvertidos, com a fonte nos autos."),
   criticos: z.array(z.string()).describe("Pontos críticos para o nosso cliente: o que pode dar errado."),
-  checklist: z.array(z.string()).describe("Itens práticos para levar ou conferir (documentos, testemunhas, procuração, link da sala)."),
+  checklist: z.array(z.string()).describe("Itens práticos para levar ou conferir (documentos, testemunhas, procuração, link da sala). Cada item é só a frase, sem marcador nem caixa: a tela já desenha a caixa de marcar."),
   recusa,
 });
 export type PreparacaoDeAudiencia = z.infer<typeof preparacaoDeAudienciaSchema>;
 
-export async function prepararAudiencia(ia: Ia, entrada: { audiencia: { tipo: string; em: string; porVideo: boolean }; contextoDoProcesso: string }, signal?: AbortSignal) {
+/** "[ ] Levar a procuração" → "Levar a procuração": a tela já tem a caixa de marcar. */
+export function itemDoChecklist(texto: string): string {
+  return texto.replace(/^\s*(?:[-*•]\s*)?(?:\[[ xX]?\]\s*)?(?:\d+[.)]\s+)?/, "").trim();
+}
+
+export async function prepararAudiencia(ia: Ia, entrada: { audiencia: { tipo: string; em: string; porVideo: boolean; local?: string | null }; contextoDoProcesso: string }, signal?: AbortSignal) {
   const a = entrada.audiencia;
-  return exigir(
+  const p = exigir(
     await gerarObjeto(
       ia,
       "preparar-audiencia",
       preparacaoDeAudienciaSchema,
-      "Prepare a equipe para a audiência: o que é, o objetivo, pontos controvertidos, pontos críticos e um checklist marcável.",
-      `## Audiência\n${a.tipo}, ${a.em}, ${a.porVideo ? "por vídeo" : "presencial"}.\n\n${entrada.contextoDoProcesso}`,
+      "Prepare a equipe para a audiência: o que é, o objetivo, pontos controvertidos, pontos críticos e um checklist do que levar e conferir. A data, a hora e o local da audiência vêm abaixo; não peça para confirmá-los.",
+      `## Audiência\n${a.tipo}, ${a.em}, ${a.porVideo ? "por vídeo" : "presencial"}${a.local ? `. Local: ${a.local}` : ""}.\n\n${entrada.contextoDoProcesso}`,
       signal,
     ),
   );
+  return { ...p, checklist: p.checklist.map(itemDoChecklist).filter(Boolean) };
 }
 
 /* ------------------------------------------------------------------ */

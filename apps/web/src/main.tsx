@@ -5,17 +5,15 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ApiError } from "./lib/api";
+import { iniciarTema } from "./lib/tema";
 import { router } from "./router";
 
 // Erros das telas no navegador. O DSN entra no build (VITE_SENTRY_DSN no CI); sem ele, nada sai daqui.
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
 if (sentryDsn) Sentry.init({ dsn: sentryDsn, environment: "producao", tracesSampleRate: 0 });
 
-// Tema do sistema: claro ou escuro, como o celular estiver.
-const escuro = window.matchMedia("(prefers-color-scheme: dark)");
-const aplicarTema = () => document.documentElement.setAttribute("data-theme", escuro.matches ? "escuro" : "claro");
-aplicarTema();
-escuro.addEventListener("change", aplicarTema);
+// Claro ou escuro: o que a pessoa escolheu em Minha conta, ou o do aparelho.
+iniciarTema();
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({

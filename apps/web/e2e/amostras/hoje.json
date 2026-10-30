@@ -14,102 +14,107 @@
     "itens": [
       {
         "tipo": "prazo",
-        "id": "05567aa2-9c8e-482f-9a47-6c25e929f987",
+        "id": "e3db6ee3-e36d-476b-a1c7-c71fa35caf1a",
         "urgencia": "vencido",
         "quando": "Vencido · 28 out",
         "titulo": "Contestação trabalhista",
         "detalhe": "Padaria Bom Grão Ltda. × Rodrigo Alves · 1ª Vara do Trabalho de Itajaí",
         "cnj": "0000812-61.2026.5.12.0005",
-        "processoId": "70aebad7-b877-4b7b-b668-724e2f082f67",
+        "processoId": "f4b1ed79-144b-401a-aa78-32b2e3729d5f",
         "responsavel": {
-          "id": "u2r4XT3PFUcyTOdS8ijwE2LSW17u78Uz",
+          "id": "NJEVyCpwVedca4kQEkl3QSIz8wiR7swN",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
-          "iniciais": "TM"
+          "iniciais": "TM",
+          "foto": "/demonstracao/tiago.jpg"
         },
         "aConfirmar": false
       },
       {
         "tipo": "prazo",
-        "id": "305051f0-0dc1-471c-ae44-6b51121f5696",
-        "urgencia": "hoje",
-        "quando": "Hoje",
-        "titulo": "Alegações finais",
-        "detalhe": "Roberto Kühn × Transportes Serra Azul Ltda. · 4ª Vara Cível de Joinville",
-        "cnj": "5009876-57.2025.8.24.0038",
-        "processoId": "a4a3736c-e59b-44c7-9e60-6272fd33a050",
-        "responsavel": {
-          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
-          "nome": "Beatriz Souza",
-          "apelido": "Beatriz",
-          "iniciais": "BS"
-        },
-        "aConfirmar": false
-      },
-      {
-        "tipo": "prazo",
-        "id": "c73cfe36-08de-45e1-bc99-aa2d4a2ba3c0",
-        "urgencia": "hoje",
-        "quando": "Hoje",
-        "titulo": "Réplica à contestação",
-        "detalhe": "Ana Lúcia Ferraz × Banco Horizonte S.A. · 3ª Vara Cível de Florianópolis",
-        "cnj": "5011873-86.2026.8.24.0023",
-        "processoId": "70c33ec6-0c61-4561-88d0-77cb580379c2",
-        "responsavel": {
-          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
-          "nome": "Beatriz Souza",
-          "apelido": "Beatriz",
-          "iniciais": "BS"
-        },
-        "aConfirmar": false
-      },
-      {
-        "tipo": "prazo",
-        "id": "06f426b8-fdd5-4fca-8fdb-52b98ae88975",
+        "id": "a217bb53-ce2a-4e24-ba1a-c34443b6a3d8",
         "urgencia": "hoje",
         "quando": "Hoje",
         "titulo": "Juntar procuração atualizada",
         "detalhe": "Eduardo Lima × Saúde Litoral Planos · 1ª Vara Cível de Balneário Camboriú",
         "cnj": "5003390-24.2026.8.24.0005",
-        "processoId": "9797f2cd-30a0-49cf-a08c-857c0da8e721",
+        "processoId": "8c5d4de8-4d42-446c-9bf3-ae8be1b68672",
         "responsavel": null,
         "aConfirmar": true
       },
       {
+        "tipo": "prazo",
+        "id": "2bf7a62f-3a46-4688-8471-534889eacfc9",
+        "urgencia": "hoje",
+        "quando": "Hoje",
+        "titulo": "Alegações finais",
+        "detalhe": "Roberto Kühn × Transportes Serra Azul Ltda. · 4ª Vara Cível de Joinville",
+        "cnj": "5009876-57.2025.8.24.0038",
+        "processoId": "07795901-a9f5-463c-944d-82dde4898d55",
+        "responsavel": {
+          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
+        },
+        "aConfirmar": false
+      },
+      {
+        "tipo": "prazo",
+        "id": "72b459aa-6e34-46e2-ad14-ed71d2b1b417",
+        "urgencia": "hoje",
+        "quando": "Hoje",
+        "titulo": "Réplica à contestação",
+        "detalhe": "Ana Lúcia Ferraz × Banco Horizonte S.A. · 3ª Vara Cível de Florianópolis",
+        "cnj": "5011873-86.2026.8.24.0023",
+        "processoId": "c2d7f574-b6d2-49d6-be15-bb8c88f35d8a",
+        "responsavel": {
+          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
+        },
+        "aConfirmar": false
+      },
+      {
         "tipo": "audiencia",
-        "id": "9a1a0b25-fb76-46c2-93b2-9acbf4048836",
+        "id": "b00d60df-15f1-435d-b49b-9cf0e111ec88",
         "urgencia": "audiencia",
         "quando": "14:30",
         "titulo": "Audiência de conciliação · por vídeo",
         "detalhe": "Carlos Henrique Prado × Construtora Vale Norte · Juizado Especial Cível de Blumenau",
         "cnj": "5007745-68.2026.8.24.0008",
-        "processoId": "8dd1b8b2-3c7d-47fa-b51c-95331d36e5c5",
+        "processoId": "92e78ecb-6622-4fc3-84e2-b2d8f4c5630f",
         "responsavel": {
-          "id": "2jeG4bq1ORZYmOsuAVfr3An9fG1EMrJq",
+          "id": "UuR8wZ2Hx3zGy4oGAm1ZLspfqGyiZGLd",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
-          "iniciais": "RF"
+          "iniciais": "RF",
+          "foto": "/demonstracao/rafael.jpg"
         }
       },
       {
         "tipo": "audiencia",
-        "id": "28e5b98b-c3d2-4fc9-b0bf-e64e55caaa6d",
+        "id": "896a1cb6-e373-421b-8391-137ccd860663",
         "urgencia": "audiencia",
         "quando": "16:00",
         "titulo": "Audiência de instrução e julgamento",
         "detalhe": "Antônio Reis × Transportadora Vale Verde · Vara do Trabalho de Rio do Sul",
         "cnj": "0000533-40.2025.5.12.0028",
-        "processoId": "197cf918-acf9-4fe2-96ce-89cd98cccee0",
+        "processoId": "2f80b285-107c-4122-9423-f4dc5679d8d0",
         "responsavel": {
-          "id": "u2r4XT3PFUcyTOdS8ijwE2LSW17u78Uz",
+          "id": "NJEVyCpwVedca4kQEkl3QSIz8wiR7swN",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
-          "iniciais": "TM"
+          "iniciais": "TM",
+          "foto": "/demonstracao/tiago.jpg"
         }
       },
       {
         "tipo": "tarefa",
-        "id": "eeab9030-bf40-4a44-aa2e-6662386e6b90",
+        "id": "3631e0ab-1b79-4012-af46-a194a5f30725",
         "urgencia": "tarefa",
         "quando": "Tarefa",
         "titulo": "Cobrar documentos do cliente novo",
@@ -117,26 +122,27 @@
         "cnj": null,
         "processoId": null,
         "responsavel": {
-          "id": "2jeG4bq1ORZYmOsuAVfr3An9fG1EMrJq",
+          "id": "UuR8wZ2Hx3zGy4oGAm1ZLspfqGyiZGLd",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
-          "iniciais": "RF"
+          "iniciais": "RF",
+          "foto": "/demonstracao/rafael.jpg"
         }
       }
     ],
     "publicacoes": [
       {
-        "id": "286ce867-25a0-42cf-b2a1-803668fe85e2",
+        "id": "3ea1c509-4b9c-4e76-b052-00f406fcc8de",
         "titulo": "Manifestação sobre laudo pericial",
         "detalhe": "Marina Duarte · prazo sugerido 23/11"
       },
       {
-        "id": "35df2b12-18f9-4f36-a63c-c904ae056481",
+        "id": "4f2b4da7-b732-4192-a451-1c658946907f",
         "titulo": "Apelação",
         "detalhe": "Lúcia Matos · prazo sugerido 23/11"
       },
       {
-        "id": "293644c4-a7d2-4201-a0ec-d1f83d79682b",
+        "id": "33a6cf8a-82f3-4bf3-bb04-8686c4b18bf6",
         "titulo": "Intimação · cumpra-se",
         "detalhe": "Eduardo Lima · não gera prazo"
       }
@@ -144,40 +150,44 @@
     "porResponsavel": [
       {
         "pessoa": {
-          "id": "u2r4XT3PFUcyTOdS8ijwE2LSW17u78Uz",
+          "id": "NJEVyCpwVedca4kQEkl3QSIz8wiR7swN",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
-          "iniciais": "TM"
+          "iniciais": "TM",
+          "foto": "/demonstracao/tiago.jpg"
         },
         "hoje": 1,
         "semana": 4
       },
       {
         "pessoa": {
-          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
-          "iniciais": "BS"
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
         },
         "hoje": 2,
         "semana": 3
       },
       {
         "pessoa": {
-          "id": "vCylBi39VKf7RXjMVhfuwW1Jd8wsQk99",
+          "id": "jJmfzvhxEFo4umhKf9ENjST0TlrsCROj",
           "nome": "Camila Azevedo",
           "apelido": "Camila",
-          "iniciais": "CA"
+          "iniciais": "CA",
+          "foto": "/demonstracao/camila.jpg"
         },
         "hoje": 0,
         "semana": 2
       },
       {
         "pessoa": {
-          "id": "2jeG4bq1ORZYmOsuAVfr3An9fG1EMrJq",
+          "id": "UuR8wZ2Hx3zGy4oGAm1ZLspfqGyiZGLd",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
-          "iniciais": "RF"
+          "iniciais": "RF",
+          "foto": "/demonstracao/rafael.jpg"
         },
         "hoje": 0,
         "semana": 1

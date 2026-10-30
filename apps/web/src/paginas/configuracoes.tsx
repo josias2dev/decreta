@@ -154,9 +154,12 @@ function AbaTimbre({ e, socio, celular }: { e: Escritorio; socio: boolean; celul
             </Campo>
             <Campo rotulo="Logo (PNG)" htmlFor="tb-logo" ajuda={e.timbre?.logoDocumentoId ? "Logo guardado" : "Sem logo"}>
               <input ref={entrada} id="tb-logo" type="file" accept="image/png" hidden onChange={(ev) => ev.target.files?.[0] && logo.mutate(ev.target.files[0])} />
-              <Botao onClick={() => entrada.current?.click()} ocupado={logo.isPending} disabled={!socio}>
-                <Upload /> Enviar logo
-              </Botao>
+              <span className="flex items-center gap-3">
+                {e.timbre?.logoDocumentoId && <img src={`/api/app/escritorio/logo?v=${e.timbre.logoDocumentoId}`} alt="Logo do escritório" className="dc-logo-previa" />}
+                <Botao onClick={() => entrada.current?.click()} ocupado={logo.isPending} disabled={!socio}>
+                  <Upload /> {e.timbre?.logoDocumentoId ? "Trocar logo" : "Enviar logo"}
+                </Botao>
+              </span>
             </Campo>
           </div>
           <Campo rotulo="Tribunal principal" htmlFor="tb-trib" ajuda="Define o calendário de feriados forenses da contagem dos prazos.">

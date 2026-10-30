@@ -73,6 +73,20 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return c.json({ ok: true });
   });
 
+  /** O logo do timbre, para o menu e a prévia da folha. */
+  app.get("/escritorio/logo", async (c) => {
+    const chave = await tenant(c, deps, async (tx) => {
+      const [e] = await tx.select({ timbre: escritorios.timbre }).from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
+      const logo = e?.timbre?.logoDocumentoId;
+      if (!logo) return null;
+      const [d] = await tx.select({ chave: documentos.chave }).from(documentos).where(eq(documentos.id, logo));
+      return d?.chave ?? null;
+    });
+    const bytes = chave ? await deps.arquivos.read(chave).catch(() => null) : null;
+    if (!bytes) falha(404, "sem_logo", "O escritório ainda não tem logo.");
+    return c.body(bytes as Uint8Array<ArrayBuffer>, 200, { "content-type": "image/png", "cache-control": "private, max-age=3600" });
+  });
+
   /** Logo do timbre: PNG, guardado como documento do escritório. */
   app.post("/escritorio/logo", async (c) => {
     soSocios(c);

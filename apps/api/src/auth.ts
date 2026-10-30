@@ -2,12 +2,16 @@ import * as schema from "@decreta/db";
 import type { Database } from "@decreta/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError, createAuthMiddleware, isAPIError } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
 import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { organization, twoFactor } from "better-auth/plugins";
 import { registrar } from "./auditoria.ts";
+import { ehContaDaDemonstracao } from "./demonstracao/slug.ts";
 import { PAPEL, type Mailer } from "./email.ts";
 import type { Env } from "./env.ts";
+
+/** O que a conta da demonstração não muda, para ninguém trancar os outros do lado de fora. */
+const FIXOS_NA_DEMONSTRACAO = new Set(["/change-password", "/change-email", "/two-factor/enable", "/delete-user"]);
 
 /** Convite vale uma semana; depois, quem é sócio reenvia pela tela da Equipe. */
 export const DIAS_DO_CONVITE = 7;
@@ -50,6 +54,13 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
     trustedOrigins: [env.WEB_ORIGIN],
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        if (FIXOS_NA_DEMONSTRACAO.has(ctx.path)) {
+          const s = await getSessionFromCtx(ctx);
+          if (s && ehContaDaDemonstracao(s.user.email)) {
+            throw new APIError("FORBIDDEN", { code: "DEMONSTRACAO", message: "Na demonstração a senha, o e-mail e a verificação em duas etapas não mudam: todo mundo entra com a mesma conta." });
+          }
+          return;
+        }
         if (ctx.path !== "/sign-up/email") return;
         const email = String((ctx.body as { email?: unknown } | undefined)?.email ?? "").trim().toLowerCase();
         if (!email || !(await temConvite(db, email))) {

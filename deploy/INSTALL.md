@@ -142,13 +142,16 @@ Equipe; a OAB de cada advogado vai na Equipe também, porque é por ela que o DJ
 ### Demonstração (opcional)
 
 ```sh
-sudo deploy/decreta.sh demonstracao --senha "uma senha de pelo menos 10 caracteres"
+sudo sed -i 's|^DEMONSTRACAO_SENHA=.*|DEMONSTRACAO_SENHA=a senha da demonstração|' /opt/decreta/.env
+sudo deploy/decreta.sh demonstracao
 ```
 
 Cria o escritório "Souza & Freitas Advocacia", com dados inventados, para mostrar
-o Decreta: entra-se como beatriz@demo.decreta.app (sócia), rafael@, tiago@ ou
-camila@. Liga também o `decreta-demonstracao.timer`, que toda madrugada às 04:15
-refaz os dados com as datas do dia, sem tirar ninguém do sistema. A busca no DJEN
+o Decreta: entra-se como teste@decreta.site (a sócia) ou rafael@, tiago@ e
+camila@demo.decreta.app. Liga também o `decreta-demonstracao.timer`, que toda
+madrugada às 04:15 refaz os dados com as datas do dia, sem tirar ninguém do
+sistema, e volta a senha para `DEMONSTRACAO_SENHA`. Como a conta é de todos, ela
+não troca senha nem e-mail e não liga a verificação em duas etapas. A busca no DJEN
 e no DataJud não roda para esse escritório. Os documentos dele ocupam uns 3 MB.
 
 ## Conferir

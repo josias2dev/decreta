@@ -23,38 +23,40 @@
     ],
     "errados": [
       {
-        "id": "64f19b2f-4f2f-4ad8-afc4-217ef7c7e07b",
+        "id": "dce22751-199a-46c8-8f32-e4ab31e81254",
         "acao": "gerar-documento",
         "rotulo": "Peça gerada",
         "comentario": "Citou o evento errado na seção 2.",
-        "em": "2026-10-30T00:11:01.825Z",
+        "em": "2026-10-30T00:19:18.457Z",
         "pessoa": {
-          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
-          "iniciais": "BS"
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
         },
         "onde": {
           "tipo": "peca",
-          "id": "f68c79fb-8301-4a0d-bfaa-193740c0675e",
-          "processoId": "a4a3736c-e59b-44c7-9e60-6272fd33a050"
+          "id": "9b1c23bb-1e75-47b4-9a9b-9b0b02a9cf38",
+          "processoId": "07795901-a9f5-463c-944d-82dde4898d55"
         }
       },
       {
-        "id": "3ba97e7e-49a0-4a43-9d9d-80726f8774de",
+        "id": "d061ccd4-8713-4248-863b-76b12a93bcb7",
         "acao": "briefing-prazo",
         "rotulo": "Briefing do prazo",
         "comentario": "Contou o prazo do laudo como se fosse corrido.",
-        "em": "2026-10-30T00:11:01.819Z",
+        "em": "2026-10-30T00:19:18.451Z",
         "pessoa": {
-          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
-          "iniciais": "BS"
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
         },
         "onde": {
           "tipo": "prazo",
-          "id": "f509cc56-f2bd-4af9-92f5-8b96343ecbf0"
+          "id": "3f440eef-c22b-456e-8682-041f7c7ef3b9"
         }
       }
     ]

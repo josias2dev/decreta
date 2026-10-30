@@ -39,7 +39,7 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     orgId = organizationId;
     const rotas = createRotas({ db: t.db, auth, ia: null, arquivos, mailer: createLogMailer(() => {}), telas: "https://decreta.local", captura: { db: t.db, datajudKey: "" }, maxArquivoBytes: 5e6, enfileirar: async () => {}, log: () => {} });
     app = createApp({ db: t.db, env, auth, rotas, log: () => {} });
-    const r = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "beatriz@demo.decreta.app", password: "demonstracao-123" }) });
+    const r = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "teste@decreta.site", password: "demonstracao-123" }) });
     expect(r.status).toBe(200);
     cookie = r.headers.get("set-cookie")?.split(";")[0] ?? "";
     await app.request("/api/auth/organization/set-active", { method: "POST", headers: { "content-type": "application/json", cookie, origin: env.WEB_ORIGIN }, body: JSON.stringify({ organizationId }) });
@@ -116,19 +116,27 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     expect(semAndamento!.n).toBe(0);
   });
 
+  test("a conta da demonstração não troca a senha nem liga a verificação em duas etapas", async () => {
+    const post = (path: string, body: unknown) => app.request(`/api/auth${path}`, { method: "POST", headers: { cookie, origin: env.WEB_ORIGIN, "content-type": "application/json" }, body: JSON.stringify(body) });
+    expect((await post("/change-password", { currentPassword: "demonstracao-123", newPassword: "so-minha-agora" })).status).toBe(403);
+    expect((await post("/two-factor/enable", { password: "demonstracao-123" })).status).toBe(403);
+    expect((await call("/eu")).usuario.nome).toBe("Beatriz Souza");
+  });
+
   test("renovar refaz as datas sem tirar ninguém do sistema", async () => {
     const [antes] = await t.owner`select count(*)::int as n from documentos`;
     expect(await apagarDemonstracao(t.db, { arquivos, manterPessoas: true })).toBe(orgId);
     // Os arquivos do escritório saem junto.
     const [chave] = await t.owner`select chave from documentos limit 1`;
     expect(chave).toBeUndefined();
-    await criarDemonstracao(t.db, createAuth(t.db, env), { hoje: "2026-10-29", arquivos, organizationId: orgId });
+    await criarDemonstracao(t.db, createAuth(t.db, env), { hoje: "2026-10-29", senha: "demonstracao-456", arquivos, organizationId: orgId });
     // A mesma sessão continua valendo, com o escritório inteiro de volta.
     const h = await call("/hoje");
     expect(h.contadores).toMatchObject({ vencidos: 1, vencemHoje: 3, publicacoesNovas: 7, audienciasHoje: 2 });
     const [depois] = await t.owner`select count(*)::int as n from documentos`;
     expect(depois!.n).toBe(antes!.n);
-    const entrar = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "rafael@demo.decreta.app", password: "demonstracao-123" }) });
+    const entrar = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "rafael@demo.decreta.app", password: "demonstracao-456" }) });
+    // A senha volta para a da renovação (DEMONSTRACAO_SENHA no servidor), sem derrubar quem estava dentro.
     expect(entrar.status).toBe(200);
   }, 60_000);
 

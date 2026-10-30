@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/305051f0-0dc1-471c-ae44-6b51121f5696",
+  "path": "/prazos/2bf7a62f-3a46-4688-8471-534889eacfc9",
   "corpo": {
-    "id": "305051f0-0dc1-471c-ae44-6b51121f5696",
+    "id": "2bf7a62f-3a46-4688-8471-534889eacfc9",
     "tipo": "Alegações finais",
     "fundamento": "art. 364, § 2º, CPC",
     "dias": 15,
@@ -21,21 +21,23 @@
     "origem": "ia",
     "confirmado": true,
     "confirmadoPor": {
-      "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+      "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
-      "iniciais": "BS"
+      "iniciais": "BS",
+      "foto": "/demonstracao/beatriz.jpg"
     },
     "responsavel": {
-      "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+      "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
-      "iniciais": "BS"
+      "iniciais": "BS",
+      "foto": "/demonstracao/beatriz.jpg"
     },
     "observacoes": null,
     "motivoDescarte": null,
     "processo": {
-      "id": "a4a3736c-e59b-44c7-9e60-6272fd33a050",
+      "id": "07795901-a9f5-463c-944d-82dde4898d55",
       "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
       "cnj": "5009876-57.2025.8.24.0038",
       "orgao": "4ª Vara Cível",
@@ -44,7 +46,7 @@
       "poloCliente": "ativo"
     },
     "publicacao": {
-      "id": "6767fd37-f6e4-4e5f-b6db-85940e8bfaac",
+      "id": "47b742b1-c6e6-4918-815a-1e148b76d5d0",
       "fonte": "djen",
       "texto": "Encerrada a instrução, concedo às partes o prazo sucessivo de 15 (quinze) dias para apresentação de alegações finais por memoriais.",
       "disponibilizadaEm": "2026-10-06",
@@ -56,10 +58,10 @@
     "briefing": null,
     "pecas": [
       {
-        "id": "f68c79fb-8301-4a0d-bfaa-193740c0675e",
+        "id": "9b1c23bb-1e75-47b4-9a9b-9b0b02a9cf38",
         "titulo": "Alegações finais · Roberto Kühn",
         "situacao": "rascunho",
-        "atualizadaEm": "2026-10-30T00:10:55.010Z"
+        "atualizadaEm": "2026-10-30T00:19:11.977Z"
       }
     ],
     "historico": [

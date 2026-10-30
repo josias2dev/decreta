@@ -5,6 +5,8 @@ export interface Pessoa {
   nome: string;
   apelido: string;
   iniciais: string;
+  /** Foto de perfil; sem ela, as iniciais. */
+  foto?: string | null;
 }
 
 export type Urgencia = "vencido" | "hoje" | "breve" | "prazo" | "cumprido";
@@ -12,7 +14,7 @@ export type Contagem = "uteis" | "corridos";
 
 export interface Eu {
   usuario: Pessoa & { cargo: string | null; papel: string };
-  escritorio: { id: string; nome: string; pessoas: number; timezone: string };
+  escritorio: { id: string; nome: string; pessoas: number; timezone: string; logo?: boolean; demonstracao?: boolean };
   hoje: string;
   ia: boolean;
   equipe: (Pessoa & { cargo: string | null; papel: string })[];

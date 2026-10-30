@@ -10,7 +10,9 @@ import {
   transcreverDocumento,
   IaRecusou,
   impressao,
+  itemDoChecklist,
   pecaParaPrazo,
+  prepararAudiencia,
   semTeor,
   sugerirPrazo,
   textoDoProcesso,
@@ -87,6 +89,33 @@ describe("sugestão de prazo", () => {
     });
     const r = briefingDoPrazo(ia, { prazo: { tipo: "Manifestação", fim: "2026-11-23", fundamento: null }, publicacao: PUBLICACAO.texto, contextoDoProcesso: "" });
     await expect(r).rejects.toThrow("Anexe o laudo do evento 87.");
+  });
+});
+
+describe("preparação de audiência", () => {
+  test("o checklist sai sem a caixa que a IA escreve", async () => {
+    let pedido = "";
+    const ia: Ia = {
+      modelo: () =>
+        new MockLanguageModelV4({
+          doGenerate: async (o) => {
+            pedido = JSON.stringify(o.prompt);
+            return responde(JSON.stringify({ oQueE: "Instrução.", objetivo: "Provar o acidente.", controvertidos: [], criticos: [], checklist: ["[ ] Levar a procuração", "- [x] Confirmar as testemunhas", "3. Levar o laudo", "Conferir o link"], recusa: null }));
+          },
+        }),
+      transcrever: async () => "",
+    };
+    const p = await prepararAudiencia(ia, { audiencia: { tipo: "Instrução e julgamento", em: "quinta, 29 de outubro de 2026, às 16:00", porVideo: false, local: "Vara do Trabalho de Rio do Sul" }, contextoDoProcesso: "Autos." });
+    expect(p.checklist).toEqual(["Levar a procuração", "Confirmar as testemunhas", "Levar o laudo", "Conferir o link"]);
+    // A IA recebe o ano e o local, para não pedir que alguém confirme.
+    expect(pedido).toContain("29 de outubro de 2026");
+    expect(pedido).toContain("Vara do Trabalho de Rio do Sul");
+  });
+
+  test("tira marcadores sem tocar no texto", () => {
+    expect(itemDoChecklist("[] Pedir a certidão")).toBe("Pedir a certidão");
+    expect(itemDoChecklist("• Levar RG")).toBe("Levar RG");
+    expect(itemDoChecklist("Juntar o art. 477 [ver nota]")).toBe("Juntar o art. 477 [ver nota]");
   });
 });
 

@@ -3,6 +3,7 @@ import { analises, audiencias, clientes, mensagensIa, pecas, prazos, processos, 
 import {
   briefingDoPrazo,
   conversar,
+  itemDoChecklist,
   prepararAudiencia,
   resumirAtendimento,
   resumirAutos,
@@ -93,20 +94,25 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         const [au] = await tx.select().from(audiencias).where(eq(audiencias.id, audienciaId));
         if (!au) return null;
         const ctx = await carregarContexto(tx, au.processoId, { documentos: true });
-        const quando = `${diaPorExtenso(diaDoInstante(au.em, tz))}, às ${horaLocal(au.em, tz)}`;
-        return { entrada: { audiencia: { tipo: au.tipo, em: quando, porVideo: au.porVideo }, contextoDoProcesso: ctx?.texto ?? "" }, base: ctx?.base ?? "", fonte: ctx?.fonte ?? "Dados do processo" };
+        // Com o ano e o local: sem eles, a IA pede para confirmar o que o sistema já sabe.
+        const dia = diaDoInstante(au.em, tz);
+        const quando = `${diaPorExtenso(dia)} de ${dia.slice(0, 4)}, às ${horaLocal(au.em, tz)}`;
+        return { entrada: { audiencia: { tipo: au.tipo, em: quando, porVideo: au.porVideo, local: au.local }, contextoDoProcesso: ctx?.texto ?? "" }, base: ctx?.base ?? "", fonte: ctx?.fonte ?? "Dados do processo" };
       },
       executar: (e) => prepararAudiencia(ia, e),
     });
     if (!a) falha(404, "nao_encontrado");
     // O checklist da IA vira o checklist marcável da audiência (sem apagar o que já foi marcado).
     if (a.situacao === "pronto") {
-      const itens = (a.conteudo as { checklist?: string[] }).checklist ?? [];
+      const itens = ((a.conteudo as { checklist?: string[] }).checklist ?? []).map(itemDoChecklist).filter(Boolean);
       await tenant(c, deps, async (tx) => {
         const [au] = await tx.select({ checklist: audiencias.checklist }).from(audiencias).where(eq(audiencias.id, audienciaId));
-        const existentes = new Set((au?.checklist ?? []).map((i) => i.texto));
-        const novos = itens.filter((t) => !existentes.has(t)).map((texto) => ({ texto, feito: false }));
-        if (novos.length) await tx.update(audiencias).set({ checklist: [...(au?.checklist ?? []), ...novos] }).where(eq(audiencias.id, audienciaId));
+        // Os itens antigos também saem sem o "[ ]" que a IA escrevia antes.
+        const atuais = (au?.checklist ?? []).map((i) => ({ ...i, texto: itemDoChecklist(i.texto) }));
+        const existentes = new Set(atuais.map((i) => i.texto));
+        const novos = [...new Set(itens)].filter((t) => !existentes.has(t)).map((texto) => ({ texto, feito: false }));
+        const mudou = novos.length > 0 || atuais.some((i, n) => i.texto !== au!.checklist[n]!.texto);
+        if (mudou) await tx.update(audiencias).set({ checklist: [...atuais, ...novos] }).where(eq(audiencias.id, audienciaId));
       });
     }
     return c.json(a);

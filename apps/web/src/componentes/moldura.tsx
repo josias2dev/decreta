@@ -35,7 +35,7 @@ import { cn } from "@/lib/util";
 import { Avisos } from "./avisos";
 import { Busca } from "./busca";
 import { Marca } from "./marca";
-import { Botao, Carregando } from "./ui";
+import { Avatar, Botao, Carregando } from "./ui";
 
 type Destino = "/hoje" | "/prazos" | "/publicacoes" | "/agenda" | "/perguntar" | "/processos" | "/clientes" | "/negocios" | "/alvaras" | "/documentos" | "/modelos" | "/equipe" | "/configuracoes";
 
@@ -164,9 +164,13 @@ function Moldura({ eu }: { eu: Eu }) {
           <Marca />
         </div>
         <div className="dc-menu__escritorio">
-          <span className="dc-menu__escritorio-logo">
-            <Building2 />
-          </span>
+          {eu.escritorio.logo ? (
+            <img className="dc-menu__escritorio-logo dc-menu__escritorio-logo--imagem" src="/api/app/escritorio/logo" alt="" />
+          ) : (
+            <span className="dc-menu__escritorio-logo">
+              <Building2 />
+            </span>
+          )}
           <span className="min-w-0">
             <strong className="truncate">{eu.escritorio.nome}</strong>
             <small>
@@ -195,7 +199,7 @@ function Moldura({ eu }: { eu: Eu }) {
           </div>
         ))}
         <Link to="/conta" className="dc-menu__pe">
-          <span className="dc-avatar">{eu.usuario.iniciais}</span>
+          <Avatar pessoa={eu.usuario} />
           <span className="min-w-0">
             {eu.usuario.nome}
             <small>{eu.usuario.cargo ?? "Equipe"}</small>

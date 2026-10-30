@@ -98,7 +98,7 @@ export class ApiFalsa {
     const u = amostras.eu!.corpo.usuario;
     return {
       session: { id: "sessao", userId: u.id, activeOrganizationId: amostras.eu!.corpo.escritorio.id, expiresAt: "2026-11-28T12:00:00.000Z" },
-      user: { id: u.id, name: u.nome, email: "beatriz@demo.decreta.app", emailVerified: true, twoFactorEnabled: false },
+      user: { id: u.id, name: u.nome, email: "teste@decreta.site", emailVerified: true, twoFactorEnabled: false },
     };
   }
 }

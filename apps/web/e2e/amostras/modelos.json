@@ -4,36 +4,38 @@
     "total": 2,
     "itens": [
       {
-        "id": "7ddc880a-b31f-4f3b-aef3-4913c99ad77a",
+        "id": "bcb9f5b4-f951-4439-b301-64011a2c47f6",
         "titulo": "Contestação · negativa de cobertura de plano de saúde",
         "tipo": "contestacao",
         "tese": "Exclusão contratual não vale contra indicação médica",
         "assunto": "Plano de saúde",
         "pecaId": null,
         "criadoPor": {
-          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
-          "iniciais": "BS"
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
         },
-        "em": "2026-10-30T00:11:01.775Z",
+        "em": "2026-10-30T00:19:18.408Z",
         "tamanho": 351,
         "tipoNome": "Contestação"
       },
       {
-        "id": "bbd4c77c-647b-45bf-ab54-a49dbf330e41",
+        "id": "fb2258bb-f6bd-4950-88ac-e921e24fa7a2",
         "titulo": "Alegações finais · Roberto Kühn",
         "tipo": "alegacoes-finais",
         "tese": "Prova testemunhal confirma o uso habitual do imóvel",
         "assunto": "Alegações finais",
-        "pecaId": "f68c79fb-8301-4a0d-bfaa-193740c0675e",
+        "pecaId": "9b1c23bb-1e75-47b4-9a9b-9b0b02a9cf38",
         "criadoPor": {
-          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
+          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
-          "iniciais": "BS"
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
         },
-        "em": "2026-10-30T00:11:01.766Z",
+        "em": "2026-10-30T00:19:18.399Z",
         "tamanho": 763,
         "tipoNome": "Alegações finais"
       }

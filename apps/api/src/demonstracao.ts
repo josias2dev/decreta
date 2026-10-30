@@ -30,13 +30,15 @@ import {
   publicacoes,
   suspensoes,
   tarefas,
+  twoFactor,
   user,
   withTenant,
   type Database,
 } from "@decreta/db";
 import { chaveDoDocumento, gerarDocx, MIME_DOCX, type Armazenamento } from "@decreta/documentos";
 import { impressao } from "@decreta/ia";
-import { and, eq, like } from "drizzle-orm";
+import { existsSync, readFileSync } from "node:fs";
+import { and, eq, like, or } from "drizzle-orm";
 import type { Auth } from "./auth.ts";
 import {
   ALVARAS,
@@ -59,12 +61,19 @@ import {
   type ProcessoDemo,
   type Quem,
 } from "./demonstracao/dados.ts";
+import { DOMINIO_DA_DEMONSTRACAO, LOGIN_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import { gerarVolume } from "./demonstracao/volume.ts";
 import { carregarContexto } from "./servicos/contexto.ts";
 import { contagemNaTela, criarPrazoSugerido, type SugestaoNaTela } from "./servicos/prazos.ts";
 import { CHECKLIST_DA_TRIAGEM } from "./rotas/negocios.ts";
 
-export const DOMINIO_DA_DEMONSTRACAO = "demo.decreta.app";
+/** Fotos de perfil e logo inventados (gerados por IA), se estiverem no repositório. */
+const FOTOS = new URL("../../web/public/demonstracao/", import.meta.url);
+const LOGO = new URL("./demonstracao/imagens/logo.png", import.meta.url);
+const fotoDe = (q: Quem) => (existsSync(new URL(`${q}.jpg`, FOTOS)) ? `/demonstracao/${q}.jpg` : null);
+
+/** O e-mail de cada pessoa: a sócia entra com o login da demonstração. */
+export const emailDaDemonstracao = (q: Quem) => EQUIPE[q].email ?? `${q}@${DOMINIO_DA_DEMONSTRACAO}`;
 
 export interface OpcoesDaDemonstracao {
   /** Dia da demonstração; os prazos e publicações saem dele. */
@@ -91,7 +100,7 @@ export async function apagarDemonstracao(db: Database, o: { arquivos?: Armazenam
     }
     await db.delete(organization).where(eq(organization.id, org.id));
   }
-  if (!o.manterPessoas) await db.delete(user).where(like(user.email, `%@${DOMINIO_DA_DEMONSTRACAO}`));
+  if (!o.manterPessoas) await db.delete(user).where(or(like(user.email, `%@${DOMINIO_DA_DEMONSTRACAO}`), eq(user.email, LOGIN_DA_DEMONSTRACAO)));
   return org?.id ?? null;
 }
 
@@ -157,18 +166,21 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     ...volume.processos,
   };
 
-  // Equipe: quem já existe (renovação) fica com a conta e as sessões.
+  // Equipe: quem já existe (renovação) fica com a conta e as sessões, e volta
+  // ao nome, à senha e ao login sem verificação em duas etapas.
   const ids = {} as Record<Quem, string>;
   for (const [quem, p] of Object.entries(EQUIPE) as [Quem, (typeof EQUIPE)[Quem]][]) {
-    const email = `${quem}@${DOMINIO_DA_DEMONSTRACAO}`;
+    const email = emailDaDemonstracao(quem);
     const [existe] = await db.select({ id: user.id }).from(user).where(eq(user.email, email));
     if (existe) {
       ids[quem] = existe.id;
+      await db.update(user).set({ name: p.nome, image: fotoDe(quem), twoFactorEnabled: false }).where(eq(user.id, existe.id));
+      await db.delete(twoFactor).where(eq(twoFactor.userId, existe.id));
       if (o.senha) await ctx.internalAdapter.updatePassword(existe.id, await ctx.password.hash(o.senha));
       continue;
     }
     if (!o.senha) throw new Error(`falta a senha para criar ${email}`);
-    const criado = await ctx.internalAdapter.createUser({ email, name: p.nome, emailVerified: true }, { method: "email-password" });
+    const criado = await ctx.internalAdapter.createUser({ email, name: p.nome, emailVerified: true, image: fotoDe(quem) }, { method: "email-password" });
     await ctx.internalAdapter.linkAccount({ userId: criado.id, providerId: "credential", accountId: criado.id, password: await ctx.password.hash(o.senha) });
     ids[quem] = criado.id;
   }
@@ -181,10 +193,19 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
   );
 
   // Documentos vão para o armazenamento depois da transação.
-  const arquivos: { chave: string; bytes: Uint8Array }[] = [];
+  const arquivos: { chave: string; bytes: Uint8Array; mime: string }[] = [];
 
   const { sugestoes, marinaId } = await withTenant(db, organizationId, async (tx) => {
-    await tx.insert(escritorios).values({ organizationId, tribunal: "TJSC", timbre: ESCRITORIO.timbre, avisos: { manha: false, hora: "07:30" }, capturaDjen: false, capturaDatajud: false });
+    // O logo entra como o da tela de Configurações: um documento do escritório.
+    let logoDocumentoId: string | undefined;
+    if (existsSync(LOGO)) {
+      const bytes = new Uint8Array(readFileSync(LOGO));
+      logoDocumentoId = crypto.randomUUID();
+      const chave = chaveDoDocumento(organizationId, logoDocumentoId);
+      arquivos.push({ chave, bytes, mime: "image/png" });
+      await tx.insert(documentos).values({ id: logoDocumentoId, organizationId, nome: "Logo do escritório.png", mime: "image/png", tamanho: bytes.length, chave, origem: "upload", enviadoPor: ids.beatriz, createdAt: em(somarDias(hoje, -400)) });
+    }
+    await tx.insert(escritorios).values({ organizationId, tribunal: "TJSC", timbre: { ...ESCRITORIO.timbre, logoDocumentoId }, avisos: { manha: false, hora: "07:30" }, capturaDjen: false, capturaDatajud: false });
     await tx.insert(equipe).values(
       (Object.keys(EQUIPE) as Quem[]).map((q) => ({
         organizationId,
@@ -269,7 +290,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           const documentoId = crypto.randomUUID();
           const chaveArquivo = chaveDoDocumento(organizationId, documentoId);
           const bytes = await gerarDocx({ titulo: m.documento.nome.replace(/\.docx$/, ""), texto: m.documento.texto, timbre: { nome: "Cópia dos autos" } });
-          arquivos.push({ chave: chaveArquivo, bytes });
+          arquivos.push({ chave: chaveArquivo, bytes, mime: MIME_DOCX });
           await tx.insert(documentos).values({
             id: documentoId,
             organizationId,
@@ -508,7 +529,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     return { sugestoes, marinaId: processoId.marina! };
   });
 
-  for (const a of arquivos) await o.arquivos.put(a.chave, a.bytes, MIME_DOCX);
+  for (const a of arquivos) await o.arquivos.put(a.chave, a.bytes, a.mime);
   // As sugestões viram prazos "Confirmar sugestão" pelo mesmo caminho da IA.
   for (const { pubId, s } of sugestoes) await criarPrazoSugerido(db, organizationId, pubId, s);
 
@@ -536,5 +557,5 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     }
   });
 
-  return { organizationId, emails: (Object.keys(EQUIPE) as Quem[]).map((q) => `${q}@${DOMINIO_DA_DEMONSTRACAO}`) };
+  return { organizationId, emails: (Object.keys(EQUIPE) as Quem[]).map(emailDaDemonstracao) };
 }
