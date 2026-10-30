@@ -1,3 +1,4 @@
+import { tribunalDoCnj } from "@decreta/core";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
@@ -5,15 +6,28 @@ import { useState } from "react";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoProcesso } from "@/componentes/novos";
 import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
-import { Avatar, Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Cnj, Responsavel, Selo, Vazio } from "@/componentes/ui";
+import { Avatar, Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Responsavel, Selo, Vazio } from "@/componentes/ui";
 import { api } from "@/lib/api";
 import { useBuscaNaUrl } from "@/lib/busca";
 import { useCelular } from "@/lib/celular";
-import { diaCurto, diaDoInstante, numero, ondeTramita } from "@/lib/formato";
+import { diaCompleto, diaDoInstante, haQuanto, numero, ondeTramita } from "@/lib/formato";
 import type { Pagina as PaginaDaApi, ProcessoNaLista } from "@/lib/tipos";
 
 type Situacao = "ativos" | "arquivados" | "todos";
 const SITUACAO: Record<ProcessoNaLista["situacao"], string> = { ativo: "Ativo", suspenso: "Suspenso", arquivado: "Arquivado", encerrado: "Encerrado" };
+
+/** A sigla do tribunal (TJSC, TRT12, TRF4), o número e onde tramita, numa linha. */
+function Onde({ p }: { p: ProcessoNaLista }) {
+  const sigla = (p.cnj && tribunalDoCnj(p.cnj)) || (p.tipo === "extrajudicial" ? "Extrajudicial" : null);
+  const resto = [p.cnj ? ondeTramita(p) : p.classe, p.situacao !== "ativo" && SITUACAO[p.situacao]].filter(Boolean).join(" · ");
+  return (
+    <span className="dc-onde">
+      {sigla && <span className="dc-sigla">{sigla}</span>}
+      {p.cnj && <span className="dc-num dc-onde__cnj">{p.cnj}</span>}
+      {resto && <span className="dc-onde__resto">{resto}</span>}
+    </span>
+  );
+}
 
 export function ProcessosPage() {
   const celular = useCelular();
@@ -78,11 +92,15 @@ export function ProcessosPage() {
               <Link key={p.id} to="/processos/$id" params={{ id: p.id }} className="dc-item">
                 <span className="dc-item__titulo">{p.titulo}</span>
                 {p.proximoPrazo ? <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo> : <span />}
-                <span className="dc-item__meta">{[ondeTramita(p), p.cnj ?? "Extrajudicial"].filter(Boolean).join(" · ")}</span>
+                <span className="dc-item__meta">
+                  <Onde p={p} />
+                </span>
                 <span className="dc-item__pe">
-                  <Avatar pessoa={p.responsavel} /> {p.responsavel?.apelido ?? "Sem responsável"}
-                  {p.proximoPrazo && <> · {p.proximoPrazo.tipo}</>}
-                  {p.situacao !== "ativo" && <> · {SITUACAO[p.situacao]}</>}
+                  <Avatar pessoa={p.responsavel} />
+                  <span className="min-w-0 truncate">
+                    {p.responsavel?.apelido ?? "Sem responsável"}
+                    {p.proximoPrazo && <> · {p.proximoPrazo.tipo}</>}
+                  </span>
                 </span>
               </Link>
             ))}
@@ -117,14 +135,13 @@ export function ProcessosPage() {
         ) : itens.length ? (
           <>
             <Rolagem id="processos" className="dc-tabela-caixa">
-              <table className="dc-tabela">
+              <table className="dc-tabela dc-tabela--fixa dc-processos">
                 <thead>
                   <tr>
                     <th>Processo</th>
-                    <th style={{ width: 200 }}>Número</th>
-                    <th style={{ width: 136 }}>Responsável</th>
-                    <th style={{ width: 200 }}>Próximo prazo</th>
-                    <th style={{ width: 104 }}>Movimentou</th>
+                    <th style={{ width: 152 }}>Responsável</th>
+                    <th style={{ width: 300 }}>Próximo prazo</th>
+                    <th style={{ width: 120 }}>Movimentou</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -132,34 +149,30 @@ export function ProcessosPage() {
                     <tr key={p.id} data-link="" onClick={() => void navigate({ to: "/processos/$id", params: { id: p.id } })}>
                       <td>
                         <span className="dc-celula">
-                          <Link className="dc-celula__1" to="/processos/$id" params={{ id: p.id }} onClick={(e) => e.stopPropagation()}>
+                          <Link className="dc-celula__1 truncate" to="/processos/$id" params={{ id: p.id }} onClick={(e) => e.stopPropagation()}>
                             {p.titulo}
                           </Link>
                           <span className="dc-celula__2">
-                            {[p.classe, ondeTramita(p)].filter(Boolean).join(" · ")}
-                            {p.situacao !== "ativo" && ` · ${SITUACAO[p.situacao]}`}
+                            <Onde p={p} />
                           </span>
                         </span>
-                      </td>
-                      <td>
-                        <Cnj cnj={p.cnj} />
                       </td>
                       <td>
                         <Responsavel pessoa={p.responsavel} />
                       </td>
                       <td>
                         {p.proximoPrazo ? (
-                          <span className="dc-celula">
-                            <span>
-                              <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
-                            </span>
-                            <span className="dc-celula__2">{p.proximoPrazo.tipo}</span>
+                          <span className="dc-prazo-linha" title={`${p.proximoPrazo.tipo} · ${diaCompleto(p.proximoPrazo.fim)}`}>
+                            <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                            <span className="truncate">{p.proximoPrazo.tipo}</span>
                           </span>
                         ) : (
-                          <span className="text-[var(--tinta-3)]">—</span>
+                          <span className="text-[var(--tinta-3)]">Sem prazo aberto</span>
                         )}
                       </td>
-                      <td className="dc-num text-[var(--tinta-2)]">{p.ultimaMovimentacaoEm ? diaCurto(diaDoInstante(p.ultimaMovimentacaoEm)) : "—"}</td>
+                      <td className="text-[var(--tinta-2)]" title={p.ultimaMovimentacaoEm ? diaCompleto(diaDoInstante(p.ultimaMovimentacaoEm)) : undefined}>
+                        {p.ultimaMovimentacaoEm ? haQuanto(p.ultimaMovimentacaoEm) : "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

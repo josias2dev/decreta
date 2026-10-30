@@ -888,6 +888,45 @@ a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
 .dc-arquivo--audio { --cor: #0d9488; }
 .dc-arquivo--texto { --cor: #6b6a76; }
 
+/* ---------- Lista de processos ----------
+   Uma linha por processo, todas da mesma altura: as partes e, embaixo, a sigla do tribunal, o número e a vara. */
+.dc-tabela--fixa { table-layout: fixed; }
+.dc-processos td { vertical-align: middle; }
+.dc-onde { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
+.dc-onde__cnj { flex: none; }
+.dc-onde__resto { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dc-onde__cnj + .dc-onde__resto::before { content: "· "; }
+.dc-sigla { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 4px; background: var(--superficie-2); font: 600 10.5px/16px var(--font-sans); letter-spacing: 0.03em; color: var(--tinta-2); }
+.dc-prazo-linha { display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; font-size: 13.5px; color: var(--tinta-2); }
+/* No celular a vara desce para a linha de baixo, inteira. */
+.dc-celular .dc-onde { flex-wrap: wrap; row-gap: 2px; white-space: normal; }
+.dc-celular .dc-onde__resto { flex-basis: 100%; }
+.dc-celular .dc-onde__cnj + .dc-onde__resto::before { content: none; }
+
+/* ---------- Alvarás ----------
+   Os três totais em cima; no quadro, as etapas numeradas e o valor como título do cartão. */
+.dc-numeros--alvaras { flex: none; }
+.dc-numeros--alvaras .dc-contador { padding: 12px var(--space-4); }
+.dc-numeros--alvaras .dc-contador:hover { background: none; }
+.dc-numeros--alvaras .dc-contador__n { font-size: 20px; line-height: 28px; }
+.dc-contador__nota { font: 400 12.5px/16px var(--font-sans); color: var(--tinta-3); }
+.dc-quadro__topo:has(> .dc-quadro__sub) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; row-gap: 0; }
+.dc-quadro__sub { grid-column: 1 / -1; padding-left: 24px; font: 500 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-etapa { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dc-etapa > .truncate { min-width: 0; }
+.dc-etapa__n { flex: none; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--borda-forte); font: 600 11px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-2); }
+.dc-alvara { gap: 2px; width: 100%; text-align: left; cursor: pointer; transition: border-color 0.12s; }
+.dc-alvara:hover { border-color: var(--borda-forte); }
+.dc-alvara__valor { font: 600 17px/24px var(--font-sans); letter-spacing: -0.01em; color: var(--tinta); }
+.dc-alvara__desc { font: 500 13.5px/19px var(--font-sans); color: var(--tinta); }
+.dc-alvara__cliente { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-alvara__quando { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 6px; font: 400 12.5px/18px var(--font-sans); color: var(--tinta-3); }
+.dc-alvara--compacto { gap: 0; padding: 10px 12px; }
+.dc-alvara--compacto .dc-alvara__valor { font-size: 14px; line-height: 20px; }
+.dc-celular .dc-alvara__valor { font-size: 18px; }
+.dc-celular .dc-alvara__desc { font-size: 15px; line-height: 21px; }
+.dc-celular .dc-alvara__cliente { font-size: 14px; line-height: 20px; }
+
 /* ---------- Rótulos pequenos ----------
    Cabeçalho das tabelas, grupos das listas, do histórico e da busca em caixa normal, como os grupos do menu.
    Os dias da semana dos calendários continuam em caixa alta. */

@@ -22,6 +22,21 @@ const TZ = "America/Sao_Paulo";
 /** Data local (AAAA-MM-DD) de um instante. */
 export const diaDoInstante = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
 export const hora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+/** Dias de calendário de `dia` (AAAA-MM-DD ou instante) até hoje, no fuso do escritório. */
+export const diasDesde = (dia: string) => {
+  const [a, m, d] = partes(dia.length > 10 ? diaDoInstante(dia) : dia);
+  const [ha, hm, hd] = partes(diaDoInstante(new Date().toISOString()));
+  return Math.round((Date.UTC(ha, hm - 1, hd) - Date.UTC(a, m - 1, d)) / 864e5);
+};
+/** "hoje", "ontem", "há 5 dias", "há 2 meses". */
+export const haQuanto = (dia: string) => {
+  const n = diasDesde(dia);
+  if (n <= 0) return "hoje";
+  if (n === 1) return "ontem";
+  if (n < 30) return `há ${n} dias`;
+  if (n < 365) return Math.floor(n / 30) === 1 ? "há 1 mês" : `há ${Math.floor(n / 30)} meses`;
+  return Math.floor(n / 365) === 1 ? "há 1 ano" : `há ${Math.floor(n / 365)} anos`;
+};
 /** "09:12" se foi hoje, "28/10 09:12" se não. */
 export const quando = (iso: string, hoje?: string) => {
   const d = diaDoInstante(iso);

@@ -62,7 +62,7 @@ export function Quadro({ id, children }: { id: string; children: ReactNode }) {
 }
 
 /** Coluna do quadro: o topo fica e os cartões rolam por baixo dele. */
-export function ColunaDoQuadro({ id, titulo, valor, children }: { id: string; titulo: ReactNode; valor: ReactNode; children: ReactNode }) {
+export function ColunaDoQuadro({ id, titulo, valor, sub, children }: { id: string; titulo: ReactNode; valor: ReactNode; sub?: ReactNode; children: ReactNode }) {
   return (
     <section className="dc-quadro__coluna">
       <div className="dc-quadro__topo">
@@ -70,6 +70,7 @@ export function ColunaDoQuadro({ id, titulo, valor, children }: { id: string; ti
           {titulo}
         </span>
         <span className="dc-quadro__n">{valor}</span>
+        {sub && <span className="dc-quadro__sub">{sub}</span>}
       </div>
       <div className="dc-quadro__corpo dc-rola" data-scroll-restoration-id={id}>
         {children}

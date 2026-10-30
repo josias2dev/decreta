@@ -12,12 +12,26 @@ import { Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/compo
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { diaCurto, dinheiro, paraValor, valorNoCampo } from "@/lib/formato";
+import { diaCompleto, diaCurto, diasDesde, dinheiro, haQuanto, numero, paraValor, valorNoCampo } from "@/lib/formato";
+import { cn } from "@/lib/util";
 import type { Alvara, EtapaAlvara, QuadroDeAlvaras } from "@/lib/tipos";
 
 const ETAPA: Record<EtapaAlvara, string> = { novo: "Expedido", aguardando_saque: "Aguardando saque", sacado: "Sacado", repassado: "Repassado ao cliente", finalizado: "Finalizado" };
 const ORDEM: EtapaAlvara[] = ["novo", "aguardando_saque", "sacado", "repassado", "finalizado"];
 const proxima = (e: EtapaAlvara) => ORDEM[ORDEM.indexOf(e) + 1];
+
+/** A data que levou o alvará à etapa e o rótulo dela. */
+const CHEGOU: Record<EtapaAlvara, { rotulo: string; dia: (a: Alvara) => string | null }> = {
+  novo: { rotulo: "Expedido", dia: (a) => a.expedidoEm },
+  aguardando_saque: { rotulo: "Expedido", dia: (a) => a.expedidoEm },
+  sacado: { rotulo: "Sacado", dia: (a) => a.sacadoEm },
+  repassado: { rotulo: "Repassado", dia: (a) => a.repassadoEm },
+  finalizado: { rotulo: "Repassado", dia: (a) => a.repassadoEm },
+};
+/** Dias na etapa até chamar atenção: dinheiro sacado é do cliente e sai logo. */
+const PARADO: Partial<Record<EtapaAlvara, number>> = { novo: 15, aguardando_saque: 15, sacado: 5 };
+
+const alvaras = (n: number) => `${numero(n)} ${n === 1 ? "alvará" : "alvarás"}`;
 
 export function AlvarasPage() {
   const celular = useCelular();
@@ -28,18 +42,37 @@ export function AlvarasPage() {
   const d = q.data;
   const todos = d?.etapas.flatMap((e) => e.itens.map((i) => ({ ...i, etapa: e.etapa }))) ?? [];
   const selecionado = todos.find((i) => i.id === aberto) ?? null;
-  const sub = d ? `${dinheiro(d.totais.pendente)} a receber · ${dinheiro(d.totais.recebido)} já repassado` : " ";
+  const daEtapa = (e: EtapaAlvara) => d?.etapas.find((x) => x.etapa === e);
+  const soma = (...es: EtapaAlvara[]) => es.reduce((t, e) => ({ valor: t.valor + Number(daEtapa(e)?.total ?? 0), n: t.n + (daEtapa(e)?.itens.length ?? 0) }), { valor: 0, n: 0 });
+  const sub = d ? `${alvaras(soma("novo", "aguardando_saque", "sacado").n)} em andamento` : " ";
 
-  const cartao = (a: Alvara & { etapa: EtapaAlvara }) => (
-    <button key={a.id} type="button" className="dc-cartao w-full cursor-pointer text-left" onClick={() => setAberto(a.id)}>
-      <span className="dc-cartao__titulo">{a.descricao}</span>
-      <span className="dc-num text-[15px] font-semibold">{dinheiro(a.valor)}</span>
-      <span className="dc-cartao__linha">{[a.cliente, a.processo.titulo].filter(Boolean)[0]}</span>
-      <span className="dc-nota dc-num">
-        {a.repassadoEm ? `Repassado em ${diaCurto(a.repassadoEm)}` : a.sacadoEm ? `Sacado em ${diaCurto(a.sacadoEm)}` : a.expedidoEm ? `Expedido em ${diaCurto(a.expedidoEm)}` : (a.processo.cnj ?? "")}
-      </span>
-    </button>
-  );
+  const cartao = (a: Alvara & { etapa: EtapaAlvara }) => {
+    const chegou = CHEGOU[a.etapa];
+    const dia = chegou.dia(a);
+    const dias = dia ? diasDesde(dia) : 0;
+    const limite = PARADO[a.etapa];
+    const compacto = a.etapa === "finalizado";
+    return (
+      <button key={a.id} type="button" className={cn("dc-cartao dc-alvara", compacto && "dc-alvara--compacto")} onClick={() => setAberto(a.id)}>
+        <span className="dc-alvara__valor dc-num">{dinheiro(a.valor)}</span>
+        {!compacto && <span className="dc-alvara__desc">{a.descricao}</span>}
+        <span className="dc-alvara__cliente">{a.cliente ?? a.processo.titulo}</span>
+        {!compacto && dia && (
+          <span className="dc-alvara__quando" title={`${chegou.rotulo} em ${diaCompleto(dia)}`}>
+            {limite != null && dias > limite ? (
+              <span className="dc-selo dc-selo--breve">
+                {chegou.rotulo} {haQuanto(dia)}
+              </span>
+            ) : dias <= 60 ? (
+              `${chegou.rotulo} ${haQuanto(dia)}`
+            ) : (
+              `${chegou.rotulo} em ${dias < 300 ? diaCurto(dia) : diaCompleto(dia)}`
+            )}
+          </span>
+        )}
+      </button>
+    );
+  };
   const dialogos = (
     <>
       <NovoAlvara aberto={novo} aoFechar={() => setNovo(false)} />
@@ -48,7 +81,7 @@ export function AlvarasPage() {
   );
 
   if (celular) {
-    const daEtapa = d?.etapas.find((e) => e.etapa === etapa);
+    const lista = daEtapa(etapa);
     return (
       <TelaCelular
         titulo="Alvarás"
@@ -62,7 +95,7 @@ export function AlvarasPage() {
         fixo={
           <div className="dc-chips">
             {ORDEM.map((e) => (
-              <Chip key={e} ligado={etapa === e} n={d?.etapas.find((x) => x.etapa === e)?.itens.length} onClick={() => setEtapa(e)}>
+              <Chip key={e} ligado={etapa === e} n={daEtapa(e)?.itens.length} onClick={() => setEtapa(e)}>
                 {ETAPA[e]}
               </Chip>
             ))}
@@ -71,10 +104,10 @@ export function AlvarasPage() {
       >
         {!d ? (
           <Carregando />
-        ) : daEtapa?.itens.length ? (
+        ) : lista?.itens.length ? (
           <div className="dc-lista">
-            <span className="dc-nota">Total da etapa: {dinheiro(daEtapa.total)}</span>
-            {daEtapa.itens.map((i) => cartao({ ...i, etapa }))}
+            <span className="dc-nota">Total da etapa: {dinheiro(lista.total)}</span>
+            {lista.itens.map((i) => cartao({ ...i, etapa }))}
           </div>
         ) : (
           <Vazio titulo="Nada nesta etapa" />
@@ -97,13 +130,39 @@ export function AlvarasPage() {
       {!d ? (
         <Carregando />
       ) : (
-        <Quadro id="alvaras">
-          {d.etapas.map((e) => (
-            <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} titulo={ETAPA[e.etapa]} valor={dinheiro(e.total)}>
-              {e.itens.length ? e.itens.map((i) => cartao({ ...i, etapa: e.etapa })) : <div className="dc-quadro__vazio">Nada aqui</div>}
-            </ColunaDoQuadro>
-          ))}
-        </Quadro>
+        <>
+          <div className="dc-numeros dc-numeros--alvaras" aria-label="Totais dos alvarás">
+            {[
+              { rotulo: "A sacar", ...soma("novo", "aguardando_saque") },
+              { rotulo: "Sacado, falta repassar", ...soma("sacado") },
+              { rotulo: "Já repassado aos clientes", ...soma("repassado", "finalizado") },
+            ].map((t) => (
+              <div key={t.rotulo} className="dc-contador">
+                <span className="dc-contador__n dc-num">{dinheiro(t.valor)}</span>
+                <span className="dc-contador__rotulo">{t.rotulo}</span>
+                <span className="dc-contador__nota">{alvaras(t.n)}</span>
+              </div>
+            ))}
+          </div>
+          <Quadro id="alvaras">
+            {d.etapas.map((e) => (
+              <ColunaDoQuadro
+                key={e.etapa}
+                id={`alvaras-${e.etapa}`}
+                titulo={
+                  <span className="dc-etapa">
+                    <span className="dc-etapa__n">{ORDEM.indexOf(e.etapa) + 1}</span>
+                    <span className="truncate">{ETAPA[e.etapa]}</span>
+                  </span>
+                }
+                valor={e.itens.length}
+                sub={<span className="dc-num">{dinheiro(e.total)}</span>}
+              >
+                {e.itens.length ? e.itens.map((i) => cartao({ ...i, etapa: e.etapa })) : <div className="dc-quadro__vazio">Nada aqui</div>}
+              </ColunaDoQuadro>
+            ))}
+          </Quadro>
+        </>
       )}
       {dialogos}
     </Pagina>
