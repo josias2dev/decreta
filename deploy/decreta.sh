@@ -7,6 +7,8 @@
 #   sudo deploy/decreta.sh estado      serviço, saúde, timer do backup e as últimas linhas do log
 #   sudo deploy/decreta.sh logs        acompanha o log da API
 #   sudo deploy/decreta.sh backup      faz um backup agora
+#   sudo deploy/decreta.sh demonstracao [--senha X]
+#                                      cria a demonstração e liga a renovação de toda madrugada
 #
 # Nada aqui mexe no Caddyfile principal nem em outro sistema da máquina.
 set -euo pipefail
@@ -53,7 +55,7 @@ preparar() {
   install -d -o "$USUARIO" -g "$USUARIO" -m 750 "$APP/data" "$APP/data/arquivos"
 
   passo "serviços do systemd"
-  install -m 644 deploy/decreta-api.service deploy/decreta-backup.service deploy/decreta-backup.timer /etc/systemd/system/
+  install -m 644 deploy/decreta-api.service deploy/decreta-backup.service deploy/decreta-backup.timer deploy/decreta-demonstracao.service deploy/decreta-demonstracao.timer /etc/systemd/system/
   systemctl daemon-reload
   systemctl enable decreta-api.service decreta-backup.timer
 
@@ -111,6 +113,16 @@ ativar() {
   echo "✓ Decreta no ar: https://$(dominio)"
 }
 
+# O escritório de demonstração (dados inventados) e a renovação das datas às 04:15.
+demonstracao() {
+  install -m 644 deploy/decreta-demonstracao.service deploy/decreta-demonstracao.timer /etc/systemd/system/
+  systemctl daemon-reload
+  passo "criando a demonstração (se ainda não existe)"
+  como_app "$BUN" --env-file="$APP/.env" apps/api/src/scripts/demonstracao.ts "$@"
+  systemctl enable --now decreta-demonstracao.timer
+  echo "✓ demonstração no ar; renova toda madrugada (systemctl list-timers decreta-demonstracao.timer)"
+}
+
 estado() {
   systemctl --no-pager --lines=0 status decreta-api || true
   echo
@@ -127,8 +139,12 @@ case "${1:-}" in
   estado) estado ;;
   logs) journalctl -u decreta-api -f ;;
   backup) systemctl start decreta-backup.service && journalctl -u decreta-backup -n 20 --no-pager ;;
+  demonstracao)
+    shift
+    demonstracao "$@"
+    ;;
   *)
-    sed -n '2,11p' "$0"
+    sed -n '2,13p' "$0"
     exit 1
     ;;
 esac

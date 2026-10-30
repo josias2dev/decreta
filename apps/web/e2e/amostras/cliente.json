@@ -1,7 +1,7 @@
 {
-  "path": "/clientes/ed866ff7-ff43-476f-a3d6-7b797927f716",
+  "path": "/clientes/b151e2c8-fa9f-42bf-a31e-4cf3e1e44ae5",
   "corpo": {
-    "id": "ed866ff7-ff43-476f-a3d6-7b797927f716",
+    "id": "b151e2c8-fa9f-42bf-a31e-4cf3e1e44ae5",
     "nome": "Marina Duarte",
     "tipo": "pf",
     "documento": "318.204.567-90",
@@ -13,13 +13,13 @@
     "criadoEm": "2025-09-24T12:00:00.000Z",
     "processos": [
       {
-        "id": "12106326-1310-4e97-b3ca-cc941812d31f",
+        "id": "4c84242a-d9d7-41c6-9deb-287576e9d0fa",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "orgao": "2ª Vara Cível",
         "situacao": "ativo",
         "responsavel": {
-          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
+          "id": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -28,30 +28,30 @@
     ],
     "atendimentos": [
       {
-        "id": "7b8b3166-84d9-42f9-af47-7b1423e49d2a",
+        "id": "1d0194e7-ff6b-49bc-982f-29296e83d602",
         "em": "2026-10-20T18:30:00.000Z",
         "canal": "whatsapp",
         "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
         "autor": {
-          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
+          "id": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
         },
-        "processoId": "12106326-1310-4e97-b3ca-cc941812d31f"
+        "processoId": "4c84242a-d9d7-41c6-9deb-287576e9d0fa"
       },
       {
-        "id": "610652ee-cda3-4136-9a47-84fac7baa06f",
+        "id": "74ae730e-1e5c-47ab-a0bc-af31fb8243ae",
         "em": "2026-08-30T18:30:00.000Z",
         "canal": "presencial",
         "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
         "autor": {
-          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
+          "id": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
         },
-        "processoId": "12106326-1310-4e97-b3ca-cc941812d31f"
+        "processoId": "4c84242a-d9d7-41c6-9deb-287576e9d0fa"
       }
     ],
     "documentos": [],

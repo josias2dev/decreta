@@ -12,8 +12,9 @@
 import { diaDaSemana, hojeEm } from "@decreta/core";
 import { avisosEnviados, escritorios, organization, withTenant, type Database } from "@decreta/db";
 import type { Ia } from "@decreta/ia";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { eventType, Inngest, staticSchema } from "inngest";
+import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
 import { atualizarDoDataJud, capturarDjen, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
@@ -52,8 +53,9 @@ export interface DepsDasRotinas {
   reporter?: Reporter;
 }
 
+/** Os escritórios das rotinas. A demonstração fica de fora: nada dela sai para o DJEN, o DataJud ou o WhatsApp. */
 async function escritoriosAtivos(db: Database) {
-  return db.select({ id: organization.id, timezone: organization.timezone }).from(organization);
+  return db.select({ id: organization.id, timezone: organization.timezone }).from(organization).where(ne(organization.slug, SLUG_DA_DEMONSTRACAO));
 }
 
 export function createFunctions(deps: DepsDasRotinas) {

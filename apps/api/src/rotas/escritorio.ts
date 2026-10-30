@@ -39,6 +39,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         avisos: e?.avisos ?? { manha: true, hora: "07:30" },
         capturaDjen: e?.capturaDjen ?? true,
         capturaDatajud: e?.capturaDatajud ?? true,
+        demonstracao: c.get("demonstracao"),
         whatsappLigado: !!deps.wameow,
         datajudLigado: !!deps.captura.datajudKey,
         iaLigada: !!deps.ia,
@@ -59,6 +60,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         capturaDatajud: z.boolean().optional(),
       }),
     );
+    if (c.get("demonstracao") && (b.capturaDjen || b.capturaDatajud)) falha(403, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");
     await tenant(c, deps, async (tx) => {
       const valores = Object.fromEntries(Object.entries(b).filter(([, v]) => v !== undefined)) as Partial<typeof escritorios.$inferInsert>;
       if (b.timbre) valores.timbre = { ...b.timbre, cor: b.timbre.cor ? `#${b.timbre.cor.replace("#", "")}` : undefined } as Timbre;

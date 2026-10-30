@@ -15,14 +15,15 @@
       "hora": "07:30",
       "manha": false
     },
-    "capturaDjen": true,
-    "capturaDatajud": true,
+    "capturaDjen": false,
+    "capturaDatajud": false,
+    "demonstracao": true,
     "whatsappLigado": false,
     "datajudLigado": false,
     "iaLigada": false,
     "suspensoes": [
       {
-        "id": "522fc395-1b91-4338-814d-ca94029f14e5",
+        "id": "f2162a2f-3293-4163-8676-00e664e7421b",
         "dia": "2026-11-25",
         "motivo": "Instabilidade do eproc (portaria da Presidência)",
         "tipo": "forense",
@@ -30,7 +31,7 @@
         "comarca": null
       },
       {
-        "id": "6e3c5bce-5fc0-45d8-8e72-7bbf985a088b",
+        "id": "66b9ad10-7656-4fb4-a6a9-56767c5f8a14",
         "dia": "2027-03-09",
         "motivo": "Aniversário de Joinville",
         "tipo": "local",

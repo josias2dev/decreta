@@ -1,14 +1,14 @@
 {
-  "path": "/pecas/preparar?prazo=f8b6f730-cc75-41c3-a50b-e2e9502833c2",
+  "path": "/pecas/preparar?prazo=6958853b-2006-4a0a-af0a-fa47750d3bd3",
   "corpo": {
     "processo": {
-      "id": "12106326-1310-4e97-b3ca-cc941812d31f",
+      "id": "4c84242a-d9d7-41c6-9deb-287576e9d0fa",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "orgao": "2ª Vara Cível"
     },
     "prazo": {
-      "id": "f8b6f730-cc75-41c3-a50b-e2e9502833c2",
+      "id": "6958853b-2006-4a0a-af0a-fa47750d3bd3",
       "tipo": "Manifestação sobre laudo pericial",
       "fim": "2026-11-23"
     },

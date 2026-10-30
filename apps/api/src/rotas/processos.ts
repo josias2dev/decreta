@@ -318,6 +318,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
   /** Atualizar do DataJud agora (o botão da ficha). Tribunal fora do ar não derruba a tela. */
   app.post("/processos/:id/datajud", async (c) => {
     const processoId = id(c);
+    if (c.get("demonstracao")) falha(409, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");
     if (!deps.captura.datajudKey) falha(503, "datajud_desligado", "Falta a chave do DataJud no servidor.");
     try {
       const novas = await atualizarDoDataJud(deps.captura, c.get("orgId"), processoId);

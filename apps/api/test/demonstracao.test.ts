@@ -1,5 +1,5 @@
 /** A demonstração sobe inteira e as telas mostram o que o design mostra. */
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, setSystemTime, test } from "bun:test";
 import { randomBytes } from "node:crypto";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
@@ -9,12 +9,17 @@ import { apagarDemonstracao, criarDemonstracao, documentoValido } from "../src/d
 import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { createRotas } from "../src/rotas/index.ts";
+import { atualizarDoDataJud, capturarDjen } from "../src/servicos/captura.ts";
 import { cnpjValido, cpfValido } from "@decreta/core";
+
+/** Um prazo da lista. */
+type Item = { tipo: string; processo: { titulo: string } };
 
 describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
   let t: TestDatabase;
   let app: ReturnType<typeof createApp>;
   let cookie = "";
+  let orgId = "";
   const arquivos = armazenamentoEmMemoria();
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });
   const call = async (path: string) => {
@@ -24,20 +29,43 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
   };
 
   beforeAll(async () => {
+    // O "hoje" do design, no relógio também: o Hoje e as listas contam a partir dele.
+    setSystemTime(new Date("2026-10-29T09:30:00-03:00"));
     t = await createTestDatabase();
     const auth = createAuth(t.db, env);
-    // O "hoje" do design: quinta, 29/10/2026.
+    const inicio = performance.now();
     const { organizationId } = await criarDemonstracao(t.db, auth, { hoje: "2026-10-29", senha: "demonstracao-123", arquivos });
+    console.log(`demonstração criada em ${Math.round(performance.now() - inicio)} ms`);
+    orgId = organizationId;
     const rotas = createRotas({ db: t.db, auth, ia: null, arquivos, mailer: createLogMailer(() => {}), telas: "https://decreta.local", captura: { db: t.db, datajudKey: "" }, maxArquivoBytes: 5e6, enfileirar: async () => {}, log: () => {} });
     app = createApp({ db: t.db, env, auth, rotas, log: () => {} });
     const r = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "beatriz@demo.decreta.app", password: "demonstracao-123" }) });
     expect(r.status).toBe(200);
     cookie = r.headers.get("set-cookie")?.split(";")[0] ?? "";
     await app.request("/api/auth/organization/set-active", { method: "POST", headers: { "content-type": "application/json", cookie, origin: env.WEB_ORIGIN }, body: JSON.stringify({ organizationId }) });
-  });
+  }, 120_000);
 
   afterAll(async () => {
+    setSystemTime();
     await t?.drop();
+  });
+
+  test("nada da demonstração vai ao DJEN nem ao DataJud", async () => {
+    let chamadas = 0;
+    const fetch = (async () => {
+      chamadas++;
+      return new Response("{}");
+    }) as unknown as typeof globalThis.fetch;
+    const captura = { db: t.db, datajudKey: "chave", fetch };
+    expect(await capturarDjen(captura, orgId, { de: "2026-10-28", ate: "2026-10-29" })).toEqual({ encontradas: 0, novas: [] });
+    const { itens } = await call("/processos");
+    expect(await atualizarDoDataJud(captura, orgId, itens[0].id)).toBe(0);
+    expect(chamadas).toBe(0);
+    expect(await call("/escritorio")).toMatchObject({ demonstracao: true, capturaDjen: false, capturaDatajud: false });
+    const ligar = await app.request("/api/app/escritorio", { method: "PUT", headers: { cookie, origin: env.WEB_ORIGIN, "content-type": "application/json" }, body: JSON.stringify({ capturaDjen: true }) });
+    expect(ligar.status).toBe(403);
+    const buscar = await app.request("/api/app/publicacoes/buscar", { method: "POST", headers: { cookie, origin: env.WEB_ORIGIN } });
+    expect(buscar.status).toBe(409);
   });
 
   test("documentos inventados têm verificadores válidos", () => {
@@ -54,9 +82,9 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
 
   test("a sugestão da Marina vence em 23/11, a confirmar", async () => {
     const p = await call("/prazos?quando=abertos");
-    const marina = p.itens.find((i: { tipo: string }) => i.tipo === "Manifestação sobre laudo pericial");
+    const marina = p.itens.find((i: Item) => i.tipo === "Manifestação sobre laudo pericial" && i.processo.titulo.startsWith("Marina"));
     expect(marina).toMatchObject({ fim: "2026-11-23", situacao: "a_confirmar", origem: "DJEN · 28/10" });
-    expect(p.itens.find((i: { tipo: string }) => i.tipo === "Alegações finais").situacao).toBe("peca_em_revisao");
+    expect(p.itens.find((i: Item) => i.tipo === "Alegações finais" && i.processo.titulo.startsWith("Roberto")).situacao).toBe("peca_em_revisao");
     const prazo = await call(`/prazos/${marina.id}`);
     expect(prazo.briefing).toMatchObject({ situacao: "pronto", desatualizada: false });
     expect(prazo.desconsiderados.map((d: { dia: string }) => d.dia)).toEqual(["2026-11-02", "2026-11-20"]);
@@ -75,8 +103,37 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     expect(docs.itens.length).toBeGreaterThanOrEqual(8);
   });
 
+  test("tem o volume de um escritório de verdade", async () => {
+    expect((await call("/clientes")).total).toBeGreaterThan(120);
+    expect((await call("/processos")).total).toBeGreaterThan(130);
+    expect((await call("/processos?situacao=arquivados")).total).toBeGreaterThan(5);
+    expect((await call("/prazos?quando=cumpridos")).itens.length).toBeGreaterThan(150);
+    expect((await call("/publicacoes?situacao=vinculada")).itens.length).toBeGreaterThan(100);
+    // Todo processo principal tem andamento, não só o da Marina.
+    const padaria = (await call("/processos?busca=Padaria")).itens[0];
+    expect((await call(`/processos/${padaria.id}/movimentacoes`)).itens.length).toBeGreaterThan(1);
+    const [semAndamento] = await t.owner`select count(*)::int as n from processos p where not exists (select 1 from movimentacoes m where m.processo_id = p.id)`;
+    expect(semAndamento!.n).toBe(0);
+  });
+
+  test("renovar refaz as datas sem tirar ninguém do sistema", async () => {
+    const [antes] = await t.owner`select count(*)::int as n from documentos`;
+    expect(await apagarDemonstracao(t.db, { arquivos, manterPessoas: true })).toBe(orgId);
+    // Os arquivos do escritório saem junto.
+    const [chave] = await t.owner`select chave from documentos limit 1`;
+    expect(chave).toBeUndefined();
+    await criarDemonstracao(t.db, createAuth(t.db, env), { hoje: "2026-10-29", arquivos, organizationId: orgId });
+    // A mesma sessão continua valendo, com o escritório inteiro de volta.
+    const h = await call("/hoje");
+    expect(h.contadores).toMatchObject({ vencidos: 1, vencemHoje: 3, publicacoesNovas: 7, audienciasHoje: 2 });
+    const [depois] = await t.owner`select count(*)::int as n from documentos`;
+    expect(depois!.n).toBe(antes!.n);
+    const entrar = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "rafael@demo.decreta.app", password: "demonstracao-123" }) });
+    expect(entrar.status).toBe(200);
+  }, 60_000);
+
   test("recriar apaga só a demonstração", async () => {
-    expect(await apagarDemonstracao(t.db)).toBe(true);
+    expect(await apagarDemonstracao(t.db)).toBe(orgId);
     expect((await t.owner`select count(*)::int as n from processos`)[0]!.n).toBe(0);
     expect((await t.owner`select count(*)::int as n from "user"`)[0]!.n).toBe(0);
   });

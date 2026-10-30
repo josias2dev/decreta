@@ -4,9 +4,10 @@
  * que achou e o erro, para a tela de Publicações dizer quando foi a última.
  */
 import { dataDaPublicacao, limparCnj, nomeProprio, somarDias, tribunalDoCnj, type Dia } from "@decreta/core";
-import { capturas, equipe, escritorios, movimentacoes, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
+import { capturas, equipe, escritorios, movimentacoes, organization, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
 import { buscarNoDataJud, buscarNoDjen, type ComunicacaoDjen, type OpcoesDjen } from "@decreta/tribunais";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { calendarioDoEscritorio } from "./calendario.ts";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
@@ -67,8 +68,15 @@ export async function gravarComunicacoes(tx: Tx, organizationId: string, oab: st
   return novas;
 }
 
+/** A demonstração nunca consulta o DJEN nem o DataJud (ver demonstracao/slug.ts). */
+export async function ehDemonstracao(db: Database, organizationId: string): Promise<boolean> {
+  const [o] = await db.select({ slug: organization.slug }).from(organization).where(eq(organization.id, organizationId));
+  return o?.slug === SLUG_DA_DEMONSTRACAO;
+}
+
 /** Busca no DJEN de `de` a `ate` por todas as OABs da equipe. */
 export async function capturarDjen(deps: DepsDaCaptura, organizationId: string, periodo: { de: Dia; ate: Dia }): Promise<{ encontradas: number; novas: string[] }> {
+  if (await ehDemonstracao(deps.db, organizationId)) return { encontradas: 0, novas: [] };
   const { oabs, ligado } = await withTenant(deps.db, organizationId, async (tx) => {
     const [e] = await tx.select({ ligado: escritorios.capturaDjen }).from(escritorios).where(eq(escritorios.organizationId, organizationId));
     const linhas = await tx.select({ numero: equipe.oabNumero, uf: equipe.oabUf }).from(equipe).where(isNotNull(equipe.oabNumero));
@@ -108,6 +116,7 @@ export function periodoDaCaptura(hoje: Dia): { de: Dia; ate: Dia } {
 
 /** Andamentos do DataJud de um processo. Devolve quantos entraram. */
 export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: string, processoId: string): Promise<number> {
+  if (await ehDemonstracao(deps.db, organizationId)) return 0;
   const p = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(processos).where(eq(processos.id, processoId)))[0]);
   if (!p?.cnj || limparCnj(p.cnj).length !== 20) return 0;
   const dados = await buscarNoDataJud(p.cnj, { apiKey: deps.datajudKey, fetch: deps.fetch });

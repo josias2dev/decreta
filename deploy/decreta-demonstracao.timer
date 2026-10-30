@@ -1,0 +1,11 @@
+# Toda madrugada às 04:15 de Brasília, depois do backup. Só é ligado onde há demonstração:
+#   sudo deploy/decreta.sh demonstracao
+[Unit]
+Description=Renovação diária da demonstração do Decreta
+
+[Timer]
+OnCalendar=*-*-* 04:15:00 America/Sao_Paulo
+Persistent=true
+
+[Install]
+WantedBy=timers.target

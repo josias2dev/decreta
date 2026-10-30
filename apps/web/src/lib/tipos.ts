@@ -438,6 +438,8 @@ export interface Escritorio {
   timbre: Timbre | null;
   avisos: { manha: boolean; hora: string };
   capturaDjen: boolean;
+  /** Escritório de demonstração: DJEN e DataJud ficam desligados. */
+  demonstracao: boolean;
   capturaDatajud: boolean;
   whatsappLigado: boolean;
   datajudLigado: boolean;

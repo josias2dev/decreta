@@ -4,7 +4,8 @@
  * As datas saem do dia de hoje (prazo que vence hoje, publicação de ontem) e
  * passam pelo mesmo motor de prazos das telas: abrir um prazo e "Ajustar" dá
  * a mesma data final. As análises da IA ficam gravadas como se ela tivesse
- * lido, para a demonstração funcionar mesmo sem o gateway.
+ * lido, para a demonstração funcionar mesmo sem o gateway. O volume (uns cem
+ * clientes e processos a mais) sai de ./demonstracao/volume.ts.
  */
 import { calendarioPara, contarPrazo, dataDaPublicacao, dvCnj, ehDiaUtil, formatarDiaCurto, instanteLocal, somarDias, type Calendario, type Contagem, type Dia } from "@decreta/core";
 import {
@@ -39,6 +40,7 @@ import { and, eq, like } from "drizzle-orm";
 import type { Auth } from "./auth.ts";
 import {
   ALVARAS,
+  ANDAMENTOS,
   ATENDIMENTOS,
   AUDIENCIAS,
   BRIEFING_MARINA,
@@ -54,8 +56,10 @@ import {
   RESUMO_MARINA,
   SUSPENSOES,
   TAREFAS,
+  type ProcessoDemo,
   type Quem,
 } from "./demonstracao/dados.ts";
+import { gerarVolume } from "./demonstracao/volume.ts";
 import { carregarContexto } from "./servicos/contexto.ts";
 import { contagemNaTela, criarPrazoSugerido, type SugestaoNaTela } from "./servicos/prazos.ts";
 import { CHECKLIST_DA_TRIAGEM } from "./rotas/negocios.ts";
@@ -65,17 +69,30 @@ export const DOMINIO_DA_DEMONSTRACAO = "demo.decreta.app";
 export interface OpcoesDaDemonstracao {
   /** Dia da demonstração; os prazos e publicações saem dele. */
   hoje: Dia;
-  senha: string;
+  /** Senha das quatro pessoas. Sem ela, quem já existe fica com a senha que tem. */
+  senha?: string;
   arquivos: Armazenamento;
   timezone?: string;
+  /** Recriar com o mesmo id: quem já entrou continua no escritório. */
+  organizationId?: string;
 }
 
-/** Apaga a demonstração (o escritório e as quatro pessoas). Nenhum outro escritório é tocado. */
-export async function apagarDemonstracao(db: Database): Promise<boolean> {
+/**
+ * Apaga a demonstração: o escritório, os arquivos dele e as quatro pessoas.
+ * Com `manterPessoas`, as contas e as sessões ficam (para renovar as datas sem
+ * tirar ninguém do sistema). Nenhum outro escritório é tocado.
+ */
+export async function apagarDemonstracao(db: Database, o: { arquivos?: Armazenamento; manterPessoas?: boolean } = {}): Promise<string | null> {
   const [org] = await db.select({ id: organization.id }).from(organization).where(eq(organization.slug, ESCRITORIO.slug));
-  if (org) await db.delete(organization).where(eq(organization.id, org.id));
-  await db.delete(user).where(like(user.email, `%@${DOMINIO_DA_DEMONSTRACAO}`));
-  return !!org;
+  if (org) {
+    if (o.arquivos) {
+      const chaves = await withTenant(db, org.id, (tx) => tx.select({ chave: documentos.chave }).from(documentos));
+      for (const { chave } of chaves) await o.arquivos.delete(chave).catch(() => {});
+    }
+    await db.delete(organization).where(eq(organization.id, org.id));
+  }
+  if (!o.manterPessoas) await db.delete(user).where(like(user.email, `%@${DOMINIO_DA_DEMONSTRACAO}`));
+  return org?.id ?? null;
 }
 
 const digitos = (base: string, pesos: number[]) => {
@@ -133,18 +150,31 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
   const calTJSC = calendarioPara({ tribunal: "TJSC" });
   const calDe = (tribunal?: string) => calendarioPara({ tribunal: tribunal ?? "TJSC" });
   const util = (n: number) => diasUteis(hoje, n, calTJSC);
+  const volume = gerarVolume(hoje);
+  const clientesDemo = { ...CLIENTES, ...volume.clientes };
+  const processosDemo: Record<string, ProcessoDemo> = {
+    ...Object.fromEntries(Object.entries(PROCESSOS).map(([chave, p]) => [chave, { ...p, movimentacoes: p.movimentacoes ?? ANDAMENTOS[chave] }])),
+    ...volume.processos,
+  };
 
-  // Equipe
+  // Equipe: quem já existe (renovação) fica com a conta e as sessões.
   const ids = {} as Record<Quem, string>;
   for (const [quem, p] of Object.entries(EQUIPE) as [Quem, (typeof EQUIPE)[Quem]][]) {
     const email = `${quem}@${DOMINIO_DA_DEMONSTRACAO}`;
+    const [existe] = await db.select({ id: user.id }).from(user).where(eq(user.email, email));
+    if (existe) {
+      ids[quem] = existe.id;
+      if (o.senha) await ctx.internalAdapter.updatePassword(existe.id, await ctx.password.hash(o.senha));
+      continue;
+    }
+    if (!o.senha) throw new Error(`falta a senha para criar ${email}`);
     const criado = await ctx.internalAdapter.createUser({ email, name: p.nome, emailVerified: true }, { method: "email-password" });
     await ctx.internalAdapter.linkAccount({ userId: criado.id, providerId: "credential", accountId: criado.id, password: await ctx.password.hash(o.senha) });
     ids[quem] = criado.id;
   }
   const pessoa = (q: Quem | null | undefined) => (q ? ids[q] : null);
 
-  const organizationId = crypto.randomUUID();
+  const organizationId = o.organizationId ?? crypto.randomUUID();
   await db.insert(organization).values({ id: organizationId, name: ESCRITORIO.nome, slug: ESCRITORIO.slug, timezone: tz });
   await db.insert(member).values(
     (Object.keys(EQUIPE) as Quem[]).map((q) => ({ id: crypto.randomUUID(), organizationId, userId: ids[q], role: EQUIPE[q].papel })),
@@ -154,7 +184,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
   const arquivos: { chave: string; bytes: Uint8Array }[] = [];
 
   const { sugestoes, marinaId } = await withTenant(db, organizationId, async (tx) => {
-    await tx.insert(escritorios).values({ organizationId, tribunal: "TJSC", timbre: ESCRITORIO.timbre, avisos: { manha: false, hora: "07:30" } });
+    await tx.insert(escritorios).values({ organizationId, tribunal: "TJSC", timbre: ESCRITORIO.timbre, avisos: { manha: false, hora: "07:30" }, capturaDjen: false, capturaDatajud: false });
     await tx.insert(equipe).values(
       (Object.keys(EQUIPE) as Quem[]).map((q) => ({
         organizationId,
@@ -170,17 +200,17 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
 
     // Clientes
     const clienteId: Record<string, string> = {};
-    for (const [chave, c] of Object.entries(CLIENTES)) {
+    for (const [chave, c] of Object.entries(clientesDemo)) {
       const [linha] = await tx
         .insert(clientes)
-        .values({ organizationId, nome: c.nome, tipo: c.tipo, documento: documentoValido(c.base), telefone: c.telefone, email: c.email ?? null, endereco: c.endereco ?? null, createdAt: em(somarDias(hoje, -400 + Object.keys(clienteId).length * 13)) })
+        .values({ organizationId, nome: c.nome, tipo: c.tipo, documento: documentoValido(c.base), telefone: c.telefone, email: c.email ?? null, endereco: c.endereco ?? null, createdAt: em(somarDias(hoje, -(c.desdeHa ?? 400 - Object.keys(clienteId).length * 13))) })
         .returning({ id: clientes.id });
       clienteId[chave] = linha!.id;
     }
 
     // Processos, partes e movimentações (a da última publicação entra depois do resumo da IA)
     const processoId: Record<string, string> = {};
-    for (const [chave, p] of Object.entries(PROCESSOS)) {
+    for (const [chave, p] of Object.entries(processosDemo)) {
       const cnj = p.numero ? cnjDe(p.numero) : null;
       const [linha] = await tx
         .insert(processos)
@@ -197,6 +227,8 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           sistema: p.sistema ?? null,
           valorCausa: p.valor != null ? p.valor.toFixed(2) : null,
           fase: p.fase ?? null,
+          situacao: p.situacao ?? "ativo",
+          segredo: p.segredo ?? false,
           clienteId: clienteId[p.cliente]!,
           poloCliente: p.poloCliente,
           responsavelId: pessoa(p.responsavel),
@@ -206,7 +238,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
         })
         .returning({ id: processos.id });
       processoId[chave] = linha!.id;
-      const c = CLIENTES[p.cliente]!;
+      const c = clientesDemo[p.cliente]!;
       const outraPolo = p.poloCliente === "ativo" ? "passivo" : "ativo";
       await tx.insert(partes).values([
         { organizationId, processoId: linha!.id, nome: c.nome, polo: p.poloCliente, papel: p.papelCliente, documento: documentoValido(c.base), cliente: true, ordem: p.poloCliente === "ativo" ? 0 : 1 },
@@ -217,7 +249,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     const ultimaDisp = util(-1);
     /** `capturadaAs`: a hora em que o DataJud trouxe a movimentação (o resumo da Marina é das 18:30). */
     const gravarMovimentacoes = async (chave: string, filtro: (evento: number) => boolean, capturadaAs = "18:10") => {
-      const p = PROCESSOS[chave]!;
+      const p = processosDemo[chave]!;
       for (const m of p.movimentacoes ?? []) {
         if (!filtro(m.evento)) continue;
         const dia = somarDias(ultimaDisp, -m.antes);
@@ -229,7 +261,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           titulo: m.titulo,
           descricao: m.descricao,
           autor: m.autor,
-          fonte: "datajud",
+          fonte: p.tipo === "extrajudicial" ? "manual" : "datajud",
           chave: `demo:${m.evento}`,
           createdAt: em(dia, capturadaAs),
         });
@@ -275,14 +307,14 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
       createdAt: em(ultimaDisp, "18:30"),
     });
     await gravarMovimentacoes("marina", (e) => e > 88, "19:40");
-    for (const chave of Object.keys(PROCESSOS)) if (chave !== "marina") await gravarMovimentacoes(chave, () => true);
+    for (const chave of Object.keys(processosDemo)) if (chave !== "marina") await gravarMovimentacoes(chave, () => true);
 
     // Publicações da caixa, com a leitura da IA
     const oab = (q: Quem | null) => (q && EQUIPE[q].oab ? [{ nome: EQUIPE[q].nome, oab: EQUIPE[q].oab!, uf: "SC" }] : [{ nome: EQUIPE.beatriz.nome, oab: EQUIPE.beatriz.oab!, uf: "SC" }]);
     let idExterno = 512_300_000;
     let ordem = 0;
     const novaPublicacao = async (x: { processo: string; disponibilizadaEm: Dia; tipoComunicacao: string; tipoDocumento: string; teor: string; situacao: "nova" | "pendente" | "lida" | "vinculada"; tratadaPor?: string | null }) => {
-      const p = PROCESSOS[x.processo]!;
+      const p = processosDemo[x.processo]!;
       const cal = calDe(p.tribunal);
       const publicadaEm = dataDaPublicacao(x.disponibilizadaEm, cal);
       const [pub] = await tx
@@ -301,7 +333,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           cnj: p.numero ? cnjDe(p.numero) : null,
           processoId: processoId[x.processo]!,
           texto: x.teor,
-          destinatarios: [{ nome: CLIENTES[p.cliente]!.nome, polo: p.poloCliente }],
+          destinatarios: [{ nome: clientesDemo[p.cliente]!.nome, polo: p.poloCliente }],
           advogados: oab(p.responsavel),
           situacao: x.situacao,
           tratadaPor: x.tratadaPor ?? null,
@@ -325,8 +357,8 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     };
 
     const sugestoes: { pubId: string; s: SugestaoNaTela }[] = [];
-    for (const x of PUBLICACOES) {
-      const p = PROCESSOS[x.processo]!;
+    for (const x of [...PUBLICACOES, ...volume.publicacoes]) {
+      const p = processosDemo[x.processo]!;
       const cal = calDe(p.tribunal);
       const disp = diasUteis(hoje, -x.disp, cal);
       const pub = await novaPublicacao({ processo: x.processo, disponibilizadaEm: disp, tipoComunicacao: x.tipoComunicacao, tipoDocumento: x.tipoDocumento, teor: x.teor, situacao: x.situacao, tratadaPor: x.situacao === "lida" ? pessoa(p.responsavel) ?? ids.beatriz : null });
@@ -343,8 +375,8 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     }
 
     // Prazos confirmados e cumpridos, cada um com a publicação de onde veio
-    for (const z of PRAZOS) {
-      const p = PROCESSOS[z.processo]!;
+    for (const z of [...PRAZOS, ...volume.prazos]) {
+      const p = processosDemo[z.processo]!;
       const cal = calDe(p.tribunal);
       const contagem = z.contagem ?? "uteis";
       const fimAlvo = diasUteis(hoje, z.fim, cal);
@@ -388,8 +420,8 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
     }
 
     // Audiências (a do Carlos já tem a preparação da IA)
-    for (const a of AUDIENCIAS) {
-      const p = PROCESSOS[a.processo]!;
+    for (const a of [...AUDIENCIAS, ...volume.audiencias]) {
+      const p = processosDemo[a.processo]!;
       const dia = diasUteis(hoje, a.dia, calDe(p.tribunal));
       const [linha] = await tx
         .insert(audiencias)
@@ -400,6 +432,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           tipo: a.tipo,
           local: a.local,
           porVideo: a.porVideo,
+          situacao: a.situacao ?? "marcada",
           responsavelId: pessoa(a.responsavel),
           checklist: a.preparada ? PREPARACAO_CARLOS.checklist.map((texto, i) => ({ texto, feito: i < 1 })) : [],
         })
@@ -431,19 +464,20 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
         .returning({ id: negocios.id });
       negocioId[n.chave] = linha!.id;
     }
-    for (const t of TAREFAS) {
+    for (const t of [...TAREFAS, ...volume.tarefas]) {
       await tx.insert(tarefas).values({
         organizationId,
         titulo: t.titulo,
         detalhe: t.detalhe,
         dia: util(t.dia),
+        concluidaEm: t.concluida ? em(util(t.dia), "17:40") : null,
         responsavelId: ids[t.responsavel],
         processoId: t.processo ? processoId[t.processo]! : null,
         negocioId: t.negocio ? negocioId[t.negocio]! : null,
         criadaPor: ids.beatriz,
       });
     }
-    for (const a of ALVARAS) {
+    for (const a of [...ALVARAS, ...volume.alvaras]) {
       const expedidoEm = somarDias(hoje, -a.expedidoHa);
       await tx.insert(alvaras).values({
         organizationId,
@@ -453,12 +487,13 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
         valorRecebido: a.recebido != null ? a.recebido.toFixed(2) : null,
         etapa: a.etapa,
         expedidoEm,
-        sacadoEm: a.etapa === "sacado" || a.etapa === "repassado" ? somarDias(expedidoEm, 4) : null,
-        repassadoEm: a.etapa === "repassado" ? somarDias(expedidoEm, 6) : null,
+        sacadoEm: a.etapa === "sacado" || a.etapa === "repassado" || a.etapa === "finalizado" ? somarDias(expedidoEm, 4) : null,
+        repassadoEm: a.etapa === "repassado" || a.etapa === "finalizado" ? somarDias(expedidoEm, 6) : null,
       });
     }
-    for (const a of ATENDIMENTOS) {
-      await tx.insert(atendimentos).values({ organizationId, clienteId: clienteId[a.cliente]!, processoId: a.processo ? processoId[a.processo]! : null, em: em(somarDias(hoje, -a.haDias), "15:30"), canal: a.canal, resumo: a.resumo, autorId: ids[a.autor] });
+    for (const [i, a] of [...ATENDIMENTOS, ...volume.atendimentos].entries()) {
+      const hora = i < ATENDIMENTOS.length ? "15:30" : `${String(9 + ((i * 7) % 9)).padStart(2, "0")}:${["05", "20", "35", "50"][i % 4]}`;
+      await tx.insert(atendimentos).values({ organizationId, clienteId: clienteId[a.cliente]!, processoId: a.processo ? processoId[a.processo]! : null, em: em(somarDias(hoje, -a.haDias), hora), canal: a.canal, resumo: a.resumo, autorId: ids[a.autor] });
     }
 
     // Chat do processo da Marina

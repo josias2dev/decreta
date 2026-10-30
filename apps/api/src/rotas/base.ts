@@ -14,6 +14,8 @@ import type { Wameow } from "../servicos/avisos.ts";
 export type Vars = {
   orgId: string;
   orgNome: string;
+  /** Escritório de demonstração: sem DJEN nem DataJud. */
+  demonstracao: boolean;
   timezone: string;
   userId: string;
   userNome: string;

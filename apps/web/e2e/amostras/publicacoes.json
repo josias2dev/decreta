@@ -4,8 +4,8 @@
     "contagens": {
       "nova": 7,
       "pendente": 3,
-      "lida": 2,
-      "vinculada": 15
+      "lida": 17,
+      "vinculada": 205
     },
     "ultimaCaptura": {
       "em": "2026-10-29T09:40:00.000Z",
@@ -15,77 +15,77 @@
     },
     "itens": [
       {
-        "id": "4f1cc184-b84c-4e20-9a8b-45e6bd36ec8c",
+        "id": "6eaf6418-ec04-4afb-a805-9714361771b8",
         "titulo": "Intimação · laudo pericial",
         "disponibilizadaEm": "2026-10-28",
         "partes": "Marina Duarte × Seguradora Alfa S.A.",
-        "processoId": "12106326-1310-4e97-b3ca-cc941812d31f",
+        "processoId": "4c84242a-d9d7-41c6-9deb-287576e9d0fa",
         "selo": {
           "tipo": "prazo",
           "texto": "Prazo sugerido · 23/11"
         }
       },
       {
-        "id": "66d8ced1-d52b-47b9-ac4a-f00b17e4b6b8",
+        "id": "4157bee2-e0dd-44ad-86ca-0da0dc9a6e6a",
         "titulo": "Intimação · sentença",
         "disponibilizadaEm": "2026-10-28",
         "partes": "Lúcia Matos × Instituto de Previdência de Brusque",
-        "processoId": "52aff0c7-bc38-46db-9c15-8a593bb48cd8",
+        "processoId": "e923b9cb-0680-4186-8bc4-c3750a54f544",
         "selo": {
           "tipo": "prazo",
           "texto": "Prazo sugerido · 23/11"
         }
       },
       {
-        "id": "dfb98657-2d87-46c4-9ce1-8784f0662697",
+        "id": "902c76d6-f4eb-4781-99bc-5fc63fe8fb01",
         "titulo": "Intimação · cumpra-se",
         "disponibilizadaEm": "2026-10-28",
-        "partes": "Eduardo Lima × Unimed Litoral",
-        "processoId": "fabdeb87-f43c-44ef-9cc9-701bb150a9c1",
+        "partes": "Eduardo Lima × Saúde Litoral Planos",
+        "processoId": "d565c5d7-6aca-4237-a40e-67cc281b71ed",
         "selo": {
           "tipo": "sem_prazo",
           "texto": "Não gera prazo"
         }
       },
       {
-        "id": "d2fb8c93-6823-49b9-97c1-0aac620599c6",
+        "id": "4346b4f4-24ca-4846-b476-826a4d741e84",
         "titulo": "Citação",
         "disponibilizadaEm": "2026-10-28",
         "partes": "Construtora Litoral Norte × Marcos Tavares",
-        "processoId": "413917df-bdc6-43a7-b9a3-bfdf84e9e63d",
+        "processoId": "e3f6cead-93fb-4cda-bf87-ac53963e2eda",
         "selo": {
           "tipo": "prazo",
           "texto": "Prazo sugerido · 23/11"
         }
       },
       {
-        "id": "a3f6611f-d284-439e-8126-75394ebe7c34",
+        "id": "68103cd2-5cb6-4a10-84e9-aac34d52672a",
         "titulo": "Intimação · audiência designada",
         "disponibilizadaEm": "2026-10-27",
         "partes": "Carlos Henrique Prado × Construtora Vale Norte",
-        "processoId": "7a8c0d46-5099-4045-902a-7a302b707094",
+        "processoId": "2fa7c7c8-89ab-4cab-a329-d12517a706e6",
         "selo": {
           "tipo": "audiencia",
           "texto": "Audiência · 13/11 às 15:00"
         }
       },
       {
-        "id": "30fd7316-4115-4872-8700-cb21a241cc85",
+        "id": "2aa9c801-1f02-4afb-83bb-7d00ddb2acc6",
         "titulo": "Intimação · sem teor",
         "disponibilizadaEm": "2026-10-27",
         "partes": "Hotel Mar Azul Ltda. × Fernanda Rocha",
-        "processoId": "90e98fa1-85b3-4123-b73f-2ba096d26505",
+        "processoId": "5140b007-ba0b-4d49-a081-031d895ae4c9",
         "selo": {
           "tipo": "sem_teor",
           "texto": "Falta o teor: abrir no sistema do tribunal"
         }
       },
       {
-        "id": "99bf0af9-f77d-4976-873b-f69ccdcf2e04",
+        "id": "f20498bb-d71a-4089-9d9b-e8a37100b4f5",
         "titulo": "Intimação · rol de testemunhas",
         "disponibilizadaEm": "2026-10-27",
         "partes": "Jorge Batista × Mercado Bom Preço Ltda.",
-        "processoId": "e76cc0cf-0a7b-49ee-82cd-c5c2331ed5bb",
+        "processoId": "67ddcc07-471c-49f8-8a45-25a204378d34",
         "selo": {
           "tipo": "prazo",
           "texto": "Prazo sugerido · 05/11"

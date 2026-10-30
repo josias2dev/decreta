@@ -7,6 +7,7 @@ import { hojeEm, somarDias } from "@decreta/core";
 import { alvaras, clientes, negocios, organization, prazos, processos, publicacoes } from "@decreta/db";
 import { and, eq, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
+import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { ehMembro, pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
@@ -33,9 +34,10 @@ export function createRotas(deps: DepsDasRotas) {
     // O escritório ativo fica gravado na sessão; confere que o vínculo ainda existe.
     const papel = await ehMembro(db, orgId, sessao.user.id);
     if (!papel) return c.json({ erro: "sem_escritorio" }, 403);
-    const [org] = await db.select({ nome: organization.name, timezone: organization.timezone }).from(organization).where(eq(organization.id, orgId));
+    const [org] = await db.select({ nome: organization.name, slug: organization.slug, timezone: organization.timezone }).from(organization).where(eq(organization.id, orgId));
     c.set("orgId", orgId);
     c.set("orgNome", org?.nome ?? "");
+    c.set("demonstracao", org?.slug === SLUG_DA_DEMONSTRACAO);
     c.set("timezone", org?.timezone ?? "America/Sao_Paulo");
     c.set("userId", sessao.user.id);
     c.set("userNome", sessao.user.name || sessao.user.email);

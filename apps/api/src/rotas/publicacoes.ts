@@ -278,6 +278,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
 
   /** "Buscar agora": a captura do DJEN roda em segundo plano; a tela recarrega sozinha. */
   app.post("/publicacoes/buscar", async (c) => {
+    if (c.get("demonstracao")) falha(409, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");
     await deps.enfileirar({ nome: "captura.djen", organizationId: c.get("orgId") });
     return c.json({ ok: true, hoje: hojeEm(c.get("timezone")) });
   });

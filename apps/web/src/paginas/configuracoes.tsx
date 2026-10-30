@@ -225,13 +225,14 @@ function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
       </Painel>
       <Painel titulo="Captura automática">
         <div className="dc-form">
-          <Interruptor rotulo="Publicações do DJEN" ajuda="Busca pelas OABs da equipe às 06:40, 12:40 e 18:40, de segunda a sexta." ligado={e.capturaDjen} aoMudar={(v) => salvar.mutate({ capturaDjen: v })} desligado={!socio} />
+          {e.demonstracao && <Faixa tipo="aviso">Na demonstração a busca fica desligada: as OABs e os números de processo são inventados.</Faixa>}
+          <Interruptor rotulo="Publicações do DJEN" ajuda="Busca pelas OABs da equipe às 06:40, 12:40 e 18:40, de segunda a sexta." ligado={e.capturaDjen} aoMudar={(v) => salvar.mutate({ capturaDjen: v })} desligado={!socio || e.demonstracao} />
           <Interruptor
             rotulo="Movimentações do DataJud"
             ajuda="Atualiza as movimentações dos processos ativos toda madrugada, às 05:00."
             ligado={e.capturaDatajud}
             aoMudar={(v) => salvar.mutate({ capturaDatajud: v })}
-            desligado={!socio}
+            desligado={!socio || e.demonstracao}
           />
           <div className="flex flex-col gap-1">
             <p className="dc-nota m-0">Chave do DataJud: {estado(e.datajudLigado, "configurada", "falta no servidor")}</p>

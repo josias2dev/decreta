@@ -4,6 +4,7 @@
  *
  *   TEST_OWNER_URL=... bun apps/api/test/amostras.ts
  */
+import { setSystemTime } from "bun:test";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createTestDatabase } from "@decreta/db/testing";
@@ -14,6 +15,12 @@ import { criarDemonstracao } from "../src/demonstracao.ts";
 import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { createRotas } from "../src/rotas/index.ts";
+
+/** Um prazo da lista. */
+type Item = { tipo: string; processo: { titulo: string } };
+
+// O relógio das telas de teste (e2e/apoio.ts): "hoje", "amanhã" e "vencido" saem iguais em qualquer dia.
+setSystemTime(new Date("2026-10-29T09:30:00-03:00"));
 
 const DESTINO = new URL("../../web/e2e/amostras/", import.meta.url).pathname;
 const t = await createTestDatabase();
@@ -38,8 +45,8 @@ try {
   await guardar("hoje", "/hoje");
   const prazos = await get("/prazos?quando=abertos");
   amostras["prazos"] = { path: "/prazos?quando=abertos", corpo: prazos };
-  const marina = prazos.itens.find((i: { tipo: string }) => i.tipo === "Manifestação sobre laudo pericial");
-  const alegacoes = prazos.itens.find((i: { tipo: string }) => i.tipo === "Alegações finais");
+  const marina = prazos.itens.find((i: Item) => i.tipo === "Manifestação sobre laudo pericial" && i.processo.titulo.startsWith("Marina"));
+  const alegacoes = prazos.itens.find((i: Item) => i.tipo === "Alegações finais" && i.processo.titulo.startsWith("Roberto"));
   await guardar("prazo", `/prazos/${marina.id}`);
   await guardar("prazoComPeca", `/prazos/${alegacoes.id}`);
   const pubs = await get("/publicacoes");
@@ -56,7 +63,8 @@ try {
   await guardar("chat", `/ia/chat/${processoId}`);
   const clientes = await get("/clientes");
   amostras["clientes"] = { path: "/clientes", corpo: clientes };
-  await guardar("cliente", `/clientes/${clientes.itens.find((c: { nome: string }) => c.nome === "Marina Duarte").id}`);
+  const marinaCliente = (await get("/clientes?busca=Marina%20Duarte")).itens[0];
+  await guardar("cliente", `/clientes/${marinaCliente.id}`);
   await guardar("agenda", "/agenda");
   await guardar("negocios", "/negocios");
   await guardar("alvaras", "/alvaras");

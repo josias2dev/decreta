@@ -47,9 +47,13 @@ bun run dev                       # API na 8787
 bun run web                       # telas em http://localhost:5173
 ```
 
-A demonstração cria quatro pessoas (beatriz@, rafael@, tiago@ e camila@demo.decreta.app);
-a senha sai na tela, ou passe `--senha`. `bun run demonstracao --recriar` refaz com as
-datas de hoje.
+A demonstração cria quatro pessoas (beatriz@, rafael@, tiago@ e camila@demo.decreta.app)
+e um escritório com uns 130 clientes e 150 processos inventados, de oito áreas, com
+andamentos, documentos, prazos, audiências e alvarás. A senha sai na tela, ou passe
+`--senha`. `--renovar` refaz os dados com as datas de hoje sem mexer nas contas (no
+servidor, o `decreta-demonstracao.timer` faz isso toda madrugada) e `--recriar` apaga
+tudo, contas inclusive. A busca no DJEN e no DataJud nunca roda para a demonstração:
+as OABs e os números de processo dela são inventados e poderiam ser de alguém.
 
 ## Testes
 

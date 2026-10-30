@@ -2,12 +2,14 @@
   "path": "/negocios",
   "corpo": {
     "contagens": {
-      "triagem": 6,
-      "repassado": 1
+      "triagem": 8,
+      "repassado": 2,
+      "concluido": 3,
+      "desistiu": 2
     },
     "itens": [
       {
-        "id": "e290fe6c-9d74-48ab-abbf-33b015d02c05",
+        "id": "694d1990-3c46-4374-8916-b564df84212b",
         "nome": "José Antunes",
         "telefone": "47991208833",
         "assunto": "Revisão de aposentadoria",
@@ -42,7 +44,7 @@
         ],
         "observacoes": "Faltam RG e comprovante de residência.",
         "responsavel": {
-          "id": "WLhw1Rm7nqAt2UD6NPhRitFswwkLsyGh",
+          "id": "IMnu2SMmRX2dM7juZHel5fUDfuo2otK4",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF"
@@ -51,7 +53,7 @@
         "em": "2026-10-27T14:00:00.000Z"
       },
       {
-        "id": "d7ed1d69-7ba7-403b-99c2-a1af77069799",
+        "id": "cd5c983c-863b-4997-a267-52d182c66d1f",
         "nome": "Luiza Brandt",
         "telefone": "47988014422",
         "assunto": "Indenização por acidente de moto",
@@ -86,7 +88,7 @@
         ],
         "observacoes": null,
         "responsavel": {
-          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
+          "id": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -95,7 +97,7 @@
         "em": "2026-10-26T14:00:00.000Z"
       },
       {
-        "id": "3f74bb2b-2855-423b-a6c7-11ebbd773cc6",
+        "id": "c78365ad-52fa-4366-b2dc-f71d7dd109dc",
         "nome": "Paulo Siqueira",
         "telefone": "47999321177",
         "assunto": "Horas extras · motorista",
@@ -130,7 +132,7 @@
         ],
         "observacoes": null,
         "responsavel": {
-          "id": "zANDd4n4FHEFpyfVeNf6nIKBML0mbeqJ",
+          "id": "T3wldwj01tJQwYP49cyUuXNbJpJdJsIX",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM"
@@ -139,7 +141,7 @@
         "em": "2026-10-25T14:00:00.000Z"
       },
       {
-        "id": "98a6eced-b25a-4fe8-9516-54cd397c03de",
+        "id": "3f4d8f54-1a46-4450-bf5b-6df33dd5deda",
         "nome": "Teresa Mello",
         "telefone": "48996671200",
         "assunto": "Inventário",
@@ -174,7 +176,7 @@
         ],
         "observacoes": null,
         "responsavel": {
-          "id": "DLIIwDd5uUmHRzF0GDKsHqsjhnD396jY",
+          "id": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -183,7 +185,7 @@
         "em": "2026-10-24T14:00:00.000Z"
       },
       {
-        "id": "6cdbdd97-c918-47f6-a1b0-f2c66ac4f129",
+        "id": "9d61b55e-e163-4084-9779-a528dd22a0df",
         "nome": "Fábio Krüger",
         "telefone": "47984459011",
         "assunto": "Cobrança de cheques",
@@ -222,7 +224,7 @@
         "em": "2026-10-23T14:00:00.000Z"
       },
       {
-        "id": "dc967e3d-6be6-4057-93f0-41a3e1fcca71",
+        "id": "1727d26b-ea5b-4d21-919f-0f1718285fab",
         "nome": "Rosa Lemos",
         "telefone": "47991560032",
         "assunto": "Benefício assistencial (BPC)",
@@ -257,13 +259,101 @@
         ],
         "observacoes": null,
         "responsavel": {
-          "id": "HGaBXCi2fJf8Gf9ojWYD1Ck5GSRgObFX",
+          "id": "Q9qIYDZl6Qd7KfzoV16gdWppXcL6ejaq",
           "nome": "Camila Azevedo",
           "apelido": "Camila",
           "iniciais": "CA"
         },
         "clienteId": null,
         "em": "2026-10-22T14:00:00.000Z"
+      },
+      {
+        "id": "d0644d86-521d-4b16-b498-2c389f0eb2b1",
+        "nome": "Murilo Fontana",
+        "telefone": "47991452266",
+        "assunto": "Vínculo de emprego · motorista de aplicativo",
+        "area": "Trabalhista",
+        "pasta": "faltam_documentos",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": true,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": true,
+            "texto": "CPF"
+          },
+          {
+            "feito": true,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": false,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": "Falta o extrato das corridas dos últimos 12 meses.",
+        "responsavel": {
+          "id": "T3wldwj01tJQwYP49cyUuXNbJpJdJsIX",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM"
+        },
+        "clienteId": null,
+        "em": "2026-10-20T14:00:00.000Z"
+      },
+      {
+        "id": "2dbbbf16-9e6a-4a08-bdbe-e443e169df2b",
+        "nome": "Inês Carvalho",
+        "telefone": "47984337120",
+        "assunto": "Revisão de financiamento imobiliário",
+        "area": "Cível",
+        "pasta": "faltam_documentos",
+        "etapa": "triagem",
+        "checklist": [
+          {
+            "feito": true,
+            "texto": "Documento com foto (RG ou CNH)"
+          },
+          {
+            "feito": true,
+            "texto": "CPF"
+          },
+          {
+            "feito": false,
+            "texto": "Comprovante de residência"
+          },
+          {
+            "feito": false,
+            "texto": "Procuração assinada"
+          },
+          {
+            "feito": false,
+            "texto": "Contrato de honorários assinado"
+          },
+          {
+            "feito": false,
+            "texto": "Documentos do caso"
+          }
+        ],
+        "observacoes": null,
+        "responsavel": {
+          "id": "IMnu2SMmRX2dM7juZHel5fUDfuo2otK4",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF"
+        },
+        "clienteId": null,
+        "em": "2026-10-19T14:00:00.000Z"
       }
     ]
   }

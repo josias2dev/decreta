@@ -1,0 +1,24 @@
+# Renova o escritório de demonstração com as datas do dia (apps/api/src/scripts/demonstracao.ts).
+# As contas e as sessões ficam; o que foi mexido no dia volta ao começo.
+# Disparado pelo decreta-demonstracao.timer; à mão: sudo systemctl start decreta-demonstracao.
+[Unit]
+Description=Renovação da demonstração do Decreta
+After=network-online.target postgresql.service decreta-api.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=appsvc
+Group=appsvc
+WorkingDirectory=/opt/decreta
+EnvironmentFile=/opt/decreta/.env
+Environment=BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+ExecStart=/usr/local/bin/bun --smol apps/api/src/scripts/demonstracao.ts --renovar
+Nice=10
+MemoryMax=300M
+TimeoutStartSec=10min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/decreta/data

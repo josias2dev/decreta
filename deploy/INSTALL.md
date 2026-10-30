@@ -104,8 +104,8 @@ cd /opt/decreta
 sudo deploy/decreta.sh preparar
 ```
 
-Instala `decreta-api.service`, `decreta-backup.service` e `decreta-backup.timer`
-e grava o bloco do Caddy em `/etc/caddy/decreta.caddy`. O Caddyfile principal não
+Instala `decreta-api.service`, `decreta-backup.service`, `decreta-backup.timer` e
+a renovação da demonstração (desligada até o passo opcional abaixo) e grava o bloco do Caddy em `/etc/caddy/decreta.caddy`. O Caddyfile principal não
 é tocado. Combinado com quem cuida dele, falta uma linha no fim de
 `/etc/caddy/Caddyfile`:
 
@@ -138,6 +138,18 @@ Sai uma senha provisória. A pessoa entra, troca a senha em Minha conta e liga a
 verificação em duas etapas. O resto da equipe entra por convite, pela tela da
 Equipe; a OAB de cada advogado vai na Equipe também, porque é por ela que o DJEN
 é buscado.
+
+### Demonstração (opcional)
+
+```sh
+sudo deploy/decreta.sh demonstracao --senha "uma senha de pelo menos 10 caracteres"
+```
+
+Cria o escritório "Souza & Freitas Advocacia", com dados inventados, para mostrar
+o Decreta: entra-se como beatriz@demo.decreta.app (sócia), rafael@, tiago@ ou
+camila@. Liga também o `decreta-demonstracao.timer`, que toda madrugada às 04:15
+refaz os dados com as datas do dia, sem tirar ninguém do sistema. A busca no DJEN
+e no DataJud não roda para esse escritório. Os documentos dele ocupam uns 3 MB.
 
 ## Conferir
 
