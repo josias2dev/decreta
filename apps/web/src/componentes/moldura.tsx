@@ -1,6 +1,6 @@
 /**
- * A moldura das telas logadas. No computador: menu lateral cinza (com busca e
- * Perguntar) e o conteúdo com o véu do topo. No celular: cada tela tem o
+ * A moldura das telas logadas. No computador: menu lateral cinza (o escritório
+ * no topo, a busca, os itens e a conta embaixo) e o conteúdo com o véu do topo. No celular: cada tela tem o
  * próprio topo, e embaixo ficam a navegação e o botão Perguntar.
  */
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import {
   BookMarked,
   Building2,
   CalendarDays,
+  ChevronRight,
   FileText,
   FolderOpen,
   Hourglass,
@@ -165,9 +166,6 @@ function Moldura({ eu }: { eu: Eu }) {
   return (
     <div className="dc dc-app">
       <nav className="dc-menu" aria-label="Menu principal">
-        <div className="dc-menu__marca">
-          <Marca />
-        </div>
         <div className="dc-menu__escritorio">
           {eu.escritorio.logo ? (
             <img className="dc-menu__escritorio-logo dc-menu__escritorio-logo--imagem" src="/api/app/escritorio/logo" alt="" />
@@ -207,6 +205,7 @@ function Moldura({ eu }: { eu: Eu }) {
               <strong className="truncate">{eu.usuario.nome}</strong>
               <small className="truncate">{eu.usuario.cargo ?? "Equipe"}</small>
             </span>
+            <ChevronRight className="dc-menu__seta" />
           </Link>
         </div>
       </nav>
