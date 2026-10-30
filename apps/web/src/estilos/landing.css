@@ -483,3 +483,15 @@
     .lp-aparelho-palco .lp-zap { animation: lp-surge linear both; animation-timeline: view(); animation-range: entry 10% entry 100%; }
   }
 }
+
+/* Celular e tablet: o fundo vivo fica parado, sem desfoque nem vidro. Em parte dos Android o
+   Chrome não dá conta de desenhar brilhos desfocados se movendo por baixo do topo de vidro, e
+   a página inteira fica em branco. */
+@media (pointer: coarse), (max-width: 760px) {
+  .lp-fundo__orbe { filter: none; animation: none; }
+  .lp-fundo__feixe, .lp-fundo__celula { display: none; }
+  .lp-topo { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--papel); }
+  .lp-topo[data-theme="escuro"] { background: #0b0b0f; }
+  .lp-cartao-entrar { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--superficie); }
+  .lp-a, .lp-navegador, .lp-aparelho-palco .lp-zap { animation: none; }
+}
