@@ -1,14 +1,14 @@
 {
-  "path": "/pecas/preparar?prazo=6958853b-2006-4a0a-af0a-fa47750d3bd3",
+  "path": "/pecas/preparar?prazo=f509cc56-f2bd-4af9-92f5-8b96343ecbf0",
   "corpo": {
     "processo": {
-      "id": "4c84242a-d9d7-41c6-9deb-287576e9d0fa",
+      "id": "c200ae85-fe5a-404b-a3bd-145de8827182",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "orgao": "2ª Vara Cível"
     },
     "prazo": {
-      "id": "6958853b-2006-4a0a-af0a-fa47750d3bd3",
+      "id": "f509cc56-f2bd-4af9-92f5-8b96343ecbf0",
       "tipo": "Manifestação sobre laudo pericial",
       "fim": "2026-11-23"
     },
@@ -22,6 +22,7 @@
       "Contestação.docx · evento 24",
       "Briefing do prazo"
     ],
+    "modelos": [],
     "ultima": null
   }
 }

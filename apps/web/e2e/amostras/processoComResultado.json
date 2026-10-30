@@ -1,8 +1,8 @@
 {
-  "path": "/processos/f1dd6729-c7ac-49de-9b4c-608e0c7a6526",
+  "path": "/processos/9797f2cd-30a0-49cf-a08c-857c0da8e721",
   "corpo": {
-    "id": "f1dd6729-c7ac-49de-9b4c-608e0c7a6526",
-    "titulo": "Eduardo Lima × Unimed Litoral",
+    "id": "9797f2cd-30a0-49cf-a08c-857c0da8e721",
+    "titulo": "Eduardo Lima × Saúde Litoral Planos",
     "cnj": "5003390-24.2026.8.24.0005",
     "tipo": "judicial",
     "tribunal": "TJSC",
@@ -20,7 +20,7 @@
     "observacoes": null,
     "datajudEm": "2026-10-29T08:12:00.000Z",
     "cliente": {
-      "id": "5a3650b2-50bb-44d9-8896-95f4c78799be",
+      "id": "b4a41be6-ee38-4ec7-a8ad-4df3256deb1d",
       "nome": "Eduardo Lima"
     },
     "responsavel": null,
@@ -30,7 +30,7 @@
     },
     "partes": [
       {
-        "id": "488a03d8-0afa-48a0-b2f5-ee367e9fdac6",
+        "id": "d8e9d10c-1b34-49f3-9923-74718e060440",
         "nome": "Eduardo Lima",
         "polo": "ativo",
         "papel": "Autor",
@@ -39,8 +39,8 @@
         "documento": "14578632008"
       },
       {
-        "id": "c7a7597b-569b-47fc-833f-08e5fa9e7859",
-        "nome": "Unimed Litoral Cooperativa de Trabalho Médico",
+        "id": "64ac3340-6028-4553-bd34-a6b744f3448c",
+        "nome": "Saúde Litoral Planos de Saúde S.A.",
         "polo": "passivo",
         "papel": "Ré",
         "advogados": null,
@@ -49,15 +49,75 @@
       }
     ],
     "contadores": {
-      "movimentacoes": 0,
+      "movimentacoes": 5,
       "prazos": 2,
-      "documentos": 0
+      "documentos": 1
     },
     "resumo": null,
     "novidades": [],
-    "ultimasMovimentacoes": [],
+    "ultimasMovimentacoes": [
+      {
+        "id": "389c979b-a5a9-40ee-b34c-f801ebc32d8f",
+        "em": "2026-10-28T17:05:00.000Z",
+        "evento": 10,
+        "titulo": "Despacho",
+        "descricao": "Cumpra-se o acórdão; aguardar o retorno do agravo",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": false,
+        "documento": null
+      },
+      {
+        "id": "431c38d7-0d89-4661-9032-dfc6f7d3bea9",
+        "em": "2026-10-20T17:05:00.000Z",
+        "evento": 8,
+        "titulo": "Despacho",
+        "descricao": "Regularizar a procuração em 5 dias",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": false,
+        "documento": null
+      },
+      {
+        "id": "e82f0466-c012-4456-9b0a-a1bfc4a7d566",
+        "em": "2026-10-04T20:20:00.000Z",
+        "evento": 5,
+        "titulo": "Agravo de instrumento",
+        "descricao": "Autor recorre ao TJSC contra o indeferimento da tutela",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": false,
+        "documento": null
+      },
+      {
+        "id": "8eecc2c8-c634-4dc9-9a46-14954f1d25e7",
+        "em": "2026-10-01T17:05:00.000Z",
+        "evento": 3,
+        "titulo": "Decisão",
+        "descricao": "Tutela de urgência indeferida",
+        "autor": "juizo",
+        "fonte": "datajud",
+        "nova": false,
+        "documento": null
+      },
+      {
+        "id": "64dc7724-295e-47bf-89b8-9805faaaca19",
+        "em": "2026-09-29T20:20:00.000Z",
+        "evento": 1,
+        "titulo": "Distribuição",
+        "descricao": "Petição inicial · procedimento comum cível",
+        "autor": "partes",
+        "fonte": "datajud",
+        "nova": false,
+        "documento": {
+          "id": "eaea8a97-422f-48ac-a05b-d00529cdf8c5",
+          "nome": "Petição inicial.docx",
+          "paginas": 12
+        }
+      }
+    ],
     "proximoPrazo": {
-      "id": "72451166-b7a8-4b46-ac7e-629209053baa",
+      "id": "06f426b8-fdd5-4fca-8fdb-52b98ae88975",
       "tipo": "Juntar procuração atualizada",
       "fim": "2026-10-29",
       "dias": 5,
@@ -71,12 +131,12 @@
     "alvaras": [],
     "resultados": [
       {
-        "id": "633d0662-b9a9-403e-aa91-c0e2ab78d24e",
+        "id": "e5c7eb20-871c-4142-9ae1-95cd78445634",
         "tipo": "sentenca",
         "resultado": "parcialmente_procedente",
         "decididoEm": "2026-10-29",
         "resumo": "Cirurgia e reembolso; sem danos morais.",
-        "publicacaoId": "8635522e-ee01-4c21-b79c-9f68dec8d41f"
+        "publicacaoId": "e7f8c01d-e993-472f-ac00-e1457b698990"
       }
     ]
   }

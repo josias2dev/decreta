@@ -1,7 +1,7 @@
 {
-  "path": "/clientes/5226af6d-b56b-4538-86a5-756ca6152ebf?conferido",
+  "path": "/clientes/e3960160-77d8-45e7-8261-fa08bcc08570?conferido",
   "corpo": {
-    "id": "5226af6d-b56b-4538-86a5-756ca6152ebf",
+    "id": "e3960160-77d8-45e7-8261-fa08bcc08570",
     "nome": "Marina Duarte",
     "tipo": "pf",
     "documento": "318.204.567-90",
@@ -13,13 +13,13 @@
     "criadoEm": "2025-09-24T12:00:00.000Z",
     "processos": [
       {
-        "id": "c1539908-bf82-43f6-862c-d2be5140ba60",
+        "id": "c200ae85-fe5a-404b-a3bd-145de8827182",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "orgao": "2ª Vara Cível",
         "situacao": "ativo",
         "responsavel": {
-          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
@@ -28,46 +28,46 @@
     ],
     "atendimentos": [
       {
-        "id": "023d5280-3fbb-4046-b820-f4beaa65dfb8",
+        "id": "43296458-25bd-430e-a727-c176c4d40609",
         "em": "2026-10-20T18:30:00.000Z",
         "canal": "whatsapp",
         "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
         "autor": {
-          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
         },
-        "processoId": "c1539908-bf82-43f6-862c-d2be5140ba60"
+        "processoId": "c200ae85-fe5a-404b-a3bd-145de8827182"
       },
       {
-        "id": "a5e71764-ea80-4ac9-8deb-dea723bfdb5e",
+        "id": "6ecb30d0-2bed-462c-85f1-7fda32d3a9f1",
         "em": "2026-08-30T18:30:00.000Z",
         "canal": "presencial",
         "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
         "autor": {
-          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS"
         },
-        "processoId": "c1539908-bf82-43f6-862c-d2be5140ba60"
+        "processoId": "c200ae85-fe5a-404b-a3bd-145de8827182"
       }
     ],
     "documentos": [
       {
-        "id": "87921fe4-e3b3-47e4-8c94-38eb42be5584",
+        "id": "c3380e1d-a2c7-4262-8c16-e3e86f273173",
         "nome": "rg-marina.txt",
         "mime": "text/plain",
         "tamanho": 82,
-        "em": "2026-10-30T00:09:10.321Z",
+        "em": "2026-10-30T00:11:01.737Z",
         "processoId": null,
         "leitura": null,
         "lido": true
       }
     ],
     "conferencia": {
-      "id": "543d69a7-afa4-4a01-a7ff-0e89b5e9761a",
+      "id": "39a8c169-3bac-4805-8310-fdb8b95f7de7",
       "acao": "conferir-pasta",
       "situacao": "pronto",
       "conteudo": {
@@ -122,13 +122,13 @@
         "resumo": "Para um caso novo, faltam a procuração, o comprovante de residência e o contrato de honorários."
       },
       "fonte": "1 documento · 29/10/2026",
-      "em": "2026-10-30T00:09:10.329Z",
+      "em": "2026-10-30T00:11:01.750Z",
       "desatualizada": false,
       "erro": null
     },
     "linhaDoTempo": [
       {
-        "em": "2026-10-30T00:09:10.321Z",
+        "em": "2026-10-30T00:11:01.737Z",
         "titulo": "Documento anexado",
         "detalhe": "rg-marina.txt",
         "tipo": "documento"

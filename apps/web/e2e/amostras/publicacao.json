@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/6eaf6418-ec04-4afb-a805-9714361771b8",
+  "path": "/publicacoes/286ce867-25a0-42cf-b2a1-803668fe85e2",
   "corpo": {
-    "id": "6eaf6418-ec04-4afb-a805-9714361771b8",
+    "id": "286ce867-25a0-42cf-b2a1-803668fe85e2",
     "situacao": "nova",
     "fonte": "djen",
     "disponibilizadaEm": "2026-10-28",
@@ -27,21 +27,21 @@
       }
     ],
     "processo": {
-      "id": "4c84242a-d9d7-41c6-9deb-287576e9d0fa",
+      "id": "c200ae85-fe5a-404b-a3bd-145de8827182",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "classe": "Procedimento comum cível",
       "orgao": "2ª Vara Cível",
       "comarca": "Joinville",
       "responsavel": {
-        "id": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
+        "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS"
       }
     },
     "sugestao": {
-      "id": "2b95cc23-347c-4a41-adc1-5ec5069d7d81",
+      "id": "2dd4cf8f-2789-4796-9206-266a4cd8ab4a",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -54,7 +54,7 @@
         "audiencia": null,
         "geraPrazo": true,
         "fundamento": "art. 477, § 1º, CPC",
-        "responsavelId": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
+        "responsavelId": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
         "contagemCalculada": {
           "fim": "2026-11-23",
           "dias": 15,
@@ -82,18 +82,21 @@
       "desatualizada": false,
       "erro": null,
       "responsavel": {
-        "id": "uD0yyIhn9CveddcZIZmdxECwizqjK5T1",
+        "id": "K2YMxcrsGBCi7JoeM76wiS875EQBe6Sa",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS"
       }
     },
     "prazo": {
-      "id": "6958853b-2006-4a0a-af0a-fa47750d3bd3",
+      "id": "f509cc56-f2bd-4af9-92f5-8b96343ecbf0",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Manifestação sobre laudo pericial"
     },
-    "audiencia": null
+    "audiencia": null,
+    "decisao": false,
+    "sentenca": null,
+    "resultado": null
   }
 }
