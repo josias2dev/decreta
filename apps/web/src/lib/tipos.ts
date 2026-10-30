@@ -185,6 +185,26 @@ export interface Publicacao {
   sugestao: (Analise<Sugestao> & { responsavel: Pessoa | null }) | null;
   prazo: { id: string; confirmado: boolean; fim: string; tipo: string } | null;
   audiencia: { id: string; em: string; tipo: string } | null;
+  /** É sentença ou acórdão: a IA lê pedido a pedido. */
+  decisao: boolean;
+  sentenca: Analise<LeituraDaSentenca> | null;
+  resultado: { id: string; tipo: TipoDecisao; resultado: ResultadoDecisao; resumo: string | null; confirmadoPor: Pessoa | null; confirmadoEm: string } | null;
+}
+
+export type TipoDecisao = "sentenca" | "acordao";
+export type ResultadoDecisao = "procedente" | "parcialmente_procedente" | "improcedente" | "sem_merito" | "acordo_homologado" | "outro";
+
+export interface LeituraDaSentenca {
+  tipo: TipoDecisao;
+  resultado: ResultadoDecisao;
+  resumo: string;
+  pedidos: { pedido: string; decisao: "acolhido" | "parcial" | "rejeitado" | "nao_apreciado"; detalhe: string }[];
+  valores: string[];
+  honorarios: string | null;
+  recurso: { cabivel: string; dias: number | null; fundamento: string | null } | null;
+  recorrer: string[];
+  manter: string[];
+  recusa?: string | null;
 }
 
 export interface ProcessoNaLista {
@@ -268,6 +288,8 @@ export interface Processo {
   proximoPrazo: { id: string; tipo: string; fim: string; dias: number; contagem: Contagem; urgencia: Urgencia; quando: string; confirmado: boolean; responsavel: Pessoa | null } | null;
   audiencias: { id: string; em: string; tipo: string; porVideo: boolean }[];
   alvaras: { id: string; descricao: string; valor: string; etapa: EtapaAlvara }[];
+  /** Sentenças e acórdãos confirmados, do mais recente ao mais antigo. */
+  resultados: { id: string; tipo: TipoDecisao; resultado: ResultadoDecisao; decididoEm: string; resumo: string | null; publicacaoId: string | null }[];
 }
 
 export interface Movimentacoes {
@@ -287,10 +309,39 @@ export interface Documento {
   origem: "upload" | "peca" | "captura";
   lido: boolean;
   semTexto: boolean;
+  /** Foto ou PDF escaneado que a IA transcreve; nulo quando não precisou. */
+  leitura: Leitura;
   em: string;
   processo: { id: string; titulo: string } | null;
   cliente: { id: string; nome: string } | null;
   enviadoPor: Pessoa | null;
+}
+
+export type Leitura = "pendente" | "pronta" | "falhou" | null;
+
+export type ItemDaConferencia = "procuracao" | "comprovante_residencia" | "documento_identidade" | "cpf" | "hipossuficiencia" | "contrato_honorarios" | "litispendencia";
+
+export interface Conferencia {
+  itens: { item: ItemDaConferencia; situacao: "certo" | "atencao" | "falta"; detalhe: string; documento: string | null }[];
+  outros: string[];
+  resumo: string;
+  recusa?: string | null;
+}
+
+/** Um arquivo da pasta (cliente ou negócio), com a leitura pela IA. */
+export interface DocumentoDaPasta {
+  id: string;
+  nome: string;
+  mime: string;
+  tamanho: number;
+  leitura: Leitura;
+  lido: boolean;
+  em: string;
+}
+
+export interface PastaDoNegocio {
+  documentos: DocumentoDaPasta[];
+  conferencia: Analise<Conferencia> | null;
 }
 
 export interface MensagemIa {
@@ -333,7 +384,8 @@ export interface Cliente {
   criadoEm: string;
   processos: { id: string; titulo: string; cnj: string | null; orgao: string | null; situacao: string; responsavel: Pessoa | null }[];
   atendimentos: { id: string; em: string; canal: Canal; resumo: string; autor: Pessoa | null; processoId: string | null }[];
-  documentos: { id: string; nome: string; mime: string; tamanho: number; em: string }[];
+  documentos: DocumentoDaPasta[];
+  conferencia: Analise<Conferencia> | null;
   linhaDoTempo: { em: string; titulo: string; detalhe: string | null; tipo: string }[];
 }
 
@@ -481,6 +533,8 @@ export interface PreparoDaPeca {
   prazo: { id: string; tipo: string; fim: string } | null;
   tipoSugerido: string;
   leu: string[];
+  /** Os modelos do escritório que a IA vai seguir. */
+  modelos: { id: string; titulo: string }[];
   ultima: { id: string; titulo: string; tipo: string; instrucoes: string | null; texto: string; situacao: "rascunho" | "revisada"; atualizadaEm: string } | null;
 }
 
@@ -495,6 +549,31 @@ export interface Peca {
   situacao: "rascunho" | "revisada";
   atualizadaEm: string;
   rodape: string;
+  /** Quem revisou, com a OAB, e quando. */
+  revisao: { por: (Pessoa & { oab: string | null }) | null; em: string } | null;
+  modelos: { id: string; titulo: string }[];
+}
+
+export interface ModeloNaLista {
+  id: string;
+  titulo: string;
+  tipo: string;
+  tipoNome: string;
+  tese: string | null;
+  assunto: string | null;
+  pecaId: string | null;
+  criadoPor: Pessoa | null;
+  em: string;
+  tamanho: number;
+}
+
+export interface Modelo extends Omit<ModeloNaLista, "tamanho"> {
+  texto: string;
+}
+
+export interface RetornosDaIa {
+  porAcao: { acao: string; rotulo: string; uteis: number; errados: number }[];
+  errados: { id: string; acao: string; rotulo: string; comentario: string | null; em: string; pessoa: Pessoa | null; onde: { tipo: string; id: string; processoId?: string | null } | null }[];
 }
 
 export interface Busca {

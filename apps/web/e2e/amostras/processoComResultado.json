@@ -1,0 +1,83 @@
+{
+  "path": "/processos/f1dd6729-c7ac-49de-9b4c-608e0c7a6526",
+  "corpo": {
+    "id": "f1dd6729-c7ac-49de-9b4c-608e0c7a6526",
+    "titulo": "Eduardo Lima × Unimed Litoral",
+    "cnj": "5003390-24.2026.8.24.0005",
+    "tipo": "judicial",
+    "tribunal": "TJSC",
+    "sistema": "eproc",
+    "classe": "Procedimento comum cível",
+    "assunto": "Plano de saúde · negativa de cobertura",
+    "orgao": "1ª Vara Cível",
+    "comarca": "Balneário Camboriú",
+    "valorCausa": "52000.00",
+    "fase": null,
+    "situacao": "ativo",
+    "poloCliente": "ativo",
+    "distribuidoEm": "2026-09-29",
+    "segredo": false,
+    "observacoes": null,
+    "datajudEm": "2026-10-29T08:12:00.000Z",
+    "cliente": {
+      "id": "5a3650b2-50bb-44d9-8896-95f4c78799be",
+      "nome": "Eduardo Lima"
+    },
+    "responsavel": null,
+    "link": {
+      "rotulo": "Abrir no eproc",
+      "url": "https://eproc1g.tjsc.jus.br/eproc/externo_controlador.php?acao=processo_consulta_publica"
+    },
+    "partes": [
+      {
+        "id": "488a03d8-0afa-48a0-b2f5-ee367e9fdac6",
+        "nome": "Eduardo Lima",
+        "polo": "ativo",
+        "papel": "Autor",
+        "advogados": null,
+        "cliente": true,
+        "documento": "14578632008"
+      },
+      {
+        "id": "c7a7597b-569b-47fc-833f-08e5fa9e7859",
+        "nome": "Unimed Litoral Cooperativa de Trabalho Médico",
+        "polo": "passivo",
+        "papel": "Ré",
+        "advogados": null,
+        "cliente": false,
+        "documento": null
+      }
+    ],
+    "contadores": {
+      "movimentacoes": 0,
+      "prazos": 2,
+      "documentos": 0
+    },
+    "resumo": null,
+    "novidades": [],
+    "ultimasMovimentacoes": [],
+    "proximoPrazo": {
+      "id": "72451166-b7a8-4b46-ac7e-629209053baa",
+      "tipo": "Juntar procuração atualizada",
+      "fim": "2026-10-29",
+      "dias": 5,
+      "contagem": "uteis",
+      "urgencia": "hoje",
+      "quando": "Hoje",
+      "confirmado": false,
+      "responsavel": null
+    },
+    "audiencias": [],
+    "alvaras": [],
+    "resultados": [
+      {
+        "id": "633d0662-b9a9-403e-aa91-c0e2ab78d24e",
+        "tipo": "sentenca",
+        "resultado": "parcialmente_procedente",
+        "decididoEm": "2026-10-29",
+        "resumo": "Cirurgia e reembolso; sem danos morais.",
+        "publicacaoId": "8635522e-ee01-4c21-b79c-9f68dec8d41f"
+      }
+    ]
+  }
+}

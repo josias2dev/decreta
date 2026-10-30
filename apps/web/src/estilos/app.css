@@ -251,3 +251,66 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-celular .dc-abas .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 4px; }
 /* Na tela estreita, texto justificado abre buracos entre as palavras. */
 .dc-celular .dc-folha p { text-align: left; }
+
+/* ---------- Retorno sobre a IA: os polegares no rodapé do bloco ---------- */
+.dc-ia__pe { flex-wrap: wrap; }
+.dc-ia__pe > span:first-child { flex: 1 1 0; min-width: 0; }
+.dc-retorno { display: inline-flex; align-items: center; gap: 2px; flex: none; }
+.dc-retorno .dc-btn { width: 28px; padding: 0; color: var(--tinta-2); }
+.dc-celular .dc-retorno .dc-btn { width: 32px; padding: 0; }
+.dc-retorno .dc-btn[aria-pressed="true"] { color: var(--acento); background: var(--superficie); }
+.dc-ia__pe > .dc-retorno:last-child { margin-right: -7px; }
+.dc-retorno__comentario { order: 1; flex: 1 0 100%; }
+
+/* ---------- Leitura da sentença ---------- */
+.dc-sentenca { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3) var(--space-8); }
+.dc-sentenca > .dc-inteira { grid-column: 1 / -1; }
+.dc-sentenca p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--tinta); }
+.dc-celular .dc-sentenca { grid-template-columns: minmax(0, 1fr); }
+.dc-celular .dc-sentenca p { font-size: 15px; line-height: 22px; }
+.dc-pedidos { display: flex; flex-direction: column; }
+.dc-pedidos > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--space-3); padding: 8px 0; }
+.dc-pedidos > div + div { border-top: 1px solid var(--acento-borda); }
+.dc-pedidos > div:last-child { padding-bottom: 0; }
+.dc-pedidos__nome { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-pedidos__decisao { font: 500 13px/20px var(--font-sans); color: var(--tinta-2); white-space: nowrap; }
+.dc-pedidos__detalhe { grid-column: 1 / -1; font: 400 14px/21px var(--font-sans); color: var(--tinta-2); }
+.dc-celular .dc-pedidos__nome, .dc-celular .dc-pedidos__detalhe { font-size: 15px; line-height: 22px; }
+.dc-sentenca__confirmar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; padding-top: var(--space-3); border-top: 1px solid var(--acento-borda); }
+
+/* Leitura do arquivo pela IA (lido, transcrito, lendo, sem texto) */
+.dc-leitura { display: inline-flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; font: 400 14px/20px var(--font-sans); }
+.dc-leitura svg { width: 14px; height: 14px; flex: none; }
+.dc-leitura .dc-link { font-size: 13px; line-height: 18px; }
+
+/* ---------- Conferência da pasta ---------- */
+.dc-conferencia { display: flex; flex-direction: column; }
+.dc-conferencia__item { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: start; gap: 2px var(--space-3); padding: 8px 0; }
+.dc-conferencia__item + .dc-conferencia__item { border-top: 1px solid var(--acento-borda); }
+.dc-conferencia__item:last-child { padding-bottom: 0; }
+.dc-conferencia__item > svg { width: 16px; height: 16px; margin-top: 2px; color: var(--tinta-2); }
+.dc-conferencia__item.is-certo > svg { color: var(--acento); }
+.dc-conferencia__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; font: 400 14px/21px var(--font-sans); color: var(--tinta-2); }
+.dc-conferencia__texto strong { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-conferencia__arquivo { font: 400 12px/16px var(--font-sans); color: var(--tinta-3); overflow-wrap: anywhere; }
+.dc-conferencia__situacao { font: 500 13px/20px var(--font-sans); color: var(--tinta-2); white-space: nowrap; }
+.dc-conferencia__item.is-falta .dc-conferencia__situacao, .dc-conferencia__item.is-atencao .dc-conferencia__situacao { color: var(--tinta); font-weight: 600; }
+.dc-celular .dc-conferencia__texto { font-size: 15px; line-height: 22px; }
+.dc-celular .dc-conferencia__texto strong { font-size: 15px; line-height: 22px; }
+
+/* Rodapé da peça: o aviso da IA e o retorno */
+.dc-peca__pe { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); padding: 6px var(--space-4); border-top: 1px solid var(--borda); font: 400 12px/16px var(--font-sans); color: var(--tinta-2); }
+.dc-peca__pe > span:first-child { flex: 1 1 0; min-width: 0; }
+.dc-peca__pe > .dc-retorno:last-child { margin-right: -7px; }
+.dc-peca__pe--solto { padding: 0; border-top: 0; font-size: 13px; line-height: 18px; }
+.dc-painel > .dc-folha-fundo:not(:last-child) { border-radius: 0; }
+
+/* ---------- Modelos ---------- */
+.dc-filtro-tipo { flex: 0 1 260px; }
+.dc-filtro-tipo select { height: 40px; }
+.dc-celular .dc-filtro-tipo { flex: 1 1 100%; }
+.dc-dialogo--largo { width: min(680px, calc(100vw - 32px)); }
+.dc-modelo__texto { max-height: 40vh; overflow-y: auto; }
+
+/* Caixa de marcar dentro de um campo (checklist da triagem): não herda o tamanho dos campos de texto. */
+.dc-campo input.dc-checa, .dc-celular .dc-campo input.dc-checa { width: 16px; height: 16px; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: none; flex: none; }

@@ -1,0 +1,156 @@
+{
+  "path": "/clientes/5226af6d-b56b-4538-86a5-756ca6152ebf?conferido",
+  "corpo": {
+    "id": "5226af6d-b56b-4538-86a5-756ca6152ebf",
+    "nome": "Marina Duarte",
+    "tipo": "pf",
+    "documento": "318.204.567-90",
+    "telefone": "(47) 99123-4567",
+    "whatsapp": "5547991234567",
+    "email": "marina.duarte@exemplo.com.br",
+    "endereco": "Rua Itajaí, 455, apto 302 · América · Joinville/SC",
+    "observacoes": null,
+    "criadoEm": "2025-09-24T12:00:00.000Z",
+    "processos": [
+      {
+        "id": "c1539908-bf82-43f6-862c-d2be5140ba60",
+        "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+        "cnj": "5004321-25.2026.8.24.0038",
+        "orgao": "2ª Vara Cível",
+        "situacao": "ativo",
+        "responsavel": {
+          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        }
+      }
+    ],
+    "atendimentos": [
+      {
+        "id": "023d5280-3fbb-4046-b820-f4beaa65dfb8",
+        "em": "2026-10-20T18:30:00.000Z",
+        "canal": "whatsapp",
+        "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
+        "autor": {
+          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "processoId": "c1539908-bf82-43f6-862c-d2be5140ba60"
+      },
+      {
+        "id": "a5e71764-ea80-4ac9-8deb-dea723bfdb5e",
+        "em": "2026-08-30T18:30:00.000Z",
+        "canal": "presencial",
+        "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
+        "autor": {
+          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "processoId": "c1539908-bf82-43f6-862c-d2be5140ba60"
+      }
+    ],
+    "documentos": [
+      {
+        "id": "87921fe4-e3b3-47e4-8c94-38eb42be5584",
+        "nome": "rg-marina.txt",
+        "mime": "text/plain",
+        "tamanho": 82,
+        "em": "2026-10-30T00:09:10.321Z",
+        "processoId": null,
+        "leitura": null,
+        "lido": true
+      }
+    ],
+    "conferencia": {
+      "id": "543d69a7-afa4-4a01-a7ff-0e89b5e9761a",
+      "acao": "conferir-pasta",
+      "situacao": "pronto",
+      "conteudo": {
+        "itens": [
+          {
+            "item": "procuracao",
+            "detalhe": "A procuração do processo atual não está na pasta da cliente. Para um caso novo, precisa de outra.",
+            "situacao": "falta",
+            "documento": null
+          },
+          {
+            "item": "comprovante_residencia",
+            "detalhe": "Sem comprovante de residência na pasta.",
+            "situacao": "falta",
+            "documento": null
+          },
+          {
+            "item": "documento_identidade",
+            "detalhe": "Carteira de identidade legível, com o mesmo nome do cadastro.",
+            "situacao": "certo",
+            "documento": "rg-marina.txt"
+          },
+          {
+            "item": "cpf",
+            "detalhe": "O CPF da identidade confere com o cadastro.",
+            "situacao": "certo",
+            "documento": "rg-marina.txt"
+          },
+          {
+            "item": "hipossuficiencia",
+            "detalhe": "Sem declaração. Precisa se for pedir justiça gratuita.",
+            "situacao": "falta",
+            "documento": null
+          },
+          {
+            "item": "contrato_honorarios",
+            "detalhe": "Sem contrato de honorários na pasta.",
+            "situacao": "falta",
+            "documento": null
+          },
+          {
+            "item": "litispendencia",
+            "detalhe": "Já há a ação contra a Seguradora Alfa. Confira se o caso novo não é o mesmo pedido.",
+            "situacao": "atencao",
+            "documento": null
+          }
+        ],
+        "outros": [
+          "A identidade foi expedida em 2019: vale, mas a foto pode estar antiga."
+        ],
+        "recusa": null,
+        "resumo": "Para um caso novo, faltam a procuração, o comprovante de residência e o contrato de honorários."
+      },
+      "fonte": "1 documento · 29/10/2026",
+      "em": "2026-10-30T00:09:10.329Z",
+      "desatualizada": false,
+      "erro": null
+    },
+    "linhaDoTempo": [
+      {
+        "em": "2026-10-30T00:09:10.321Z",
+        "titulo": "Documento anexado",
+        "detalhe": "rg-marina.txt",
+        "tipo": "documento"
+      },
+      {
+        "em": "2026-10-20T18:30:00.000Z",
+        "titulo": "Atendimento · WhatsApp",
+        "detalhe": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
+        "tipo": "atendimento"
+      },
+      {
+        "em": "2026-08-30T18:30:00.000Z",
+        "titulo": "Atendimento · presencial",
+        "detalhe": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
+        "tipo": "atendimento"
+      },
+      {
+        "em": "2026-03-13T12:00:00.000Z",
+        "titulo": "Processo cadastrado",
+        "detalhe": "Marina Duarte × Seguradora Alfa S.A.",
+        "tipo": "processo"
+      }
+    ]
+  }
+}

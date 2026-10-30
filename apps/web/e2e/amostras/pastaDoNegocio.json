@@ -1,0 +1,83 @@
+{
+  "path": "/negocios/acba5eb8-a886-40ec-b43d-433b81c19c71/pasta",
+  "corpo": {
+    "documentos": [
+      {
+        "id": "0116efd8-1b91-48f3-8fd5-8b68e614a22a",
+        "nome": "procuracao.txt",
+        "mime": "text/plain",
+        "tamanho": 152,
+        "leitura": null,
+        "lido": true,
+        "em": "2026-10-30T00:09:10.284Z"
+      },
+      {
+        "id": "b899e72d-62e2-4c10-9eca-2b1637e99292",
+        "nome": "conta-de-luz.txt",
+        "mime": "text/plain",
+        "tamanho": 91,
+        "leitura": null,
+        "lido": true,
+        "em": "2026-10-30T00:09:10.292Z"
+      }
+    ],
+    "conferencia": {
+      "id": "5ece9919-1948-49b3-b953-dc5d2c31b0e1",
+      "acao": "conferir-pasta",
+      "situacao": "pronto",
+      "conteudo": {
+        "itens": [
+          {
+            "item": "procuracao",
+            "detalhe": "Assinada em 20/10/2026, com poderes gerais para o foro.",
+            "situacao": "certo",
+            "documento": "procuracao.txt"
+          },
+          {
+            "item": "comprovante_residencia",
+            "detalhe": "Conta de março de 2026: tem mais de 90 dias. Peça uma recente.",
+            "situacao": "atencao",
+            "documento": "conta-de-luz.txt"
+          },
+          {
+            "item": "documento_identidade",
+            "detalhe": "Não há documento com foto na pasta.",
+            "situacao": "falta",
+            "documento": null
+          },
+          {
+            "item": "cpf",
+            "detalhe": "O CPF da procuração não confere com o cadastro.",
+            "situacao": "atencao",
+            "documento": "procuracao.txt"
+          },
+          {
+            "item": "hipossuficiencia",
+            "detalhe": "Sem declaração. Precisa se for pedir justiça gratuita.",
+            "situacao": "falta",
+            "documento": null
+          },
+          {
+            "item": "contrato_honorarios",
+            "detalhe": "Sem contrato de honorários na pasta.",
+            "situacao": "falta",
+            "documento": null
+          },
+          {
+            "item": "litispendencia",
+            "detalhe": "Nenhum processo do escritório com a mesma pessoa e o mesmo assunto.",
+            "situacao": "certo",
+            "documento": null
+          }
+        ],
+        "outros": [],
+        "recusa": null,
+        "resumo": "Ainda não dá para protocolar: falta o documento com foto e o comprovante de residência está velho."
+      },
+      "fonte": "2 documentos · 29/10/2026",
+      "em": "2026-10-30T00:09:10.306Z",
+      "desatualizada": false,
+      "erro": null
+    }
+  }
+}

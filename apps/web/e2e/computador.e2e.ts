@@ -1,6 +1,6 @@
 /** Telas no computador (1440 de largura), com as respostas da demonstração. */
 import { expect, test } from "@playwright/test";
-import { abrir, ApiFalsa, ids, sobraNaLateral } from "./apoio";
+import { abrir, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
 
 test("sem sessão, vai para Entrar e volta para onde ia", async ({ page }) => {
   const api = new ApiFalsa();
@@ -98,12 +98,111 @@ test("equipe: convidar manda e-mail e papel", async ({ page }) => {
   await expect.poll(() => api.mudancas("/organization/invite-member")[0]?.corpo).toMatchObject({ email: "nova.pessoa@exemplo.com.br" });
 });
 
+test("sentença: a IA lê pedido a pedido e a pessoa confirma o resultado", async ({ page }) => {
+  const api = await abrir(page, `/publicacoes?id=${ids.sentenca}`, new ApiFalsa().responder("/eu", euComIa));
+  await expect(page.getByText("Leitura da sentença")).toBeVisible();
+  await expect(page.getByText("Pedido a pedido")).toBeVisible();
+  await expect(page.getByText("Danos morais", { exact: true })).toBeVisible();
+  await expect(page.getByText("Rejeitado")).toBeVisible();
+  await expect(page.getByText("Parcialmente procedente", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Apelação · 15 dias/)).toBeVisible();
+  await page.getByRole("button", { name: "Confirmar resultado" }).click();
+  await expect.poll(() => api.mudancas(`/publicacoes/${ids.sentenca}/resultado`)[0]?.corpo).toMatchObject({ tipo: "sentenca", resultado: "parcialmente_procedente" });
+});
+
+test("retorno sobre a IA: errado pede uma frase e manda junto", async ({ page }) => {
+  const api = await abrir(page, `/publicacoes?id=${ids.sentenca}`, new ApiFalsa().responder("/eu", euComIa));
+  const leitura = page.locator(".dc-ia").filter({ hasText: "Leitura da sentença" });
+  await leitura.getByRole("button", { name: "Errado" }).click();
+  await expect.poll(() => api.mudancas("/ia/retorno")[0]?.corpo).toMatchObject({ analiseId: amostras.publicacaoSentenca!.corpo.sentenca.id, util: false });
+  await leitura.getByLabel("O que estava errado").fill("Os danos morais foram acolhidos em parte.");
+  await leitura.getByRole("button", { name: "Enviar" }).click();
+  await expect.poll(() => api.mudancas("/ia/retorno")[1]?.corpo).toMatchObject({ util: false, comentario: "Os danos morais foram acolhidos em parte." });
+  await expect(leitura.getByRole("button", { name: "Errado" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("sentença confirmada: o resultado fica no processo", async ({ page }) => {
+  await abrir(page, `/publicacoes?id=${ids.sentenca}`, new ApiFalsa().responder(`/publicacoes/${ids.sentenca}`, amostras.publicacaoSentencaConfirmada!.corpo));
+  await expect(page.getByText(/No processo: sentença parcialmente procedente, confirmado por Beatriz/)).toBeVisible();
+  await page.goto(`/processos/${ids.processoComResultado}`);
+  await expect(page.getByText("Parcialmente procedente · sentença de 29/10/2026")).toBeVisible();
+});
+
+test("negócio na triagem: a pasta e a conferência item por item", async ({ page }) => {
+  const api = await abrir(page, "/negocios", new ApiFalsa().responder("/eu", euComIa));
+  const nome = amostras.negocios!.corpo.itens.find((n: { id: string }) => n.id === ids.negocio).nome as string;
+  await page.getByText(nome).first().click();
+  const dialogo = page.getByRole("dialog");
+  await expect(dialogo.getByText("procuracao.txt").first()).toBeVisible();
+  await expect(dialogo.getByText("Conferência da pasta")).toBeVisible();
+  await expect(dialogo.getByText("Documento com foto", { exact: true })).toBeVisible();
+  await expect(dialogo.getByText(/falta o documento com foto/)).toBeVisible();
+  await dialogo.getByRole("button", { name: "Refazer" }).click();
+  await expect.poll(() => api.mudancas(`/negocios/${ids.negocio}/conferir`).length).toBe(1);
+});
+
+test("cliente: conferência da pasta e o arquivo lido", async ({ page }) => {
+  await abrir(page, `/clientes/${ids.cliente}`, new ApiFalsa().responder(`/clientes/${ids.cliente}`, amostras.clienteConferido!.corpo));
+  await expect(page.getByText("Conferência da pasta")).toBeVisible();
+  await expect(page.getByRole("link", { name: /rg-marina\.txt/ })).toBeVisible();
+  await expect(page.locator(".dc-leitura").filter({ hasText: "Lido" })).toBeVisible();
+});
+
+test("foto na leitura da IA: lendo, transcrito e não deu para ler", async ({ page }) => {
+  const base = amostras.documentos!.corpo.itens[0];
+  const itens = [
+    { ...base, id: "00000000-0000-4000-8000-0000000000a1", nome: "foto-do-rg.jpg", mime: "image/jpeg", lido: false, semTexto: true, leitura: "pendente" },
+    { ...base, id: "00000000-0000-4000-8000-0000000000a2", nome: "contrato-escaneado.pdf", mime: "application/pdf", lido: true, semTexto: false, leitura: "pronta" },
+    { ...base, id: "00000000-0000-4000-8000-0000000000a3", nome: "comprovante-borrado.jpg", mime: "image/jpeg", lido: false, semTexto: true, leitura: "falhou" },
+  ];
+  const api = await abrir(page, `/processos/${ids.processo}?aba=documentos`, new ApiFalsa().responder("/eu", euComIa).responder("/documentos", { itens }));
+  await expect(page.getByText("Lendo")).toBeVisible();
+  await expect(page.getByText("Transcrito")).toBeVisible();
+  await expect(page.getByText("Não deu para ler")).toBeVisible();
+  await page.getByRole("button", { name: "Tentar de novo" }).click();
+  await expect.poll(() => api.mudancas("/documentos/00000000-0000-4000-8000-0000000000a3/ler").length).toBe(1);
+});
+
+test("modelos: a lista, abrir um e colar um novo", async ({ page }) => {
+  const api = await abrir(page, "/modelos");
+  await expect(page.getByRole("heading", { name: "Modelos" })).toBeVisible();
+  await page.getByRole("button", { name: "Contestação · negativa de cobertura de plano de saúde" }).click();
+  const dialogo = page.getByRole("dialog");
+  await expect(dialogo.getByText(/A indicação médica prevalece/)).toBeVisible();
+  await dialogo.getByRole("button", { name: "Fechar" }).click();
+  await page.getByRole("button", { name: "Novo modelo" }).click();
+  const novo = page.getByRole("dialog");
+  await novo.getByRole("button", { name: "Colar o texto" }).click();
+  await novo.getByLabel("Tipo de peça").selectOption("contestacao");
+  await novo.getByLabel("Texto da peça").fill("Contestação de exemplo. ".repeat(12));
+  await novo.getByLabel("Nome do modelo").fill("Contestação · seguro prestamista");
+  await novo.getByRole("button", { name: "Guardar" }).click();
+  await expect.poll(() => api.mudancas("/modelos")[0]?.corpo).toMatchObject({ titulo: "Contestação · seguro prestamista", tipo: "contestacao" });
+});
+
+test("peça revisada: quem revisou, com a OAB, e guardar como modelo", async ({ page }) => {
+  const api = await abrir(page, `/pecas?id=${ids.peca}`, new ApiFalsa().responder(`/pecas/${ids.peca}`, amostras.pecaRevisada!.corpo));
+  await expect(page.getByText(/Revisada por Beatriz · OAB\/SC 41\.233/)).toBeVisible();
+  await page.getByRole("button", { name: "Guardar como modelo" }).click();
+  const dialogo = page.getByRole("dialog");
+  await dialogo.getByLabel("Tese").fill("Prova testemunhal do uso do imóvel");
+  await dialogo.getByRole("button", { name: "Guardar" }).click();
+  await expect.poll(() => api.mudancas("/modelos")[0]?.corpo).toMatchObject({ pecaId: ids.peca, tese: "Prova testemunhal do uso do imóvel" });
+});
+
+test("configurações: o retorno sobre a IA para os sócios", async ({ page }) => {
+  await abrir(page, "/configuracoes");
+  await page.getByRole("tab", { name: "Retorno sobre a IA" }).click();
+  await expect(page.getByText("Como a IA está indo")).toBeVisible();
+  await expect(page.getByText("Contou o prazo do laudo como se fosse corrido. · Beatriz")).toBeVisible();
+});
+
 test("endereço que não existe mostra a página de não encontrada", async ({ page }) => {
   await abrir(page, "/isso-nao-existe");
   await expect(page.getByText("Página não encontrada")).toBeVisible();
 });
 
-for (const rota of ["/prazos", "/processos", "/clientes", "/agenda", "/negocios", "/alvaras", "/documentos", "/configuracoes", "/conta"]) {
+for (const rota of ["/prazos", "/processos", "/clientes", "/agenda", "/negocios", "/alvaras", "/documentos", "/modelos", "/configuracoes", "/conta"]) {
   test(`${rota} abre sem erro e sem rolar para o lado`, async ({ page }) => {
     const erros: string[] = [];
     page.on("pageerror", (e) => erros.push(String(e)));

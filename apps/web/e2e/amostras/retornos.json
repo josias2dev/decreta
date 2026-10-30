@@ -1,0 +1,62 @@
+{
+  "path": "/ia/retornos",
+  "corpo": {
+    "porAcao": [
+      {
+        "acao": "briefing-prazo",
+        "uteis": 0,
+        "errados": 1,
+        "rotulo": "Briefing do prazo"
+      },
+      {
+        "acao": "gerar-documento",
+        "uteis": 0,
+        "errados": 1,
+        "rotulo": "Peça gerada"
+      },
+      {
+        "acao": "ler-sentenca",
+        "uteis": 1,
+        "errados": 0,
+        "rotulo": "Leitura da sentença"
+      }
+    ],
+    "errados": [
+      {
+        "id": "db191e7c-e58e-4c28-b97b-a9529ec32ef0",
+        "acao": "gerar-documento",
+        "rotulo": "Peça gerada",
+        "comentario": "Citou o evento errado na seção 2.",
+        "em": "2026-10-30T00:09:10.422Z",
+        "pessoa": {
+          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "onde": {
+          "tipo": "peca",
+          "id": "645ba58c-896b-467e-8879-4f1253e0174b",
+          "processoId": "f1e2083b-0d72-4ea6-b17b-2d06e635b740"
+        }
+      },
+      {
+        "id": "543d6097-2763-462a-8ff8-5a2b984b9c6a",
+        "acao": "briefing-prazo",
+        "rotulo": "Briefing do prazo",
+        "comentario": "Contou o prazo do laudo como se fosse corrido.",
+        "em": "2026-10-30T00:09:10.415Z",
+        "pessoa": {
+          "id": "8zXAmYzMUINCrRDUfA2nKhkc1JXHNWAP",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS"
+        },
+        "onde": {
+          "tipo": "prazo",
+          "id": "45a19c68-203f-4c0d-b0f3-0de9e12e2e4d"
+        }
+      }
+    ]
+  }
+}

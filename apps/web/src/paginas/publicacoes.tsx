@@ -11,12 +11,12 @@ import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
-import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Faixa, MarcaIa, Responsavel, Vazio } from "@/componentes/ui";
+import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias } from "@/lib/formato";
-import type { CaixaDePublicacoes, Contagem, ContagemNaTela, Pessoa, Publicacao, Selo, SituacaoPublicacao, Sugestao } from "@/lib/tipos";
+import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
+import type { CaixaDePublicacoes, Contagem, ContagemNaTela, LeituraDaSentenca, Pessoa, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { atualizarPrazos } from "./prazo";
 
@@ -39,8 +39,11 @@ const caixaQuery = (situacao: SituacaoPublicacao) => ({
 const publicacaoQuery = (id: string) => ({
   queryKey: ["publicacao", id],
   queryFn: () => api<Publicacao>(`/publicacoes/${id}`),
-  // Enquanto a IA lê o teor, a tela pergunta de novo.
-  refetchInterval: (q: { state: { data?: Publicacao } }) => (q.state.data && !q.state.data.sugestao ? 4000 : false),
+  // Enquanto a IA lê o teor, a tela pergunta de novo; a leitura da sentença chega logo depois (e só se a IA estiver ligada).
+  refetchInterval: (q: { state: { data?: Publicacao; dataUpdateCount: number } }) => {
+    const d = q.state.data;
+    return d && (!d.sugestao || (d.decisao && !d.sentenca && q.state.dataUpdateCount < 30)) ? 4000 : false;
+  },
 });
 
 /** A captura do DJEN roda às 06:40, 12:40 e 18:40, de segunda a sexta (apps/api/src/inngest.ts). */
@@ -465,6 +468,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
         {lida}
         <section className="flex flex-col gap-2">{teor}</section>
         {ia}
+        {pub.decisao && <LeituraDaDecisao pub={pub} />}
         {acoes[3] && (
           <button type="button" className="dc-link self-center" onClick={acoes[3].fazer} disabled={ocupado}>
             {acoes[3].rotulo}
@@ -480,6 +484,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
       <div className="dc-painel__secao">{processo}</div>
       <div className="dc-painel__secao">{teor}</div>
       {ia}
+      {pub.decisao && <LeituraDaDecisao pub={pub} />}
       {(feito || lida) && <div className="dc-painel__secao">{feito || lida}</div>}
       {acoes.length > 0 && (
         <div className="dc-painel__acoes">
@@ -492,6 +497,206 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
       )}
       {dialogos}
     </section>
+  );
+}
+
+const DECISAO_DO_PEDIDO = { acolhido: "Acolhido", parcial: "Em parte", rejeitado: "Rejeitado", nao_apreciado: "Não apreciado" } as const;
+
+/**
+ * Sentença ou acórdão: a IA lê pedido a pedido e a pessoa confirma o resultado,
+ * que fica no processo. A leitura roda sozinha quando a publicação chega.
+ */
+function LeituraDaDecisao({ pub }: { pub: Publicacao }) {
+  const qc = useQueryClient();
+  const avisar = useAviso();
+  const eu = useQuery(euQuery);
+  const [corrigir, setCorrigir] = useState(false);
+  const a = pub.sentenca;
+  const l = a?.situacao === "pronto" ? a.conteudo : null;
+  const tipo: TipoDecisao = pub.resultado?.tipo ?? l?.tipo ?? (/ac[óo]rd[ãa]o/i.test(pub.tipoDocumento ?? "") ? "acordao" : "sentenca");
+  const ler = useMutation({
+    mutationFn: () => api(`/publicacoes/${pub.id}/sentenca`, { method: "POST" }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["publicacao", pub.id] }),
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+  const confirmar = useMutation({
+    mutationFn: (b: { tipo: TipoDecisao; resultado: ResultadoDecisao; resumo: string | null }) => api(`/publicacoes/${pub.id}/resultado`, { json: b }),
+    onSuccess: () => {
+      setCorrigir(false);
+      avisar("Resultado guardado no processo.");
+      void qc.invalidateQueries({ queryKey: ["publicacao", pub.id] });
+      if (pub.processo) void qc.invalidateQueries({ queryKey: ["processo", pub.processo.id] });
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+  // As duas leituras saem juntas quando a publicação chega: enquanto não há nenhuma, a IA está lendo.
+  const lendo = ler.isPending || (!a && !!eu.data?.ia && !pub.sugestao);
+  const r = pub.resultado;
+  return (
+    <BlocoIa
+      titulo={tipo === "acordao" ? "Leitura do acórdão" : "Leitura da sentença"}
+      analise={a}
+      aoRefazer={eu.data?.ia ? () => ler.mutate() : undefined}
+      refazendo={lendo}
+      rodape={a ? "Gerado por IA. Confira na decisão." : "A IA lê a decisão pedido a pedido."}
+    >
+      {l && <ConteudoDaSentenca l={l} />}
+      {!a && !eu.data?.ia && <p className="m-0 text-[14px]">A IA não está ligada. Leia a decisão e confirme o resultado à mão.</p>}
+      {r ? (
+        <Faixa tipo="ok">
+          <Check />
+          <span className="flex-1">
+            No processo: {TIPO_DA_DECISAO[r.tipo].toLocaleLowerCase("pt-BR")} {RESULTADO_DA_DECISAO[r.resultado].toLocaleLowerCase("pt-BR")}
+            {r.confirmadoPor ? `, confirmado por ${r.confirmadoPor.apelido}` : ""}.
+          </span>
+          <button type="button" className="dc-link" onClick={() => setCorrigir(true)}>
+            Corrigir
+          </button>
+        </Faixa>
+      ) : (
+        (l || (!a && !eu.data?.ia)) && (
+          <div className="dc-sentenca__confirmar">
+            <span className="dc-nota">{pub.processo ? "Confirme para o resultado ficar no processo." : "Vincule a um processo para guardar o resultado."}</span>
+            <div className="dc-linha-acoes">
+              {l && (
+                <Botao pequeno onClick={() => confirmar.mutate({ tipo: l.tipo, resultado: l.resultado, resumo: l.resumo })} ocupado={confirmar.isPending} disabled={!pub.processo}>
+                  <Check /> Confirmar resultado
+                </Botao>
+              )}
+              <Botao variante={l ? "fantasma" : "secundaria"} pequeno onClick={() => setCorrigir(true)} disabled={!pub.processo}>
+                {l ? "Corrigir" : "Informar resultado"}
+              </Botao>
+            </div>
+          </div>
+        )
+      )}
+      <CorrigirResultado
+        aberto={corrigir}
+        aoFechar={() => setCorrigir(false)}
+        inicial={{ tipo, resultado: r?.resultado ?? l?.resultado ?? "procedente", resumo: r?.resumo ?? l?.resumo ?? "" }}
+        salvando={confirmar.isPending}
+        aoSalvar={(b) => confirmar.mutate(b)}
+      />
+    </BlocoIa>
+  );
+}
+
+function ConteudoDaSentenca({ l }: { l: LeituraDaSentenca }) {
+  const recurso = l.recurso ? [l.recurso.cabivel, l.recurso.dias ? `${l.recurso.dias} dias` : null].filter(Boolean).join(" · ") : "Não cabe recurso";
+  return (
+    <>
+      <div className="dc-sentenca">
+        <Par rotulo="Resultado" valor={RESULTADO_DA_DECISAO[l.resultado]} />
+        <Par rotulo="Recurso cabível" valor={recurso} nota={l.recurso?.fundamento} />
+        <p className="dc-inteira">{l.resumo}</p>
+      </div>
+      {l.pedidos.length > 0 && (
+        <SecaoIa titulo="Pedido a pedido">
+          <div className="dc-pedidos">
+            {l.pedidos.map((p, i) => (
+              <div key={i}>
+                <span className="dc-pedidos__nome">{p.pedido}</span>
+                <span className="dc-pedidos__decisao">{DECISAO_DO_PEDIDO[p.decisao]}</span>
+                <span className="dc-pedidos__detalhe">{p.detalhe}</span>
+              </div>
+            ))}
+          </div>
+        </SecaoIa>
+      )}
+      {(l.valores.length > 0 || l.honorarios) && (
+        <div className="dc-ia__duas">
+          {l.valores.length > 0 && (
+            <SecaoIa titulo="Valores">
+              <ListaIa itens={l.valores} />
+            </SecaoIa>
+          )}
+          {l.honorarios && (
+            <SecaoIa titulo="Honorários e custas">
+              <p>{l.honorarios}</p>
+            </SecaoIa>
+          )}
+        </div>
+      )}
+      {(l.recorrer.length > 0 || l.manter.length > 0) && (
+        <div className="dc-ia__duas">
+          {l.recorrer.length > 0 && (
+            <SecaoIa titulo="Para recorrer">
+              <ListaIa itens={l.recorrer} />
+            </SecaoIa>
+          )}
+          {l.manter.length > 0 && (
+            <SecaoIa titulo="Para manter a decisão">
+              <ListaIa itens={l.manter} />
+            </SecaoIa>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+function CorrigirResultado({
+  aberto,
+  aoFechar,
+  inicial,
+  salvando,
+  aoSalvar,
+}: {
+  aberto: boolean;
+  aoFechar: () => void;
+  inicial: { tipo: TipoDecisao; resultado: ResultadoDecisao; resumo: string };
+  salvando: boolean;
+  aoSalvar: (b: { tipo: TipoDecisao; resultado: ResultadoDecisao; resumo: string | null }) => void;
+}) {
+  const [f, setF] = useState(inicial);
+  const [visto, setVisto] = useState(aberto);
+  if (aberto !== visto) {
+    setVisto(aberto);
+    if (aberto) setF(inicial);
+  }
+  return (
+    <Dialogo
+      aberto={aberto}
+      aoFechar={aoFechar}
+      titulo="Resultado da decisão"
+      descricao="Fica no processo e na ficha do cliente."
+      acoes={
+        <>
+          <Botao variante="fantasma" onClick={aoFechar}>
+            Cancelar
+          </Botao>
+          <Botao variante="primaria" onClick={() => aoSalvar({ ...f, resumo: f.resumo.trim() || null })} ocupado={salvando}>
+            Guardar
+          </Botao>
+        </>
+      }
+    >
+      <div className="dc-form">
+        <div className="dc-grade-2">
+          <Campo rotulo="Decisão" htmlFor="rs-tipo">
+            <select id="rs-tipo" value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value as TipoDecisao })}>
+              {Object.entries(TIPO_DA_DECISAO).map(([v, n]) => (
+                <option key={v} value={v}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </Campo>
+          <Campo rotulo="Resultado" htmlFor="rs-resultado">
+            <select id="rs-resultado" value={f.resultado} onChange={(e) => setF({ ...f, resultado: e.target.value as ResultadoDecisao })}>
+              {Object.entries(RESULTADO_DA_DECISAO).map(([v, n]) => (
+                <option key={v} value={v}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </Campo>
+        </div>
+        <Campo rotulo="Em poucas palavras" htmlFor="rs-resumo" ajuda="O que ganhamos e o que perdemos.">
+          <textarea id="rs-resumo" rows={3} value={f.resumo} onChange={(e) => setF({ ...f, resumo: e.target.value })} />
+        </Campo>
+      </div>
+    </Dialogo>
   );
 }
 

@@ -24,7 +24,15 @@ export const ids = {
   cliente: amostras.cliente!.corpo.id as string,
   audiencia: amostras.audiencia!.corpo.id as string,
   peca: amostras.peca!.corpo.id as string,
+  /** Sentença inventada, lida pela IA de mentira (propostas 1 a 5). */
+  sentenca: amostras.publicacaoSentenca!.corpo.id as string,
+  processoComResultado: amostras.processoComResultado!.corpo.id as string,
+  negocio: amostras.pastaDoNegocio!.path.split("/")[2]!,
+  modelo: amostras.modelo!.corpo.id as string,
 };
+
+/** /eu com a IA ligada, para as telas que mostram Refazer, Conferir e o retorno. */
+export const euComIa = { ...amostras.eu!.corpo, ia: true };
 
 /** O "agora" das amostras: quinta, 29/10/2026, de manhã em Joinville. */
 export const AGORA = new Date("2026-10-29T09:30:00-03:00");

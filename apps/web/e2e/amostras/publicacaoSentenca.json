@@ -1,0 +1,127 @@
+{
+  "path": "/publicacoes/8635522e-ee01-4c21-b79c-9f68dec8d41f",
+  "corpo": {
+    "id": "8635522e-ee01-4c21-b79c-9f68dec8d41f",
+    "situacao": "nova",
+    "fonte": "manual",
+    "disponibilizadaEm": "2026-10-28",
+    "publicadaEm": "2026-10-29",
+    "tribunal": "TJSC",
+    "orgao": null,
+    "tipoComunicacao": "Intimação",
+    "tipoDocumento": "Sentença",
+    "cnj": null,
+    "texto": "Vistos. Eduardo Lima ajuizou ação contra Unimed Litoral pedindo a cobertura da cirurgia negada, o reembolso de R$ 18.400,00 e danos morais. A ré alegou exclusão contratual. Ante o exposto, JULGO PARCIALMENTE PROCEDENTES os pedidos para condenar a ré a custear a cirurgia e a reembolsar R$ 18.400,00, com correção pelo INPC desde o desembolso e juros de 1% ao mês desde a citação. Rejeito o pedido de danos morais. Custas e honorários de 10% do valor da condenação pela ré. Publique-se. Intimem-se.",
+    "link": null,
+    "destinatarios": [],
+    "advogados": [],
+    "processo": {
+      "id": "f1dd6729-c7ac-49de-9b4c-608e0c7a6526",
+      "titulo": "Eduardo Lima × Unimed Litoral",
+      "cnj": "5003390-24.2026.8.24.0005",
+      "classe": "Procedimento comum cível",
+      "orgao": "1ª Vara Cível",
+      "comarca": "Balneário Camboriú",
+      "responsavel": null
+    },
+    "sugestao": {
+      "id": "e0736241-8ab7-4924-9955-a453d1ee872a",
+      "acao": "sugerir-prazo",
+      "situacao": "pronto",
+      "conteudo": {
+        "dias": 15,
+        "tipo": "Apelação",
+        "recusa": null,
+        "resumo": "Sentença parcialmente procedente: cirurgia e reembolso, sem danos morais.",
+        "assunto": "sentença",
+        "contagem": "uteis",
+        "audiencia": null,
+        "geraPrazo": true,
+        "fundamento": "art. 1.003, § 5º, CPC",
+        "responsavelId": null,
+        "contagemCalculada": {
+          "fim": "2026-11-23",
+          "dias": 15,
+          "inicio": "2026-10-30",
+          "contagem": "uteis",
+          "explicacao": "Começa em 30/10, primeiro dia útil depois da publicação. Fora da conta: fins de semana, 02/11 (Finados) e 20/11 (Consciência Negra).",
+          "publicacao": "2026-10-29",
+          "prorrogadoDe": null,
+          "desconsiderados": [
+            {
+              "dia": "2026-11-02",
+              "nome": "Finados",
+              "tipo": "nacional"
+            },
+            {
+              "dia": "2026-11-20",
+              "nome": "Consciência Negra",
+              "tipo": "nacional"
+            }
+          ]
+        }
+      },
+      "fonte": "Publicação · 28/10/2026",
+      "em": "2026-10-30T00:09:10.190Z",
+      "desatualizada": false,
+      "erro": null,
+      "responsavel": null
+    },
+    "prazo": {
+      "id": "918b8ee1-310c-459b-b62d-01ad9fd65158",
+      "confirmado": false,
+      "fim": "2026-11-23",
+      "tipo": "Apelação"
+    },
+    "audiencia": null,
+    "decisao": true,
+    "sentenca": {
+      "id": "19b04e92-b3af-4982-8bc8-cfe32a77a956",
+      "acao": "ler-sentenca",
+      "situacao": "pronto",
+      "conteudo": {
+        "tipo": "sentenca",
+        "manter": [
+          "A cláusula de exclusão é abusiva diante da indicação médica."
+        ],
+        "recusa": null,
+        "resumo": "Ganhamos a cirurgia e o reembolso de R$ 18.400,00; perdemos os danos morais. Cabe apelação para pedir os danos morais.",
+        "pedidos": [
+          {
+            "pedido": "Cobertura da cirurgia",
+            "decisao": "acolhido",
+            "detalhe": "A exclusão contratual não vale para o procedimento indicado pelo médico."
+          },
+          {
+            "pedido": "Reembolso de R$ 18.400,00",
+            "decisao": "acolhido",
+            "detalhe": "Com correção pelo INPC desde o desembolso e juros desde a citação."
+          },
+          {
+            "pedido": "Danos morais",
+            "decisao": "rejeitado",
+            "detalhe": "O juízo viu mero inadimplemento contratual."
+          }
+        ],
+        "recurso": {
+          "dias": 15,
+          "cabivel": "Apelação",
+          "fundamento": "art. 1.003, § 5º, CPC"
+        },
+        "valores": [
+          "R$ 18.400,00, com correção pelo INPC desde o desembolso e juros de 1% ao mês desde a citação"
+        ],
+        "recorrer": [
+          "Danos morais: a negativa de cirurgia urgente vai além do inadimplemento (a sentença não enfrentou a urgência)."
+        ],
+        "resultado": "parcialmente_procedente",
+        "honorarios": "Ré paga custas e 10% do valor da condenação."
+      },
+      "fonte": "Publicação · 28/10/2026",
+      "em": "2026-10-30T00:09:10.209Z",
+      "desatualizada": false,
+      "erro": null
+    },
+    "resultado": null
+  }
+}

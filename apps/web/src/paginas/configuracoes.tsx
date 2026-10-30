@@ -1,5 +1,6 @@
 /** Configurações do escritório: timbre das peças, avisos e captura, calendário forense e o registro. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Plus, Send, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
@@ -11,10 +12,10 @@ import { ehSocio } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora } from "@/lib/formato";
-import type { Escritorio, Feriados, Registro, Timbre } from "@/lib/tipos";
+import type { Escritorio, Feriados, Registro, RetornosDaIa, Timbre } from "@/lib/tipos";
 import { Folha } from "./peca";
 
-type Aba = "escritorio" | "avisos" | "calendario" | "registro";
+type Aba = "escritorio" | "avisos" | "calendario" | "ia" | "registro";
 const FONTES = ["Arial", "Times New Roman", "Calibri", "Garamond"] as const;
 const TRIBUNAIS = [
   { id: "TJSC", nome: "TJSC · Justiça estadual de Santa Catarina" },
@@ -41,7 +42,7 @@ export function ConfiguracoesPage() {
         { id: "escritorio", rotulo: "Timbre" },
         { id: "avisos", rotulo: "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
-        ...(socio ? [{ id: "registro" as const, rotulo: "Registro" }] : []),
+        ...(socio ? [{ id: "ia" as const, rotulo: celular ? "IA" : "Retorno sobre a IA" }, { id: "registro" as const, rotulo: "Registro" }] : []),
       ]}
     />
   );
@@ -54,6 +55,8 @@ export function ConfiguracoesPage() {
     <AbaAvisos e={e} socio={socio} />
   ) : aba === "calendario" ? (
     <AbaCalendario e={e} socio={socio} celular={celular} />
+  ) : aba === "ia" ? (
+    <AbaRetorno celular={celular} />
   ) : (
     <AbaRegistro />
   );
@@ -398,6 +401,70 @@ function NovaSuspensao({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => 
         {criar.error && <Faixa tipo="erro">{mensagemDoErro(criar.error)}</Faixa>}
       </div>
     </Dialogo>
+  );
+}
+
+/** Onde está a saída avaliada, para abrir e ver. */
+function Abrir({ onde, celular }: { onde: RetornosDaIa["errados"][number]["onde"]; celular: boolean }) {
+  if (!onde) return null;
+  const rotulo = "Abrir";
+  if (onde.tipo === "peca") return <Link to="/pecas" search={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link>;
+  if (onde.tipo === "publicacao")
+    return celular ? <Link to="/publicacoes/$id" params={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link> : <Link to="/publicacoes" search={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link>;
+  if (onde.tipo === "prazo") return <Link to="/prazos/$id" params={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link>;
+  if (onde.tipo === "processo") return <Link to="/processos/$id" params={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link>;
+  if (onde.tipo === "audiencia") return <Link to="/audiencias/$id" params={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link>;
+  if (onde.tipo === "cliente") return <Link to="/clientes/$id" params={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link>;
+  if (onde.tipo === "negocio") return <Link to="/negocios" className="dc-link flex-none">{rotulo}</Link>;
+  return null;
+}
+
+/** Para os sócios: quanto a equipe achou útil cada leitura da IA, e o que disse que estava errado. */
+function AbaRetorno({ celular }: { celular: boolean }) {
+  const eu = useQuery(euQuery);
+  const q = useQuery({ queryKey: ["ia", "retornos"], queryFn: () => api<RetornosDaIa>("/ia/retornos") });
+  if (!q.data) return <Carregando linhas={4} />;
+  const { porAcao, errados } = q.data;
+  if (!porAcao.length) {
+    return (
+      <Painel titulo="Retorno sobre a IA">
+        <Vazio titulo="Ninguém avaliou a IA ainda">Cada leitura da IA e cada peça têm os botões Útil e Errado no rodapé. O que a equipe marcar aparece aqui.</Vazio>
+      </Painel>
+    );
+  }
+  return (
+    <div className="dc-pilha">
+      <Painel titulo="Como a IA está indo" acao={<span className="dc-nota">Últimos 90 dias</span>} corpo={false}>
+        <div className="dc-linhas">
+          {porAcao.map((a) => (
+            <div key={a.acao} className="dc-linhas__item items-center">
+              <span className="min-w-0 flex-1 text-[14px] font-medium">{a.rotulo}</span>
+              <span className="dc-num flex-none text-[13px] text-[var(--tinta-2)]">
+                {a.uteis} {a.uteis === 1 ? "útil" : "úteis"} · {a.errados} {a.errados === 1 ? "errado" : "errados"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Painel>
+      <Painel titulo="O que estava errado" corpo={false}>
+        {errados.length ? (
+          <div className="dc-linhas">
+            {errados.map((r) => (
+              <div key={r.id} className="dc-linhas__item">
+                <span className="dc-num w-[92px] flex-none text-[13px] text-[var(--tinta-2)]">{diaDoInstante(r.em) === eu.data?.hoje ? hora(r.em) : diaCurto(diaDoInstante(r.em))}</span>
+                <span className="dc-celula min-w-0 flex-1">
+                  <span className="dc-celula__1">{r.rotulo}</span>
+                  <span className="dc-celula__2">{[r.comentario ?? "Sem comentário", r.pessoa?.apelido].filter(Boolean).join(" · ")}</span>
+                </span>
+                <Abrir onde={r.onde} celular={celular} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Vazio titulo="Nada marcado como errado" />
+        )}
+      </Painel>
+    </div>
   );
 }
 

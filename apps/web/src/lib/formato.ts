@@ -60,3 +60,14 @@ export const paraValor = (texto: string): string | null => {
 };
 /** "1234.5" → "1.234,50" para o campo. */
 export const valorNoCampo = (v: string | null | undefined) => (v == null || v === "" ? "" : new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v)));
+
+/** Como o juízo decidiu, pelo pedido do autor (a mesma lista da API). */
+export const RESULTADO_DA_DECISAO = {
+  procedente: "Procedente",
+  parcialmente_procedente: "Parcialmente procedente",
+  improcedente: "Improcedente",
+  sem_merito: "Extinto sem mérito",
+  acordo_homologado: "Acordo homologado",
+  outro: "Outro resultado",
+} as const;
+export const TIPO_DA_DECISAO = { sentenca: "Sentença", acordao: "Acórdão" } as const;

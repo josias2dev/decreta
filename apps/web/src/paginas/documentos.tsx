@@ -11,7 +11,7 @@ import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { diaCompleto, diaCurto, diaDoInstante, numero, tamanho } from "@/lib/formato";
 import type { Documento } from "@/lib/tipos";
-import { Enviar } from "./processo";
+import { enquantoLe, Enviar, LeituraDaIa } from "./processo";
 
 const arquivo = (id: string) => `${API_URL}/api/app/documentos/${id}/arquivo`;
 const ORIGEM = { upload: "Enviado", peca: "Peça", captura: "Dos autos" } as const;
@@ -20,7 +20,7 @@ export function DocumentosPage() {
   const celular = useCelular();
   const [texto, setTexto] = useState("");
   const busca = useDeferredValue(texto.trim());
-  const docs = useQuery({ queryKey: ["documentos", "todos", busca], queryFn: () => api<{ itens: Documento[] }>(`/documentos${busca ? `?busca=${encodeURIComponent(busca)}` : ""}`), placeholderData: (a) => a });
+  const docs = useQuery({ queryKey: ["documentos", "todos", busca], queryFn: () => api<{ itens: Documento[] }>(`/documentos${busca ? `?busca=${encodeURIComponent(busca)}` : ""}`), placeholderData: (a) => a, refetchInterval: enquantoLe });
   const [apagando, setApagando] = useState<Documento | null>(null);
   const itens = docs.data?.itens ?? [];
   const sub = docs.data ? `${numero(itens.length)}${itens.length === 200 ? "+" : ""} ${itens.length === 1 ? "documento" : "documentos"}${busca ? " encontrados" : ", os mais recentes primeiro"}` : " ";
@@ -58,6 +58,7 @@ export function DocumentosPage() {
                       {d.processo?.titulo ?? d.cliente?.nome ?? "Escritório"} · {diaCurto(diaDoInstante(d.em))}
                     </span>
                   </span>
+                  <LeituraDaIa d={d} />
                 </a>
               ))}
             </div>
@@ -86,7 +87,7 @@ export function DocumentosPage() {
                   <th>Documento</th>
                   <th style={{ width: 260 }}>De</th>
                   <th style={{ width: 112 }}>Enviado</th>
-                  <th style={{ width: 120 }}>Leitura da IA</th>
+                  <th style={{ width: 150 }}>Leitura da IA</th>
                   <th style={{ width: 84 }} />
                 </tr>
               </thead>
@@ -106,7 +107,9 @@ export function DocumentosPage() {
                     </td>
                     <td className="truncate">{de(d)}</td>
                     <td className="dc-num">{diaCompleto(diaDoInstante(d.em))}</td>
-                    <td className="text-[var(--tinta-2)]">{d.lido ? "Lido" : d.semTexto ? <span className="text-[var(--hoje)]">Sem texto</span> : "—"}</td>
+                    <td>
+                      <LeituraDaIa d={d} reler />
+                    </td>
                     <td>
                       <span className="flex justify-end">
                         <a href={arquivo(d.id)} className="dc-btn dc-btn--fantasma dc-btn--sm" aria-label={`Baixar ${d.nome}`}>

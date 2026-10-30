@@ -5,13 +5,13 @@
 import { blocos, trechos, type Bloco } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { Check, Download, FileText, Pencil, RefreshCw } from "lucide-react";
+import { BookMarked, Check, Download, FileText, Pencil, RefreshCw } from "lucide-react";
 import { Fragment, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
-import { Botao, Carregando, Cnj, Faixa, MarcaIa, Painel, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
+import { Botao, Campo, Carregando, Cnj, Faixa, MarcaIa, Painel, RetornoDaIa, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
@@ -29,23 +29,30 @@ export function PecaPage() {
   const avisar = useAviso();
   const eu = useQuery(euQuery);
 
+  const [tipoEscolhido, setTipo] = useState<string | null>(null);
   const pecaSalva = useQuery({ queryKey: ["peca", search.id], queryFn: () => api<Peca>(`/pecas/${search.id}`), enabled: !!search.id });
   const prazoId = search.prazo ?? pecaSalva.data?.prazoId ?? undefined;
   const processoId = search.processo ?? pecaSalva.data?.processoId;
   const consulta = prazoId ? `prazo=${prazoId}` : processoId ? `processo=${processoId}` : null;
-  const prep = useQuery({ queryKey: ["pecas", "preparar", consulta], queryFn: () => api<PreparoDaPeca>(`/pecas/preparar?${consulta}`), enabled: !!consulta });
+  // O tipo vai junto: a lista "A IA lê" mostra os modelos do escritório daquele tipo.
+  const prep = useQuery({
+    queryKey: ["pecas", "preparar", consulta, tipoEscolhido],
+    queryFn: () => api<PreparoDaPeca>(`/pecas/preparar?${consulta}${tipoEscolhido ? `&tipo=${encodeURIComponent(tipoEscolhido)}` : ""}`),
+    enabled: !!consulta,
+    placeholderData: (a: PreparoDaPeca | undefined) => a,
+  });
   const catalogo = useQuery({ queryKey: ["pecas", "catalogo"], queryFn: () => api<Catalogo>("/pecas/catalogo"), staleTime: Infinity });
   const escritorio = useQuery({ queryKey: ["escritorio"], queryFn: () => api<Escritorio>("/escritorio") });
 
   const pecaId = search.id ?? prep.data?.ultima?.id;
   const peca = pecaSalva.data ?? (prep.data?.ultima && pecaId === prep.data.ultima.id ? prep.data.ultima : undefined);
 
-  const [tipoEscolhido, setTipo] = useState<string | null>(null);
   const [instrucoesDigitadas, setInstrucoes] = useState<string | null>(null);
   const [aoVivo, setAoVivo] = useState<string | null>(null);
   const [gerando, setGerando] = useState(false);
   const [edicao, setEdicao] = useState<string | null>(null);
   const [trocando, setTrocando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   const tipo = tipoEscolhido ?? peca?.tipo ?? prep.data?.tipoSugerido ?? "";
   const instrucoes = instrucoesDigitadas ?? peca?.instrucoes ?? "";
@@ -92,7 +99,7 @@ export function PecaPage() {
       void qc.invalidateQueries({ queryKey: ["peca", pecaId] });
       void qc.invalidateQueries({ queryKey: ["pecas", "preparar"] });
       if (corpo.texto !== undefined) setEdicao(null);
-      avisar(corpo.situacao === "revisada" ? "Peça marcada como revisada." : "Texto salvo.");
+      avisar(corpo.situacao === "revisada" ? "Peça marcada como revisada, com o seu nome." : "Texto salvo.");
     },
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
@@ -133,6 +140,12 @@ export function PecaPage() {
   const sobreOPrazo = p.prazo ? `Sugerido pelo prazo de ${diaCurto(p.prazo.fim)}` : "Escolha o modelo da peça";
   const quandoGerou = peca && !gerando ? `${diaDoInstante(peca.atualizadaEm) === eu.data?.hoje ? "às" : `em ${diaCurto(diaDoInstante(peca.atualizadaEm))} às`} ${hora(peca.atualizadaEm)}` : null;
   const revisada = peca?.situacao === "revisada";
+  const revisao = pecaSalva.data?.revisao;
+  const quemRevisou = revisao
+    ? [revisao.por ? `Revisada por ${revisao.por.apelido}` : "Revisada", revisao.por?.oab, `${diaDoInstante(revisao.em) === eu.data?.hoje ? "hoje" : diaCurto(diaDoInstante(revisao.em))} às ${hora(revisao.em)}`].filter(Boolean).join(" · ")
+    : null;
+  const podeAvaliar = !!pecaId && !!texto && !gerando && edicao === null;
+  const revisar = () => salvar.mutate({ situacao: "revisada" });
 
   const leu = (
     <ul className="dc-lista-check m-0 list-none p-0">
@@ -146,6 +159,11 @@ export function PecaPage() {
           <Check /> Dados do processo e as movimentações
         </li>
       )}
+      {p.modelos.map((m) => (
+        <li key={m.id}>
+          <BookMarked /> Modelo do escritório: {m.titulo}
+        </li>
+      ))}
     </ul>
   );
   const campoInstrucoes = (
@@ -200,6 +218,14 @@ export function PecaPage() {
         }}
       />
     </Dialogo>
+  );
+
+  const guardar = peca && pecaId && <GuardarComoModelo pecaId={pecaId} titulo={peca.titulo} aberto={guardando} aoFechar={() => setGuardando(false)} />;
+  const pe = (solto: boolean) => (
+    <div className={cn("dc-peca__pe", solto && "dc-peca__pe--solto")}>
+      <span>Gerado por IA. Confira nos autos antes de protocolar.</span>
+      {podeAvaliar && <RetornoDaIa key={pecaId} alvo={{ pecaId: pecaId! }} />}
+    </div>
   );
 
   if (celular) {
@@ -267,10 +293,28 @@ export function PecaPage() {
               {quandoGerou && <span className="dc-nota">{quandoGerou}</span>}
             </div>
             <div className="dc-folha-fundo">{folha}</div>
-            <p className="dc-nota m-0">Gerado por IA. Confira nos autos antes de protocolar.</p>
+            {pe(true)}
+            {podeAvaliar &&
+              (revisada ? (
+                <>
+                  {quemRevisou && (
+                    <Faixa tipo="ok">
+                      <Check /> {quemRevisou}
+                    </Faixa>
+                  )}
+                  <Botao bloco onClick={() => setGuardando(true)}>
+                    <BookMarked /> Guardar como modelo
+                  </Botao>
+                </>
+              ) : (
+                <Botao bloco onClick={revisar} ocupado={salvar.isPending && salvar.variables?.situacao === "revisada"}>
+                  <Check /> Marcar como revisada
+                </Botao>
+              ))}
           </section>
         )}
         {trocar}
+        {guardar}
       </TelaCelular>
     );
   }
@@ -304,11 +348,16 @@ export function PecaPage() {
               acoesDaEdicao
             ) : (
               <>
-                {texto && !gerando && !revisada && pecaId && (
-                  <Botao variante="fantasma" onClick={() => salvar.mutate({ situacao: "revisada" })}>
-                    <Check /> Marcar como revisada
-                  </Botao>
-                )}
+                {podeAvaliar &&
+                  (revisada ? (
+                    <Botao variante="fantasma" onClick={() => setGuardando(true)}>
+                      <BookMarked /> Guardar como modelo
+                    </Botao>
+                  ) : (
+                    <Botao variante="fantasma" onClick={revisar} ocupado={salvar.isPending && salvar.variables?.situacao === "revisada"}>
+                      <Check /> Marcar como revisada
+                    </Botao>
+                  ))}
                 <Botao onClick={editar} disabled={gerando}>
                   <Pencil /> Editar texto
                 </Botao>
@@ -352,13 +401,71 @@ export function PecaPage() {
                 </span>
               )}
             </span>
-            <span className="dc-nota">Gerado por IA. Confira nos autos antes de protocolar.</span>
+            {revisada && quemRevisou && !gerando && (
+              <span className="inline-flex items-center gap-1.5 text-[13px] text-[var(--tinta-2)]">
+                <Check className="size-3.5 text-[var(--acento)]" /> {quemRevisou}
+              </span>
+            )}
           </div>
           <div className="dc-folha-fundo">{folha}</div>
+          {pe(false)}
         </section>
       </div>
       {trocar}
+      {guardar}
     </Pagina>
+  );
+}
+
+/** Peça boa vira modelo: a IA segue o jeito dela nas próximas do mesmo tipo e assunto. */
+function GuardarComoModelo({ pecaId, titulo, aberto, aoFechar }: { pecaId: string; titulo: string; aberto: boolean; aoFechar: () => void }) {
+  const qc = useQueryClient();
+  const avisar = useAviso();
+  const inicial = () => ({ titulo, tese: "", assunto: "" });
+  const [f, setF] = useState(inicial);
+  const [visto, setVisto] = useState(aberto);
+  if (aberto !== visto) {
+    setVisto(aberto);
+    if (aberto) setF(inicial());
+  }
+  const salvar = useMutation({
+    mutationFn: () => api("/modelos", { json: { pecaId, titulo: f.titulo.trim(), tese: f.tese.trim() || null, assunto: f.assunto.trim() || null } }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["modelos"] });
+      avisar("Guardada em Modelos. A IA segue este modelo nas próximas peças do tipo.");
+      aoFechar();
+    },
+  });
+  return (
+    <Dialogo
+      aberto={aberto}
+      aoFechar={aoFechar}
+      titulo="Guardar como modelo"
+      descricao="A IA usa os modelos do escritório como referência de estrutura e argumentos. Os fatos e nomes deste caso não passam para os outros."
+      acoes={
+        <>
+          <Botao variante="fantasma" onClick={aoFechar}>
+            Cancelar
+          </Botao>
+          <Botao variante="primaria" onClick={() => salvar.mutate()} ocupado={salvar.isPending} disabled={f.titulo.trim().length < 2}>
+            Guardar
+          </Botao>
+        </>
+      }
+    >
+      <div className="dc-form">
+        <Campo rotulo="Nome do modelo" htmlFor="gm-titulo">
+          <input id="gm-titulo" value={f.titulo} onChange={(e) => setF({ ...f, titulo: e.target.value })} />
+        </Campo>
+        <Campo rotulo="Tese" htmlFor="gm-tese" ajuda="Opcional. Ajuda a IA e a busca a achar o modelo certo.">
+          <textarea id="gm-tese" rows={2} value={f.tese} onChange={(e) => setF({ ...f, tese: e.target.value })} placeholder="Negativa de cobertura indevida; dano moral pela recusa." />
+        </Campo>
+        <Campo rotulo="Assunto" htmlFor="gm-assunto" ajuda="Opcional.">
+          <input id="gm-assunto" value={f.assunto} onChange={(e) => setF({ ...f, assunto: e.target.value })} placeholder="Seguro de vida" />
+        </Campo>
+        {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
+      </div>
+    </Dialogo>
   );
 }
 

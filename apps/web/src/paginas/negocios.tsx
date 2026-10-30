@@ -1,18 +1,20 @@
 /** Novos negócios: a triagem de quem chega, com o checklist da pasta, até virar cliente. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { MessageCircle, Plus, UserCheck } from "lucide-react";
+import { FileText, MessageCircle, Plus, UserCheck } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Avatar, Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCurto, diaDoInstante, telefone } from "@/lib/formato";
-import type { EtapaNegocio, Negocio, Pasta } from "@/lib/tipos";
+import type { EtapaNegocio, Negocio, Pasta, PastaDoNegocio } from "@/lib/tipos";
 import { cn } from "@/lib/util";
+import { enquantoLe, Enviar, LeituraDaIa } from "./processo";
 
 const ETAPAS: { id: EtapaNegocio; rotulo: string }[] = [
   { id: "triagem", rotulo: "Triagem" },
@@ -270,10 +272,56 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
             </div>
           </div>
         </div>
+        {n.etapa !== "concluido" && <ArquivosDaPasta negocioId={n.id} />}
         <Campo rotulo="Observações" htmlFor="vn-obs">
           <textarea id="vn-obs" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={() => obs !== (n.observacoes ?? "") && mudar.mutate({ observacoes: obs || null })} />
         </Campo>
       </div>
     </Dialogo>
+  );
+}
+
+/** Os documentos que a pessoa trouxe na triagem e a conferência da IA antes de virar cliente. */
+function ArquivosDaPasta({ negocioId }: { negocioId: string }) {
+  const qc = useQueryClient();
+  const avisar = useAviso();
+  const eu = useQuery(euQuery);
+  const q = useQuery({ queryKey: ["pasta", "negocio", negocioId], queryFn: () => api<PastaDoNegocio>(`/negocios/${negocioId}/pasta`), refetchInterval: enquantoLe });
+  const conferir = useMutation({
+    mutationFn: () => api(`/negocios/${negocioId}/conferir`, { method: "POST" }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["pasta", "negocio", negocioId] }),
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+  const docs = q.data?.documentos ?? [];
+  return (
+    <div className="dc-campo">
+      <div className="flex items-center justify-between gap-2">
+        <label>Documentos da pasta</label>
+        <Enviar negocioId={negocioId} />
+      </div>
+      {docs.length > 0 && (
+        <div className="dc-painel">
+          <div className="dc-linhas">
+            {docs.map((d) => (
+              <div key={d.id} className="dc-linhas__item items-center">
+                <FileText className="size-4 flex-none text-[var(--tinta-3)]" />
+                <a className="dc-celula__1 min-w-0 flex-1 truncate no-underline hover:underline" href={`${API_URL}/api/app/documentos/${d.id}/arquivo?ver=1`} target="_blank" rel="noreferrer">
+                  {d.nome}
+                </a>
+                <LeituraDaIa d={d} reler />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {q.data && (
+        <ConferenciaDaPasta
+          analise={q.data.conferencia}
+          aoConferir={eu.data?.ia ? () => conferir.mutate() : undefined}
+          conferindo={conferir.isPending}
+          semDocumentos={!docs.some((d) => d.lido)}
+        />
+      )}
+    </div>
   );
 }

@@ -8,6 +8,7 @@ import { Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/
 import {
   ArrowLeft,
   Banknote,
+  BookMarked,
   Building2,
   CalendarDays,
   FileText,
@@ -36,7 +37,7 @@ import { Busca } from "./busca";
 import { Marca } from "./marca";
 import { Botao, Carregando } from "./ui";
 
-type Destino = "/hoje" | "/prazos" | "/publicacoes" | "/agenda" | "/perguntar" | "/processos" | "/clientes" | "/negocios" | "/alvaras" | "/documentos" | "/equipe" | "/configuracoes";
+type Destino = "/hoje" | "/prazos" | "/publicacoes" | "/agenda" | "/perguntar" | "/processos" | "/clientes" | "/negocios" | "/alvaras" | "/documentos" | "/modelos" | "/equipe" | "/configuracoes";
 
 interface ItemDoMenu {
   to: Destino;
@@ -69,6 +70,7 @@ export const MENU: { titulo: string; itens: ItemDoMenu[] }[] = [
     titulo: "Escritório",
     itens: [
       { to: "/documentos", rotulo: "Documentos", icone: FileText },
+      { to: "/modelos", rotulo: "Modelos", icone: BookMarked },
       { to: "/equipe", rotulo: "Equipe", icone: UsersRound },
       { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
     ],

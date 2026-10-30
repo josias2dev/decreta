@@ -9,6 +9,7 @@ import { ClientePage, ClientesPage } from "./paginas/clientes";
 import { ConfiguracoesPage } from "./paginas/configuracoes";
 import { ContaPage } from "./paginas/conta";
 import { DocumentosPage } from "./paginas/documentos";
+import { ModelosPage } from "./paginas/modelos";
 import { EntrarPage } from "./paginas/entrar";
 import { EquipePage } from "./paginas/equipe";
 import { HojePage } from "./paginas/hoje";
@@ -119,6 +120,7 @@ const perguntarRoute = createRoute({
 const negociosRoute = createRoute({ getParentRoute: () => appRoute, path: "/negocios", component: NegociosPage });
 const alvarasRoute = createRoute({ getParentRoute: () => appRoute, path: "/alvaras", component: AlvarasPage });
 const documentosRoute = createRoute({ getParentRoute: () => appRoute, path: "/documentos", component: DocumentosPage });
+const modelosRoute = createRoute({ getParentRoute: () => appRoute, path: "/modelos", component: ModelosPage });
 const equipeRoute = createRoute({ getParentRoute: () => appRoute, path: "/equipe", component: EquipePage });
 const configuracoesRoute = createRoute({ getParentRoute: () => appRoute, path: "/configuracoes", component: ConfiguracoesPage });
 const contaRoute = createRoute({ getParentRoute: () => appRoute, path: "/conta", component: ContaPage });
@@ -146,6 +148,7 @@ const routeTree = rootRoute.addChildren([
     negociosRoute,
     alvarasRoute,
     documentosRoute,
+    modelosRoute,
     equipeRoute,
     configuracoesRoute,
     contaRoute,

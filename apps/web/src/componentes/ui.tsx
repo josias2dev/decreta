@@ -1,7 +1,10 @@
 /** Componentes do design system (classes dc-*) em React. */
+import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, RefreshCw, Search } from "lucide-react";
-import { Children, Fragment, forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { ChevronRight, RefreshCw, Search, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Children, Fragment, forwardRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useAviso } from "@/componentes/avisos";
+import { api, mensagemDoErro } from "@/lib/api";
 import type { Analise, Pessoa, Urgencia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
@@ -107,15 +110,18 @@ export function BlocoIa({
   aoRefazer,
   refazendo,
   avisoDesatualizada,
+  rotuloGerar = "Gerar",
   children,
   className,
 }: {
   titulo: string;
-  analise?: Pick<Analise<object>, "situacao" | "fonte" | "desatualizada" | "erro" | "conteudo"> | null;
+  analise?: (Pick<Analise<object>, "situacao" | "fonte" | "desatualizada" | "erro" | "conteudo"> & { id?: string }) | null;
   rodape?: string;
   aoRefazer?: () => void;
   refazendo?: boolean;
   avisoDesatualizada?: string;
+  /** O botão quando ainda não há análise ("Conferir", "Ler a decisão"). */
+  rotuloGerar?: string;
   children?: ReactNode;
   className?: string;
 }) {
@@ -153,13 +159,67 @@ export function BlocoIa({
       )}
       <div className="dc-ia__pe">
         <span>{rodape}</span>
+        {analise?.id && analise.situacao === "pronto" && !refazendo && <RetornoDaIa key={analise.id} alvo={{ analiseId: analise.id }} />}
         {aoRefazer && !analise?.desatualizada && (
           <Botao variante="fantasma" pequeno onClick={aoRefazer} ocupado={refazendo}>
-            <RefreshCw /> {analise ? "Refazer" : "Gerar"}
+            <RefreshCw /> {analise ? "Refazer" : rotuloGerar}
           </Botao>
         )}
       </div>
     </section>
+  );
+}
+
+/**
+ * "Útil" ou "Errado" no que a IA entregou. O errado pede uma frase do que
+ * estava errado; os sócios veem tudo em Configurações. Votar de novo troca o voto.
+ */
+export function RetornoDaIa({ alvo }: { alvo: { analiseId: string } | { pecaId: string } }) {
+  const avisar = useAviso();
+  const [voto, setVoto] = useState<boolean | null>(null);
+  const [comentando, setComentando] = useState(false);
+  const [comentario, setComentario] = useState("");
+  const enviar = useMutation({
+    mutationFn: (b: { util: boolean; comentario?: string }) => api("/ia/retorno", { json: { ...alvo, ...b } }),
+    onSuccess: (_r, b) => {
+      setVoto(b.util);
+      if (b.comentario !== undefined) {
+        setComentando(false);
+        avisar("Obrigado. O retorno fica com os sócios.");
+      } else setComentando(!b.util);
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+  return (
+    <>
+      <span className="dc-retorno" role="group" aria-label="Avaliar a IA">
+        <Botao variante="fantasma" pequeno aria-label="Útil" title="Útil" aria-pressed={voto === true} disabled={enviar.isPending} onClick={() => enviar.mutate({ util: true })}>
+          <ThumbsUp />
+        </Botao>
+        <Botao variante="fantasma" pequeno aria-label="Errado" title="Errado" aria-pressed={voto === false} disabled={enviar.isPending} onClick={() => enviar.mutate({ util: false })}>
+          <ThumbsDown />
+        </Botao>
+      </span>
+      {comentando && (
+        <form
+          className="dc-campo dc-retorno__comentario"
+          onSubmit={(e) => {
+            e.preventDefault();
+            enviar.mutate({ util: false, comentario: comentario.trim() });
+          }}
+        >
+          <textarea rows={2} value={comentario} onChange={(e) => setComentario(e.target.value)} placeholder="O que estava errado? Uma frase já ajuda." aria-label="O que estava errado" autoFocus />
+          <div className="dc-linha-acoes">
+            <Botao type="submit" pequeno ocupado={enviar.isPending} disabled={!comentario.trim()}>
+              Enviar
+            </Botao>
+            <Botao variante="fantasma" pequeno onClick={() => setComentando(false)}>
+              Agora não
+            </Botao>
+          </div>
+        </form>
+      )}
+    </>
   );
 }
 

@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router"
 import { FileText, FolderPlus, MessageCircle, MessageSquarePlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -16,7 +17,7 @@ import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, hora, numero, tamanho, telefone } from "@/lib/formato";
 import type { Canal, Cliente, ClienteNaLista, Pagina as PaginaDaApi } from "@/lib/tipos";
-import { Enviar } from "./processo";
+import { enquantoLe, Enviar, LeituraDaIa } from "./processo";
 
 export const CANAL: Record<Canal, string> = { presencial: "Presencial", telefone: "Telefone", whatsapp: "WhatsApp", video: "Vídeo", email: "E-mail" };
 const linkDoWhatsapp = (n: string | null) => (n ? `https://wa.me/${n.replace(/\D/g, "").replace(/^(?!55)/, "55")}` : null);
@@ -153,8 +154,15 @@ export function ClientePage() {
   const { id } = useParams({ from: "/app/clientes/$id" });
   const celular = useCelular();
   const eu = useQuery(euQuery);
-  const q = useQuery({ queryKey: ["cliente", id], queryFn: () => api<Cliente>(`/clientes/${id}`) });
+  const q = useQuery({ queryKey: ["cliente", id], queryFn: () => api<Cliente>(`/clientes/${id}`), refetchInterval: enquantoLe });
   const [dialogo, setDialogo] = useState<"atendimento" | "processo" | "editar" | "apagar" | null>(null);
+  const qc = useQueryClient();
+  const avisar = useAviso();
+  const conferir = useMutation({
+    mutationFn: () => api(`/clientes/${id}/conferir`, { method: "POST" }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["cliente", id] }),
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
 
   const c = q.data;
   if (!c) {
@@ -263,6 +271,7 @@ export function ClientePage() {
                   {diaCurto(diaDoInstante(d.em))} · {tamanho(d.tamanho)}
                 </span>
               </span>
+              <LeituraDaIa d={d} />
             </a>
           ))}
         </div>
@@ -270,6 +279,15 @@ export function ClientePage() {
         <Vazio titulo="Nenhum documento">RG, comprovantes, procuração.</Vazio>
       )}
     </Painel>
+  );
+
+  const conferencia = (
+    <ConferenciaDaPasta
+      analise={c.conferencia}
+      aoConferir={eu.data?.ia ? () => conferir.mutate() : undefined}
+      conferindo={conferir.isPending}
+      semDocumentos={!c.documentos.some((d) => d.lido)}
+    />
   );
 
   const tempo = c.linhaDoTempo.length > 0 && (
@@ -326,6 +344,7 @@ export function ClientePage() {
         {atendimentos}
         {dados}
         {documentos}
+        {conferencia}
         {tempo}
         {apagar}
         {dialogos}
@@ -368,6 +387,7 @@ export function ClientePage() {
         <div className="dc-pilha">
           {dados}
           {documentos}
+          {conferencia}
           {tempo}
           {apagar}
         </div>

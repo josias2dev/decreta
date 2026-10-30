@@ -1,6 +1,6 @@
 /** Telas no celular (390 × 844, como um iPhone 14), com as respostas da demonstração. */
 import { expect, test } from "@playwright/test";
-import { abrir, ids, sobraNaLateral } from "./apoio";
+import { abrir, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
 
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 
@@ -49,13 +49,31 @@ test("processo: as abas cabem sem rolar e Perguntar abre o chat do processo", as
 test("Mais: o resto do menu, sem repetir a navegação de baixo", async ({ page }) => {
   await abrir(page, "/mais");
   const miolo = page.locator("main");
-  for (const item of ["Publicações", "Agenda", "Novos negócios", "Alvarás", "Documentos", "Equipe", "Configurações"]) await expect(miolo.getByRole("link", { name: new RegExp(item) })).toBeVisible();
+  for (const item of ["Publicações", "Agenda", "Novos negócios", "Alvarás", "Documentos", "Modelos", "Equipe", "Configurações"]) await expect(miolo.getByRole("link", { name: new RegExp(item) })).toBeVisible();
   for (const item of ["Hoje", "Prazos", "Processos", "Clientes"]) await expect(miolo.getByRole("link", { name: new RegExp(`^${item}`) })).toHaveCount(0);
 });
 
 test("peça sem a IA: o botão de baixo é escrever à mão", async ({ page }) => {
   await abrir(page, `/pecas?prazo=${ids.prazo}`);
   await expect(page.getByRole("button", { name: "Escrever à mão" })).toBeInViewport();
+});
+
+test("sentença: leitura pedido a pedido, decisão alinhada à direita e confirmar", async ({ page }) => {
+  const api = await abrir(page, `/publicacoes/${ids.sentenca}`, new ApiFalsa().responder("/eu", euComIa));
+  await expect(page.getByText("Leitura da sentença")).toBeVisible();
+  const decisoes = page.locator(".dc-pedidos__decisao");
+  await expect(decisoes).toHaveCount(3);
+  const direitas = await decisoes.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().right)));
+  expect(new Set(direitas).size).toBe(1);
+  await page.getByRole("button", { name: "Confirmar resultado" }).tap();
+  await expect.poll(() => api.mudancas(`/publicacoes/${ids.sentenca}/resultado`).length).toBe(1);
+  expect(await sobraNaLateral(page)).toBe(0);
+});
+
+test("peça revisada: quem revisou e guardar como modelo, no meio da tela", async ({ page }) => {
+  await abrir(page, `/pecas?id=${ids.peca}`, new ApiFalsa().responder(`/pecas/${ids.peca}`, amostras.pecaRevisada!.corpo));
+  await expect(page.getByText(/Revisada por Beatriz · OAB\/SC 41\.233/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Guardar como modelo" })).toBeVisible();
 });
 
 const ROTAS = [
@@ -75,6 +93,9 @@ const ROTAS = [
   "/negocios",
   "/alvaras",
   "/documentos",
+  "/modelos",
+  `/publicacoes/${ids.sentenca}#sentenca`,
+  `/processos/${ids.processoComResultado}#resultado`,
   "/equipe",
   "/configuracoes",
   "/conta",

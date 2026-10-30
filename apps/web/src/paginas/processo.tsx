@@ -1,7 +1,7 @@
 /** Ficha do processo: resumo da IA, movimentações, prazos, documentos e o chat dos autos. */
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { ArrowRight, Download, ExternalLink, FileText, MessageSquare, Plus, RefreshCw, Trash2, Upload } from "lucide-react";
+import { ArrowRight, Download, ExternalLink, FileText, LoaderCircle, MessageSquare, Plus, RefreshCw, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Conversa } from "@/componentes/conversa";
@@ -13,7 +13,7 @@ import { Abas, Avatar, BlocoIa, Botao, Campo, Carregando, Chip, Cnj, Dados, Faix
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { diaCompleto, diaCurto, diaDoInstante, diaMes, dinheiro, hora, numero, ondeTramita, prazoEmDias, tamanho } from "@/lib/formato";
+import { diaCompleto, diaCurto, diaDoInstante, diaMes, dinheiro, hora, numero, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, tamanho, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { Conversa as ConversaDaApi, Documento, ListaDePrazos, Movimentacao, Movimentacoes, Parte, Processo, ResumoDosAutos } from "@/lib/tipos";
 import { Situacao } from "./prazos";
 
@@ -210,6 +210,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
           ["Valor da causa", dinheiro(p.valorCausa)],
           ["Fase", p.fase ?? "—"],
           ["Situação", SITUACAO[p.situacao]],
+          ...p.resultados.slice(0, 1).map((r): [string, string] => ["Resultado", `${RESULTADO_DA_DECISAO[r.resultado]} · ${TIPO_DA_DECISAO[r.tipo].toLocaleLowerCase("pt-BR")} de ${diaCompleto(r.decididoEm)}`]),
           ["Responsável", <Responsavel pessoa={p.responsavel} />],
           ...(p.observacoes ? ([["Observações", p.observacoes]] as [string, string][]) : []),
         ]}
@@ -606,28 +607,34 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
 
 /* ---------------- Documentos ---------------- */
 
-export function Enviar({ processoId, clienteId, aoEnviar }: { processoId?: string; clienteId?: string; aoEnviar?: () => void }) {
+export function Enviar({ processoId, clienteId, negocioId, aoEnviar }: { processoId?: string; clienteId?: string; negocioId?: string; aoEnviar?: () => void }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const entrada = useRef<HTMLInputElement>(null);
   const enviar = useMutation({
     mutationFn: async (arquivos: File[]) => {
       let lidos = 0;
+      let lendo = 0;
       for (const a of arquivos) {
         const form = new FormData();
         form.set("arquivo", a);
         if (processoId) form.set("processoId", processoId);
         if (clienteId) form.set("clienteId", clienteId);
-        const r = await api<{ lido: boolean }>("/documentos", { form });
+        if (negocioId) form.set("negocioId", negocioId);
+        const r = await api<{ lido: boolean; lendo?: boolean }>("/documentos", { form });
         if (r.lido) lidos++;
+        if (r.lendo) lendo++;
       }
-      return { n: arquivos.length, lidos };
+      return { n: arquivos.length, lidos, lendo };
     },
-    onSuccess: ({ n, lidos }) => {
-      avisar(n === 1 ? (lidos ? "Documento guardado e lido." : "Documento guardado.") : `${n} documentos guardados.`);
+    onSuccess: ({ n, lidos, lendo }) => {
+      // Foto e PDF escaneado: a IA transcreve em segundo plano.
+      const depois = lendo ? (lendo === 1 && n === 1 ? " A IA está lendo o arquivo." : " A IA está lendo os escaneados.") : "";
+      avisar(n === 1 ? (lidos ? "Documento guardado e lido." : `Documento guardado.${depois}`) : `${n} documentos guardados.${depois}`);
       void qc.invalidateQueries({ queryKey: ["documentos"] });
       void qc.invalidateQueries({ queryKey: ["processo"] });
       void qc.invalidateQueries({ queryKey: ["cliente"] });
+      void qc.invalidateQueries({ queryKey: ["pasta"] });
       aoEnviar?.();
     },
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
@@ -653,19 +660,55 @@ export function Enviar({ processoId, clienteId, aoEnviar }: { processoId?: strin
   );
 }
 
-function LeituraDaIa({ d }: { d: Documento }) {
-  if (d.lido)
+/** Enquanto algum arquivo está na leitura da IA, a lista pergunta de novo. */
+export const enquantoLe = (q: { state: { data?: { itens?: { leitura: Documento["leitura"] }[]; documentos?: { leitura: Documento["leitura"] }[] } } }) =>
+  (q.state.data?.itens ?? q.state.data?.documentos ?? []).some((d) => d.leitura === "pendente") ? 5000 : false;
+
+/**
+ * Como a IA está com o arquivo: lido na hora (PDF com texto, DOCX), transcrito
+ * (foto, PDF escaneado), lendo ou sem leitura. Com `reler`, oferece ler de novo.
+ */
+export function LeituraDaIa({ d, reler }: { d: Pick<Documento, "id" | "lido" | "leitura"> & { semTexto?: boolean; mime?: string }; reler?: boolean }) {
+  const qc = useQueryClient();
+  const avisar = useAviso();
+  const eu = useQuery(euQuery);
+  const ler = useMutation({
+    mutationFn: () => api(`/documentos/${d.id}/ler`, { method: "POST" }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["documentos"] });
+      void qc.invalidateQueries({ queryKey: ["cliente"] });
+      void qc.invalidateQueries({ queryKey: ["pasta"] });
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+  if (d.leitura === "pendente" || ler.isPending)
     return (
-      <span className="inline-flex items-center gap-1 text-[var(--tinta-2)]">
-        <span className="text-[var(--cumprido)]">✓</span> Lido
+      <span className="dc-leitura text-[var(--tinta-3)]">
+        <LoaderCircle className="animate-spin" /> Lendo
       </span>
     );
-  if (d.semTexto) return <span className="text-[var(--hoje)]">Sem texto (imagem)</span>;
-  return <span className="text-[var(--tinta-3)]">Não lido</span>;
+  if (d.lido)
+    return (
+      <span className="dc-leitura text-[var(--tinta-2)]">
+        <span className="text-[var(--cumprido)]">✓</span> {d.leitura === "pronta" ? "Transcrito" : "Lido"}
+      </span>
+    );
+  const semTexto = d.leitura === "falhou" || d.semTexto || d.mime?.startsWith("image/");
+  if (!semTexto) return <span className="dc-leitura text-[var(--tinta-3)]">Não lido</span>;
+  return (
+    <span className="dc-leitura text-[var(--hoje)]">
+      {d.leitura === "falhou" ? "Não deu para ler" : "Sem texto"}
+      {reler && eu.data?.ia && (
+        <button type="button" className="dc-link" onClick={() => ler.mutate()}>
+          {d.leitura === "falhou" ? "Tentar de novo" : "Ler com a IA"}
+        </button>
+      )}
+    </span>
+  );
 }
 
 function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
-  const docs = useQuery({ queryKey: ["documentos", "processo", p.id], queryFn: () => api<{ itens: Documento[] }>(`/documentos?processo=${p.id}`) });
+  const docs = useQuery({ queryKey: ["documentos", "processo", p.id], queryFn: () => api<{ itens: Documento[] }>(`/documentos?processo=${p.id}`), refetchInterval: enquantoLe });
   const itens = docs.data?.itens ?? [];
   const paginas = itens.reduce((s, d) => s + (d.paginas ?? 0), 0);
   return (
@@ -736,7 +779,7 @@ function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
                     {d.paginas ?? "—"}
                   </td>
                   <td>
-                    <LeituraDaIa d={d} />
+                    <LeituraDaIa d={d} reler />
                   </td>
                   <td>
                     <a href={arquivo(d.id)} className="dc-btn dc-btn--fantasma dc-btn--sm" aria-label={`Baixar ${d.nome}`}>
