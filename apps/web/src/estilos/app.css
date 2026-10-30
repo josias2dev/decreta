@@ -314,3 +314,9 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 
 /* Caixa de marcar dentro de um campo (checklist da triagem): não herda o tamanho dos campos de texto. */
 .dc-campo input.dc-checa, .dc-celular .dc-campo input.dc-checa { width: 16px; height: 16px; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: none; flex: none; }
+
+/* Diálogo comprido (a triagem com a pasta): rola por dentro e os botões ficam presos embaixo, à vista. */
+.dc-dialogo { --dc-dialogo-pe: var(--space-5); scrollbar-width: thin; scrollbar-color: var(--borda-forte) transparent; }
+.dc-celular .dc-dialogo, .dc-dialogo.dc-celular { --dc-dialogo-pe: calc(var(--space-5) + env(safe-area-inset-bottom)); }
+.dc-dialogo > .dc-dialogo__acoes { position: sticky; bottom: calc(-1 * var(--dc-dialogo-pe)); z-index: 1; margin: calc(-1 * var(--space-2)) 0 calc(-1 * var(--dc-dialogo-pe)); padding: var(--space-3) 0 var(--dc-dialogo-pe); background: var(--superficie); }
+.dc-linhas__item > .dc-checa { margin: 0; }

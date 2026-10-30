@@ -1,5 +1,6 @@
 /* Decreta — gerado de tokens.json (v2, estilo AgenteHost) */
 :root, [data-theme="claro"] {
+  color-scheme: light;
   --papel: #fafafa;
   --superficie: #ffffff;
   --superficie-2: #f2f2f4;
@@ -38,6 +39,8 @@
   --sombra-leve: 0 1px 1px rgba(16, 24, 40, 0.04);
 }
 [data-theme="escuro"] {
+  /* Barras de rolagem, caixas de marcar e listas nativas também no escuro. */
+  color-scheme: dark;
   --papel: #111114;
   --superficie: #18181c;
   --superficie-2: #222228;

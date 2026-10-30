@@ -260,13 +260,16 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
           </Campo>
         </div>
         <div className="dc-campo">
-          <label>Pasta · {PASTA[n.pasta].rotulo}</label>
+          <div className="flex items-center justify-between gap-2">
+            <label>Checklist da pasta</label>
+            <span className={cn("dc-selo", PASTA[n.pasta].classe)}>{PASTA[n.pasta].rotulo}</span>
+          </div>
           <div className="dc-painel">
             <div className="dc-linhas">
               {n.checklist.map((item, k) => (
                 <label key={k} className="dc-linhas__item cursor-pointer items-center">
                   <input type="checkbox" className="dc-checa" checked={item.feito} onChange={(e) => mudar.mutate({ checklist: n.checklist.map((x, j) => (j === k ? { ...x, feito: e.target.checked } : x)) })} />
-                  <span className={cn("text-[14px]", item.feito && "text-[var(--tinta-3)] line-through")}>{item.texto}</span>
+                  <span className={cn("text-[14px]", item.feito ? "text-[var(--tinta)]" : "text-[var(--tinta-2)]")}>{item.texto}</span>
                 </label>
               ))}
             </div>
