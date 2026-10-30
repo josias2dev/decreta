@@ -38,6 +38,7 @@
   --sombra-acento: 0 6px 16px -10px rgba(51, 70, 196, 0.75);
   --sombra-leve: 0 1px 1px rgba(16, 24, 40, 0.04);
 }
+/* Escuro só nas partes escuras da landing e na tela de entrar: o app é sempre claro. */
 [data-theme="escuro"] {
   /* Barras de rolagem, caixas de marcar e listas nativas também no escuro. */
   color-scheme: dark;

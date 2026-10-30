@@ -110,14 +110,11 @@ test("cliente: dados, processos e a linha do tempo", async ({ page }) => {
   expect(await sobraNaLateral(page)).toBe(0);
 });
 
-test("minha conta: o tema escolhido vale na hora e fica no aparelho", async ({ page }) => {
+test("minha conta: sempre claro, mesmo com o aparelho no escuro", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
   await abrir(page, "/conta");
-  await page.getByRole("button", { name: "Escuro" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "escuro");
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "escuro");
-  await page.getByRole("button", { name: "Automático" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "claro");
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", "escuro");
+  await expect(page.getByRole("group", { name: "Tema" })).toHaveCount(0);
   // A conta da demonstração é de todos: não troca a senha.
   await expect(page.getByText("Esta é a conta de demonstração")).toBeVisible();
   await expect(page.getByRole("button", { name: "Trocar senha" })).toHaveCount(0);

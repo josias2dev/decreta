@@ -1,4 +1,4 @@
-/** Minha conta: perfil, senha, verificação em duas etapas, aparência e sair. */
+/** Minha conta: perfil, senha, verificação em duas etapas e sair. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { LogOut, ShieldCheck } from "lucide-react";
@@ -7,13 +7,12 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
-import { Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Painel } from "@/componentes/ui";
+import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { authCall, authClient } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { telefone } from "@/lib/formato";
-import { escolherTema, temaEscolhido, type Tema } from "@/lib/tema";
 import { equipeQuery } from "./equipe";
 
 export function ContaPage() {
@@ -48,7 +47,6 @@ export function ContaPage() {
       </div>
       <div className="dc-pilha">
         {!demonstracao && <DuasEtapas ligada={!!(sessao.data?.user as { twoFactorEnabled?: boolean } | undefined)?.twoFactorEnabled} />}
-        <Aparencia />
         <Painel titulo="Sair">
           <p className="dc-nota mb-3 mt-0">A sessão dura 30 dias neste aparelho. Saia se o aparelho não for seu.</p>
           <Botao onClick={() => sair.mutate()} ocupado={sair.isPending}>
@@ -114,35 +112,6 @@ function Perfil() {
         <Botao className="md:self-start" variante="primaria" onClick={() => salvar.mutate()} ocupado={salvar.isPending} disabled={!f}>
           Salvar perfil
         </Botao>
-      </div>
-    </Painel>
-  );
-}
-
-const TEMAS: [Tema, string][] = [
-  ["auto", "Automático"],
-  ["claro", "Claro"],
-  ["escuro", "Escuro"],
-];
-
-function Aparencia() {
-  const [tema, setTema] = useState<Tema>(temaEscolhido);
-  return (
-    <Painel titulo="Aparência">
-      <p className="dc-nota mb-3 mt-0">Vale para este aparelho. No automático, segue o modo claro ou escuro do celular ou do computador.</p>
-      <div className="dc-chips" role="group" aria-label="Tema">
-        {TEMAS.map(([t, rotulo]) => (
-          <Chip
-            key={t}
-            ligado={tema === t}
-            onClick={() => {
-              escolherTema(t);
-              setTema(t);
-            }}
-          >
-            {rotulo}
-          </Chip>
-        ))}
       </div>
     </Painel>
   );
