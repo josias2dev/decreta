@@ -1,19 +1,18 @@
 /** Alvarás: do expedido ao repassado para o cliente, com quanto falta receber. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ChevronRight, Plus } from "lucide-react";
-import { Fragment, useState } from "react";
+import { ArrowRight, CircleCheck, Landmark, Plus, Wallet, type LucideIcon } from "lucide-react";
+import { useDeferredValue, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
-import { ColunaDoQuadro, Quadro, Rolagem } from "@/componentes/rolagem";
-import { Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
-import { SeletorDeVariante, useVariante } from "@/componentes/variantes";
+import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
+import { Botao, Cabecalho, Campo, CampoDeBusca, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { diaCompleto, diaCurto, diasDesde, dinheiro, haQuanto, numero, paraValor, valorNoCampo } from "@/lib/formato";
+import { diaCompleto, diasDesde, dinheiro, haQuanto, numero, paraValor, valorNoCampo } from "@/lib/formato";
 import { cn } from "@/lib/util";
 import type { Alvara, EtapaAlvara, QuadroDeAlvaras } from "@/lib/tipos";
 
@@ -33,12 +32,10 @@ const CHEGOU: Record<EtapaAlvara, { rotulo: string; dia: (a: Alvara) => string |
 const PARADO: Partial<Record<EtapaAlvara, number>> = { novo: 15, aguardando_saque: 15, sacado: 5 };
 
 const alvaras = (n: number) => `${numero(n)} ${n === 1 ? "alvará" : "alvarás"}`;
-/** O que leva à etapa seguinte, no botão. */
-const AVANCAR: Partial<Record<EtapaAlvara, string>> = { novo: "Aguardar saque", aguardando_saque: "Marcar sacado", sacado: "Marcar repassado", repassado: "Finalizar" };
-const semMoeda = (v: string | number) => dinheiro(v).replace(/^R\$\s?/, "");
+const semAcento = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
 
 type Item = Alvara & { etapa: EtapaAlvara };
-type Totais = { valor: number; n: number };
+type Etapa = { etapa: EtapaAlvara; total: number; itens: Item[] };
 
 /** Há quanto tempo o alvará está na etapa e se passou do normal. */
 function naEtapa(a: Item) {
@@ -49,24 +46,26 @@ function naEtapa(a: Item) {
   return { dia, parado, titulo: dia ? `${chegou.rotulo} em ${diaCompleto(dia)}${parado ? `, há mais de ${limite} dias nesta etapa` : ""}` : undefined };
 }
 
+/** Há quanto tempo está na etapa. O "há" sai quando o cartão é estreito, para o valor e o tempo caberem na mesma linha. */
 function Quando({ a }: { a: Item }) {
   const { dia, parado, titulo } = naEtapa(a);
   if (!dia) return null;
+  const texto = haQuanto(dia);
   return (
     <span className={cn("dc-quando", parado && "is-parado")} title={titulo}>
-      {haQuanto(dia)}
+      <span>
+        {texto.startsWith("há ") ? (
+          <>
+            <span className="dc-quando__ha">há </span>
+            {texto.slice(3)}
+          </>
+        ) : (
+          texto
+        )}
+      </span>
     </span>
   );
 }
-
-const VARIANTES = [
-  { id: "quadro", rotulo: "Atual" },
-  { id: "lista", rotulo: "Lista" },
-  { id: "etapas", rotulo: "Etapas" },
-  { id: "cartoes", rotulo: "Cartões" },
-  { id: "colunas", rotulo: "Colunas" },
-] as const;
-type Variante = (typeof VARIANTES)[number]["id"];
 
 export function AlvarasPage() {
   const celular = useCelular();
@@ -74,35 +73,44 @@ export function AlvarasPage() {
   const [etapa, setEtapa] = useState<EtapaAlvara>("aguardando_saque");
   const [aberto, setAberto] = useState<string | null>(null);
   const [novo, setNovo] = useState(false);
-  const [variante, setVariante] = useVariante<Variante>("alvaras", VARIANTES);
+  const [texto, setTexto] = useState("");
+  const [soParados, setSoParados] = useState(false);
+  const busca = semAcento(useDeferredValue(texto.trim()));
   const d = q.data;
-  const todos = d?.etapas.flatMap((e) => e.itens.map((i) => ({ ...i, etapa: e.etapa }))) ?? [];
-  const selecionado = todos.find((i) => i.id === aberto) ?? null;
-  const daEtapa = (e: EtapaAlvara) => d?.etapas.find((x) => x.etapa === e);
-  const soma = (...es: EtapaAlvara[]): Totais => es.reduce((t, e) => ({ valor: t.valor + Number(daEtapa(e)?.total ?? 0), n: t.n + (daEtapa(e)?.itens.length ?? 0) }), { valor: 0, n: 0 });
-  const sub = d ? `${alvaras(soma("novo", "aguardando_saque", "sacado").n)} em andamento` : " ";
 
-  /** Quem, o quê e quanto, sempre nas mesmas três linhas; embaixo à direita, há quanto tempo está na etapa. */
-  const cartao = (a: Alvara & { etapa: EtapaAlvara }) => {
-    const chegou = CHEGOU[a.etapa];
-    const dia = chegou.dia(a);
-    const limite = PARADO[a.etapa];
-    const parado = !!dia && limite != null && diasDesde(dia) > limite;
-    return (
-      <button key={a.id} type="button" className={cn("dc-cartao dc-alvara", parado && "is-parado")} onClick={() => setAberto(a.id)}>
-        <span className="dc-alvara__cliente">{a.cliente ?? a.processo.titulo}</span>
-        <span className="dc-alvara__desc">{a.descricao}</span>
-        <span className="dc-alvara__pe">
-          <span className="dc-alvara__valor">{dinheiro(a.valor)}</span>
-          {dia && (
-            <span className="dc-alvara__quando" title={`${chegou.rotulo} em ${diaCompleto(dia)}${parado ? `, há mais de ${limite} dias nesta etapa` : ""}`}>
-              {haQuanto(dia)}
-            </span>
-          )}
-        </span>
-      </button>
-    );
-  };
+  // A busca e o filtro dos parados valem para o quadro e para os totais.
+  const todas: Etapa[] = (d?.etapas ?? []).map((e) => ({ etapa: e.etapa, total: Number(e.total), itens: e.itens.map((i) => ({ ...i, etapa: e.etapa })) }));
+  const parados = todas.flatMap((e) => e.itens).filter((a) => naEtapa(a).parado).length;
+  const filtrando = !!busca || soParados;
+  const etapas = filtrando
+    ? todas.map((e) => {
+        const itens = e.itens.filter((a) => (!soParados || naEtapa(a).parado) && (!busca || semAcento([a.cliente, a.descricao, a.processo.titulo, a.processo.cnj].join(" ")).includes(busca)));
+        return { ...e, itens, total: itens.reduce((t, a) => t + Number(a.valor), 0) };
+      })
+    : todas;
+  const daEtapa = (x: EtapaAlvara) => etapas.find((e) => e.etapa === x);
+  const soma = (...es: EtapaAlvara[]) => es.reduce((t, x) => ({ valor: t.valor + (daEtapa(x)?.total ?? 0), n: t.n + (daEtapa(x)?.itens.length ?? 0) }), { valor: 0, n: 0 });
+  const achados = etapas.reduce((t, e) => t + e.itens.length, 0);
+  const sub = !d ? " " : filtrando ? `${alvaras(achados)} ${achados === 1 ? "encontrado" : "encontrados"}` : `${alvaras(soma("novo", "aguardando_saque", "sacado").n)} em andamento`;
+  const selecionado = todas.flatMap((e) => e.itens).find((i) => i.id === aberto) ?? null;
+
+  /** Quem, o quê e quanto, sempre nas mesmas três linhas; embaixo à direita, há quanto tempo está na etapa (o finalizado não precisa). */
+  const cartao = (a: Item) => (
+    <button key={a.id} type="button" className={cn("dc-cartao dc-alvara", naEtapa(a).parado && "is-parado")} onClick={() => setAberto(a.id)}>
+      <span className="dc-alvara__cliente">{a.cliente ?? a.processo.titulo}</span>
+      <span className="dc-alvara__desc">{a.descricao}</span>
+      <span className="dc-alvara__pe">
+        <span className="dc-alvara__valor">{dinheiro(a.valor)}</span>
+        {a.etapa !== "finalizado" && <Quando a={a} />}
+      </span>
+    </button>
+  );
+  const campo = <CampoDeBusca valor={texto} aoMudar={setTexto} rotulo="Buscar alvará" placeholder="Cliente, processo ou descrição" />;
+  const chipParados = parados > 0 && (
+    <Chip ligado={soParados} n={parados} onClick={() => setSoParados(!soParados)}>
+      Parados
+    </Chip>
+  );
   const dialogos = (
     <>
       <NovoAlvara aberto={novo} aoFechar={() => setNovo(false)} />
@@ -123,12 +131,16 @@ export function AlvarasPage() {
           </button>
         }
         fixo={
-          <div className="dc-chips">
-            {ORDEM.map((e) => (
-              <Chip key={e} ligado={etapa === e} n={daEtapa(e)?.itens.length} onClick={() => setEtapa(e)}>
-                {ETAPA[e]}
-              </Chip>
-            ))}
+          <div className="dc-filtros">
+            {campo}
+            <div className="dc-chips">
+              {ORDEM.map((e) => (
+                <Chip key={e} ligado={etapa === e} n={daEtapa(e)?.itens.length} onClick={() => setEtapa(e)}>
+                  <span className={`dc-etapa-ponto dc-etapa--${e}`} aria-hidden />
+                  {ETAPA[e]}
+                </Chip>
+              ))}
+            </div>
           </div>
         }
       >
@@ -137,10 +149,10 @@ export function AlvarasPage() {
         ) : lista?.itens.length ? (
           <div className="dc-lista">
             <span className="dc-nota">Total da etapa: {dinheiro(lista.total)}</span>
-            {lista.itens.map((i) => cartao({ ...i, etapa }))}
+            {lista.itens.map(cartao)}
           </div>
         ) : (
-          <Vazio titulo="Nada nesta etapa" />
+          <Vazio titulo={busca ? "Nada encontrado nesta etapa" : "Nada nesta etapa"} />
         )}
         {dialogos}
       </TelaCelular>
@@ -161,284 +173,42 @@ export function AlvarasPage() {
         <Carregando />
       ) : (
         <>
-          {variante !== "etapas" && <Totais a={soma("novo", "aguardando_saque")} b={soma("sacado")} c={soma("repassado", "finalizado")} />}
-          {variante === "quadro" && (
-            <Quadro id="alvaras" className="dc-quadro--alvaras">
-              {d.etapas.map((e) => (
-                <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
-                  {e.itens.length ? e.itens.map((i) => cartao({ ...i, etapa: e.etapa })) : <div className="dc-quadro__vazio">Nada aqui</div>}
-                </ColunaDoQuadro>
-              ))}
-            </Quadro>
-          )}
-          {variante === "lista" && <Lista d={d} abrir={setAberto} />}
-          {variante === "etapas" && <Etapas d={d} abrir={setAberto} />}
-          {variante === "cartoes" && <Cartoes d={d} abrir={setAberto} />}
-          {variante === "colunas" && <Colunas d={d} abrir={setAberto} />}
+          <div className="dc-numeros dc-numeros--alvaras" aria-label="Totais dos alvarás">
+            <Total icone={Landmark} etapa="aguardando_saque" rotulo="A sacar" {...soma("novo", "aguardando_saque")} />
+            <Total icone={Wallet} etapa="sacado" rotulo="A repassar" {...soma("sacado")} />
+            <Total icone={CircleCheck} etapa="repassado" rotulo="Já repassado" {...soma("repassado", "finalizado")} />
+          </div>
+          <div className="dc-filtros">
+            {campo}
+            {chipParados}
+          </div>
+          <Quadro id="alvaras" className="dc-quadro--alvaras">
+            {etapas.map((e) => (
+              <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} className={`dc-etapa dc-etapa--${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
+                {e.itens.length ? e.itens.map(cartao) : <div className="dc-quadro__vazio">{filtrando ? "Nada encontrado" : "Nada aqui"}</div>}
+              </ColunaDoQuadro>
+            ))}
+          </Quadro>
         </>
       )}
-      <SeletorDeVariante opcoes={[...VARIANTES]} valor={variante} aoMudar={setVariante} />
       {dialogos}
     </Pagina>
   );
 }
 
-function Totais({ a, b, c }: { a: Totais; b: Totais; c: Totais }) {
+/** Um dos três totais de cima, com o ícone na cor da etapa a que se refere. */
+function Total({ icone: Icone, etapa, rotulo, valor, n }: { icone: LucideIcon; etapa: EtapaAlvara; rotulo: string; valor: number; n: number }) {
   return (
-    <div className="dc-numeros dc-numeros--alvaras" aria-label="Totais dos alvarás">
-      {[
-        { rotulo: "A sacar", ...a },
-        { rotulo: "A repassar", ...b },
-        { rotulo: "Já repassado", ...c },
-      ].map((t) => (
-        <div key={t.rotulo} className="dc-contador">
-          <span className="dc-contador__n">{dinheiro(t.valor)}</span>
-          <span className="dc-contador__rotulo">{t.rotulo}</span>
-          <span className="dc-contador__nota">{alvaras(t.n)}</span>
-        </div>
-      ))}
+    <div className={`dc-contador dc-total dc-etapa--${etapa}`}>
+      <span className="dc-total__icone" aria-hidden>
+        <Icone />
+      </span>
+      <span className="dc-total__texto">
+        <span className="dc-total__rotulo">{rotulo}</span>
+        <span className="dc-total__valor">{dinheiro(valor)}</span>
+      </span>
+      <span className="dc-total__n">{alvaras(n)}</span>
     </div>
-  );
-}
-
-type Vista = { d: QuadroDeAlvaras; abrir: (id: string) => void };
-
-/** B · Lista: uma tabela com as etapas como grupos; os finalizados ficam recolhidos. */
-function Lista({ d, abrir }: Vista) {
-  const [finalizados, setFinalizados] = useState(false);
-  return (
-    <section className="dc-painel">
-      <Rolagem id="alvaras-lista" className="dc-tabela-caixa">
-        <table className="dc-tabela dc-tabela--fixa dc-alvaras-lista">
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Alvará</th>
-              <th style={{ width: 132 }}>Na etapa</th>
-              <th style={{ width: 160 }} className="dc-direita">
-                Valor
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {d.etapas.map((e) => {
-              const recolhido = e.etapa === "finalizado" && !finalizados;
-              return (
-                <Fragment key={e.etapa}>
-                  <tr className="dc-alvaras-lista__grupo">
-                    <td colSpan={3}>
-                      {ETAPA[e.etapa]} <span className="dc-alvaras-lista__n">{e.itens.length}</span>
-                      {e.etapa === "finalizado" && (
-                        <button type="button" className="dc-alvaras-lista__ver" onClick={() => setFinalizados(!finalizados)}>
-                          {recolhido ? "Mostrar" : "Esconder"}
-                        </button>
-                      )}
-                    </td>
-                    <td className="dc-direita">{dinheiro(e.total)}</td>
-                  </tr>
-                  {!recolhido &&
-                    e.itens.map((i) => {
-                      const a = { ...i, etapa: e.etapa };
-                      return (
-                        <tr key={a.id} data-link="" onClick={() => abrir(a.id)}>
-                          <td>
-                            <span className="dc-celula">
-                              <span className="dc-celula__1 truncate">{a.cliente ?? a.processo.titulo}</span>
-                              <span className="dc-celula__2 dc-num truncate">{a.processo.cnj ?? a.processo.titulo}</span>
-                            </span>
-                          </td>
-                          <td className="truncate text-[var(--tinta-2)]">{a.descricao}</td>
-                          <td>
-                            <Quando a={a} />
-                          </td>
-                          <td className="dc-direita dc-alvaras-lista__valor">{dinheiro(a.valor)}</td>
-                        </tr>
-                      );
-                    })}
-                  {!recolhido && !e.itens.length && (
-                    <tr>
-                      <td colSpan={4} className="text-[var(--tinta-3)]">
-                        Nada nesta etapa
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
-      </Rolagem>
-    </section>
-  );
-}
-
-function useAvancar() {
-  const qc = useQueryClient();
-  const avisar = useAviso();
-  const eu = useQuery(euQuery);
-  return useMutation({
-    mutationFn: (a: Item) => {
-      const seguinte = proxima(a.etapa)!;
-      const hoje = eu.data?.hoje;
-      return api(`/alvaras/${a.id}`, {
-        method: "PUT",
-        json: { etapa: seguinte, ...(seguinte === "sacado" && !a.sacadoEm ? { sacadoEm: hoje } : {}), ...(seguinte === "repassado" && !a.repassadoEm ? { repassadoEm: hoje } : {}) },
-      });
-    },
-    onSuccess: (_r, a) => {
-      void qc.invalidateQueries({ queryKey: ["alvaras"] });
-      void qc.invalidateQueries({ queryKey: ["eu"] });
-      avisar(`Agora em ${ETAPA[proxima(a.etapa)!].toLocaleLowerCase("pt-BR")}.`);
-    },
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
-  });
-}
-
-/** C · Etapas: o caminho do alvará em cima, cada etapa com o total; embaixo, os da etapa escolhida com as datas e o próximo passo. */
-function Etapas({ d, abrir }: Vista) {
-  const [escolhida, setEscolhida] = useState<EtapaAlvara>(() => d.etapas.find((e) => e.itens.length)?.etapa ?? "novo");
-  const avancar = useAvancar();
-  const etapa = d.etapas.find((e) => e.etapa === escolhida) ?? d.etapas[0]!;
-  return (
-    <>
-      <div className="dc-fluxo" role="tablist" aria-label="Etapas do alvará">
-        {d.etapas.map((e, n) => {
-          const parados = e.itens.filter((i) => naEtapa({ ...i, etapa: e.etapa }).parado).length;
-          return (
-            <Fragment key={e.etapa}>
-              {n > 0 && <ChevronRight className="dc-fluxo__seta" aria-hidden />}
-              <button type="button" role="tab" aria-selected={e.etapa === escolhida} className={cn("dc-fluxo__etapa", e.etapa === escolhida && "is-on")} onClick={() => setEscolhida(e.etapa)}>
-                <span className="dc-fluxo__nome">{ETAPA[e.etapa]}</span>
-                <span className="dc-fluxo__total">{dinheiro(e.total)}</span>
-                <span className="dc-fluxo__n">
-                  {alvaras(e.itens.length)}
-                  {parados > 0 && <span className="dc-quando is-parado">{parados === 1 ? "1 parado" : `${parados} parados`}</span>}
-                </span>
-              </button>
-            </Fragment>
-          );
-        })}
-      </div>
-      <section className="dc-painel">
-        <Rolagem id={`alvaras-etapa-${etapa.etapa}`} topo={etapa.etapa} className="dc-linhas">
-          {etapa.itens.length ? (
-            etapa.itens.map((i) => {
-              const a = { ...i, etapa: etapa.etapa };
-              const acao = AVANCAR[a.etapa];
-              return (
-                <div key={a.id} className="dc-etapa-linha" role="button" tabIndex={0} onClick={() => abrir(a.id)} onKeyDown={(ev) => ev.key === "Enter" && abrir(a.id)}>
-                  <span className="dc-celula min-w-0">
-                    <span className="dc-celula__1 truncate">{a.cliente ?? a.processo.titulo}</span>
-                    <span className="dc-celula__2 truncate">
-                      {a.descricao} · <span className="dc-num">{a.processo.cnj ?? a.processo.titulo}</span>
-                    </span>
-                  </span>
-                  <Datas a={a} className="dc-datas" />
-                  <Quando a={a} />
-                  <span className="dc-etapa-linha__valor">{dinheiro(a.valor)}</span>
-                  <span className="dc-etapa-linha__acao">
-                    {acao && (
-                      <Botao
-                        pequeno
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          avancar.mutate(a);
-                        }}
-                        ocupado={avancar.isPending && avancar.variables?.id === a.id}
-                      >
-                        {acao}
-                      </Botao>
-                    )}
-                  </span>
-                </div>
-              );
-            })
-          ) : (
-            <Vazio titulo="Nada nesta etapa" />
-          )}
-        </Rolagem>
-      </section>
-    </>
-  );
-}
-
-/** As três datas do alvará, com traço no que ainda não aconteceu. */
-function Datas({ a, className }: { a: Item; className: string }) {
-  return (
-    <span className={className}>
-      {(
-        [
-          ["Expedido", a.expedidoEm],
-          ["Sacado", a.sacadoEm],
-          ["Repassado", a.repassadoEm],
-        ] as const
-      ).map(([rotulo, dia]) => (
-        <span key={rotulo} className={cn("dc-datas__item", dia && "is-feito")}>
-          <small>{rotulo}</small>
-          <span className="dc-num">{dia ? diaCurto(dia) : "—"}</span>
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/** D · Cartões largos: só as quatro etapas em andamento, com espaço para o valor em cima e as datas embaixo. */
-function Cartoes({ d, abrir }: Vista) {
-  return (
-    <Quadro id="alvaras-cartoes" className="dc-quadro--cartoes">
-      {d.etapas
-        .filter((e) => e.etapa !== "finalizado")
-        .map((e) => (
-          <ColunaDoQuadro key={e.etapa} id={`alvaras-cartoes-${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
-            {e.itens.length ? (
-              e.itens.map((i) => {
-                const a = { ...i, etapa: e.etapa };
-                return (
-                  <button key={a.id} type="button" className="dc-cartao dc-alvara-d" onClick={() => abrir(a.id)}>
-                    <span className="dc-alvara-d__topo">
-                      <span className="dc-alvara-d__valor">{dinheiro(a.valor)}</span>
-                      <Quando a={a} />
-                    </span>
-                    <span className="dc-alvara-d__cliente">{a.cliente ?? a.processo.titulo}</span>
-                    <span className="dc-alvara-d__desc">{a.descricao}</span>
-                    <Datas a={a} className="dc-datas dc-alvara-d__datas" />
-                  </button>
-                );
-              })
-            ) : (
-              <div className="dc-quadro__vazio">Nada aqui</div>
-            )}
-          </ColunaDoQuadro>
-        ))}
-    </Quadro>
-  );
-}
-
-/** E · Colunas: cada etapa é uma folha branca com o total em destaque e os alvarás em linhas, como um livro-caixa (quem, e embaixo quanto e há quanto tempo). */
-function Colunas({ d, abrir }: Vista) {
-  return (
-    <Quadro id="alvaras-colunas" className="dc-quadro--alvaras dc-quadro--colunas">
-      {d.etapas.map((e) => (
-        <ColunaDoQuadro key={e.etapa} id={`alvaras-colunas-${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
-          {e.itens.length ? (
-            e.itens.map((i) => {
-              const a = { ...i, etapa: e.etapa };
-              return (
-                <button key={a.id} type="button" className="dc-razao" onClick={() => abrir(a.id)}>
-                  <span className="dc-razao__cliente" title={a.descricao}>
-                    {a.cliente ?? a.processo.titulo}
-                  </span>
-                  <span className="dc-razao__valor">{semMoeda(a.valor)}</span>
-                  <Quando a={a} />
-                </button>
-              );
-            })
-          ) : (
-            <div className="dc-razao__vazio">Nada aqui</div>
-          )}
-        </ColunaDoQuadro>
-      ))}
-    </Quadro>
   );
 }
 

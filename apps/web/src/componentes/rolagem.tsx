@@ -62,9 +62,9 @@ export function Quadro({ id, className, children }: { id: string; className?: st
 }
 
 /** Coluna do quadro: o topo fica e os cartões rolam por baixo dele. */
-export function ColunaDoQuadro({ id, titulo, valor, sub, children }: { id: string; titulo: ReactNode; valor: ReactNode; sub?: ReactNode; children: ReactNode }) {
+export function ColunaDoQuadro({ id, titulo, valor, sub, className, children }: { id: string; titulo: ReactNode; valor: ReactNode; sub?: ReactNode; className?: string; children: ReactNode }) {
   return (
-    <section className="dc-quadro__coluna">
+    <section className={cn("dc-quadro__coluna", className)}>
       <div className="dc-quadro__topo">
         <span className="dc-quadro__nome" title={typeof titulo === "string" ? titulo : undefined}>
           {titulo}

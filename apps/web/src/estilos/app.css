@@ -908,94 +908,59 @@ a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
 .dc-celular .dc-onde__resto::before { content: none; }
 
 /* ---------- Alvarás ----------
-   Mesma escala da tela toda: 24px nos totais, 14px no que se lê primeiro, 13px no resto, 12px nos detalhes.
-   Os cartões têm sempre as mesmas três linhas, para todos terem a mesma altura. */
+   Mesma escala do resto do app: 20px nos totais, 14px no que se lê primeiro, 13px no resto, 12px nos detalhes.
+   Cada etapa tem uma cor própria, fora das cores dos prazos (vermelho, laranja, âmbar e verde): o ponto e o
+   número da raia, o fundo bem claro dela e o ícone do total que se refere a ela. */
+.dc-etapa--novo { --etapa: #2f7ad0; }
+.dc-etapa--aguardando_saque { --etapa: #4b55c8; }
+.dc-etapa--sacado { --etapa: #8248c9; }
+.dc-etapa--repassado { --etapa: #0e7c93; }
+.dc-etapa--finalizado { --etapa: #8a8996; }
+
 .dc-numeros--alvaras { flex: none; }
+.dc-total { flex-direction: row; align-items: center; gap: 12px; padding: 12px var(--space-4); }
 .dc-numeros--alvaras .dc-contador:hover { background: none; }
-.dc-contador__nota { font: 400 12px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); }
-.dc-quadro__topo:has(> .dc-quadro__sub) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; row-gap: 0; }
-.dc-quadro__sub { grid-column: 1 / -1; font: 400 13px/18px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-2); }
+.dc-total__icone { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: color-mix(in srgb, var(--etapa) 11%, var(--superficie)); color: var(--etapa); }
+.dc-total__icone svg { width: 18px; height: 18px; }
+.dc-total__texto { display: flex; flex-direction: column; min-width: 0; }
+.dc-total__rotulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-total__valor { white-space: nowrap; font: 600 20px/28px var(--font-sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--tinta); }
+.dc-total__n { flex: none; align-self: flex-end; margin-left: auto; padding-bottom: 4px; white-space: nowrap; font: 400 12px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); }
+
+/* As raias: o nome com o ponto da etapa, o número numa pílula da mesma cor e o total embaixo. */
+.dc-app .dc-quadro__coluna.dc-etapa { background: color-mix(in srgb, var(--etapa) 4%, var(--papel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--etapa) 13%, var(--borda)); }
+.dc-quadro__topo:has(> .dc-quadro__sub) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; row-gap: 2px; }
+.dc-etapa .dc-quadro__nome::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: var(--etapa); vertical-align: 1px; }
+/* No celular, o mesmo ponto em cada etapa das pílulas. */
+.dc-etapa-ponto { flex: none; width: 8px; height: 8px; margin-right: -1px; border-radius: 50%; background: var(--etapa); }
+.dc-etapa .dc-quadro__n { min-width: 22px; padding: 1px 7px; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--etapa) 13%, var(--superficie)); text-align: center; font: 600 12px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--etapa); }
+.dc-quadro__sub { grid-column: 1 / -1; padding-left: 15px; font: 400 13px/18px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-2); }
 /* As cinco etapas cabem a partir de 1280px de tela; abaixo disso o quadro rola para o lado. */
 .dc-quadro--alvaras { grid-auto-columns: minmax(184px, 1fr); gap: var(--space-3); }
-.dc-alvara { gap: 2px; width: 100%; padding: 12px; text-align: left; cursor: pointer; box-shadow: none; transition: border-color 0.12s; }
-.dc-alvara:hover { border-color: var(--borda-forte); }
+.dc-quadro--alvaras .dc-quadro__vazio { border-color: color-mix(in srgb, var(--etapa, var(--tinta-3)) 22%, var(--borda)); background: none; }
+
+/* Os cartões têm sempre as mesmas três linhas, para todos terem a mesma altura. */
+.dc-alvara { container-type: inline-size; gap: 2px; width: 100%; padding: 10px 12px; text-align: left; cursor: pointer; box-shadow: none; transition: border-color 0.12s; }
+.dc-alvara:hover { border-color: color-mix(in srgb, var(--etapa, var(--tinta-3)) 45%, var(--borda)); }
 .dc-alvara:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
 .dc-alvara > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-alvara__cliente { font: 500 14px/20px var(--font-sans); color: var(--tinta); }
 .dc-alvara__desc { font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
-.dc-alvara > .dc-alvara__pe { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin-top: 8px; overflow: visible; white-space: normal; }
-.dc-alvara__valor { font: 600 14px/20px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
-.dc-alvara__valor { white-space: nowrap; }
-.dc-alvara__quando { display: inline-flex; align-items: center; gap: 5px; flex: none; margin-left: auto; white-space: nowrap; font: 500 12px/16px var(--font-sans); color: var(--tinta-3); }
-.dc-alvara.is-parado .dc-alvara__quando { color: var(--breve); }
-.dc-alvara.is-parado .dc-alvara__quando::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.dc-alvara > .dc-alvara__pe { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 8px; margin-top: 6px; overflow: visible; white-space: normal; }
+.dc-alvara__valor { white-space: nowrap; font: 600 14px/20px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
+/* Há quanto tempo está na etapa; com o ponto âmbar quando passou do normal. */
+.dc-quando { display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; font: 500 12px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); }
+.dc-quando.is-parado { color: var(--breve); }
+.dc-quando.is-parado::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+@container (max-width: 156px) { .dc-quando__ha { display: none; } }
 .dc-celular .dc-alvara { padding: 14px var(--space-4); }
 .dc-celular .dc-alvara__cliente { font-size: 15px; line-height: 21px; }
 .dc-celular .dc-alvara__desc { font-size: 14px; line-height: 20px; }
 .dc-celular .dc-alvara__valor { font-size: 15px; line-height: 21px; }
-.dc-celular .dc-alvara__quando { font-size: 13px; line-height: 18px; }
+.dc-celular .dc-quando { font-size: 13px; line-height: 18px; }
 
-/* ---------- Alvarás: variações para escolher na prévia ---------- */
+/* Seletor de variações da prévia (variantes.tsx), para comparar propostas de tela. */
 .dc-variantes { position: fixed; z-index: 40; top: calc(var(--folga, 8px) + 17px); left: calc(232px + (100vw - 232px) / 2); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 5px 5px 5px 14px; background: var(--superficie); border: 1px solid var(--borda); border-radius: 12px; box-shadow: var(--sombra-flutuante), 0 1px 2px rgba(27, 25, 45, 0.06); font: 500 12px/16px var(--font-sans); color: var(--tinta-3); }
-.dc-quando { display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; font: 500 12px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); }
-.dc-quando.is-parado { color: var(--breve); }
-.dc-quando.is-parado::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.dc-tabela .dc-quando, .dc-etapa-linha .dc-quando { font-size: 13px; line-height: 18px; }
-.dc-datas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.dc-datas__item { display: flex; flex-direction: column; min-width: 0; }
-.dc-datas__item small { font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
-.dc-datas__item > span { font: 500 13px/18px var(--font-sans); color: var(--tinta-3); }
-.dc-datas__item.is-feito > span { color: var(--tinta); }
-
-/* B · Lista */
-.dc-alvaras-lista td { vertical-align: middle; }
-.dc-alvaras-lista tbody tr.dc-alvaras-lista__grupo td { padding-top: 14px; padding-bottom: 8px; background: var(--papel); border-bottom: 1px solid var(--borda); font: 600 13px/18px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
-.dc-alvaras-lista__n { margin-left: 4px; font-weight: 500; color: var(--tinta-3); }
-.dc-alvaras-lista__ver { margin-left: 12px; padding: 0; border: 0; background: none; font: 500 13px/18px var(--font-sans); color: var(--acento); cursor: pointer; }
-.dc-alvaras-lista__ver:hover { text-decoration: underline; }
-.dc-alvaras-lista__valor { font-weight: 600; font-variant-numeric: tabular-nums; }
-
-/* C · Etapas */
-.dc-fluxo { display: flex; align-items: stretch; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); overflow: hidden; }
-.dc-fluxo__etapa { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 12px var(--space-4); border: 0; background: transparent; text-align: left; cursor: pointer; box-shadow: inset 0 -2px 0 transparent; transition: background-color 0.12s, box-shadow 0.12s; }
-.dc-fluxo__etapa:hover { background: var(--papel); }
-.dc-fluxo__etapa.is-on { background: var(--superficie); box-shadow: inset 0 -2px 0 var(--acento); }
-.dc-fluxo__etapa:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--anel); }
-.dc-fluxo__nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/18px var(--font-sans); color: var(--tinta-2); }
-.dc-fluxo__etapa.is-on .dc-fluxo__nome { font-weight: 600; color: var(--tinta); }
-.dc-fluxo__total { white-space: nowrap; font: 600 20px/28px var(--font-sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--tinta); }
-.dc-fluxo__n { display: flex; align-items: center; gap: 8px; white-space: nowrap; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
-.dc-fluxo__seta { flex: none; align-self: center; width: 16px; height: 16px; margin: 0 -8px; color: var(--borda-forte); position: relative; z-index: 1; }
-.dc-etapa-linha { display: grid; grid-template-columns: minmax(0, 1fr) 252px 96px 132px 150px; align-items: center; gap: var(--space-4); min-height: 60px; padding: 10px var(--space-4); box-sizing: border-box; cursor: pointer; }
-.dc-etapa-linha:hover { background: color-mix(in srgb, var(--superficie-2) 60%, transparent); }
-.dc-etapa-linha:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--anel); }
-.dc-etapa-linha__valor { text-align: right; font: 600 14px/20px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
-.dc-etapa-linha__acao { display: flex; justify-content: flex-end; }
-
-/* D · Cartões largos */
-.dc-quadro--cartoes { grid-auto-columns: minmax(232px, 1fr); }
-.dc-alvara-d { gap: 2px; width: 100%; padding: 14px; text-align: left; cursor: pointer; box-shadow: none; transition: border-color 0.12s; }
-.dc-alvara-d:hover { border-color: var(--borda-forte); }
-.dc-alvara-d:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
-.dc-alvara-d > span { min-width: 0; }
-.dc-alvara-d__topo { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
-.dc-alvara-d__valor { white-space: nowrap; font: 600 18px/24px var(--font-sans); letter-spacing: -0.015em; font-variant-numeric: tabular-nums; color: var(--tinta); }
-.dc-alvara-d__cliente { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 14px/20px var(--font-sans); color: var(--tinta); }
-.dc-alvara-d__desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
-.dc-alvara-d__datas { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--superficie-2); }
-
-/* E · Colunas */
-.dc-app .dc-quadro--colunas .dc-quadro__coluna { gap: 0; padding: 0; overflow: hidden; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--borda); }
-.dc-app .dc-quadro--colunas .dc-quadro__topo { padding: 12px 12px 10px; border-bottom: 1px solid var(--borda); }
-.dc-quadro--colunas .dc-quadro__sub { margin-top: 2px; font: 600 18px/24px var(--font-sans); letter-spacing: -0.015em; color: var(--tinta); }
-.dc-app .dc-quadro--colunas .dc-quadro__corpo { gap: 0; margin: 0; padding: 0; }
-.dc-razao { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 8px; width: 100%; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--superficie-2); background: transparent; text-align: left; cursor: pointer; }
-.dc-razao:hover { background: var(--papel); }
-.dc-razao:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--anel); }
-.dc-razao__cliente { grid-column: 1 / -1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/18px var(--font-sans); color: var(--tinta); }
-.dc-razao__valor { font: 600 13px/18px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
-.dc-razao .dc-quando { justify-self: end; }
-.dc-razao__vazio { padding: var(--space-4) 12px; font: 400 13px/18px var(--font-sans); color: var(--tinta-3); }
 
 /* ---------- Rótulos pequenos ----------
    Cabeçalho das tabelas, grupos das listas, do histórico e da busca em caixa normal, como os grupos do menu.
