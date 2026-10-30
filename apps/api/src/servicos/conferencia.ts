@@ -100,6 +100,12 @@ function baseDaPasta(docs: { id: string; texto: string | null }[], pessoa: Pedid
   );
 }
 
+/** A impressão da pasta como está agora: a conferência gravada com ela não aparece como desatualizada. */
+export async function baseDaPastaAgora(tx: Tx, dono: DonoDaPasta, timezone: string): Promise<{ base: string; documentos: number } | null> {
+  const r = await prepararPedido(tx, dono, null, hojeEm(timezone));
+  return r ? { base: baseDaPasta(r.docs, r.pedido.pessoa), documentos: r.docs.length } : null;
+}
+
 /** A última conferência, marcada como desatualizada se a pasta mudou desde então. */
 export async function ultimaConferencia(tx: Tx, dono: DonoDaPasta, timezone: string): Promise<AnaliseNaTela | null> {
   const { alvo, alvoId } = alvoDe(dono);

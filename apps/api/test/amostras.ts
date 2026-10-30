@@ -145,7 +145,15 @@ try {
   amostras["processoComResultado"] = { path: `/processos/${eduardo.id}`, corpo: await get(`/processos/${eduardo.id}`) };
 
   // Conferência da pasta: um negócio na triagem e a cliente Marina.
-  const negocio = (await get("/negocios")).itens.find((n: { etapa: string }) => n.etapa === "triagem");
+  // Um negócio na triagem com a pasta vazia (o José Antunes já vem conferido na demonstração).
+  let negocio: { id: string; nome: string } | undefined;
+  for (const n of (await get("/negocios")).itens.filter((n: { etapa: string }) => n.etapa === "triagem")) {
+    if (!(await get(`/negocios/${n.id}/pasta`)).documentos.length) {
+      negocio = n;
+      break;
+    }
+  }
+  if (!negocio) throw new Error("nenhum negócio na triagem com a pasta vazia");
   await enviar({ negocioId: negocio.id }, "procuracao.txt", `PROCURAÇÃO. Outorgante: ${negocio.nome}, CPF 000.000.000-00. Outorgados: os advogados do escritório. Poderes gerais para o foro. Joinville, 20/10/2026.`);
   await enviar({ negocioId: negocio.id }, "conta-de-luz.txt", `Celesc. Titular: ${negocio.nome}. Rua das Palmeiras, 120, Joinville/SC. Referência: 03/2026.`);
   ia.respostas["conferir-pasta"] = {

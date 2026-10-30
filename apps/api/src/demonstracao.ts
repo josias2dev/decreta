@@ -61,6 +61,7 @@ import {
   type ProcessoDemo,
   type Quem,
 } from "./demonstracao/dados.ts";
+import { criarNovidades } from "./demonstracao/novidades.ts";
 import { DOMINIO_DA_DEMONSTRACAO, LOGIN_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import { gerarVolume } from "./demonstracao/volume.ts";
 import { carregarContexto } from "./servicos/contexto.ts";
@@ -556,6 +557,9 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
       });
     }
   });
+
+  // Leitura da sentença, modelos, conferência da pasta e retorno sobre a IA.
+  await criarNovidades(db, organizationId, { hoje, timezone: tz, arquivos: o.arquivos, pessoas: ids });
 
   return { organizationId, emails: (Object.keys(EQUIPE) as Quem[]).map(emailDaDemonstracao) };
 }
