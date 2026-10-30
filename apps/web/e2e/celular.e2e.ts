@@ -118,6 +118,9 @@ test("agenda no celular: o mês com pontinhos, o dia embaixo e arrastar troca o 
   await page.getByRole("radio", { name: "Semana" }).tap();
   await expect(page.locator(".dc-topo__sobre")).toHaveText("26 out a 1 nov");
   await expect(page.locator(".dc-mini__dia")).toHaveCount(7);
+  // Sem nada no endereço, a agenda abre na semana.
+  await page.goto("/agenda");
+  await expect(page.getByRole("radio", { name: "Semana" })).toHaveAttribute("aria-checked", "true");
   await page.getByRole("button", { name: "Nova tarefa ou audiência" }).tap();
   await page.getByRole("menuitem", { name: "Nova audiência" }).tap();
   await expect(page.getByRole("heading", { name: "Nova audiência" })).toBeVisible();

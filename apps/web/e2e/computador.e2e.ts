@@ -297,12 +297,21 @@ test("alvarás: cada coluna do quadro rola sozinha e o título fica", async ({ p
   expect(await finalizado.evaluate((e: HTMLElement) => e.offsetWidth - e.clientWidth)).toBe(0);
 });
 
-test("agenda: lista, semana e mês, com o dia escolhido ao lado do mês", async ({ page }) => {
+test("agenda: abre na semana; lista e mês, com o dia escolhido ao lado do mês", async ({ page }) => {
   await abrir(page, "/agenda");
-  await expect(page.getByRole("heading", { name: "29 out a 11 nov" })).toBeVisible();
+  const periodo = page.locator(".dc-periodo__rotulo");
+  await expect(page.getByRole("radio", { name: "Semana" })).toHaveAttribute("aria-checked", "true");
+  await expect(periodo).toHaveText("26 out a 1 nov");
+  await expect(page.locator(".dc-evento").first()).toBeVisible();
+  await page.getByRole("button", { name: "Próxima semana" }).click();
+  await expect(periodo).toHaveText("2 a 8 de novembro");
+  await page.getByRole("button", { name: "Hoje", exact: true }).click();
+  await expect(periodo).toHaveText("26 out a 1 nov");
+  await page.getByRole("radio", { name: "Lista" }).click();
+  await expect(periodo).toHaveText("29 out a 11 nov");
   await page.getByRole("radio", { name: "Mês" }).click();
   await expect(page).toHaveURL(/vista=mes/);
-  await expect(page.getByRole("heading", { name: "Outubro de 2026" })).toBeVisible();
+  await expect(periodo).toHaveText("Outubro de 2026");
   // O feriado aparece no dia; o dia escolhido abre ao lado, e a tarefa nova já vem nele.
   await expect(page.locator(".dc-mes__dia", { hasText: "Nossa Senhora Aparecida" })).toBeVisible();
   await page.getByRole("button", { name: /^sexta, 30 de outubro/ }).click();
@@ -311,19 +320,11 @@ test("agenda: lista, semana e mês, com o dia escolhido ao lado do mês", async 
   await expect(page.locator("#nt-dia")).toHaveValue("2026-10-30");
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Próximo mês" }).click();
-  await expect(page.getByRole("heading", { name: "Novembro de 2026" })).toBeVisible();
-  // O mês novo começa no dia 1 (um domingo): a semana é a dele.
-  await page.getByRole("radio", { name: "Semana" }).click();
-  await expect(page.getByRole("heading", { name: "26 out a 1 nov" })).toBeVisible();
-  await page.getByRole("button", { name: "Próxima semana" }).click();
-  await expect(page.getByRole("heading", { name: "2 a 8 nov" })).toBeVisible();
-  await page.getByRole("button", { name: "Hoje", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "26 out a 1 nov" })).toBeVisible();
-  await expect(page.locator(".dc-evento").first()).toBeVisible();
+  await expect(periodo).toHaveText("Novembro de 2026");
+  // Ir para uma data pelo calendário do período.
+  await page.locator(".dc-periodo__data").fill("2027-03-15");
+  await expect(periodo).toHaveText("Março de 2027");
   expect(await sobraNaLateral(page)).toBe(0);
-  // A vista escolhida volta na próxima vez.
-  await page.goto("/agenda");
-  await expect(page.getByRole("radio", { name: "Semana" })).toHaveAttribute("aria-checked", "true");
 });
 
 for (const rota of ["/prazos", "/processos", "/clientes", "/agenda", "/negocios", "/alvaras", "/documentos", "/modelos", "/configuracoes", "/conta"]) {

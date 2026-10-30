@@ -53,11 +53,11 @@ const posicaoNaSemana = (dia: string) => (data(dia).getUTCDay() + 6) % 7;
 
 /** "Outubro de 2026" */
 export const nomeDoMes = (dia: string) => `${MESES[mes(dia)]!.replace(/^./, (x) => x.toUpperCase())} de ${dia.slice(0, 4)}`;
-/** "2 a 8 nov", "26 out a 1 nov", com o ano quando não é o de hoje. */
+/** "2 a 8 de novembro", "26 out a 1 nov", com o ano quando não é o de hoje. */
 export const intervalo = (de: string, ate: string, hoje: string) => {
   const ano = ate.slice(0, 4) !== hoje.slice(0, 4) || de.slice(0, 4) !== ate.slice(0, 4) ? ` de ${ate.slice(0, 4)}` : "";
-  const inicio = mes(de) === mes(ate) && de.slice(0, 4) === ate.slice(0, 4) ? `${numeroDoDia(de)}` : `${numeroDoDia(de)} ${MESES_CURTOS[mes(de)]}`;
-  return `${inicio} a ${numeroDoDia(ate)} ${MESES_CURTOS[mes(ate)]}${ano}`;
+  if (mes(de) === mes(ate) && de.slice(0, 4) === ate.slice(0, 4)) return `${numeroDoDia(de)} a ${numeroDoDia(ate)} de ${MESES[mes(ate)]}${ano}`;
+  return `${numeroDoDia(de)} ${MESES_CURTOS[mes(de)]} a ${numeroDoDia(ate)} ${MESES_CURTOS[mes(ate)]}${ano}`;
 };
 /** "Hoje", "Amanhã", "Ontem" ou o dia da semana, para os títulos dos dias. */
 export const nomeDoDia = (dia: string, hoje: string) =>

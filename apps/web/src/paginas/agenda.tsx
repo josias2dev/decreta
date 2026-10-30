@@ -2,8 +2,8 @@
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { CalendarDays, CalendarRange, Check, ChevronLeft, ChevronRight, Gavel, List, ListTodo, Plus, Video, type LucideIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { CalendarDays, CalendarRange, Check, ChevronDown, ChevronLeft, ChevronRight, Gavel, List, ListTodo, Plus, Video, type LucideIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import {
   DiasNoCelular,
@@ -44,24 +44,6 @@ const VISTAS: { id: VistaDaAgenda; rotulo: string; icone: LucideIcon }[] = [
   { id: "semana", rotulo: "Semana", icone: CalendarRange },
   { id: "mes", rotulo: "Mês", icone: CalendarDays },
 ];
-/** A última vista escolhida volta na próxima vez (só neste aparelho). */
-const GUARDADA = "decreta.agenda.vista";
-function vistaGuardada(): VistaDaAgenda | null {
-  try {
-    const v = localStorage.getItem(GUARDADA);
-    return VISTAS_DA_AGENDA.includes(v as VistaDaAgenda) ? (v as VistaDaAgenda) : null;
-  } catch {
-    return null;
-  }
-}
-function guardarVista(v: VistaDaAgenda) {
-  try {
-    localStorage.setItem(GUARDADA, v);
-  } catch {
-    // Sem armazenamento (aba anônima): a vista vale só agora.
-  }
-}
-
 /**
  * O que cada vista mostra (de/ate, para o título e a contagem) e o que busca:
  * a lista, duas semanas a partir do dia; a semana, de segunda a domingo; o mês,
@@ -89,7 +71,8 @@ export function AgendaPage() {
   const search = useSearch({ from: "/app/agenda" });
   const navigate = useNavigate({ from: "/agenda" });
   const hoje = eu.data?.hoje ?? "";
-  const vista = search.vista ?? vistaGuardada() ?? "lista";
+  // A agenda abre na semana; a vista escolhida fica no endereço (voltar de uma audiência volta nela).
+  const vista = search.vista ?? "semana";
   const dia = search.dia ?? hoje;
   const p = dia ? periodoDa(vista, dia) : null;
   const buscar = (de: string, ate: string) => ({ queryKey: ["agenda", de, ate], queryFn: () => api<Agenda>(`/agenda?de=${de}&ate=${ate}`) });
@@ -137,7 +120,6 @@ export function AgendaPage() {
   const marcar = (i: ItemDaAgenda, feita: boolean) => tarefa.mutate({ id: i.id, feita });
 
   const ir = (mudanca: { vista?: VistaDaAgenda; dia?: string }) => {
-    if (mudanca.vista) guardarVista(mudanca.vista);
     void navigate({
       search: (s) => {
         const novoDia = mudanca.dia ?? s.dia;
@@ -203,14 +185,32 @@ export function AgendaPage() {
     </>
   );
   const vistas = <Segmentos rotulo="Ver a agenda em" opcoes={VISTAS} valor={vista} aoMudar={(v) => ir({ vista: v })} />;
-  const setas = (
-    <div className="dc-grupo">
-      <Botao aria-label={vista === "mes" ? "Mês anterior" : vista === "semana" ? "Semana anterior" : "Semanas anteriores"} onClick={anterior}>
+  // Anterior, o período e próximo num controle só. Clicar no período abre o calendário do aparelho para ir a qualquer data.
+  const data = useRef<HTMLInputElement>(null);
+  const escolherData = () => {
+    try {
+      data.current?.showPicker();
+    } catch {
+      data.current?.focus();
+    }
+  };
+  const passos = (rotulo: boolean) => (
+    <div className="dc-periodo" role="group" aria-label="Período">
+      <button type="button" className="dc-periodo__seta" aria-label={vista === "mes" ? "Mês anterior" : vista === "semana" ? "Semana anterior" : "Semanas anteriores"} onClick={anterior}>
         <ChevronLeft />
-      </Botao>
-      <Botao aria-label={vista === "mes" ? "Próximo mês" : vista === "semana" ? "Próxima semana" : "Próximas semanas"} onClick={proximo}>
+      </button>
+      {rotulo && (
+        <span className="dc-periodo__meio">
+          <button type="button" className="dc-periodo__rotulo" title="Ir para uma data" aria-live="polite" onClick={escolherData}>
+            <CalendarDays aria-hidden />
+            {titulo}
+          </button>
+          <input ref={data} type="date" className="dc-periodo__data" tabIndex={-1} aria-hidden value={dia} onChange={(e) => e.target.value && escolher(e.target.value)} />
+        </span>
+      )}
+      <button type="button" className="dc-periodo__seta" aria-label={vista === "mes" ? "Próximo mês" : vista === "semana" ? "Próxima semana" : "Próximas semanas"} onClick={proximo}>
         <ChevronRight />
-      </Botao>
+      </button>
     </div>
   );
 
@@ -232,7 +232,15 @@ export function AgendaPage() {
     return (
       <TelaCelular
         titulo="Agenda"
-        sobre={titulo}
+        sobre={
+          <span className="dc-periodo__meio dc-periodo__meio--topo">
+            <button type="button" className="dc-topo__data" aria-live="polite" onClick={escolherData}>
+              {titulo}
+              <ChevronDown aria-hidden />
+            </button>
+            <input ref={data} type="date" className="dc-periodo__data" tabIndex={-1} aria-hidden value={dia} onChange={(e) => e.target.value && escolher(e.target.value)} />
+          </span>
+        }
         voltar
         direita={
           <>
@@ -259,7 +267,7 @@ export function AgendaPage() {
         fixo={
           <div className="dc-agenda-barra">
             {vistas}
-            {setas}
+            {passos(false)}
           </div>
         }
       >
@@ -297,10 +305,7 @@ export function AgendaPage() {
       <div className="dc-agenda-barra">
         <div className="dc-agenda-barra__periodo">
           <Botao onClick={() => ir({ dia: hoje })}>Hoje</Botao>
-          {setas}
-          <h2 className="dc-agenda-barra__titulo" aria-live="polite">
-            {titulo}
-          </h2>
+          {passos(true)}
         </div>
         {vistas}
       </div>

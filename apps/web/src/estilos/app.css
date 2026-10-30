@@ -694,20 +694,32 @@ a.dc-cartao-ia__nome:hover { color: var(--acento); }
 .dc-segmentos__item.is-on { background: var(--superficie); color: var(--tinta); box-shadow: 0 0 0 1px var(--borda), 0 1px 2px rgba(27, 25, 45, 0.08); }
 .dc-segmentos__item.is-on svg { color: var(--tinta); }
 .dc-segmentos__item:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
-.dc-grupo { display: inline-flex; flex: none; }
-.dc-grupo > .dc-btn { width: 32px; padding: 0; border-radius: 0; }
-.dc-grupo > .dc-btn:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
-.dc-grupo > .dc-btn:last-child { margin-left: -1px; border-radius: 0 var(--radius-md) var(--radius-md) 0; }
-.dc-grupo > .dc-btn:focus-visible { position: relative; z-index: 1; }
-
+/* Anterior | período | próximo num controle branco só, como os botões; o período abre o calendário do aparelho. */
+.dc-periodo { display: inline-flex; align-items: stretch; flex: none; height: 32px; box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-md); box-shadow: var(--sombra-leve); overflow: hidden; }
+.dc-periodo__seta { display: grid; place-items: center; flex: none; width: 32px; padding: 0; border: 0; background: transparent; color: var(--tinta-2); cursor: pointer; }
+.dc-periodo__seta + .dc-periodo__seta { border-left: 1px solid var(--borda); }
+.dc-periodo__seta svg { width: 16px; height: 16px; }
+.dc-periodo__meio { position: relative; display: flex; border-left: 1px solid var(--borda); border-right: 1px solid var(--borda); }
+.dc-periodo__rotulo { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-width: 184px; padding: 0 var(--space-3); border: 0; background: transparent; font: 600 13.5px/18px var(--font-sans); letter-spacing: -0.01em; color: var(--tinta); white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; }
+.dc-periodo__rotulo svg { width: 15px; height: 15px; flex: none; color: var(--tinta-3); }
+.dc-periodo__seta:hover, .dc-periodo__rotulo:hover { background: var(--superficie-2); color: var(--tinta); }
+.dc-periodo__seta:active, .dc-periodo__rotulo:active { background: var(--borda); }
+.dc-periodo__seta:focus-visible, .dc-periodo__rotulo:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--anel); }
+.dc-periodo:has(:focus-visible) { border-color: var(--foco); }
+/* O campo de data fica embaixo do período, só para o calendário do aparelho abrir ali. */
+.dc-periodo__meio--topo { display: inline-flex; border: 0; }
+.dc-topo__data { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; }
+.dc-topo__data svg { width: 14px; height: 14px; }
+.dc-periodo__data { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; pointer-events: none; }
 .dc-agenda-barra { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .dc-agenda-barra__periodo { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.dc-agenda-barra__titulo { margin: 0 0 0 var(--space-1); min-width: 0; font: 600 16px/22px var(--font-sans); letter-spacing: -0.015em; color: var(--tinta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-celular .dc-agenda-barra { gap: var(--space-2); }
 .dc-celular .dc-agenda-barra .dc-segmentos { flex: 1 1 auto; height: 40px; border-radius: 6px; }
 .dc-celular .dc-segmentos__item { font-size: 14px; border-radius: 5px; }
 .dc-celular .dc-segmentos__item svg { display: none; }
-.dc-celular .dc-grupo > .dc-btn { width: 44px; height: 40px; padding: 0; }
+.dc-celular .dc-periodo { height: 40px; border-radius: 6px; }
+.dc-celular .dc-periodo__seta { width: 44px; }
+.dc-celular .dc-periodo__seta svg { width: 18px; height: 18px; }
 .dc-topo .dc-btn--fantasma.dc-topo__texto-btn { width: auto; padding: 0 10px; }
 
 /* O título de cada dia (na lista e ao lado do mês), com o feriado quando há. */
