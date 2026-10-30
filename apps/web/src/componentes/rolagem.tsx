@@ -12,6 +12,9 @@ import { cn } from "@/lib/util";
  */
 export const VOLTAM_AO_TOPO = ["processos", "clientes", "prazos", "publicacoes", "publicacao"].map((id) => `[data-scroll-restoration-id="${id}"]`);
 
+/** A folha do computador (moldura.tsx) rola por dentro: abre cada tela no começo e volta à posição no "voltar". */
+export const FOLHA = '[data-scroll-restoration-id="folha"]';
+
 /**
  * A parte da tela que rola. `id` guarda a posição para quando a pessoa voltar
  * à tela (o roteador lê o data-scroll-restoration-id); quando `topo` muda

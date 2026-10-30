@@ -168,16 +168,6 @@
 .dc-menu__pe .dc-avatar { width: 30px; height: 30px; font-size: 11px; background: var(--superficie); box-shadow: 0 0 0 1px rgba(27, 25, 45, 0.08); }
 
 .dc-conteudo { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; position: relative; isolation: isolate; }
-/* O véu do topo: grade bem leve e um brilho azul, só atrás do título, como no AgenteHost. */
-.dc-veu { position: absolute; inset: 0 0 auto 0; height: 220px; z-index: -1; pointer-events: none;
-  background:
-    linear-gradient(to right, color-mix(in srgb, var(--tinta) 4%, transparent) 1px, transparent 1px) 0 0 / 32px 32px,
-    linear-gradient(to bottom, color-mix(in srgb, var(--tinta) 4%, transparent) 1px, transparent 1px) 0 0 / 32px 32px,
-    radial-gradient(at 6% 0%, color-mix(in srgb, var(--acento) 18%, transparent) 0, transparent 42%),
-    radial-gradient(at 48% 0%, color-mix(in srgb, #7c8cff 12%, transparent) 0, transparent 38%),
-    radial-gradient(at 88% 0%, color-mix(in srgb, #8fd3ff 20%, transparent) 0, transparent 42%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent); mask-image: linear-gradient(to bottom, #000 30%, transparent); }
-[data-theme="escuro"] .dc-veu { opacity: .55; }
 
 .dc-pagina { width: 100%; max-width: var(--layout-pagina); margin: 0 auto; box-sizing: border-box; padding: var(--space-6) var(--space-6) var(--space-8); display: flex; flex-direction: column; gap: var(--space-4); }
 .dc-cabecalho { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }

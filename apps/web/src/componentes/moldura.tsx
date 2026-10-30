@@ -1,6 +1,7 @@
 /**
  * A moldura das telas logadas. No computador: menu lateral cinza (o escritório
- * no topo, a busca, os itens e a conta embaixo) e o conteúdo com o véu do topo. No celular: cada tela tem o
+ * no topo, a busca, os itens e a conta embaixo) e cada tela numa folha branca
+ * que rola por dentro. No celular: cada tela tem o
  * próprio topo, e embaixo ficam a navegação e o botão Perguntar.
  */
 import { useQuery } from "@tanstack/react-query";
@@ -209,8 +210,7 @@ function Moldura({ eu }: { eu: Eu }) {
           </Link>
         </div>
       </nav>
-      <div className="dc-conteudo">
-        <div className="dc-veu" aria-hidden="true" />
+      <div className="dc-conteudo" data-scroll-restoration-id="folha">
         <AbrirBusca.Provider value={() => setBuscando(true)}>
           <Outlet />
         </AbrirBusca.Provider>

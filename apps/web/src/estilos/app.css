@@ -15,6 +15,33 @@
 .dc-menu__busca span:first-of-type { flex: 1; }
 .dc-pagina--larga { max-width: none; }
 
+/* ---------- A folha (computador) ----------
+   O fundo é o cinza do menu e cada tela fica numa folha branca, a 8px das bordas, que rola por dentro.
+   Padrão de toda tela: o topo numa faixa de ponta a ponta com uma linha embaixo (título, descrição e
+   ações; nas telas de detalhe, a trilha, o título e as abas encostadas na linha), logo abaixo a busca
+   e os filtros, depois o conteúdo. A folha usa a largura toda: nada de faixas vazias dos lados. */
+.dc-app { --folga: 8px; --altura-folha: calc(100dvh - 2 * var(--folga) - 2px); background: var(--menu); }
+.dc-app > .dc-menu { background: transparent; border-right: 0; }
+.dc-app > .dc-conteudo { box-sizing: border-box; height: calc(100dvh - 2 * var(--folga)); margin: var(--folga) var(--folga) var(--folga) 0; overflow-y: auto; overscroll-behavior: contain; background: var(--superficie); border: 1px solid var(--menu-borda); border-radius: 12px; box-shadow: 0 1px 2px rgba(27, 25, 45, 0.04), 0 6px 20px -12px rgba(27, 25, 45, 0.1); }
+.dc-app .dc-pagina { max-width: none; padding: 0 var(--space-6) var(--space-8); gap: var(--space-5); }
+.dc-app .dc-pagina > .dc-cabecalho, .dc-app .dc-topo-pagina { margin: 0 calc(-1 * var(--space-6)); padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--borda); }
+.dc-app .dc-pagina > .dc-cabecalho { align-items: center; min-height: 76px; box-sizing: border-box; }
+.dc-topo-pagina { display: flex; flex-direction: column; gap: var(--space-3); }
+.dc-app .dc-topo-pagina:has(> .dc-abas) { padding-bottom: 0; }
+.dc-app .dc-topo-pagina > .dc-abas { border-bottom: 0; }
+.dc-app .dc-h1 { font-size: 19px; line-height: 26px; }
+.dc-app .dc-sub, .dc-app .dc-topo-detalhe__sobre { font-size: 13.5px; line-height: 20px; color: var(--tinta-3); }
+/* Na folha branca, os cartões se separam pela borda, sem sombra. */
+.dc-app .dc-painel, .dc-app .dc-numeros { box-shadow: none; }
+.dc-app .dc-pagina--cheia { height: var(--altura-folha); min-height: 504px; padding-bottom: var(--space-6); }
+.dc-app .dc-chat { height: var(--altura-folha); }
+.dc-app .dc-caixa__lista { max-height: calc(var(--altura-folha) - 32px); }
+.dc-app .dc-chat__cabeca { background: color-mix(in srgb, var(--superficie) 88%, transparent); }
+/* Quadros: cada coluna é uma raia cinza, e os cartões brancos ficam por cima. */
+.dc-app .dc-quadro__coluna { padding: 10px 8px 0; border-radius: 10px; background: var(--papel); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--borda) 60%, transparent); }
+.dc-app .dc-quadro__topo { padding: 0 6px 2px; }
+.dc-app .dc-quadro__corpo { padding-bottom: 8px; }
+
 /* ---------- Moldura no celular ---------- */
 .dc-tela { display: flex; flex-direction: column; min-height: 100dvh; background: var(--papel); }
 /* O topo (título) e o que fica preso com ele (busca, filtros, etapas); a lista rola por baixo. */
@@ -847,3 +874,8 @@ a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
 /* O menu do + no celular, com alvos de toque de 44px. */
 .dc-menu-flutuante.dc-celular .dc-menu-flutuante__item { height: 44px; padding: 0 var(--space-3); font-size: 15px; }
 .dc-menu-flutuante.dc-celular .dc-menu-flutuante__item svg { width: 18px; height: 18px; }
+
+/* ---------- Rótulos pequenos ----------
+   Cabeçalho das tabelas, grupos das listas, do histórico e da busca em caixa normal, como os grupos do menu.
+   Os dias da semana dos calendários continuam em caixa alta. */
+.dc-tabela th, .dc-tabela td.dc-tabela__grupo, .dc-busca-grupo__titulo, .dc-historico__grupo h3, .dc-recentes__topo h3, .dc-chat__contexto-grupo h3, .dc-cartao-ia__bloco > h4, .dc-cartao-ia__dia > h4 { text-transform: none; letter-spacing: 0; font-size: 12.5px; }

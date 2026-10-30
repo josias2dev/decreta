@@ -321,7 +321,7 @@ export function PecaPage() {
 
   return (
     <Pagina>
-      <div className="flex flex-col gap-3">
+      <div className="dc-topo-pagina">
         <Trilha>
           {p.prazo ? <Link to="/prazos">Prazos</Link> : <Link to="/processos">Processos</Link>}
           {p.prazo ? (

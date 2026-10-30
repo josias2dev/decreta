@@ -72,7 +72,7 @@ export function ConfiguracoesPage() {
   }
   return (
     <Pagina>
-      <div className="flex flex-col gap-3">
+      <div className="dc-topo-pagina">
         <Cabecalho titulo="Configurações" sub={eu.data?.escritorio.nome} />
         {abas}
       </div>

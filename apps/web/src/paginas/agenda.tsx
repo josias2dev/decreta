@@ -653,7 +653,7 @@ export function AudienciaPage() {
   }
   return (
     <Pagina>
-      <div className="flex flex-col gap-3">
+      <div className="dc-topo-pagina">
         <Trilha>
           <Link to="/agenda">Agenda</Link>
           <span>{a.tipo}</span>

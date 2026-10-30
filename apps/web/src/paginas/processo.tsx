@@ -109,7 +109,7 @@ export function ProcessoPage() {
 
   return (
     <Pagina>
-      <div className="flex flex-col gap-3">
+      <div className="dc-topo-pagina">
         <Trilha>
           <Link to="/processos">Processos</Link>
           <span>{p.titulo}</span>

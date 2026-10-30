@@ -233,7 +233,7 @@ export function PrazoPage() {
 
   return (
     <Pagina>
-      <div className="flex flex-col gap-3">
+      <div className="dc-topo-pagina">
         <Trilha>
           <Link to="/prazos">Prazos</Link>
           <span>{p.tipo}</span>

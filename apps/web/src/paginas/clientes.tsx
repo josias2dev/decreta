@@ -358,7 +358,7 @@ export function ClientePage() {
 
   return (
     <Pagina>
-      <div className="flex flex-col gap-3">
+      <div className="dc-topo-pagina">
         <Trilha>
           <Link to="/clientes">Clientes</Link>
           <span>{c.nome}</span>
