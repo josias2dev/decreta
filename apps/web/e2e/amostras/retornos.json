@@ -15,21 +15,33 @@
         "rotulo": "Peça gerada"
       },
       {
+        "acao": "preparar-audiencia",
+        "uteis": 0,
+        "errados": 1,
+        "rotulo": "Preparação de audiência"
+      },
+      {
         "acao": "ler-sentenca",
-        "uteis": 1,
+        "uteis": 2,
         "errados": 0,
         "rotulo": "Leitura da sentença"
+      },
+      {
+        "acao": "resumo-autos",
+        "uteis": 1,
+        "errados": 0,
+        "rotulo": "Resumo dos autos"
       }
     ],
     "errados": [
       {
-        "id": "dce22751-199a-46c8-8f32-e4ab31e81254",
+        "id": "4836d3f8-6655-4602-bcaf-c68352b30637",
         "acao": "gerar-documento",
         "rotulo": "Peça gerada",
         "comentario": "Citou o evento errado na seção 2.",
-        "em": "2026-10-30T00:19:18.457Z",
+        "em": "2026-10-30T00:27:55.837Z",
         "pessoa": {
-          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+          "id": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -37,18 +49,18 @@
         },
         "onde": {
           "tipo": "peca",
-          "id": "9b1c23bb-1e75-47b4-9a9b-9b0b02a9cf38",
-          "processoId": "07795901-a9f5-463c-944d-82dde4898d55"
+          "id": "84b7ace9-6b8e-4d41-90e0-1b4aae2e7e1f",
+          "processoId": "7db9f23d-9aff-459d-aa2d-49a0f886f22b"
         }
       },
       {
-        "id": "d061ccd4-8713-4248-863b-76b12a93bcb7",
+        "id": "72cfcf7a-d556-4212-9fdd-94c157da598c",
         "acao": "briefing-prazo",
         "rotulo": "Briefing do prazo",
         "comentario": "Contou o prazo do laudo como se fosse corrido.",
-        "em": "2026-10-30T00:19:18.451Z",
+        "em": "2026-10-29T12:30:00.000Z",
         "pessoa": {
-          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+          "id": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -56,7 +68,25 @@
         },
         "onde": {
           "tipo": "prazo",
-          "id": "3f440eef-c22b-456e-8682-041f7c7ef3b9"
+          "id": "002367af-f218-465d-94ad-fe29ce90a805"
+        }
+      },
+      {
+        "id": "22b29c6e-6b41-4804-8816-232ac25de4a0",
+        "acao": "preparar-audiencia",
+        "rotulo": "Preparação de audiência",
+        "comentario": "Tratou o aditivo de 60 dias como se cobrisse todo o atraso; ele foi assinado depois da data de entrega.",
+        "em": "2026-10-28T21:20:00.000Z",
+        "pessoa": {
+          "id": "meCqv3c5nwoMD2N28nlPgWePf899UXSz",
+          "nome": "Tiago Martins",
+          "apelido": "Tiago",
+          "iniciais": "TM",
+          "foto": "/demonstracao/tiago.jpg"
+        },
+        "onde": {
+          "tipo": "audiencia",
+          "id": "6149ea7c-6f21-4249-99eb-24ff8fb903f2"
         }
       }
     ]

@@ -1,14 +1,14 @@
 {
-  "path": "/pecas/preparar?prazo=3f440eef-c22b-456e-8682-041f7c7ef3b9",
+  "path": "/pecas/preparar?prazo=002367af-f218-465d-94ad-fe29ce90a805",
   "corpo": {
     "processo": {
-      "id": "b59ae9b7-d498-49b7-943d-a150abd4b054",
+      "id": "f4d8b168-dd66-4c35-b188-a4e6facbaaf6",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "orgao": "2ª Vara Cível"
     },
     "prazo": {
-      "id": "3f440eef-c22b-456e-8682-041f7c7ef3b9",
+      "id": "002367af-f218-465d-94ad-fe29ce90a805",
       "tipo": "Manifestação sobre laudo pericial",
       "fim": "2026-11-23"
     },
@@ -22,7 +22,16 @@
       "Contestação.docx · evento 24",
       "Briefing do prazo"
     ],
-    "modelos": [],
+    "modelos": [
+      {
+        "id": "1c199e72-b733-429c-9b24-c8caea38f7a0",
+        "titulo": "Manifestação sobre laudo · invalidez no seguro de vida"
+      },
+      {
+        "id": "31ccffc6-b72e-4e60-8edf-7c8895019bcc",
+        "titulo": "Contrarrazões de apelação · servidor público contra o município"
+      }
+    ],
     "ultima": null
   }
 }

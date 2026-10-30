@@ -1,43 +1,79 @@
 {
   "path": "/modelos",
   "corpo": {
-    "total": 2,
+    "total": 4,
     "itens": [
       {
-        "id": "bcb9f5b4-f951-4439-b301-64011a2c47f6",
+        "id": "38392a04-20a0-4c01-bc3b-4eb0c33a264e",
         "titulo": "Contestação · negativa de cobertura de plano de saúde",
         "tipo": "contestacao",
         "tese": "Exclusão contratual não vale contra indicação médica",
         "assunto": "Plano de saúde",
         "pecaId": null,
         "criadoPor": {
-          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+          "id": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "em": "2026-10-30T00:19:18.408Z",
+        "em": "2026-10-30T00:27:55.788Z",
         "tamanho": 351,
         "tipoNome": "Contestação"
       },
       {
-        "id": "fb2258bb-f6bd-4950-88ac-e921e24fa7a2",
+        "id": "70fef483-0736-41fe-9b7f-970c561e92c0",
         "titulo": "Alegações finais · Roberto Kühn",
         "tipo": "alegacoes-finais",
         "tese": "Prova testemunhal confirma o uso habitual do imóvel",
         "assunto": "Alegações finais",
-        "pecaId": "9b1c23bb-1e75-47b4-9a9b-9b0b02a9cf38",
+        "pecaId": "84b7ace9-6b8e-4d41-90e0-1b4aae2e7e1f",
         "criadoPor": {
-          "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+          "id": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "em": "2026-10-30T00:19:18.399Z",
+        "em": "2026-10-30T00:27:55.779Z",
         "tamanho": 763,
         "tipoNome": "Alegações finais"
+      },
+      {
+        "id": "1c199e72-b733-429c-9b24-c8caea38f7a0",
+        "titulo": "Manifestação sobre laudo · invalidez no seguro de vida",
+        "tipo": "manifestacao-laudo",
+        "tese": "Laudo confirma invalidez total e permanente; indenização integral da apólice",
+        "assunto": "Seguro de vida em grupo",
+        "pecaId": null,
+        "criadoPor": {
+          "id": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
+        },
+        "em": "2026-10-09T20:30:00.000Z",
+        "tamanho": 866,
+        "tipoNome": "Manifestação sobre laudo pericial"
+      },
+      {
+        "id": "31ccffc6-b72e-4e60-8edf-7c8895019bcc",
+        "titulo": "Contrarrazões de apelação · servidor público contra o município",
+        "tipo": "contrarrazoes",
+        "tese": "Sentença aplicou a lei municipal e o laudo; a apelação só repete a contestação",
+        "assunto": "Servidor público municipal",
+        "pecaId": null,
+        "criadoPor": {
+          "id": "PflEMqKTgCINh5SOZuw2II183aH2Zmjf",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF",
+          "foto": "/demonstracao/rafael.jpg"
+        },
+        "em": "2026-09-30T20:30:00.000Z",
+        "tamanho": 690,
+        "tipoNome": "Contrarrazões de apelação"
       }
     ]
   }

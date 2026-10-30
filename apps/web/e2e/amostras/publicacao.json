@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/3ea1c509-4b9c-4e76-b052-00f406fcc8de",
+  "path": "/publicacoes/86dc338e-b98f-4c6f-a765-c4e92ec90ed9",
   "corpo": {
-    "id": "3ea1c509-4b9c-4e76-b052-00f406fcc8de",
+    "id": "86dc338e-b98f-4c6f-a765-c4e92ec90ed9",
     "situacao": "nova",
     "fonte": "djen",
     "disponibilizadaEm": "2026-10-28",
@@ -27,14 +27,14 @@
       }
     ],
     "processo": {
-      "id": "b59ae9b7-d498-49b7-943d-a150abd4b054",
+      "id": "f4d8b168-dd66-4c35-b188-a4e6facbaaf6",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "classe": "Procedimento comum cível",
       "orgao": "2ª Vara Cível",
       "comarca": "Joinville",
       "responsavel": {
-        "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+        "id": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -42,7 +42,7 @@
       }
     },
     "sugestao": {
-      "id": "895d281e-de57-414c-9cac-07836981cce1",
+      "id": "5f255dea-a7e7-4ea4-b8d5-b8011444e2ab",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -55,7 +55,7 @@
         "audiencia": null,
         "geraPrazo": true,
         "fundamento": "art. 477, § 1º, CPC",
-        "responsavelId": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+        "responsavelId": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
         "contagemCalculada": {
           "fim": "2026-11-23",
           "dias": 15,
@@ -83,7 +83,7 @@
       "desatualizada": false,
       "erro": null,
       "responsavel": {
-        "id": "mWtfxKNJO1L5ev0YWzegZliC8GZPU1b6",
+        "id": "4fJR6WlqqJwCL3bUYN51YGo2PEgD6TQV",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -91,7 +91,7 @@
       }
     },
     "prazo": {
-      "id": "3f440eef-c22b-456e-8682-041f7c7ef3b9",
+      "id": "002367af-f218-465d-94ad-fe29ce90a805",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Manifestação sobre laudo pericial"
