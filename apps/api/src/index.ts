@@ -23,6 +23,7 @@ const ia = env.LLM_API_KEY
       apiKey: env.LLM_API_KEY,
       modelos: { juridico: env.MODELO_JURIDICO, autos: env.MODELO_AUTOS, documentos: env.MODELO_DOCUMENTOS, pdf: env.MODELO_PDF, vision: env.MODELO_VISION },
       modeloTranscricao: env.MODELO_TRANSCRICAO,
+      log,
     })
   : null;
 const arquivos = armazenamentoDoEnv(env);

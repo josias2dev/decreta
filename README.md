@@ -77,5 +77,6 @@ O CI (`.github/workflows/ci.yml`) roda tudo isso a cada push.
 O Decreta roda na máquina do escritório, ao lado dos outros sistemas: API em
 `127.0.0.1:8791` (systemd, usuário `appsvc`, em `/opt/decreta`), Caddy na 443 com
 o certificado automático, Postgres e Inngest da própria máquina, IA pelo
-openrouter-gateway (projeto `decreta`, com ZDR e teto diário). O passo a passo está em
+openrouter-gateway (projeto `decreta`, com ZDR e teto diário; os aliases com perfil
+Claude vão pela rota da Anthropic, com os créditos do escritório). O passo a passo está em
 [deploy/INSTALL.md](deploy/INSTALL.md); o deploy é o workflow **Deploy**, disparado à mão.

@@ -575,7 +575,9 @@ export async function tituloDaConversa(ia: Ia, pergunta: string, resposta: strin
     prompt: `Pergunta: ${pergunta.slice(0, 1000)}\n\nResposta: ${resposta.slice(0, 1500)}`,
     abortSignal: signal,
     maxRetries: 0,
-    maxOutputTokens: 30,
+    // Folga para o raciocínio, que nos Claude 5 não desliga e conta neste teto; o título em si tem poucas palavras.
+    maxOutputTokens: 1000,
+    providerOptions: { anthropic: { effort: "low" } },
   });
   const t = r.text.replace(/^["'“”\s]+|["'“”.\s]+$/g, "").split("\n")[0]!.trim();
   return t.length >= 2 && t.length <= 80 ? t : null;

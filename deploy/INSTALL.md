@@ -72,6 +72,15 @@ linha do modelo explica a sua):
   teto diário e os aliases `juridico`, `autos`, `documentos`, `pdf` e `vision`.
   A chave `gw_` do projeto vai em `LLM_API_KEY`. Sem ela o Decreta funciona e as
   telas avisam que a IA está desligada.
+- **Claude com os créditos do escritório**: no painel do gateway, um perfil com o
+  modelo `anthropic:claude-opus-5-5` manda aquele alias direto para a Anthropic
+  (precisa do `ANTHROPIC_API_KEY` no `.env` do gateway; a Anthropic guarda os pedidos
+  por até 30 dias, sem treinar com eles). Dê a cada perfil assim uma reserva do
+  OpenRouter: é por onde o Decreta segue quando o Claude falha (sem crédito,
+  sobrecarga, recusa), com o ZDR da reserva. Deixe o raciocínio do perfil vazio,
+  para valer o esforço que o Decreta escolhe por ação, e o teto de tokens vazio ou
+  alto (o raciocínio do Claude conta nele). Voltar ao OpenRouter é trocar o modelo
+  do perfil; o Decreta percebe em até um minuto, sem reiniciar.
 - **Limites da IA**: as variáveis `IA_*` do exemplo (mensagens por pessoa no chat,
   teto do dia do site, por pessoa e da demonstração, em dólar). O teto do site fica
   abaixo do teto do projeto no gateway, para sobrar para os prazos das publicações
