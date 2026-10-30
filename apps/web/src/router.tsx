@@ -126,7 +126,12 @@ const perguntarRoute = createRoute({
 const conversaRoute = createRoute({ getParentRoute: () => appRoute, path: "/perguntar/$id", component: ConversaPage });
 const negociosRoute = createRoute({ getParentRoute: () => appRoute, path: "/negocios", component: NegociosPage });
 const alvarasRoute = createRoute({ getParentRoute: () => appRoute, path: "/alvaras", component: AlvarasPage });
-const documentosRoute = createRoute({ getParentRoute: () => appRoute, path: "/documentos", component: DocumentosPage });
+const documentosRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/documentos",
+  validateSearch: (s: Record<string, unknown>): { doc?: string } => (texto(s.doc, 40) ? { doc: texto(s.doc, 40) } : {}),
+  component: DocumentosPage,
+});
 const modelosRoute = createRoute({ getParentRoute: () => appRoute, path: "/modelos", component: ModelosPage });
 const equipeRoute = createRoute({ getParentRoute: () => appRoute, path: "/equipe", component: EquipePage });
 const configuracoesRoute = createRoute({ getParentRoute: () => appRoute, path: "/configuracoes", component: ConfiguracoesPage });

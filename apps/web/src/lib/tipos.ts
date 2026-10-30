@@ -316,6 +316,8 @@ export interface Documento {
   em: string;
   processo: { id: string; titulo: string } | null;
   cliente: { id: string; nome: string } | null;
+  /** Pasta de quem ainda está na triagem (novos negócios). */
+  negocio: { id: string; nome: string } | null;
   enviadoPor: Pessoa | null;
 }
 

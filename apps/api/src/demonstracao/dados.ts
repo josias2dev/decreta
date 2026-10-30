@@ -620,6 +620,24 @@ export const ANDAMENTOS: Record<string, MovimentacaoDemo[]> = {
 };
 
 /** O que a IA "leu" na publicação, guardado como se ela tivesse acabado de ler. */
+/**
+ * O que a equipe enviou no processo da Marina além das cópias dos autos: a
+ * procuração escaneada em PDF e a foto do recibo da seguradora (inventados,
+ * em demonstracao/arquivos). A foto vem com o texto que a IA transcreveu.
+ */
+export const ARQUIVOS_DA_MARINA: { arquivo: string; nome: string; mime: string; por: Quem; hora: string; transcricao?: string }[] = [
+  { arquivo: "procuracao-marina.pdf", nome: "Procuração e declaração de hipossuficiência.pdf", mime: "application/pdf", por: "beatriz", hora: "10:40" },
+  {
+    arquivo: "recibo-seguradora.jpg",
+    nome: "Recibo do pagamento administrativo.jpg",
+    mime: "image/jpeg",
+    por: "rafael",
+    hora: "11:15",
+    transcricao:
+      "Seguradora Alfa S.A. · Central de Sinistros · Seguro de pessoas. Comprovante de pagamento de indenização. Sinistro 2026.0118.4471, emitido em 20/02/2026. Beneficiária: Marina Duarte. Evento: acidente de trânsito em 18/01/2026. Cobertura: invalidez permanente parcial. Grau considerado: 15%. Data do crédito: 20/02/2026. Valor pago: R$ 13.500,00. A beneficiária declara ter recebido o valor acima, correspondente à indenização pela cobertura de invalidez permanente parcial, apurada administrativamente em 15% (quinze por cento) do capital segurado.",
+  },
+];
+
 export interface SugestaoDemo {
   tipo: string;
   dias: number | null;

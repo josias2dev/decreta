@@ -19,7 +19,8 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
       },
       {
         "id": "72700a03-17d2-43b7-80fc-67720d7f1cf9",
@@ -38,7 +39,8 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
       },
       {
         "id": "8bd0f533-b0e6-49fa-b8de-cd28c9bac19f",
@@ -57,7 +59,8 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
       },
       {
         "id": "e4ac7caa-d7d1-4423-af01-f1bed981a4f4",
@@ -76,7 +79,8 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
       },
       {
         "id": "201121d5-aaec-4d68-89a7-c16af8773626",
@@ -95,7 +99,8 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
       },
       {
         "id": "47c4bb55-fc1a-4f99-bc7a-3323b1403c50",
@@ -114,7 +119,8 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
       },
       {
         "id": "e5a2fee1-6c7c-46c1-8949-6d0c551ecb0e",
@@ -133,7 +139,8 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
       },
       {
         "id": "2b97ff99-3ff6-4186-bd96-fa3e464e4267",
@@ -152,7 +159,60 @@
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
-        "enviadoPor": null
+        "enviadoPor": null,
+        "negocio": null
+      },
+      {
+        "id": "3f0c6a8e-5b1d-4c7a-9e2f-1a6d8b4c2e71",
+        "nome": "Recibo do pagamento administrativo.jpg",
+        "mime": "image/jpeg",
+        "tamanho": 75890,
+        "paginas": null,
+        "evento": null,
+        "origem": "upload",
+        "lido": true,
+        "semTexto": false,
+        "leitura": "pronta",
+        "em": "2026-03-12T14:15:00.000Z",
+        "processo": {
+          "id": "8a9e6ed9-d81d-402b-8d18-cd67f5aba392",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A."
+        },
+        "cliente": null,
+        "negocio": null,
+        "enviadoPor": {
+          "id": "YxYtYHSN2csxHlP6i0QdtbtdGcQxUGg6",
+          "nome": "Rafael Freitas",
+          "apelido": "Rafael",
+          "iniciais": "RF",
+          "foto": "/demonstracao/rafael.jpg"
+        }
+      },
+      {
+        "id": "6b2e9d41-7c3a-4f58-8d06-2c9e5a7b1f34",
+        "nome": "Procuração e declaração de hipossuficiência.pdf",
+        "mime": "application/pdf",
+        "tamanho": 44781,
+        "paginas": 2,
+        "evento": null,
+        "origem": "upload",
+        "lido": true,
+        "semTexto": false,
+        "leitura": null,
+        "em": "2026-03-12T13:40:00.000Z",
+        "processo": {
+          "id": "8a9e6ed9-d81d-402b-8d18-cd67f5aba392",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A."
+        },
+        "cliente": null,
+        "negocio": null,
+        "enviadoPor": {
+          "id": "179Q5BCDwk8K5foTgD7upNleYfNmW76h",
+          "nome": "Beatriz Souza",
+          "apelido": "Beatriz",
+          "iniciais": "BS",
+          "foto": "/demonstracao/beatriz.jpg"
+        }
       }
     ]
   }

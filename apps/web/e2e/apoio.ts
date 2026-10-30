@@ -8,6 +8,8 @@ import type { Page, Route } from "@playwright/test";
 
 type Amostra = { path: string; corpo: any };
 const PASTA = new URL("./amostras/", import.meta.url);
+/** Os arquivos dos documentos da amostra, pelo id (apps/api/test/arquivos-das-amostras.ts). */
+const ARQUIVOS = new URL("./amostras/arquivos/", import.meta.url);
 
 export const amostras: Record<string, Amostra> = Object.fromEntries(
   readdirSync(PASTA)
@@ -90,6 +92,14 @@ export class ApiFalsa {
     const troca = this.trocas.get(`${metodo} ${caminho}`) ?? this.trocas.get(caminho) ?? this.trocas.get(completo);
     if (troca) return json(troca.status ?? 200, troca.corpo);
     if (!this.logado) return json(401, { erro: "sem_sessao" });
+    // Um documento da amostra e o arquivo dele.
+    const doc = metodo === "GET" ? /^\/documentos\/([0-9a-f-]{36})(\/arquivo)?$/.exec(caminho) : null;
+    if (doc) {
+      const d = (amostras.documentos!.corpo.itens as { id: string; mime: string }[]).find((i) => i.id === doc[1]);
+      const arquivo = d && readdirSync(ARQUIVOS).find((f) => f.startsWith(d.id));
+      if (!d || (doc[2] && !arquivo)) return json(404, { erro: "nao_encontrado" });
+      return doc[2] ? route.fulfill({ status: 200, contentType: d.mime, body: readFileSync(new URL(arquivo!, ARQUIVOS)) }) : json(200, d);
+    }
     // A resposta do Perguntar chega aos poucos, uma linha JSON por acontecimento.
     if (metodo === "POST" && caminho === "/ia/perguntar") {
       const linhas = (amostras.perguntarEventos!.corpo as unknown[]).map((e) => JSON.stringify(e)).join("\n");

@@ -27,6 +27,19 @@ test("Hoje: os cinco números numa linha só, dentro da tela", async ({ page }) 
   await expect(page.getByRole("navigation", { name: "Navegação" })).toBeVisible();
 });
 
+test("documentos: o arquivo abre em tela cheia e o voltar volta à lista", async ({ page }) => {
+  await abrir(page, "/documentos");
+  await page.getByRole("link", { name: /Laudo pericial\.docx/ }).tap();
+  await expect(page.locator(".dc-topo__titulo")).toHaveText("Laudo pericial.docx");
+  // O Word corre na largura da tela, no tamanho do texto, em vez da folha reduzida.
+  const texto = page.locator("section.docx article p").first();
+  await expect(texto).toContainText("LAUDO PERICIAL MÉDICO");
+  expect(await texto.evaluate((p) => Number.parseFloat(getComputedStyle(p.querySelector("span")!).fontSize))).toBeGreaterThanOrEqual(15);
+  expect(await sobraNaLateral(page)).toBe(0);
+  await page.getByRole("button", { name: "Voltar" }).tap();
+  await expect(page.locator(".dc-topo__titulo")).toHaveText("Documentos");
+});
+
 test("prazo: ações presas embaixo e confirmar", async ({ page }) => {
   const api = await abrir(page, `/prazos/${ids.prazo}`);
   const confirmar = page.getByRole("button", { name: "Confirmar prazo" });

@@ -410,6 +410,62 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-caixa__detalhe { min-height: 0; max-height: 100%; overflow-y: auto; }
 .dc-caixa__detalhe .dc-painel__acoes { position: sticky; bottom: 0; z-index: 1; background: var(--superficie); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 
+/* Documentos: a lista e, com um aberto, o arquivo à direita (5 para 7), cada um rolando por si.
+   Aberto, a lista fica só com o nome (de quem é e o dia embaixo): o resto está no painel. */
+.dc-docs { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: var(--space-4); }
+.dc-docs--aberto { grid-template-columns: minmax(320px, 5fr) minmax(0, 7fr); }
+.dc-pagina--cheia > .dc-docs { flex: 1 1 auto; min-height: 0; }
+.dc-docs__lista { align-self: start; max-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.dc-docs__lista .dc-rola { flex: 0 1 auto; min-height: 0; overflow: auto; }
+.dc-docs--aberto .dc-docs__col { display: none; }
+.dc-docs--aberto .dc-tabela--docs { table-layout: fixed; }
+.dc-docs--aberto .dc-tabela--docs .dc-celula__2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-tabela--docs tbody tr[data-link]:hover td { background: color-mix(in srgb, var(--superficie-2) 60%, transparent); }
+.dc-tabela--docs tbody tr.is-on td, .dc-tabela--docs tbody tr.is-on:hover td { background: var(--acento-suave); }
+.dc-tabela--docs tbody tr.is-on .dc-celula__1 { color: var(--acento); }
+.dc-tabela--docs .dc-celula__1:focus-visible { outline: none; border-radius: 4px; box-shadow: 0 0 0 3px var(--anel); }
+
+.dc-doc { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-doc[aria-busy] { background: var(--superficie-2); }
+.dc-doc__topo { flex: none; display: flex; align-items: center; gap: 10px; min-height: 56px; box-sizing: border-box; padding: 8px 10px 8px var(--space-4); border-bottom: 1px solid var(--borda); }
+.dc-doc__nome { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-doc__acoes { flex: none; display: flex; align-items: center; gap: 2px; }
+.dc-doc__divisa { width: 1px; height: 16px; margin: 0 4px; background: var(--borda); }
+.dc-doc__dados { flex: none; display: flex; align-items: center; gap: var(--space-3); min-height: 36px; padding: 0 var(--space-4); border-bottom: 1px solid var(--borda); font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-doc__dados > :first-child { flex: 1 1 auto; min-width: 0; }
+.dc-doc__dados a { color: var(--acento); text-decoration: none; }
+.dc-doc__dados a:hover { text-decoration: underline; }
+.dc-doc__quando { flex: none; color: var(--tinta-3); }
+.dc-doc__dados--celular { min-height: 0; padding: 0; border: 0; font-size: 14px; line-height: 20px; }
+.dc-doc__ver { flex: 1 1 auto; min-height: 0; }
+
+/* O arquivo aberto: folhas brancas sobre o cinza, centradas, na largura do painel. */
+.dc-ver { position: relative; display: flex; flex-direction: column; background: var(--superficie-2); }
+.dc-ver__folhas { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; outline: none; }
+.dc-ver__folha { flex: none; max-width: 100%; box-sizing: border-box; background: #fff; box-shadow: 0 0 0 1px rgba(27, 25, 45, 0.06), 0 2px 10px -4px rgba(27, 25, 45, 0.16); }
+.dc-ver__folha > canvas { display: block; width: 100%; height: 100%; }
+.dc-ver__folha--vazia { width: min(100%, 560px); aspect-ratio: 1 / 1.414; background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--superficie-2) 40%, #fff), #fff); background-size: 200% 100%; animation: dc-brilho 1.4s ease-in-out infinite; }
+.dc-ver__contador { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 2px 10px; border-radius: 999px; background: rgba(37, 37, 43, 0.8); color: #fff; font: 500 12px/20px var(--font-sans); font-variant-numeric: tabular-nums; pointer-events: none; }
+.dc-ver__folhas--imagem { position: relative; padding: 0; }
+.dc-ver__imagem { position: absolute; inset: 16px; width: calc(100% - 32px); height: calc(100% - 32px); object-fit: contain; cursor: zoom-in; }
+.dc-ver__imagem--real { position: static; width: auto; height: auto; max-width: none; margin: 16px; cursor: zoom-out; }
+.dc-ver__texto { width: 720px; margin: 0; padding: 40px 48px; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 14px/1.65 var(--font-sans); color: var(--tinta); }
+.dc-ver__word { width: max-content; max-width: none; }
+.dc-ver__word .docx-wrapper { background: transparent; padding: 0; gap: 12px; }
+.dc-ver__word .docx-wrapper > section.docx { margin: 0; box-shadow: 0 0 0 1px rgba(27, 25, 45, 0.06), 0 2px 10px -4px rgba(27, 25, 45, 0.16); }
+.dc-ver__aviso { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-8) var(--space-6); text-align: center; font: 400 14px/20px var(--font-sans); color: var(--tinta-2); }
+.dc-ver__aviso > p { margin: 0; max-width: 34ch; }
+.dc-ver__icone { width: 40px; height: 46px; }
+.dc-ver__audio { width: min(100%, 420px); }
+/* No celular as folhas rolam com a tela, de ponta a ponta, e o contador fica sobre a barra de baixo. */
+.dc-ver--na-pagina { margin: 0 calc(-1 * var(--space-4)); min-height: 60dvh; }
+.dc-ver--na-pagina .dc-ver__folhas { overflow: visible; padding: 12px 8px; }
+.dc-ver--na-pagina .dc-ver__folhas--imagem { padding: 12px 8px; }
+.dc-ver--na-pagina .dc-ver__imagem { position: static; width: 100%; height: auto; cursor: default; }
+.dc-ver--na-pagina .dc-ver__contador { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 96px); }
+.dc-ver--na-pagina .dc-ver__word { width: 100%; }
+.dc-ver--na-pagina .dc-ver__word .docx-wrapper > section.docx { padding: 28px 20px 36px; }
+
 /* Quadro (novos negócios, alvarás): o topo de cada coluna fica e os cartões rolam por baixo. */
 .dc-pagina--cheia > .dc-quadro { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); margin: 0 -4px; padding: 0 4px; scroll-padding: 0 4px; overscroll-behavior-x: contain; }
 .dc-quadro__coluna { min-height: 0; }

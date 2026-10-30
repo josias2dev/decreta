@@ -35,7 +35,7 @@ import {
   withTenant,
   type Database,
 } from "@decreta/db";
-import { chaveDoDocumento, gerarDocx, MIME_DOCX, type Armazenamento } from "@decreta/documentos";
+import { chaveDoDocumento, gerarDocx, lerDocumento, MIME_DOCX, type Armazenamento } from "@decreta/documentos";
 import { impressao } from "@decreta/ia";
 import { existsSync, readFileSync } from "node:fs";
 import { and, eq, like, or } from "drizzle-orm";
@@ -43,6 +43,7 @@ import type { Auth } from "./auth.ts";
 import {
   ALVARAS,
   ANDAMENTOS,
+  ARQUIVOS_DA_MARINA,
   ATENDIMENTOS,
   AUDIENCIAS,
   BRIEFING_MARINA,
@@ -71,6 +72,7 @@ import { CHECKLIST_DA_TRIAGEM } from "./rotas/negocios.ts";
 /** Fotos de perfil e logo inventados (gerados por IA), se estiverem no repositório. */
 const FOTOS = new URL("../../web/public/demonstracao/", import.meta.url);
 const LOGO = new URL("./demonstracao/imagens/logo.png", import.meta.url);
+const ARQUIVOS = new URL("./demonstracao/arquivos/", import.meta.url);
 const fotoDe = (q: Quem) => (existsSync(new URL(`${q}.jpg`, FOTOS)) ? `/demonstracao/${q}.jpg` : null);
 
 /** O e-mail de cada pessoa: a sócia entra com o login da demonstração. */
@@ -311,6 +313,32 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
       const [ultima] = (p.movimentacoes ?? []).filter((m) => filtro(m.evento)).sort((a, b) => a.antes - b.antes);
       if (ultima) await tx.update(processos).set({ ultimaMovimentacaoEm: em(somarDias(ultimaDisp, -ultima.antes), "17:20") }).where(eq(processos.id, processoId[chave]!));
     };
+
+    // Marina: a procuração e o recibo da seguradora, enviados na distribuição, entram no resumo.
+    for (const a of ARQUIVOS_DA_MARINA) {
+      const arquivo = new URL(a.arquivo, ARQUIVOS);
+      if (!existsSync(arquivo)) continue;
+      const bytes = new Uint8Array(readFileSync(arquivo));
+      const lido = a.transcricao ? { texto: a.transcricao, paginas: null } : await lerDocumento(bytes, a.mime);
+      const documentoId = crypto.randomUUID();
+      const chaveArquivo = chaveDoDocumento(organizationId, documentoId);
+      arquivos.push({ chave: chaveArquivo, bytes, mime: a.mime });
+      await tx.insert(documentos).values({
+        id: documentoId,
+        organizationId,
+        processoId: processoId.marina!,
+        nome: a.nome,
+        mime: a.mime,
+        tamanho: bytes.length,
+        paginas: lido.paginas,
+        chave: chaveArquivo,
+        texto: lido.texto,
+        leitura: a.transcricao ? "pronta" : null,
+        origem: "upload",
+        enviadoPor: ids[a.por],
+        createdAt: em(somarDias(hoje, -processosDemo.marina!.distribuidoHa), a.hora),
+      });
+    }
 
     // Marina: o resumo foi lido até o evento 88; a petição da ré (89) chegou depois.
     await gravarMovimentacoes("marina", (e) => e <= 88);

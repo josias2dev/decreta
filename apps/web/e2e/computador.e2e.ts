@@ -234,6 +234,31 @@ test("foto na leitura da IA: lendo, transcrito e não deu para ler", async ({ pa
   await expect.poll(() => api.mudancas("/documentos/00000000-0000-4000-8000-0000000000a3/ler").length).toBe(1);
 });
 
+test("documentos: abrir um mostra o arquivo ao lado; as setas trocam e o Esc fecha", async ({ page }) => {
+  const itens = amostras.documentos!.corpo.itens as { id: string; nome: string }[];
+  const pdf = itens.find((d) => d.nome.endsWith(".pdf"))!;
+  const erros: string[] = [];
+  page.on("pageerror", (e) => erros.push(String(e)));
+  await abrir(page, "/documentos");
+  await page.getByRole("link", { name: pdf.nome, exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`doc=${pdf.id}`));
+  const painel = page.getByRole("region", { name: `Documento aberto: ${pdf.nome}` });
+  await expect(painel.getByText("1 / 2")).toBeVisible();
+  // O PDF sai desenhado (worker e decodificadores do build), não só o espaço da página.
+  await expect.poll(() => painel.locator('[data-pagina="1"] canvas').evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
+  // A lista fica só com o nome; o resto está no painel.
+  await expect(page.getByRole("columnheader", { name: "Leitura da IA" })).toBeHidden();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("region", { name: /Recibo do pagamento administrativo/ }).locator("img")).toBeVisible();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("region", { name: /Petição inicial/ }).locator("section.docx")).toContainText("Marina Duarte move ação de cobrança");
+  expect(await sobraNaLateral(page)).toBe(0);
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".dc-doc")).toHaveCount(0);
+  await expect(page.getByRole("columnheader", { name: "Leitura da IA" })).toBeVisible();
+  expect(erros).toEqual([]);
+});
+
 test("modelos: a lista, abrir um e colar um novo", async ({ page }) => {
   const api = await abrir(page, "/modelos");
   await expect(page.getByRole("heading", { name: "Modelos" })).toBeVisible();

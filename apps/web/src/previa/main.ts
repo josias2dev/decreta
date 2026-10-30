@@ -5,4 +5,5 @@
  */
 import "./relogio";
 import "./api-falsa";
+import "./pdf";
 import "../main";

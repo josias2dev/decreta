@@ -11,6 +11,10 @@ type Amostra = { path: string; corpo: unknown };
 const amostras = Object.values(import.meta.glob<Amostra>("../../e2e/amostras/*.json", { eager: true, import: "default" }));
 const fotos = import.meta.glob<string>("../../public/demonstracao/*.jpg", { eager: true, import: "default" });
 const logo = Object.values(import.meta.glob<string>("../../../api/src/demonstracao/imagens/logo.png", { eager: true, import: "default" }))[0];
+/** Os arquivos dos documentos da amostra (bun apps/api/test/arquivos-das-amostras.ts), pelo id. */
+const arquivos = Object.fromEntries(
+  Object.entries(import.meta.glob<string>("../../e2e/amostras/arquivos/*", { eager: true, query: "?url", import: "default" })).map(([caminho, url]) => [/([^/]+)\.[a-z]+$/.exec(caminho)![1]!, url]),
+);
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
 const molde = (caminho: string) => caminho.replace(UUID, ":id");
@@ -38,9 +42,10 @@ function achar(caminho: string, busca: URLSearchParams): unknown {
   if (!a) return undefined;
   const corpo = a.corpo as { itens?: unknown[]; pagina?: number; total?: number };
   if (!Array.isArray(corpo?.itens)) return a.corpo;
-  // Listas: a busca filtra pelo texto e a amostra é a única página.
+  // Listas: a busca filtra pelo texto (cada palavra, em qualquer ordem) e a amostra é a única página.
   const termo = semAcento(busca.get("busca") ?? busca.get("q") ?? "");
-  const itens = termo ? corpo.itens.filter((i) => semAcento(JSON.stringify(i)).includes(termo)) : corpo.itens;
+  const palavras = termo.split(/\s+/).filter(Boolean);
+  const itens = palavras.length ? corpo.itens.filter((i) => palavras.every((p) => semAcento(JSON.stringify(i)).includes(p))) : corpo.itens;
   const pagina = Number(busca.get("pagina") ?? 1);
   if (pagina > 1) return { ...corpo, pagina, itens: [], total: 0 };
   return { ...corpo, itens, ...(termo && typeof corpo.total === "number" ? { total: itens.length } : {}) };
@@ -72,6 +77,16 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
     return new Response(`${eventos.map((e) => JSON.stringify(e)).join("\n")}\n`, { headers: { "content-type": "application/x-ndjson" } });
   }
   if (metodo !== "GET") return json(200, { ok: true, id: "00000000-0000-4000-8000-000000000001" });
+  // Um documento e o arquivo dele, da amostra dos documentos.
+  const doc = /^\/documentos\/([0-9a-f-]{36})(\/arquivo)?$/.exec(caminho);
+  if (doc) {
+    const { itens } = amostras.find((a) => a.path.startsWith("/documentos"))!.corpo as { itens: { id: string; mime: string }[] };
+    const d = itens.find((i) => i.id === doc[1]);
+    if (!doc[2]) return d ? json(200, comFotos(d)) : json(404, { erro: "nao_encontrado" });
+    const url = arquivos[doc[1]!];
+    if (!d || !url) return json(404, { erro: "nao_encontrado" });
+    return new Response(await (await fetchReal(url)).blob(), { headers: { "content-type": d.mime } });
+  }
   const corpo = achar(caminho, url.searchParams);
   return corpo === undefined ? json(404, { erro: "nao_encontrado", detalhe: "Esta tela não tem dados na prévia." }) : json(200, comFotos(corpo));
 }) as typeof fetch;
