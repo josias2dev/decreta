@@ -10,17 +10,17 @@ test("sem sessão, vai para Entrar e volta para onde ia", async ({ page }) => {
   expect(new URL(page.url()).searchParams.get("redirect")).toBe(`/prazos/${ids.prazo}`);
 });
 
-test("landing: sem sessão fica na página, as abas da IA trocam e Entrar abre o login", async ({ page }) => {
+test("landing: sem sessão fica na página, mostra as seções e Entrar abre o login", async ({ page }) => {
   const api = new ApiFalsa();
   api.logado = false;
   await abrir(page, "/", api);
   await expect(page.getByRole("heading", { name: /O escritório em dia/ })).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
-  const abas = page.getByRole("tablist").first();
-  await abas.getByRole("tab", { name: /Peça em Word/ }).click();
-  await expect(abas.getByRole("tab", { name: /Peça em Word/ })).toHaveAttribute("aria-selected", "true");
-  await expect(page.locator('[data-painel="peca"]')).toBeVisible();
-  await expect(page.locator('[data-painel="briefing"]')).toBeHidden();
+  for (const titulo of ["Cada intimação já chega explicada", "Tudo o que o escritório usa, num lugar só", "Começa no primeiro dia"]) {
+    await expect(page.getByRole("heading", { name: titulo })).toBeAttached();
+  }
+  await expect(page.locator("#recursos .lp-bloco")).toHaveCount(8);
+  await expect(page.locator("#acesso").getByRole("link", { name: "Pedir acesso" })).toHaveAttribute("href", /^https:\/\/wa\.me\//);
   await expect(page.locator(".lp-hero").getByRole("link", { name: "Pedir acesso" })).toHaveAttribute("href", /^https:\/\/wa\.me\/55\d+\?text=/);
   await page.locator(".lp-topo").getByRole("link", { name: "Entrar" }).click();
   await expect(page.getByRole("heading", { name: "Entrar no Decreta" })).toBeVisible();

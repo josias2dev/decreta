@@ -1,7 +1,7 @@
 /**
  * A landing do Decreta (decreta.site). A marcação vem pronta do canvas do Claude Design
- * (landing/pagina.html, estilos em estilos/landing.css); aqui entram as abas da IA,
- * os links para as telas, o contato e o atalho para quem já tem sessão.
+ * (landing/pagina.html, estilos em estilos/landing.css e landing-secoes.css); aqui entram
+ * o fundo em ASCII, os links para as telas, o contato e o atalho para quem já tem sessão.
  */
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
@@ -26,11 +26,16 @@ export function InicioPage() {
     if (eu.data) router.history.replace("/hoje");
   }, [eu.data, router]);
 
-  // O fundo em ASCII do topo, no canvas que vem no HTML da landing
+  // O fundo em ASCII, nos canvas que vêm no HTML da landing: o do topo com a IA lendo, o da chamada final sem.
   useEffect(() => {
-    const tela = raiz.current?.querySelector<HTMLCanvasElement>("canvas.lp-ascii");
-    if (!tela) return;
-    return ligarFundoAscii(tela, { miolo: raiz.current?.querySelector(".lp-hero__texto") });
+    const r = raiz.current;
+    if (!r) return;
+    const desligar = [...r.querySelectorAll<HTMLCanvasElement>("canvas.lp-ascii")].map((tela) =>
+      tela.closest(".lp-hero")
+        ? ligarFundoAscii(tela, { miolo: r.querySelector(".lp-hero__texto"), ia: true, evitar: [...r.querySelectorAll(".lp-vitrine, .lp-flutua")] })
+        : ligarFundoAscii(tela, { miolo: tela.parentElement?.querySelector(".lp-fim__centro") }),
+    );
+    return () => desligar.forEach((f) => f());
   }, []);
 
   useEffect(() => {
@@ -41,14 +46,8 @@ export function InicioPage() {
   }, []);
 
   const clicar = (e: MouseEvent<HTMLDivElement>) => {
-    const alvo = e.target as HTMLElement;
-    const aba = alvo.closest<HTMLElement>("[data-aba]");
-    if (aba && raiz.current) {
-      abrirAba(raiz.current, aba.dataset.aba!);
-      return;
-    }
     // Links para as telas do app (/entrar) navegam sem recarregar a página.
-    const link = alvo.closest<HTMLAnchorElement>("a[href^='/']");
+    const link = (e.target as HTMLElement).closest<HTMLAnchorElement>("a[href^='/']");
     if (link && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
       e.preventDefault();
       void router.navigate({ to: link.getAttribute("href")! });
@@ -58,12 +57,3 @@ export function InicioPage() {
   return <div ref={raiz} onClick={clicar} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-/** Briefing, Resumo, Pergunte e Peça: uma aba acesa e o painel dela à mostra. */
-function abrirAba(raiz: HTMLElement, id: string) {
-  for (const botao of raiz.querySelectorAll<HTMLElement>(".lp-aba[data-aba]")) {
-    const ligada = botao.dataset.aba === id;
-    botao.classList.toggle("is-on", ligada);
-    botao.setAttribute("aria-selected", String(ligada));
-  }
-  for (const painel of raiz.querySelectorAll<HTMLElement>("[data-painel]")) painel.hidden = painel.dataset.painel !== id;
-}
