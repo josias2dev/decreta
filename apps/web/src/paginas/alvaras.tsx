@@ -94,15 +94,15 @@ export function AlvarasPage() {
   const sub = !d ? " " : filtrando ? `${alvaras(achados)} ${achados === 1 ? "encontrado" : "encontrados"}` : `${alvaras(soma("novo", "aguardando_saque", "sacado").n)} em andamento`;
   const selecionado = todas.flatMap((e) => e.itens).find((i) => i.id === aberto) ?? null;
 
-  /** Quem, o quê e quanto, sempre nas mesmas três linhas; embaixo à direita, há quanto tempo está na etapa (o finalizado não precisa). */
+  /** No desenho do cartão da agenda: em cima, na cor da etapa, o valor e há quanto tempo está nela (o finalizado não precisa); embaixo, quem e o quê. */
   const cartao = (a: Item) => (
     <button key={a.id} type="button" className={cn("dc-cartao dc-alvara", naEtapa(a).parado && "is-parado")} onClick={() => setAberto(a.id)}>
-      <span className="dc-alvara__cliente">{a.cliente ?? a.processo.titulo}</span>
-      <span className="dc-alvara__desc">{a.descricao}</span>
-      <span className="dc-alvara__pe">
+      <span className="dc-alvara__topo">
         <span className="dc-alvara__valor">{dinheiro(a.valor)}</span>
         {a.etapa !== "finalizado" && <Quando a={a} />}
       </span>
+      <span className="dc-alvara__cliente">{a.cliente ?? a.processo.titulo}</span>
+      <span className="dc-alvara__desc">{a.descricao}</span>
     </button>
   );
   const campo = <CampoDeBusca valor={texto} aoMudar={setTexto} rotulo="Buscar alvará" placeholder="Cliente, processo ou descrição" />;
@@ -147,7 +147,7 @@ export function AlvarasPage() {
         {!d ? (
           <Carregando />
         ) : lista?.itens.length ? (
-          <div className="dc-lista">
+          <div className={`dc-lista dc-etapa--${etapa}`}>
             <span className="dc-nota">Total da etapa: {dinheiro(lista.total)}</span>
             {lista.itens.map(cartao)}
           </div>
