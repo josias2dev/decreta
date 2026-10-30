@@ -2,15 +2,16 @@
 import type { Database, Tx } from "@decreta/db";
 import { withTenant } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
-import type { Ia } from "@decreta/ia";
+import type { Ia, MetodoIa } from "@decreta/ia";
 import { type SQL, sql } from "drizzle-orm";
-import type { Context } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
 import type { Auth } from "../auth.ts";
 import type { Mailer } from "../email.ts";
 import type { DepsDaCaptura } from "../servicos/captura.ts";
 import type { Wameow } from "../servicos/avisos.ts";
+import { AVISOS, iaMedida, LimiteDaIa, motivoParaBarrar, registrarMensagem, reservarVez, SEM_LIMITES, usoDoDia, type LimitesDaIa } from "../servicos/uso-ia.ts";
 
 export type Vars = {
   orgId: string;
@@ -21,6 +22,8 @@ export type Vars = {
   userId: string;
   userNome: string;
   papel: string;
+  /** A IA da rota, medida em nome da pessoa. Só existe nas rotas com `comLimiteDaIa`. */
+  ia?: Ia;
 };
 
 export type Ambiente = { Variables: Vars };
@@ -45,6 +48,8 @@ export interface DepsDasRotas {
   maxArquivoBytes: number;
   enfileirar: (p: Pedido) => Promise<void>;
   log: (msg: string, extra?: Record<string, unknown>) => void;
+  /** Limites da IA nas telas. Sem eles (testes), só mede. */
+  limites?: LimitesDaIa;
 }
 
 export function tenant<T>(c: C, deps: { db: Database }, fn: (tx: Tx) => Promise<T>): Promise<T> {
@@ -61,8 +66,73 @@ export async function corpo<S extends z.ZodType>(c: C, schema: S): Promise<z.inf
   return r.data;
 }
 
-export function falha(status: 400 | 403 | 404 | 409 | 422 | 503, erro: string, detalhe?: string): never {
+export function falha(status: 400 | 403 | 404 | 409 | 422 | 429 | 503, erro: string, detalhe?: string): never {
   throw new HTTPException(status, { res: Response.json({ erro, detalhe }, { status }) });
+}
+
+/** Por que a IA não pode atender esta pessoa agora (ver `motivoParaBarrar`), ou `null`. */
+export async function motivoDaIa(c: C, deps: DepsDasRotas, mensagem = false): Promise<string | null> {
+  const uso = await usoDoDia(deps.db, { organizationId: c.get("orgId"), userId: c.get("userId") });
+  return motivoParaBarrar(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), mensagem });
+}
+
+/**
+ * Toda rota que chama a IA passa por aqui antes: confere os limites do dia
+ * (e, com `mensagem`, conta a mensagem do chat), guarda uma vez para a pessoa
+ * enquanto a resposta chega e deixa em `c.get("ia")` a IA que grava o gasto.
+ * Sem passar por aqui a rota não tem IA (`iaDaRota` responde "desligada").
+ */
+export function comLimiteDaIa(deps: DepsDasRotas, opcoes: { mensagem?: MetodoIa } = {}): MiddlewareHandler<Ambiente> {
+  return async (c, next) => {
+    if (!deps.ia) return next();
+    const limites = deps.limites ?? SEM_LIMITES;
+    const quem = { organizationId: c.get("orgId"), userId: c.get("userId") };
+    const devolver = reservarVez(quem.userId, limites.simultaneos);
+    if (!devolver) throw new LimiteDaIa(AVISOS.simultaneos);
+    try {
+      const motivo = await motivoDaIa(c, deps, !!opcoes.mensagem);
+      if (motivo) {
+        deps.log("limite da IA", { userId: quem.userId, organizationId: quem.organizationId, motivo });
+        throw new LimiteDaIa(motivo);
+      }
+      if (opcoes.mensagem) await registrarMensagem(deps.db, quem, opcoes.mensagem);
+      c.set("ia", iaMedida(deps, deps.ia, { ...quem, origem: "tela" }, limites.preco));
+      await next();
+    } catch (err) {
+      devolver();
+      throw err;
+    }
+    // A resposta que chega aos poucos devolve a vez quando termina (ou quando a pessoa fecha a tela).
+    const res = c.res;
+    if (!res.body || (res.headers.get("content-type") ?? "").includes("json")) return devolver();
+    const leitor = res.body.getReader();
+    c.res = new Response(
+      new ReadableStream<Uint8Array>({
+        async pull(controle) {
+          try {
+            const { done, value } = await leitor.read();
+            if (done) {
+              devolver();
+              controle.close();
+            } else controle.enqueue(value);
+          } catch (err) {
+            devolver();
+            controle.error(err);
+          }
+        },
+        cancel(motivo) {
+          devolver();
+          return leitor.cancel(motivo);
+        },
+      }),
+      { status: res.status, statusText: res.statusText, headers: res.headers },
+    );
+  };
+}
+
+/** A IA desta rota, já medida e dentro dos limites (ver `comLimiteDaIa`). */
+export function iaDaRota(c: C): Ia {
+  return c.get("ia") ?? falha(503, "ia_desligada", "A IA ainda não foi ligada neste servidor.");
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

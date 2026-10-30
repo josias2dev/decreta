@@ -681,6 +681,38 @@ export const retornosIa = pgTable(
   ],
 ).enableRLS();
 
+/** "tela": alguém pediu (conta nos tetos do dia). "fundo": a rotina sozinha (prazo da publicação nova), que nunca é barrada. */
+export const origemDoUso = pgEnum("origem_uso_ia", ["tela", "fundo"]);
+
+/**
+ * O que a IA gastou, chamada por chamada, e cada mensagem mandada no chat. É
+ * daqui que saem os limites do dia (ver apps/api/src/servicos/uso-ia.ts). Só
+ * números: nada do que foi perguntado ou respondido. A pessoa não apaga nada
+ * daqui (apagar a conversa não devolve o limite), e a linha fica mesmo se o
+ * escritório ou a pessoa sair, para o gasto do dia continuar certo.
+ */
+export const usoIa = pgTable(
+  "uso_ia",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: text("organization_id").references(() => organization.id, { onDelete: "set null" }),
+    userId: pessoa("user_id"),
+    /** O `X-Gateway-Method` da chamada ("perguntar", "gerar-documento"...). */
+    metodo: text("metodo").notNull(),
+    origem: origemDoUso("origem").notNull(),
+    /** Uma mensagem mandada no chat (Perguntar ou chat do processo), gravada antes de a IA responder. */
+    mensagem: boolean("mensagem").notNull().default(false),
+    tokensEntrada: integer("tokens_entrada").notNull().default(0),
+    tokensSaida: integer("tokens_saida").notNull().default(0),
+    custoUsd: numeric("custo_usd", { precision: 12, scale: 6, mode: "number" }).notNull().default(0),
+    /** O custo saiu dos tokens, pelo preço de referência (a resposta não trouxe o custo). */
+    estimado: boolean("estimado").notNull().default(false),
+    /** Pelo relógio da API (o mesmo das contas do limite), não pelo do banco. */
+    em: timestamp("em", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("uso_ia_dia_idx").on(t.em), index("uso_ia_pessoa_idx").on(t.organizationId, t.userId, t.em), tenantPolicy("uso_ia")],
+).enableRLS();
+
 /* ------------------------------------------------------------------ */
 /* Atendimento, novos negócios e alvarás                               */
 /* ------------------------------------------------------------------ */

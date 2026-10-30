@@ -72,6 +72,10 @@ linha do modelo explica a sua):
   teto diário e os aliases `juridico`, `autos`, `documentos`, `pdf` e `vision`.
   A chave `gw_` do projeto vai em `LLM_API_KEY`. Sem ela o Decreta funciona e as
   telas avisam que a IA está desligada.
+- **Limites da IA**: as variáveis `IA_*` do exemplo (mensagens por pessoa no chat,
+  teto do dia do site, por pessoa e da demonstração, em dólar). O teto do site fica
+  abaixo do teto do projeto no gateway, para sobrar para os prazos das publicações
+  novas, que o Decreta nunca barra. Mudou, `systemctl restart decreta-api`.
 - **DataJud**: `DATAJUD_API_KEY` é a chave pública da wiki do DataJud.
 - **WhatsApp**: `WAMEOW_TOKEN` do número que manda o resumo da manhã.
 - **R2**: dois buckets, `decreta-arquivos` e `decreta-backups`, cada um com a sua

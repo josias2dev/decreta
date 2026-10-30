@@ -9,7 +9,7 @@ import { registrar } from "../auditoria.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { modelosParaPeca } from "../servicos/modelos.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
-import { corpo, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, falha, iaDaRota, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 function briefingEmTexto(b: Briefing): string {
   return [`O que o juízo decidiu: ${b.decidiu}`, `O que fazer: ${b.fazer.join(" ")}`, `A nosso favor: ${b.aFavor.join(" ")}`, `Contra nós: ${b.contra.join(" ")}`].join("\n");
@@ -95,8 +95,8 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
   });
 
   /** Gera a peça com a IA, com o texto chegando aos poucos. O id da peça vai no cabeçalho `x-peca-id`. */
-  app.post("/pecas", async (c) => {
-    const ia = deps.ia ?? falha(503, "ia_desligada", "A IA ainda não foi ligada neste servidor.");
+  app.post("/pecas", comLimiteDaIa(deps), async (c) => {
+    const ia = iaDaRota(c);
     const b = await corpo(c, pedidoDePeca);
     const tipo = tipoDePeca(b.tipo) ?? falha(422, "tipo_desconhecido");
     const preparado = await tenant(c, deps, async (tx) => {

@@ -616,22 +616,26 @@ export function Enviar({ processoId, clienteId, negocioId, aoEnviar }: { process
     mutationFn: async (arquivos: File[]) => {
       let lidos = 0;
       let lendo = 0;
+      let limite: string | null = null;
       for (const a of arquivos) {
         const form = new FormData();
         form.set("arquivo", a);
         if (processoId) form.set("processoId", processoId);
         if (clienteId) form.set("clienteId", clienteId);
         if (negocioId) form.set("negocioId", negocioId);
-        const r = await api<{ lido: boolean; lendo?: boolean }>("/documentos", { form });
+        const r = await api<{ lido: boolean; lendo?: boolean; limite?: string }>("/documentos", { form });
         if (r.lido) lidos++;
         if (r.lendo) lendo++;
+        if (r.limite) limite = r.limite;
       }
-      return { n: arquivos.length, lidos, lendo };
+      return { n: arquivos.length, lidos, lendo, limite };
     },
-    onSuccess: ({ n, lidos, lendo }) => {
+    onSuccess: ({ n, lidos, lendo, limite }) => {
       // Foto e PDF escaneado: a IA transcreve em segundo plano.
       const depois = lendo ? (lendo === 1 && n === 1 ? " A IA está lendo o arquivo." : " A IA está lendo os escaneados.") : "";
-      avisar(n === 1 ? (lidos ? "Documento guardado e lido." : `Documento guardado.${depois}`) : `${n} documentos guardados.${depois}`);
+      // Passou do limite da IA de hoje: o arquivo está guardado, só a leitura fica para depois.
+      if (limite) avisar(`${n === 1 ? "Documento guardado" : `${n} documentos guardados`}, sem a leitura da IA. ${limite}`, { erro: true });
+      else avisar(n === 1 ? (lidos ? "Documento guardado e lido." : `Documento guardado.${depois}`) : `${n} documentos guardados.${depois}`);
       void qc.invalidateQueries({ queryKey: ["documentos"] });
       void qc.invalidateQueries({ queryKey: ["processo"] });
       void qc.invalidateQueries({ queryKey: ["cliente"] });

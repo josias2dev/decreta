@@ -4,6 +4,7 @@ import {
   briefingDoPrazo,
   conversar,
   conversarComAssistente,
+  ehTetoDoGateway,
   itemDoChecklist,
   prepararAudiencia,
   resultadoParaGuardar,
@@ -23,7 +24,8 @@ import { analisar } from "../servicos/analises.ts";
 import { dadosDoEscritorio, PedidoInvalido } from "../servicos/assistente.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { corpo, ehSocio, falha, id, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { AVISOS } from "../servicos/uso-ia.ts";
+import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 /** O nome de cada ação da IA como a equipe reconhece. */
 export const ROTULO_DA_ACAO: Record<string, string> = {
@@ -51,10 +53,10 @@ function conversaNaTela(k: typeof conversas.$inferSelect, processo: { id: string
 
 export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
-  const exigirIa = (): Ia => deps.ia ?? falha(503, "ia_desligada", "A IA ainda não foi ligada neste servidor.");
+  const comIa = comLimiteDaIa(deps);
 
-  app.post("/ia/briefing/:id", async (c) => {
-    const ia = exigirIa();
+  app.post("/ia/briefing/:id", comIa, async (c) => {
+    const ia = iaDaRota(c);
     const prazoId = id(c);
     const a = await analisar(db, {
       organizationId: c.get("orgId"),
@@ -76,8 +78,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return a ? c.json(a) : falha(404, "nao_encontrado");
   });
 
-  app.post("/ia/resumo/:id", async (c) => {
-    const ia = exigirIa();
+  app.post("/ia/resumo/:id", comIa, async (c) => {
+    const ia = iaDaRota(c);
     const processoId = id(c);
     const a = await analisar(db, {
       organizationId: c.get("orgId"),
@@ -97,8 +99,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return a ? c.json(a) : falha(404, "nao_encontrado");
   });
 
-  app.post("/ia/audiencia/:id", async (c) => {
-    const ia = exigirIa();
+  app.post("/ia/audiencia/:id", comIa, async (c) => {
+    const ia = iaDaRota(c);
     const audienciaId = id(c);
     const tz = c.get("timezone");
     const a = await analisar(db, {
@@ -212,8 +214,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     });
   });
 
-  app.post("/ia/chat/:id", async (c) => {
-    const ia = exigirIa();
+  app.post("/ia/chat/:id", comLimiteDaIa(deps, { mensagem: "chat-processo" }), async (c) => {
+    const ia = iaDaRota(c);
     const processoId = id(c);
     const { texto } = await corpo(c, z.object({ texto: z.string().trim().min(1).max(4000) }));
     const preparado = await tenant(c, deps, async (tx) => {
@@ -336,8 +338,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
    * ferramenta que a IA consultou e o resultado (vira cartão na tela), o fim e,
    * na primeira resposta, o nome que a IA deu para a conversa.
    */
-  app.post("/ia/perguntar", async (c) => {
-    const ia = exigirIa();
+  app.post("/ia/perguntar", comLimiteDaIa(deps, { mensagem: "perguntar" }), async (c) => {
+    const ia = iaDaRota(c);
     const b = await corpo(
       c,
       z.object({
@@ -429,7 +431,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         } catch (err) {
           const parou = c.req.raw.signal.aborted;
           if (!parou) deps.log("conversa com a IA caiu", { metodo: b.modo, error: err instanceof Error ? err.message : String(err) });
-          const aviso = parou ? "[Você parou a resposta aqui.]" : textoDe() ? "[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
+          const aviso = parou ? "[Você parou a resposta aqui.]" : ehTetoDoGateway(err) ? AVISOS.gateway : textoDe() ? "[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
           partes.push({ tipo: "texto", texto: aviso });
           enviar({ t: "texto", v: `\n\n${aviso}` });
         }
@@ -461,8 +463,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return new Response(corpoDaResposta, { headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff", "x-accel-buffering": "no" } });
   });
 
-  app.post("/ia/atendimento", async (c) => {
-    const ia = exigirIa();
+  app.post("/ia/atendimento", comIa, async (c) => {
+    const ia = iaDaRota(c);
     const { transcricao } = await corpo(c, z.object({ transcricao: z.string().trim().min(1).max(200_000) }));
     try {
       return c.json({ situacao: "pronto", conteudo: await resumirAtendimento(ia, transcricao) });
@@ -473,8 +475,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   });
 
   /** Áudio do atendimento → texto (pelo gateway). */
-  app.post("/ia/transcrever", async (c) => {
-    const ia = exigirIa();
+  app.post("/ia/transcrever", comIa, async (c) => {
+    const ia = iaDaRota(c);
     const form = await c.req.formData().catch(() => null);
     const arquivo = form?.get("audio");
     if (!(arquivo instanceof File)) falha(400, "sem_audio");
@@ -505,7 +507,7 @@ function responderAosPoucos(
         }
       } catch (err) {
         deps.log("conversa com a IA caiu", { metodo: pedido.metodo, error: err instanceof Error ? err.message : String(err) });
-        const aviso = resposta ? "\n\n[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
+        const aviso = ehTetoDoGateway(err) ? `${resposta ? "\n\n" : ""}${AVISOS.gateway}` : resposta ? "\n\n[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
         resposta += aviso;
         controller.enqueue(encoder.encode(aviso));
       } finally {

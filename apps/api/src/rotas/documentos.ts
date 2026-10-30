@@ -5,7 +5,7 @@ import type { Hono } from "hono";
 import { registrar } from "../auditoria.ts";
 import { precisaDeLeitura } from "../servicos/leitura.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { falha, id, ip, palavrasDaBusca, semAcentoNoBanco, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, falha, id, ip, motivoDaIa, palavrasDaBusca, semAcentoNoBanco, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 /** O que a equipe anexa: autos, documentos do cliente, áudio de atendimento, logo do timbre. */
 const MIMES_ACEITOS = new Set([
@@ -74,8 +74,11 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const lido = await lerDocumento(bytes, mime).catch(() => ({ texto: null, paginas: null }));
     const docId = crypto.randomUUID();
     const chave = chaveDoDocumento(c.get("orgId"), docId);
-    // Foto e PDF escaneado: a IA transcreve em segundo plano.
-    const lendo = !!deps.ia && precisaDeLeitura(mime, lido.texto);
+    // Foto e PDF escaneado: a IA transcreve em segundo plano. Passou do limite da IA de hoje,
+    // o arquivo fica guardado sem a leitura, e a pessoa pede de novo depois.
+    const precisa = !!deps.ia && precisaDeLeitura(mime, lido.texto);
+    const barrada = precisa ? await motivoDaIa(c, deps) : null;
+    const lendo = precisa && !barrada;
     await tenant(c, deps, async (tx) => {
       if (processoId && !(await tx.select({ id: processos.id }).from(processos).where(eq(processos.id, processoId))).length) falha(404, "processo_nao_encontrado");
       if (clienteId && !(await tx.select({ id: clientes.id }).from(clientes).where(eq(clientes.id, clienteId))).length) falha(404, "cliente_nao_encontrado");
@@ -93,18 +96,18 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         paginas: lido.paginas,
         chave,
         texto: lido.texto,
-        leitura: lendo ? "pendente" : null,
+        leitura: lendo ? "pendente" : barrada ? "falhou" : null,
         evento,
         enviadoPor: c.get("userId"),
       });
     });
     if (lendo) await deps.enfileirar({ nome: "documento.ler", organizationId: c.get("orgId"), documentoId: docId });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "documento.enviado", detalhes: { documentoId: docId, nome: arquivo.name }, ip: ip(c) }, deps.log);
-    return c.json({ id: docId, lido: !!lido.texto, lendo, paginas: lido.paginas }, 201);
+    return c.json({ id: docId, lido: !!lido.texto, lendo, paginas: lido.paginas, ...(barrada ? { limite: barrada } : {}) }, 201);
   });
 
   /** Pede de novo a leitura pela IA (a anterior falhou, ou a IA foi ligada depois do envio). */
-  app.post("/documentos/:id/ler", async (c) => {
+  app.post("/documentos/:id/ler", comLimiteDaIa(deps), async (c) => {
     const docId = id(c);
     if (!deps.ia) falha(503, "ia_desligada", "A IA ainda não foi ligada neste servidor.");
     await tenant(c, deps, async (tx) => {

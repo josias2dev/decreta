@@ -22,6 +22,8 @@ interface Deps {
   ia: Ia | null;
   arquivos: Armazenamento;
   log?: (msg: string, extra?: Record<string, unknown>) => void;
+  /** Por que a IA não pode ler agora (passou do teto do dia), ou `null`. */
+  barrar?: () => Promise<string | null>;
 }
 
 /** Transcreve e grava. Devolve a leitura como ficou. */
@@ -33,6 +35,13 @@ export async function lerDocumentoComIa(deps: Deps, organizationId: string, docu
   }
   const gravar = (valores: Partial<typeof documentos.$inferInsert>) => withTenant(deps.db, organizationId, (tx) => tx.update(documentos).set(valores).where(eq(documentos.id, documentoId)));
   if (d.tamanho > TETO_PARA_LER) {
+    await gravar({ leitura: "falhou" });
+    return "falhou";
+  }
+  // Passou do teto: fica como não lida, e a pessoa pede de novo amanhã.
+  const motivo = await deps.barrar?.();
+  if (motivo) {
+    deps.log?.("leitura do documento barrada pelo limite da IA", { documentoId, motivo });
     await gravar({ leitura: "falhou" });
     return "falhou";
   }

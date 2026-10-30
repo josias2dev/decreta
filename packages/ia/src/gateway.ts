@@ -6,6 +6,7 @@
  */
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel } from "ai";
+import type { UsoDaTranscricao } from "./uso.ts";
 
 /** Aliases configurados no gateway. Qual modelo responde a cada um é decisão do gateway, nunca do Decreta. */
 export interface ModelosDoGateway {
@@ -56,11 +57,22 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "ler-pdf": "pdf",
 };
 
+/** O gateway recusou porque o teto de gasto do dia acabou (429 com o código "teto-diario"), mesmo depois das novas tentativas do SDK. */
+export function ehTetoDoGateway(err: unknown): boolean {
+  let e = err;
+  for (let i = 0; e && i < 5; i++) {
+    const x = e as { statusCode?: number; responseBody?: string; lastError?: unknown; cause?: unknown };
+    if (x.statusCode === 429 && (x.responseBody ?? "").includes("teto-diario")) return true;
+    e = x.lastError ?? x.cause;
+  }
+  return false;
+}
+
 export interface Ia {
   /** O modelo da ação, já com o `X-Gateway-Method` certo. */
   modelo(metodo: MetodoIa): LanguageModel;
-  /** Áudio → texto (atendimento gravado). Devolve vazio quando não há fala. */
-  transcrever(audio: Uint8Array, mime: string): Promise<string>;
+  /** Áudio → texto (atendimento gravado). Devolve vazio quando não há fala. `aoUsar` recebe o que a transcrição gastou. */
+  transcrever(audio: Uint8Array, mime: string, aoUsar?: (uso: UsoDaTranscricao) => void | Promise<void>): Promise<string>;
 }
 
 export interface ConfigDoGateway {
@@ -103,7 +115,7 @@ export function createGatewayIa(config: ConfigDoGateway): Ia {
 
   return {
     modelo: (metodo) => provedor(metodo).chatModel(config.modelos[ALIAS[metodo]]),
-    async transcrever(audio, mime) {
+    async transcrever(audio, mime, aoUsar) {
       const res = await fetchImpl(`${baseURL}/audio/transcriptions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.apiKey}`, "X-Gateway-Method": "transcription" },
@@ -115,7 +127,8 @@ export function createGatewayIa(config: ConfigDoGateway): Ia {
         signal: AbortSignal.timeout(120_000),
       });
       if (!res.ok) throw new Error(`transcrição HTTP ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
-      const json = (await res.json()) as { text?: string };
+      const json = (await res.json()) as { text?: string; usage?: { input_tokens?: number; output_tokens?: number; cost?: number } };
+      await aoUsar?.({ entrada: json.usage?.input_tokens ?? 0, saida: json.usage?.output_tokens ?? 0, custoUsd: typeof json.usage?.cost === "number" ? json.usage.cost : null });
       return (json.text ?? "").trim();
     },
   };

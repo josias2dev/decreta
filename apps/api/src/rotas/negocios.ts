@@ -6,7 +6,7 @@ import { z } from "zod";
 import { conferirPastaDe, ultimaConferencia } from "../servicos/conferencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { IaDesligada } from "../servicos/prazos.ts";
-import { corpo, falha, id, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, falha, id, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 /** Checklist padrão da triagem: o que a pasta de quem chega precisa ter. */
 export const CHECKLIST_DA_TRIAGEM = ["Documento com foto (RG ou CNH)", "CPF", "Comprovante de residência", "Procuração assinada", "Contrato de honorários assinado", "Documentos do caso"];
@@ -125,10 +125,10 @@ export function rotasDosNegocios(app: Hono<Ambiente>, deps: DepsDasRotas) {
     });
   });
 
-  app.post("/negocios/:id/conferir", async (c) => {
+  app.post("/negocios/:id/conferir", comLimiteDaIa(deps), async (c) => {
     const negocioId = id(c);
     try {
-      const a = await conferirPastaDe(deps, c.get("orgId"), { negocioId }, { userId: c.get("userId"), timezone: c.get("timezone") });
+      const a = await conferirPastaDe({ ...deps, ia: c.get("ia") ?? null }, c.get("orgId"), { negocioId }, { userId: c.get("userId"), timezone: c.get("timezone") });
       if (!a) falha(404, "nao_encontrado");
       return c.json(a);
     } catch (err) {

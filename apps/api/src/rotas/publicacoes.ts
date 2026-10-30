@@ -10,7 +10,7 @@ import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.t
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
-import { corpo, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { tituloDaPublicacao } from "../servicos/publicacoes.ts";
 
 const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
@@ -124,10 +124,10 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
   });
 
   /** Pede (ou refaz) a leitura da IA agora, esperando a resposta. */
-  app.post("/publicacoes/:id/sugerir", async (c) => {
+  app.post("/publicacoes/:id/sugerir", comLimiteDaIa(deps), async (c) => {
     const pubId = id(c);
     try {
-      const a = await sugerirPrazoDaPublicacao(deps, c.get("orgId"), pubId, c.get("userId"));
+      const a = await sugerirPrazoDaPublicacao({ ...deps, ia: c.get("ia") ?? null }, c.get("orgId"), pubId, c.get("userId"));
       if (!a) falha(404, "nao_encontrado");
       return c.json(a);
     } catch (err) {
@@ -137,10 +137,10 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
   });
 
   /** Lê (ou relê) a publicação como sentença ou acórdão, esperando a resposta. */
-  app.post("/publicacoes/:id/sentenca", async (c) => {
+  app.post("/publicacoes/:id/sentenca", comLimiteDaIa(deps), async (c) => {
     const pubId = id(c);
     try {
-      const a = await lerSentencaDaPublicacao(deps, c.get("orgId"), pubId, { userId: c.get("userId"), forcar: true });
+      const a = await lerSentencaDaPublicacao({ ...deps, ia: c.get("ia") ?? null }, c.get("orgId"), pubId, { userId: c.get("userId"), forcar: true });
       if (!a) falha(404, "nao_encontrado");
       return c.json(a);
     } catch (err) {

@@ -9,6 +9,7 @@ import { readEnv } from "./env.ts";
 import { createFunctions, eventoDoPedido, inngest } from "./inngest.ts";
 import { createRotas } from "./rotas/index.ts";
 import { startSentry } from "./sentry.ts";
+import { limitesDoEnv } from "./servicos/uso-ia.ts";
 
 const env = readEnv();
 const log = (msg: string, extra?: Record<string, unknown>) => console.log(JSON.stringify({ msg, ...extra }));
@@ -29,6 +30,7 @@ const wameow = env.WAMEOW_URL && env.WAMEOW_TOKEN ? { url: env.WAMEOW_URL, token
 const captura = { db, datajudKey: env.DATAJUD_API_KEY, log };
 const mailer = env.RESEND_API_KEY ? createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM }) : createLogMailer(log);
 const telas = env.WEB_ORIGIN.replace(/\/$/, "");
+const limites = limitesDoEnv(env);
 
 const auth = createAuth(db, env, {
   mailer,
@@ -53,6 +55,7 @@ const rotas = createRotas({
     await inngest.send(eventoDoPedido(p));
   },
   log,
+  limites,
 });
 
 const app = createApp({
@@ -60,7 +63,7 @@ const app = createApp({
   env,
   auth,
   rotas,
-  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter }) }),
+  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites }) }),
   log,
   reporter,
 });

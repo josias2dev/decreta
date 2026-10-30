@@ -26,6 +26,7 @@ import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "./servicos/sentencas.ts";
+import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
 import { silentReporter, type Reporter } from "./sentry.ts";
 
 export const inngest = new Inngest({ id: "decreta" });
@@ -60,6 +61,8 @@ export interface DepsDasRotinas {
   telas: string;
   log: (msg: string, extra?: Record<string, unknown>) => void;
   reporter?: Reporter;
+  /** O preço de referência do gasto e os tetos que valem para a leitura dos arquivos enviados. */
+  limites?: LimitesDaIa;
 }
 
 /** Os escritórios das rotinas. A demonstração fica de fora: nada dela sai para o DJEN, o DataJud ou o WhatsApp. */
@@ -68,6 +71,9 @@ async function escritoriosAtivos(db: Database) {
 }
 
 export function createFunctions(deps: DepsDasRotinas) {
+  const limites = deps.limites ?? SEM_LIMITES;
+  /** A IA que grava o gasto no escritório da rotina. */
+  const iaDo = (organizationId: string, origem: QuemUsa["origem"]) => (deps.ia ? iaMedida(deps, deps.ia, { organizationId, userId: null, origem }, limites.preco) : null);
   const { db, log } = deps;
   const reporter = deps.reporter ?? silentReporter;
 
@@ -112,7 +118,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     async ({ event, step }) =>
       step.run("ler", async () => {
         try {
-          const a = await sugerirPrazoDaPublicacao(deps, event.data.organizationId, event.data.publicacaoId);
+          const a = await sugerirPrazoDaPublicacao({ ...deps, ia: iaDo(event.data.organizationId, "fundo") }, event.data.organizationId, event.data.publicacaoId);
           return a?.situacao ?? "sem-publicacao";
         } catch (err) {
           // Sem IA configurada a publicação fica na caixa para a pessoa decidir; não é falha da rotina.
@@ -134,7 +140,7 @@ export function createFunctions(deps: DepsDasRotinas) {
       step.run("ler", async () => {
         try {
           // Só lê o que parece sentença ou acórdão; o resto passa direto.
-          const a = await lerSentencaDaPublicacao(deps, event.data.organizationId, event.data.publicacaoId);
+          const a = await lerSentencaDaPublicacao({ ...deps, ia: iaDo(event.data.organizationId, "fundo") }, event.data.organizationId, event.data.publicacaoId);
           return a?.situacao ?? "nao-e-decisao";
         } catch (err) {
           if (err instanceof IaDesligada) return "ia-desligada";
@@ -152,7 +158,15 @@ export function createFunctions(deps: DepsDasRotinas) {
       retries: 1,
       onFailure: async ({ event, error }) => reporter.error(error, { funcao: "ler-documento", ...(event.data.event.data as Org) }),
     },
-    async ({ event, step }) => step.run("ler", () => lerDocumentoComIa({ db, ia: deps.ia, arquivos: deps.arquivos, log }, event.data.organizationId, event.data.documentoId)),
+    // Quem enviou o arquivo pediu a leitura: conta nos tetos do dia (o do site e o da demonstração).
+    async ({ event, step }) =>
+      step.run("ler", () =>
+        lerDocumentoComIa(
+          { db, ia: iaDo(event.data.organizationId, "tela"), arquivos: deps.arquivos, log, barrar: () => motivoNoFundo(db, limites, event.data.organizationId) },
+          event.data.organizationId,
+          event.data.documentoId,
+        ),
+      ),
   );
 
   const agendarDataJud = inngest.createFunction(

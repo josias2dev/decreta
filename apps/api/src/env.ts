@@ -25,6 +25,22 @@ const schema = z.object({
   MODELO_PDF: z.string().default("pdf"),
   MODELO_VISION: z.string().default("vision"),
   MODELO_TRANSCRICAO: z.string().default("openai/whisper-1"),
+  /**
+   * Limites da IA nas telas (0 desliga cada um). O dia vira à meia-noite de
+   * Brasília. O teto do site fica abaixo do teto do projeto no gateway (US$ 5)
+   * para sobrar para as rotinas de fundo, que nunca são barradas aqui.
+   */
+  IA_MENSAGENS_POR_MINUTO: z.coerce.number().int().min(0).default(6),
+  IA_MENSAGENS_POR_DIA: z.coerce.number().int().min(0).default(150),
+  IA_TETO_PESSOA_USD: z.coerce.number().min(0).default(2),
+  IA_TETO_SITE_USD: z.coerce.number().min(0).default(4),
+  /** Na demonstração (o login que vai para quem quer conhecer): mensagens por pessoa e o gasto do escritório inteiro. */
+  IA_DEMONSTRACAO_MENSAGENS_POR_DIA: z.coerce.number().int().min(0).default(30),
+  IA_DEMONSTRACAO_TETO_USD: z.coerce.number().min(0).default(0.5),
+  IA_PEDIDOS_SIMULTANEOS: z.coerce.number().int().min(0).default(2),
+  /** Preço por milhão de tokens para estimar o gasto quando a resposta não traz o custo (o do modelo mais caro). */
+  IA_USD_MTOK_ENTRADA: z.coerce.number().min(0).default(4),
+  IA_USD_MTOK_SAIDA: z.coerce.number().min(0).default(20),
   /** Chave pública da API do DataJud (wiki do DataJud). Vazia: os andamentos não são atualizados. */
   DATAJUD_API_KEY: z.string().default(""),
   /** wameow: o número do Decreta que manda o resumo da manhã. Vazio: o resumo não sai. */
