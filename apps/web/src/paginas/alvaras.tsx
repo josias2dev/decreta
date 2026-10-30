@@ -7,6 +7,7 @@ import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
+import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
 import { Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -58,14 +59,16 @@ export function AlvarasPage() {
             <Plus />
           </button>
         }
+        fixo={
+          <div className="dc-chips">
+            {ORDEM.map((e) => (
+              <Chip key={e} ligado={etapa === e} n={d?.etapas.find((x) => x.etapa === e)?.itens.length} onClick={() => setEtapa(e)}>
+                {ETAPA[e]}
+              </Chip>
+            ))}
+          </div>
+        }
       >
-        <div className="dc-chips">
-          {ORDEM.map((e) => (
-            <Chip key={e} ligado={etapa === e} n={d?.etapas.find((x) => x.etapa === e)?.itens.length} onClick={() => setEtapa(e)}>
-              {ETAPA[e]}
-            </Chip>
-          ))}
-        </div>
         {!d ? (
           <Carregando />
         ) : daEtapa?.itens.length ? (
@@ -81,7 +84,7 @@ export function AlvarasPage() {
     );
   }
   return (
-    <Pagina larga>
+    <Pagina larga cheia>
       <Cabecalho
         titulo="Alvarás"
         sub={sub}
@@ -94,20 +97,13 @@ export function AlvarasPage() {
       {!d ? (
         <Carregando />
       ) : (
-        <div className="dc-quadro">
+        <Quadro id="alvaras">
           {d.etapas.map((e) => (
-            <section key={e.etapa} className="dc-quadro__coluna">
-              <div className="dc-quadro__topo">
-                {ETAPA[e.etapa]} <span>{dinheiro(e.total)}</span>
-              </div>
-              {e.itens.length ? (
-                e.itens.map((i) => cartao({ ...i, etapa: e.etapa }))
-              ) : (
-                <div className="dc-quadro__vazio">Nada aqui</div>
-              )}
-            </section>
+            <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} titulo={ETAPA[e.etapa]} valor={dinheiro(e.total)}>
+              {e.itens.length ? e.itens.map((i) => cartao({ ...i, etapa: e.etapa })) : <div className="dc-quadro__vazio">Nada aqui</div>}
+            </ColunaDoQuadro>
           ))}
-        </div>
+        </Quadro>
       )}
       {dialogos}
     </Pagina>

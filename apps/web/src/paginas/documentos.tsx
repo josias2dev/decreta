@@ -6,6 +6,7 @@ import { useDeferredValue, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
+import { Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Carregando, Faixa, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -42,8 +43,7 @@ export function DocumentosPage() {
 
   if (celular) {
     return (
-      <TelaCelular titulo="Documentos" sobre={sub} voltar direita={<Enviar />}>
-        {campo}
+      <TelaCelular titulo="Documentos" sobre={sub} voltar direita={<Enviar />} fixo={campo}>
         {!docs.data ? (
           <Carregando />
         ) : itens.length ? (
@@ -71,7 +71,7 @@ export function DocumentosPage() {
     );
   }
   return (
-    <Pagina>
+    <Pagina cheia>
       <Cabecalho titulo="Documentos" sub={sub} acoes={<Enviar />} />
       <div className="dc-filtros">{campo}</div>
       <section className="dc-painel">
@@ -80,7 +80,7 @@ export function DocumentosPage() {
             <Carregando />
           </div>
         ) : itens.length ? (
-          <div className="dc-tabela-caixa">
+          <Rolagem id="documentos" topo={busca} className="dc-tabela-caixa">
             <table className="dc-tabela">
               <thead>
                 <tr>
@@ -124,7 +124,7 @@ export function DocumentosPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </Rolagem>
         ) : (
           vazio
         )}

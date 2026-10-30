@@ -56,6 +56,17 @@ test("processo: as abas cabem sem rolar e Perguntar abre o chat do processo", as
   await expect(page.getByRole("tab", { name: "Resumo" })).toHaveAttribute("aria-selected", "true");
 });
 
+test("processos: a busca e os filtros ficam presos em cima e a lista rola por baixo", async ({ page }) => {
+  await abrir(page, "/processos");
+  await expect(page.getByRole("link", { name: /Marina Duarte/ })).toBeVisible();
+  await page.evaluate(() => window.scrollTo({ top: 1500 }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+  await expect(page.getByRole("heading", { name: "Processos" })).toBeInViewport();
+  await expect(page.getByLabel("Buscar processo")).toBeInViewport();
+  await expect(page.getByRole("button", { name: "Arquivados" })).toBeInViewport();
+  await expect(page.getByRole("link", { name: /Marina Duarte/ })).not.toBeInViewport();
+});
+
 test("Mais: o resto do menu, sem repetir a navegação de baixo", async ({ page }) => {
   await abrir(page, "/mais");
   const miolo = page.locator("main");

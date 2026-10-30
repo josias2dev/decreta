@@ -237,6 +237,69 @@ test("endereço que não existe mostra a página de não encontrada", async ({ p
   await expect(page.getByText("Página não encontrada")).toBeVisible();
 });
 
+test("processos: título, busca e filtros parados, só a lista rola e sem barra à vista", async ({ page }) => {
+  const api = await abrir(page, "/processos");
+  const lista = page.locator('[data-scroll-restoration-id="processos"]');
+  await expect(lista.getByRole("link", { name: "Marina Duarte × Seguradora Alfa S.A." })).toBeVisible();
+  const busca = page.getByLabel("Buscar processo");
+  const antes = await busca.boundingBox();
+  await lista.hover();
+  await page.mouse.wheel(0, 1200);
+  await expect.poll(() => lista.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight)).toBe(0);
+  expect((await busca.boundingBox())?.y).toBe(antes?.y);
+  await expect(page.getByRole("columnheader", { name: "Processo" })).toBeInViewport();
+  await expect(page.getByRole("button", { name: "Carregar mais" })).toBeInViewport();
+  expect(await lista.evaluate((e: HTMLElement) => e.offsetWidth - e.clientWidth)).toBe(0);
+  // Outro filtro: a lista volta ao começo.
+  await page.getByRole("button", { name: "Arquivados" }).click();
+  await expect(page).toHaveURL(/situacao=arquivados/);
+  await expect.poll(() => lista.evaluate((e) => e.scrollTop)).toBe(0);
+  // Pelo teclado também rola.
+  await lista.getByRole("link").first().focus();
+  await page.keyboard.press("PageDown");
+  await expect.poll(() => lista.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+  // Chegando no fim, vem a próxima página sem clicar.
+  const pedidos = api.pedidos.filter((p) => p.caminho === "/processos").length;
+  await lista.evaluate((e) => e.scrollTo({ top: e.scrollHeight }));
+  await expect.poll(() => api.pedidos.filter((p) => p.caminho === "/processos").length).toBeGreaterThan(pedidos);
+});
+
+test("processos: ao voltar de um processo, a lista está onde estava", async ({ page }) => {
+  await abrir(page, "/processos");
+  const lista = page.locator('[data-scroll-restoration-id="processos"]');
+  await expect(lista.getByRole("link").first()).toBeVisible();
+  await lista.hover();
+  await page.mouse.wheel(0, 900);
+  await expect.poll(() => lista.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+  const onde = await lista.evaluate((e) => e.scrollTop);
+  // Um processo que está à vista no meio da lista, para o clique não rolar nada antes.
+  const nome = await lista.evaluate((e) => {
+    const r = e.getBoundingClientRect();
+    return document.elementFromPoint(r.left + 80, r.top + r.height / 2)?.closest("tr")?.querySelector("a")?.textContent ?? "";
+  });
+  await lista.getByRole("link", { name: nome, exact: true }).click();
+  await expect(page).toHaveURL(/\/processos\/[^/]+$/);
+  await page.goBack();
+  await expect(lista.getByRole("link", { name: nome, exact: true })).toBeVisible();
+  await expect.poll(() => lista.evaluate((e) => e.scrollTop)).toBe(onde);
+});
+
+test("alvarás: cada coluna do quadro rola sozinha e o título fica", async ({ page }) => {
+  await abrir(page, "/alvaras");
+  const finalizado = page.locator('[data-scroll-restoration-id="alvaras-finalizado"]');
+  const expedido = page.locator('[data-scroll-restoration-id="alvaras-novo"]');
+  await expect(finalizado.locator(".dc-cartao").first()).toBeVisible();
+  await finalizado.hover();
+  await page.mouse.wheel(0, 600);
+  await expect.poll(() => finalizado.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+  expect(await expedido.evaluate((e) => e.scrollTop)).toBe(0);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight)).toBe(0);
+  await expect(page.getByRole("heading", { name: "Alvarás" })).toBeInViewport();
+  await expect(page.getByText("Finalizado", { exact: true })).toBeInViewport();
+  expect(await finalizado.evaluate((e: HTMLElement) => e.offsetWidth - e.clientWidth)).toBe(0);
+});
+
 for (const rota of ["/prazos", "/processos", "/clientes", "/agenda", "/negocios", "/alvaras", "/documentos", "/modelos", "/configuracoes", "/conta"]) {
   test(`${rota} abre sem erro e sem rolar para o lado`, async ({ page }) => {
     const erros: string[] = [];

@@ -10,6 +10,7 @@ import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
+import { Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -96,8 +97,8 @@ export function ModelosPage() {
             <Plus />
           </button>
         }
+        fixo={filtros}
       >
-        {filtros}
         {q.error ? (
           <FalhaAoCarregar erro={q.error} sumiu="Modelos não encontrados" aoTentar={() => void q.refetch()} />
         ) : !q.data ? (
@@ -125,7 +126,7 @@ export function ModelosPage() {
   }
 
   return (
-    <Pagina>
+    <Pagina cheia>
       <Cabecalho
         titulo="Modelos"
         sub={sub}
@@ -144,7 +145,7 @@ export function ModelosPage() {
             <Carregando />
           </div>
         ) : itens.length ? (
-          <div className="dc-tabela-caixa">
+          <Rolagem id="modelos" topo={params} className="dc-tabela-caixa">
             <table className="dc-tabela">
               <thead>
                 <tr>
@@ -177,7 +178,7 @@ export function ModelosPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </Rolagem>
         ) : (
           vazio
         )}

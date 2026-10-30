@@ -8,6 +8,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
+import { Rolagem } from "@/componentes/rolagem";
 import { Avatar, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -100,20 +101,22 @@ export function AgendaPage() {
             <Plus />
           </button>
         }
+        fixo={
+          <div className="flex items-center justify-between">
+            {navegar}
+            <Botao pequeno onClick={() => setNova("audiencia")}>
+              <Plus /> Audiência
+            </Botao>
+          </div>
+        }
       >
-        <div className="flex items-center justify-between">
-          {navegar}
-          <Botao pequeno onClick={() => setNova("audiencia")}>
-            <Plus /> Audiência
-          </Botao>
-        </div>
         {lista}
         {dialogos}
       </TelaCelular>
     );
   }
   return (
-    <Pagina>
+    <Pagina cheia>
       <Cabecalho
         titulo="Agenda"
         sub={sub}
@@ -129,7 +132,9 @@ export function AgendaPage() {
           </>
         }
       />
-      {lista}
+      <Rolagem id="agenda" topo={inicio} className="dc-rola--secoes">
+        {lista}
+      </Rolagem>
       {dialogos}
     </Pagina>
   );

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoPrazo } from "@/componentes/novo-prazo";
+import { Rolagem } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, MarcaIa, Responsavel, Selo, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -147,15 +148,19 @@ export function PrazosPage() {
             </button>
           </>
         }
+        fixo={
+          l && (
+            <div className="flex flex-col gap-2">
+              {chips}
+              {pessoas}
+            </div>
+          )
+        }
       >
         {!l ? (
           <Carregando />
         ) : (
           <>
-            <div className="flex flex-col gap-2">
-              {chips}
-              {pessoas}
-            </div>
             {grupos.length ? (
               grupos.map((g) => (
                 <section key={g.chave} className="dc-secao">
@@ -190,7 +195,7 @@ export function PrazosPage() {
   const todosVisiveis = l?.itens.map((i) => i.id) ?? [];
   const marcarTodos = selecao.size > 0 && selecao.size === todosVisiveis.length;
   return (
-    <Pagina>
+    <Pagina cheia>
       <Cabecalho
         titulo="Prazos"
         sub={sub}
@@ -215,7 +220,7 @@ export function PrazosPage() {
           </div>
           <section className="dc-painel">
             {l.itens.length ? (
-              <div className="dc-tabela-caixa">
+              <Rolagem id="prazos" className="dc-tabela-caixa">
                 <table className="dc-tabela">
                   <thead>
                     <tr>
@@ -280,12 +285,12 @@ export function PrazosPage() {
                     </tbody>
                   ))}
                 </table>
-              </div>
+              </Rolagem>
             ) : (
               <Vazio titulo={quando === "cumpridos" ? "Nenhum prazo cumprido" : "Nenhum prazo aqui"}>{quando === "vencidos" ? "Nada vencido." : "Os prazos novos chegam das publicações do DJEN."}</Vazio>
             )}
             {selecao.size > 0 && (
-              <div className="flex items-center gap-3 border-t border-[var(--borda)] px-4 py-2.5" style={{ background: "var(--superficie-2)", borderRadius: "0 0 12px 12px" }}>
+              <div className="flex items-center gap-3 border-t border-[var(--borda)] px-4 py-2.5" style={{ background: "var(--superficie-2)", borderRadius: "0 0 var(--radius-lg) var(--radius-lg)" }}>
                 <span className="text-[13px] font-medium">
                   {selecao.size} {selecao.size === 1 ? "selecionado" : "selecionados"}
                 </span>

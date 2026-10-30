@@ -1,5 +1,6 @@
 import { createRootRoute, createRoute, createRouter, Outlet } from "@tanstack/react-router";
 import { AppLayout } from "./componentes/moldura";
+import { VOLTAM_AO_TOPO } from "./componentes/rolagem";
 import { NaoEncontrada } from "./componentes/nao-encontrada";
 import type { Quando, SituacaoPublicacao } from "./lib/tipos";
 import { ConvitePage, RedefinirSenhaPage } from "./paginas/acesso";
@@ -153,7 +154,7 @@ const routeTree = rootRoute.addChildren([
   ]),
 ]);
 
-export const router = createRouter({ routeTree, defaultPreload: "intent", scrollRestoration: true });
+export const router = createRouter({ routeTree, defaultPreload: "intent", scrollRestoration: true, scrollToTopSelectors: VOLTAM_AO_TOPO });
 
 declare module "@tanstack/react-router" {
   interface Register {

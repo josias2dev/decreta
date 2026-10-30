@@ -220,20 +220,26 @@ function Moldura({ eu }: { eu: Eu }) {
 const AbrirBusca = createContext<() => void>(() => {});
 export const useAbrirBusca = () => useContext(AbrirBusca);
 
-/** Página no computador: largura máxima, título e ações. */
-export function Pagina({ children, larga }: { children: ReactNode; larga?: boolean }) {
-  return <main className={cn("dc-pagina", larga && "dc-pagina--larga")}>{children}</main>;
+/**
+ * Página no computador: largura máxima, título e ações. `cheia` é a das
+ * listas e quadros: ocupa a altura da tela, que fica parada, e só a lista
+ * (ou cada coluna do quadro) rola.
+ */
+export function Pagina({ children, larga, cheia }: { children: ReactNode; larga?: boolean; cheia?: boolean }) {
+  return <main className={cn("dc-pagina", larga && "dc-pagina--larga", cheia && "dc-pagina--cheia")}>{children}</main>;
 }
 
 /**
  * Tela no celular: topo com título (e voltar, quando é uma tela de detalhe),
- * o miolo rolando e, se houver, as ações presas embaixo.
+ * o miolo rolando e, se houver, as ações presas embaixo. `fixo` (a busca e os
+ * filtros das listas) fica preso com o topo, e a lista rola por baixo.
  */
 export function TelaCelular({
   titulo,
   sobre,
   voltar,
   direita,
+  fixo,
   rodape,
   children,
 }: {
@@ -241,6 +247,7 @@ export function TelaCelular({
   sobre?: ReactNode;
   voltar?: boolean | (() => void);
   direita?: ReactNode;
+  fixo?: ReactNode;
   rodape?: ReactNode;
   children: ReactNode;
 }) {
@@ -253,19 +260,22 @@ export function TelaCelular({
   };
   return (
     <>
-      <header className={cn("dc-topo", voltar && "dc-topo--voltar")}>
-        {voltar && (
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Voltar" onClick={aoVoltar}>
-            <ArrowLeft />
-          </button>
-        )}
-        <div className="dc-topo__texto">
-          {sobre && !voltar && <span className="dc-topo__sobre">{sobre}</span>}
-          <h1 className="dc-topo__titulo">{titulo}</h1>
-          {sobre && voltar && <span className="dc-topo__sobre">{sobre}</span>}
-        </div>
-        {direita}
-      </header>
+      <div className="dc-cabeca">
+        <header className={cn("dc-topo", voltar && "dc-topo--voltar")}>
+          {voltar && (
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Voltar" onClick={aoVoltar}>
+              <ArrowLeft />
+            </button>
+          )}
+          <div className="dc-topo__texto">
+            {sobre && !voltar && <span className="dc-topo__sobre">{sobre}</span>}
+            <h1 className="dc-topo__titulo">{titulo}</h1>
+            {sobre && voltar && <span className="dc-topo__sobre">{sobre}</span>}
+          </div>
+          {direita}
+        </header>
+        {fixo && <div className="dc-cabeca__fixo">{fixo}</div>}
+      </div>
       <main className={cn("dc-miolo", rodape && "dc-miolo--com-rodape")}>{children}</main>
       {rodape && <footer className="dc-rodape">{rodape}</footer>}
     </>

@@ -11,6 +11,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
+import { Rolagem } from "@/componentes/rolagem";
 import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -149,10 +150,10 @@ export function PublicacoesPage() {
             </button>
           </>
         }
+        fixo={<Abas abas={abas} ativa={situacao} aoMudar={irPara} />}
       >
         {falhou}
         <section className="dc-painel">
-          <Abas abas={abas} ativa={situacao} aoMudar={irPara} />
           {!c ? (
             <div className="p-4">
               <Carregando linhas={3} />
@@ -173,7 +174,8 @@ export function PublicacoesPage() {
   }
 
   const selecionada = search.id ?? c?.itens[0]?.id;
-  const escolher = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, id }), replace: true });
+  // Escolher na lista não mexe na rolagem: a lista fica onde está e a publicação abre do começo.
+  const escolher = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, id }), replace: true, resetScroll: false });
   /** Depois de tratar: a próxima da lista (a tratada sai da aba Novas). */
   const proxima = () => {
     const itens = c?.itens ?? [];
@@ -182,7 +184,7 @@ export function PublicacoesPage() {
   };
 
   return (
-    <Pagina>
+    <Pagina cheia>
       <Cabecalho
         titulo="Publicações"
         sub={sub}
@@ -206,16 +208,22 @@ export function PublicacoesPage() {
               <Carregando linhas={3} />
             </div>
           ) : c.itens.length ? (
-            <div className="dc-linhas">
+            <Rolagem id="publicacoes" className="dc-linhas">
               {c.itens.map((i) => (
                 <ItemDaCaixa key={i.id} item={i} celular={false} ligado={i.id === selecionada} aoEscolher={() => escolher(i.id)} />
               ))}
-            </div>
+            </Rolagem>
           ) : (
             vazio
           )}
         </section>
-        {selecionada ? <Selecionada id={selecionada} aoTerminar={proxima} /> : <div />}
+        {selecionada ? (
+          <Rolagem key={selecionada} id="publicacao" className="dc-caixa__detalhe">
+            <Selecionada id={selecionada} aoTerminar={proxima} />
+          </Rolagem>
+        ) : (
+          <div />
+        )}
       </div>
       <ColarPublicacao aberto={colar} aoFechar={() => setColar(false)} />
     </Pagina>

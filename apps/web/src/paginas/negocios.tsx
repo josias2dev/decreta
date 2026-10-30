@@ -7,6 +7,7 @@ import { useAviso } from "@/componentes/avisos";
 import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
+import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -85,21 +86,23 @@ export function NegociosPage() {
             <Plus />
           </button>
         }
+        fixo={
+          <div className="dc-chips">
+            {ETAPAS.map((e) => (
+              <Chip key={e.id} ligado={etapa === e.id} n={n(e.id)} onClick={() => setEtapa(e.id)}>
+                {e.rotulo}
+              </Chip>
+            ))}
+          </div>
+        }
       >
-        <div className="dc-chips">
-          {ETAPAS.map((e) => (
-            <Chip key={e.id} ligado={etapa === e.id} n={n(e.id)} onClick={() => setEtapa(e.id)}>
-              {e.rotulo}
-            </Chip>
-          ))}
-        </div>
         {!q.data ? <Carregando /> : daEtapa.length ? <div className="dc-lista">{daEtapa.map(cartao)}</div> : vazio(etapa)}
         {dialogos}
       </TelaCelular>
     );
   }
   return (
-    <Pagina larga>
+    <Pagina larga cheia>
       <Cabecalho
         titulo="Novos negócios"
         sub={sub}
@@ -112,19 +115,16 @@ export function NegociosPage() {
       {!q.data ? (
         <Carregando />
       ) : (
-        <div className="dc-quadro">
+        <Quadro id="negocios">
           {ETAPAS.map((e) => {
             const daEtapa = itens.filter((i) => i.etapa === e.id);
             return (
-              <section key={e.id} className="dc-quadro__coluna">
-                <div className="dc-quadro__topo">
-                  {e.rotulo} <span>{n(e.id)}</span>
-                </div>
+              <ColunaDoQuadro key={e.id} id={`negocios-${e.id}`} titulo={e.rotulo} valor={n(e.id)}>
                 {daEtapa.length ? daEtapa.map(cartao) : e.id === "triagem" ? <div className="dc-painel">{vazio(e.id)}</div> : <div className="dc-quadro__vazio">Nada aqui</div>}
-              </section>
+              </ColunaDoQuadro>
             );
           })}
-        </div>
+        </Quadro>
       )}
       {dialogos}
     </Pagina>

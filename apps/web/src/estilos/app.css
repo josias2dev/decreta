@@ -17,7 +17,17 @@
 
 /* ---------- Moldura no celular ---------- */
 .dc-tela { display: flex; flex-direction: column; min-height: 100dvh; background: var(--papel); }
-.dc-topo { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--space-3); padding: calc(12px + env(safe-area-inset-top)) var(--space-4) var(--space-2); background: color-mix(in srgb, var(--papel) 92%, transparent); backdrop-filter: blur(8px); }
+/* O topo (título) e o que fica preso com ele (busca, filtros, etapas); a lista rola por baixo. */
+.dc-cabeca { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--papel) 92%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.dc-topo { display: flex; align-items: center; gap: var(--space-3); padding: calc(12px + env(safe-area-inset-top)) var(--space-4) var(--space-2); }
+.dc-cabeca__fixo { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-1) var(--space-4) var(--space-2); }
+/* As etapas rolam de ponta a ponta da tela, sem cortar na margem. */
+.dc-cabeca__fixo .dc-chips { margin: 0 calc(-1 * var(--space-4)); padding: 0 var(--space-4); scroll-padding: 0 var(--space-4); }
+/* Uma linha fina embaixo do topo só depois que a lista começa a rolar. */
+@supports (animation-timeline: scroll()) {
+  .dc-cabeca { animation: dc-cabeca-linha linear both; animation-timeline: scroll(root block); animation-range: 0 12px; }
+}
+@keyframes dc-cabeca-linha { from { box-shadow: 0 1px 0 transparent; } to { box-shadow: 0 1px 0 var(--borda); } }
 .dc-topo--voltar { gap: var(--space-2); padding-left: var(--space-2); }
 .dc-topo__texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .dc-topo__sobre { font: 500 13px/18px var(--font-sans); color: var(--tinta-3); }
@@ -80,7 +90,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 /* ---------- Formulários ---------- */
 .dc-campo select { box-sizing: border-box; width: 100%; height: 32px; padding: 0 28px 0 10px; font: 400 14px/20px var(--font-sans); color: var(--tinta); background: var(--superficie) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6a76' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center; border: 1px solid var(--borda-forte); border-radius: var(--radius-md); box-shadow: var(--sombra-leve); appearance: none; outline: none; }
 .dc-campo select:focus-visible { border-color: var(--foco); box-shadow: 0 0 0 3px var(--anel); }
-.dc-celular .dc-campo select { height: 44px; font-size: 16px; border-radius: 8px; }
+.dc-celular .dc-campo select { height: 44px; font-size: 16px; border-radius: 6px; }
 .dc-campo__ajuda { font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
 .dc-form { display: flex; flex-direction: column; gap: var(--space-4); }
 .dc-opcao { display: flex; align-items: center; gap: var(--space-2); font: 400 14px/20px var(--font-sans); color: var(--tinta); cursor: pointer; }
@@ -95,7 +105,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-dialogo__titulo { margin: 0; font: 600 16px/22px var(--font-sans); color: var(--tinta); }
 .dc-dialogo__texto { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--tinta-2); }
 .dc-dialogo__acoes { display: flex; justify-content: flex-end; gap: var(--space-2); }
-.dc-celular .dc-dialogo, .dc-dialogo.dc-celular { top: auto; bottom: 0; left: 0; transform: none; width: 100%; max-height: 88dvh; border-radius: 16px 16px 0 0; padding: var(--space-5) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom)); }
+.dc-celular .dc-dialogo, .dc-dialogo.dc-celular { top: auto; bottom: 0; left: 0; transform: none; width: 100%; max-height: 88dvh; border-radius: 12px 12px 0 0; padding: var(--space-5) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom)); }
 .dc-dialogo.dc-celular .dc-dialogo__acoes { flex-direction: column-reverse; }
 .dc-dialogo.dc-celular .dc-dialogo__acoes .dc-btn { width: 100%; }
 .dc-dialogo--busca { top: 10vh; gap: 0; padding: 0; width: min(600px, calc(100vw - 32px)); }
@@ -109,7 +119,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 /* ---------- Avisos que somem ---------- */
 .dc-avisos { position: fixed; z-index: 60; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; flex-direction: column; gap: var(--space-2); width: min(420px, calc(100vw - 32px)); pointer-events: none; }
 .dc-celular .dc-avisos, .dc-avisos.dc-celular { bottom: calc(140px + env(safe-area-inset-bottom)); }
-.dc-aviso { display: flex; align-items: center; gap: var(--space-2); padding: 10px 14px; border-radius: 10px; background: var(--primaria); color: var(--on-primaria); font: 500 14px/20px var(--font-sans); box-shadow: var(--sombra-flutuante); pointer-events: auto; }
+.dc-aviso { display: flex; align-items: center; gap: var(--space-2); padding: 10px 14px; border-radius: var(--radius-lg); background: var(--primaria); color: var(--on-primaria); font: 500 14px/20px var(--font-sans); box-shadow: var(--sombra-flutuante); pointer-events: auto; }
 .dc-aviso--erro { background: var(--vencido); color: #fff; }
 .dc-aviso svg { width: 16px; height: 16px; flex: none; }
 
@@ -130,20 +140,22 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 
 /* ---------- Conversa com a IA ---------- */
 .dc-conversa { display: flex; flex-direction: column; gap: var(--space-3); }
-.dc-msg { max-width: 88%; padding: 10px 14px; border-radius: 14px; font: 400 14px/21px var(--font-sans); white-space: pre-wrap; overflow-wrap: anywhere; }
+.dc-msg { max-width: 88%; padding: 10px 14px; border-radius: 12px; font: 400 14px/21px var(--font-sans); white-space: pre-wrap; overflow-wrap: anywhere; }
 .dc-celular .dc-msg { font-size: 15px; line-height: 22px; }
 .dc-msg--pessoa { align-self: flex-end; background: var(--primaria); color: var(--on-primaria); border-bottom-right-radius: 4px; }
 .dc-msg--ia { align-self: flex-start; background: var(--acento-suave); border: 1px solid var(--acento-borda); color: var(--tinta); border-bottom-left-radius: 4px; }
 .dc-msg__pe { margin-top: 6px; font: 400 12px/16px var(--font-sans); color: var(--tinta-2); }
-.dc-perguntar-campo { display: flex; align-items: flex-end; gap: var(--space-2); padding: var(--space-2); background: var(--superficie); border: 1px solid var(--borda-forte); border-radius: 12px; box-shadow: var(--sombra-leve); }
+.dc-perguntar-campo { display: flex; align-items: flex-end; gap: var(--space-2); padding: var(--space-2); background: var(--superficie); border: 1px solid var(--borda-forte); border-radius: var(--radius-lg); box-shadow: var(--sombra-leve); }
 .dc-perguntar-campo textarea { flex: 1; min-height: 24px; max-height: 160px; padding: 6px 8px; border: 0; outline: none; resize: none; background: transparent; font: 400 15px/22px var(--font-sans); color: var(--tinta); }
 .dc-perguntar-campo:focus-within { border-color: var(--foco); box-shadow: 0 0 0 3px var(--anel); }
 
 /* ---------- Quadro (novos negócios, alvarás) ---------- */
 .dc-quadro { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); gap: var(--space-4); overflow-x: auto; padding-bottom: 4px; }
 .dc-quadro__coluna { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
-.dc-quadro__topo { display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px; font: 600 13px/18px var(--font-sans); color: var(--tinta); }
-.dc-quadro__topo span { font-weight: 500; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.dc-quadro__topo { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); padding: 0 2px; font: 600 13px/18px var(--font-sans); color: var(--tinta); }
+/* Nome da etapa numa linha só, para os cartões de todas as colunas começarem na mesma altura. */
+.dc-quadro__nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-quadro__n { flex: none; font-weight: 500; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
 .dc-quadro__vazio { border: 1px dashed var(--borda-forte); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; font: 400 13px/18px var(--font-sans); color: var(--tinta-3); }
 
 /* ---------- Entrar ---------- */
@@ -233,7 +245,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 /* ---------- Listas: busca, filtros e mais itens ---------- */
 .dc-busca input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: none; background: transparent; font: inherit; color: var(--tinta); box-shadow: none; }
 .dc-busca:focus-within { border-color: var(--foco); box-shadow: 0 0 0 3px var(--anel); }
-.dc-celular .dc-busca { height: 44px; font-size: 16px; }
+.dc-celular .dc-busca { height: 44px; font-size: 16px; border-radius: 6px; }
 .dc-filtros { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .dc-filtros > .dc-busca { flex: 1 1 280px; max-width: 420px; }
 .dc-rodape-lista { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: 10px var(--space-4); border-top: 1px solid var(--borda); font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
@@ -244,7 +256,9 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-ia__sec ul, .dc-folha ul { list-style: disc; }
 .dc-folha ol { list-style: decimal; }
 .dc-ia__sec li + li { margin-top: 2px; }
-.dc-caixa__lista .dc-aba { padding: 0 9px; }
+/* As quatro abas da caixa dividem a largura da lista e cabem sem rolar. */
+.dc-caixa__lista .dc-abas { gap: 0; }
+.dc-caixa__lista .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 6px; }
 
 /* Cor do timbre: só a amostra, com o código ao lado. */
 .dc input.dc-cor { width: 44px; height: 32px; padding: 2px; flex: none; cursor: pointer; }
@@ -318,7 +332,42 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-campo input.dc-checa, .dc-celular .dc-campo input.dc-checa { width: 16px; height: 16px; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: none; flex: none; }
 
 /* Diálogo comprido (a triagem com a pasta): rola por dentro e os botões ficam presos embaixo, à vista. */
-.dc-dialogo { --dc-dialogo-pe: var(--space-5); scrollbar-width: thin; scrollbar-color: var(--borda-forte) transparent; }
+.dc-dialogo { --dc-dialogo-pe: var(--space-5); }
 .dc-celular .dc-dialogo, .dc-dialogo.dc-celular { --dc-dialogo-pe: calc(var(--space-5) + env(safe-area-inset-bottom)); }
 .dc-dialogo > .dc-dialogo__acoes { position: sticky; bottom: calc(-1 * var(--dc-dialogo-pe)); z-index: 1; margin: calc(-1 * var(--space-2)) 0 calc(-1 * var(--dc-dialogo-pe)); padding: var(--space-3) 0 var(--dc-dialogo-pe); background: var(--superficie); }
 .dc-linhas__item > .dc-checa { margin: 0; }
+
+/* ---------- Rolagem ---------- */
+/* Barras de rolagem escondidas em todo o app; roda do mouse, toque e teclado continuam rolando. */
+* { scrollbar-width: none; }
+::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.dc-rola { overscroll-behavior: contain; }
+
+/* Telas de lista no computador: título, busca e filtros ficam parados e só a lista rola. */
+.dc-pagina--cheia { height: 100vh; height: 100dvh; min-height: 520px; padding-bottom: var(--space-6); }
+.dc-pagina--cheia > * { flex: none; }
+.dc-pagina--cheia > .dc-painel { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.dc-pagina--cheia > .dc-painel > * { flex: none; }
+.dc-pagina--cheia > .dc-painel > .dc-rola { flex: 0 1 auto; min-height: 0; overflow: auto; }
+/* O cabeçalho da tabela fica preso em cima enquanto as linhas passam. */
+.dc-pagina--cheia .dc-rola > .dc-tabela > thead th { position: sticky; top: 0; z-index: 1; border-bottom: 0; box-shadow: inset 0 -1px 0 var(--borda); }
+.dc-fim-da-lista { height: 1px; margin-top: -1px; }
+/* Agenda: os dias rolam embaixo do título. A folga dos lados deixa a sombra dos cartões inteira. */
+.dc-pagina--cheia > .dc-rola--secoes { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); margin: 0 -4px; padding: 0 4px 4px; }
+
+/* Publicações: a lista e a publicação aberta rolam cada uma por si; as ações da publicação ficam à vista. */
+.dc-pagina--cheia > .dc-caixa { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+.dc-pagina--cheia .dc-caixa__lista { position: static; max-height: 100%; }
+.dc-caixa__detalhe { min-height: 0; max-height: 100%; overflow-y: auto; }
+.dc-caixa__detalhe .dc-painel__acoes { position: sticky; bottom: 0; z-index: 1; background: var(--superficie); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+/* Quadro (novos negócios, alvarás): o topo de cada coluna fica e os cartões rolam por baixo. */
+.dc-pagina--cheia > .dc-quadro { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); margin: 0 -4px; padding: 0 4px; scroll-padding: 0 4px; overscroll-behavior-x: contain; }
+.dc-quadro__coluna { min-height: 0; }
+.dc-quadro__corpo { display: flex; flex-direction: column; gap: var(--space-2); min-height: 0; overflow-y: auto; margin: 0 -4px; padding: 0 4px 4px; }
+/* Coluna com mais cartões do que cabem: o último esmaece embaixo, avisando que tem mais (some ao chegar no fim). */
+@property --dc-esmaece { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@supports (animation-timeline: scroll()) {
+  .dc-quadro__corpo { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); animation: dc-esmaece linear both; animation-timeline: scroll(self block); animation-range: calc(100% - 32px) 100%; }
+}
+@keyframes dc-esmaece { from { --dc-esmaece: 32px; } to { --dc-esmaece: 0px; } }

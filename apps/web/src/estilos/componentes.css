@@ -114,13 +114,13 @@
 .dc-chip .dc-avatar { background: var(--superficie-2); }
 
 /* Celular: a raiz da tela leva dc-celular; alvos de toque de 44px e texto de 15–16px. */
-.dc-celular .dc-btn { height: 44px; padding: 0 var(--space-4); font-size: 15px; border-radius: 8px; }
+.dc-celular .dc-btn { height: 44px; padding: 0 var(--space-4); font-size: 15px; border-radius: 6px; }
 .dc-celular .dc-btn svg { width: 18px; height: 18px; }
 .dc-celular .dc-btn--sm { height: 32px; padding: 0 10px; font-size: 13px; border-radius: var(--radius-md); }
 .dc-celular .dc-btn--sm svg { width: 14px; height: 14px; }
 .dc-celular .dc-chip { height: 32px; padding: 0 12px; }
-.dc-celular .dc-campo input { height: 44px; font-size: 16px; line-height: 24px; border-radius: 8px; }
-.dc-celular .dc-campo textarea { font-size: 16px; line-height: 24px; padding: 10px 12px; border-radius: 8px; }
+.dc-celular .dc-campo input { height: 44px; font-size: 16px; line-height: 24px; border-radius: 6px; }
+.dc-celular .dc-campo textarea { font-size: 16px; line-height: 24px; padding: 10px 12px; border-radius: 6px; }
 .dc-celular .dc-ia__sec p, .dc-celular .dc-ia__sec ul { font-size: 15px; line-height: 22px; }
 .dc-celular .dc-ia__titulo { font-size: 15px; }
 .dc-celular .dc-numeros .dc-contador { padding: 12px 14px; }
@@ -133,8 +133,8 @@
 .dc-app { display: flex; flex-wrap: wrap; align-items: stretch; min-height: 100vh; background: var(--papel); }
 .dc-menu { flex: 1 1 var(--layout-menu); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-3) var(--space-2); background: var(--menu); border-right: 1px solid var(--menu-borda); color: var(--tinta); }
 .dc-menu__marca { display: flex; align-items: center; height: 32px; padding: 0 10px; }
-.dc-menu__escritorio { display: flex; align-items: center; gap: 10px; padding: var(--space-2); background: var(--superficie); border: 1px solid var(--borda); border-radius: 10px; box-shadow: var(--sombra-leve); }
-.dc-menu__escritorio-logo { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #5366e8, #2c3cae); color: #ffffff; font: 600 12px/1 var(--font-sans); flex: none; }
+.dc-menu__escritorio { display: flex; align-items: center; gap: 10px; padding: var(--space-2); background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); box-shadow: var(--sombra-leve); }
+.dc-menu__escritorio-logo { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #5366e8, #2c3cae); color: #ffffff; font: 600 12px/1 var(--font-sans); flex: none; }
 .dc-menu__escritorio-logo svg { width: 16px; height: 16px; }
 .dc-menu__escritorio-logo--imagem { background: #ffffff; border: 1px solid var(--borda); box-sizing: border-box; padding: 3px; object-fit: contain; }
 .dc-menu__escritorio strong { display: block; font: 600 14px/18px var(--font-sans); color: var(--tinta); }

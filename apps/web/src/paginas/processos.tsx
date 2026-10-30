@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoProcesso } from "@/componentes/novos";
+import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Cnj, Responsavel, Selo, Vazio } from "@/componentes/ui";
 import { api } from "@/lib/api";
 import { useBuscaNaUrl } from "@/lib/busca";
@@ -54,6 +55,7 @@ export function ProcessosPage() {
       Carregar mais
     </Botao>
   );
+  const fim = <AoChegarNoFim ativo={!!lista.hasNextPage && !lista.isFetchingNextPage} aoChegar={() => void lista.fetchNextPage()} />;
   const sub = lista.data ? `${numero(total)} ${total === 1 ? "processo" : "processos"}${situacao === "ativos" ? " ativos" : situacao === "arquivados" ? " arquivados" : ""}` : " ";
 
   if (celular) {
@@ -66,8 +68,8 @@ export function ProcessosPage() {
             <Plus />
           </button>
         }
+        fixo={filtros}
       >
-        {filtros}
         {!lista.data ? (
           <Carregando />
         ) : itens.length ? (
@@ -84,6 +86,7 @@ export function ProcessosPage() {
                 </span>
               </Link>
             ))}
+            {fim}
             {mais}
           </div>
         ) : (
@@ -95,7 +98,7 @@ export function ProcessosPage() {
   }
 
   return (
-    <Pagina>
+    <Pagina cheia>
       <Cabecalho
         titulo="Processos"
         sub={sub}
@@ -113,7 +116,7 @@ export function ProcessosPage() {
           </div>
         ) : itens.length ? (
           <>
-            <div className="dc-tabela-caixa">
+            <Rolagem id="processos" className="dc-tabela-caixa">
               <table className="dc-tabela">
                 <thead>
                   <tr>
@@ -161,7 +164,8 @@ export function ProcessosPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+              {fim}
+            </Rolagem>
             <div className="dc-rodape-lista">
               <span>
                 Mostrando {numero(itens.length)} de {numero(total)}

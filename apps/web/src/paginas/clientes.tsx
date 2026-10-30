@@ -9,6 +9,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
+import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, Painel, Responsavel, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
@@ -45,6 +46,7 @@ export function ClientesPage() {
       Carregar mais
     </Botao>
   );
+  const fim = <AoChegarNoFim ativo={!!lista.hasNextPage && !lista.isFetchingNextPage} aoChegar={() => void lista.fetchNextPage()} />;
 
   if (celular) {
     return (
@@ -56,8 +58,8 @@ export function ClientesPage() {
             <Plus />
           </button>
         }
+        fixo={busca}
       >
-        {busca}
         {!lista.data ? (
           <Carregando />
         ) : itens.length ? (
@@ -69,6 +71,7 @@ export function ClientesPage() {
                 <span className="dc-item__meta">{[c.documento && formatarDocumento(c.documento), telefone(c.whatsapp ?? c.telefone)].filter(Boolean).join(" · ") || "Sem documento"}</span>
               </Link>
             ))}
+            {fim}
             {mais}
           </div>
         ) : (
@@ -80,7 +83,7 @@ export function ClientesPage() {
   }
 
   return (
-    <Pagina>
+    <Pagina cheia>
       <Cabecalho
         titulo="Clientes"
         sub={sub}
@@ -98,7 +101,7 @@ export function ClientesPage() {
           </div>
         ) : itens.length ? (
           <>
-            <div className="dc-tabela-caixa">
+            <Rolagem id="clientes" className="dc-tabela-caixa">
               <table className="dc-tabela">
                 <thead>
                   <tr>
@@ -133,7 +136,8 @@ export function ClientesPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+              {fim}
+            </Rolagem>
             <div className="dc-rodape-lista">
               <span>
                 Mostrando {numero(itens.length)} de {numero(total)}
