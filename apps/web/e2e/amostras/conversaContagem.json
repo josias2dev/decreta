@@ -1,0 +1,68 @@
+{
+  "path": "/ia/conversas/c5792688-6f33-496a-8ac8-6e5ddda2048e",
+  "corpo": {
+    "rodape": "Gerado por IA. Confira nos autos.",
+    "conversa": {
+      "id": "c5792688-6f33-496a-8ac8-6e5ddda2048e",
+      "titulo": "Contagem de 15 dias úteis",
+      "modo": "pergunte",
+      "fixada": false,
+      "criadaEm": "2026-10-29T11:20:10.000Z",
+      "atualizadaEm": "2026-10-29T11:20:18.000Z",
+      "processo": null
+    },
+    "mensagens": [
+      {
+        "id": "49b05795-9657-4f51-b59c-d7d3e993ff7c",
+        "papel": "pessoa",
+        "texto": "Conta 15 dias úteis de uma intimação publicada hoje",
+        "partes": null,
+        "em": "2026-10-29T11:20:10.000Z"
+      },
+      {
+        "id": "44da3d8f-e07a-41f3-b70a-6b29ddc6eca1",
+        "papel": "ia",
+        "texto": "Vence em **23/11/2026**, uma segunda-feira. A contagem começa amanhã, 30/10, e pula Finados (02/11) e a Consciência Negra (20/11).\n\nSe o processo for de outra comarca, me diga qual: o calendário do tribunal pode ter outro feriado no meio.",
+        "partes": [
+          {
+            "id": "chamada-1-0",
+            "nome": "contarPrazo",
+            "tipo": "ferramenta",
+            "saida": {
+              "fim": "2026-11-23",
+              "dias": 15,
+              "inicio": "2026-10-30",
+              "contagem": "uteis",
+              "processo": null,
+              "explicacao": "Começa em 30/10, primeiro dia útil depois da publicação. Fora da conta: fins de semana, 02/11 (Finados) e 20/11 (Consciência Negra).",
+              "publicacao": "2026-10-29",
+              "prorrogadoDe": null,
+              "desconsiderados": [
+                {
+                  "dia": "2026-11-02",
+                  "nome": "Finados",
+                  "tipo": "nacional"
+                },
+                {
+                  "dia": "2026-11-20",
+                  "nome": "Consciência Negra",
+                  "tipo": "nacional"
+                }
+              ]
+            },
+            "entrada": {
+              "dias": 15,
+              "contagem": "uteis",
+              "publicadoEm": "2026-10-29"
+            }
+          },
+          {
+            "tipo": "texto",
+            "texto": "Vence em **23/11/2026**, uma segunda-feira. A contagem começa amanhã, 30/10, e pula Finados (02/11) e a Consciência Negra (20/11).\n\nSe o processo for de outra comarca, me diga qual: o calendário do tribunal pode ter outro feriado no meio."
+          }
+        ],
+        "em": "2026-10-29T11:20:18.000Z"
+      }
+    ]
+  }
+}

@@ -29,6 +29,10 @@ export const ids = {
   processoComResultado: amostras.processoComResultado!.corpo.id as string,
   negocio: amostras.pastaDoNegocio!.path.split("/")[2]!,
   modelo: amostras.modelo!.corpo.id as string,
+  /** Conversas do Perguntar (a da semana está fixada). */
+  conversaSemana: amostras.conversaSemana!.corpo.conversa.id as string,
+  conversaProcesso: amostras.conversaProcesso!.corpo.conversa.id as string,
+  conversaNova: amostras.conversaNova!.corpo.conversa.id as string,
 };
 
 /** /eu com a IA ligada, para as telas que mostram Refazer, Conferir e o retorno. */
@@ -86,6 +90,11 @@ export class ApiFalsa {
     const troca = this.trocas.get(`${metodo} ${caminho}`) ?? this.trocas.get(caminho) ?? this.trocas.get(completo);
     if (troca) return json(troca.status ?? 200, troca.corpo);
     if (!this.logado) return json(401, { erro: "sem_sessao" });
+    // A resposta do Perguntar chega aos poucos, uma linha JSON por acontecimento.
+    if (metodo === "POST" && caminho === "/ia/perguntar") {
+      const linhas = (amostras.perguntarEventos!.corpo as unknown[]).map((e) => JSON.stringify(e)).join("\n");
+      return route.fulfill({ status: 200, contentType: "application/x-ndjson", body: `${linhas}\n` });
+    }
     if (metodo !== "GET") return json(200, { ok: true, id: "00000000-0000-4000-8000-000000000001" });
 
     const lista = Object.values(amostras);

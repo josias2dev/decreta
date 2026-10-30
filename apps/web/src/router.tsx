@@ -18,7 +18,7 @@ import { InicioPage } from "./paginas/inicio";
 import { MaisPage } from "./paginas/mais";
 import { NegociosPage } from "./paginas/negocios";
 import { PecaPage } from "./paginas/peca";
-import { PerguntarPage } from "./paginas/perguntar";
+import { ConversaPage, PerguntarPage } from "./paginas/perguntar";
 import { PrazoPage } from "./paginas/prazo";
 import { PrazosPage } from "./paginas/prazos";
 import { ProcessoPage, type AbaDoProcesso, ABAS_DO_PROCESSO } from "./paginas/processo";
@@ -115,6 +115,7 @@ const perguntarRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): { modo?: "jurisprudencia" } => (s.modo === "jurisprudencia" ? { modo: "jurisprudencia" } : {}),
   component: PerguntarPage,
 });
+const conversaRoute = createRoute({ getParentRoute: () => appRoute, path: "/perguntar/$id", component: ConversaPage });
 const negociosRoute = createRoute({ getParentRoute: () => appRoute, path: "/negocios", component: NegociosPage });
 const alvarasRoute = createRoute({ getParentRoute: () => appRoute, path: "/alvaras", component: AlvarasPage });
 const documentosRoute = createRoute({ getParentRoute: () => appRoute, path: "/documentos", component: DocumentosPage });
@@ -143,6 +144,7 @@ const routeTree = rootRoute.addChildren([
     agendaRoute,
     audienciaRoute,
     perguntarRoute,
+    conversaRoute,
     negociosRoute,
     alvarasRoute,
     documentosRoute,

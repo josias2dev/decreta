@@ -1,0 +1,78 @@
+{
+  "path": "/ia/conversas/3bfea560-b3ac-4809-9d04-fc2bc438d54a",
+  "corpo": {
+    "rodape": "Gerado por IA. Confira nos autos.",
+    "conversa": {
+      "id": "3bfea560-b3ac-4809-9d04-fc2bc438d54a",
+      "titulo": "Resumo do dia",
+      "modo": "pergunte",
+      "fixada": false,
+      "criadaEm": "2026-10-29T12:30:00.000Z",
+      "atualizadaEm": "2026-10-29T12:30:09.000Z",
+      "processo": null
+    },
+    "mensagens": [
+      {
+        "id": "04bc7273-77d7-4cd9-b35a-13a67e0f29cb",
+        "papel": "pessoa",
+        "texto": "Como está o meu dia?",
+        "partes": null,
+        "em": "2026-10-29T12:30:00.000Z"
+      },
+      {
+        "id": "30690f61-750e-4580-b3c2-b0f11bc0fa52",
+        "papel": "ia",
+        "texto": "Hoje o escritório tem **3 prazos vencendo** e **1 já vencido**. Dos seus 16 prazos abertos, nenhum está atrasado.\n\nAinda hoje há **2 audiências**, e chegaram **8 publicações** que ninguém tratou. Vale olhar também os 8 prazos com data a confirmar e os 4 sem responsável.",
+        "partes": [
+          {
+            "id": "chamada-1-0",
+            "nome": "panorama",
+            "tipo": "ferramenta",
+            "saida": {
+              "hoje": "2026-10-29",
+              "meus": {
+                "prazosAbertos": 16,
+                "prazosVencidos": 0,
+                "audienciasAte7dias": 2
+              },
+              "prazos": {
+                "hoje": 3,
+                "abertos": 61,
+                "ate7dias": 10,
+                "vencidos": 1,
+                "aConfirmar": 8,
+                "semResponsavel": 4
+              },
+              "alvaras": {
+                "pendentes": 8,
+                "valorPendente": "121778.95"
+              },
+              "clientes": 128,
+              "negocios": {
+                "triagem": 8
+              },
+              "processos": {
+                "ativos": 136,
+                "suspensos": 0
+              },
+              "audiencias": {
+                "hoje": 2,
+                "ate7dias": 4
+              },
+              "publicacoes": {
+                "novas": 8,
+                "pendentes": 3
+              }
+            },
+            "entrada": {}
+          },
+          {
+            "tipo": "texto",
+            "texto": "Hoje o escritório tem **3 prazos vencendo** e **1 já vencido**. Dos seus 16 prazos abertos, nenhum está atrasado.\n\nAinda hoje há **2 audiências**, e chegaram **8 publicações** que ninguém tratou. Vale olhar também os 8 prazos com data a confirmar e os 4 sem responsável."
+          }
+        ],
+        "em": "2026-10-29T12:30:09.000Z"
+      }
+    ]
+  }
+}

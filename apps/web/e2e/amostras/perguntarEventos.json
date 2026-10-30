@@ -1,0 +1,165 @@
+{
+  "path": "/ia/perguntar?eventos",
+  "corpo": [
+    {
+      "t": "inicio",
+      "conversa": {
+        "id": "3bfea560-b3ac-4809-9d04-fc2bc438d54a",
+        "titulo": "Como está o meu dia",
+        "modo": "pergunte"
+      },
+      "pergunta": {
+        "id": "04bc7273-77d7-4cd9-b35a-13a67e0f29cb"
+      }
+    },
+    {
+      "t": "ferramenta",
+      "id": "chamada-1-0",
+      "nome": "panorama",
+      "entrada": {}
+    },
+    {
+      "t": "resultado",
+      "id": "chamada-1-0",
+      "nome": "panorama",
+      "saida": {
+        "hoje": "2026-10-29",
+        "prazos": {
+          "vencidos": 1,
+          "hoje": 3,
+          "ate7dias": 10,
+          "abertos": 61,
+          "aConfirmar": 8,
+          "semResponsavel": 4
+        },
+        "publicacoes": {
+          "novas": 8,
+          "pendentes": 3
+        },
+        "audiencias": {
+          "hoje": 2,
+          "ate7dias": 4
+        },
+        "processos": {
+          "ativos": 136,
+          "suspensos": 0
+        },
+        "clientes": 128,
+        "alvaras": {
+          "pendentes": 8,
+          "valorPendente": "121778.95"
+        },
+        "negocios": {
+          "triagem": 8
+        },
+        "meus": {
+          "prazosAbertos": 16,
+          "prazosVencidos": 0,
+          "audienciasAte7dias": 2
+        }
+      }
+    },
+    {
+      "t": "texto",
+      "v": "Hoje o escri"
+    },
+    {
+      "t": "texto",
+      "v": "tório tem **"
+    },
+    {
+      "t": "texto",
+      "v": "3 prazos ven"
+    },
+    {
+      "t": "texto",
+      "v": "cendo** e **"
+    },
+    {
+      "t": "texto",
+      "v": "1 já vencido"
+    },
+    {
+      "t": "texto",
+      "v": "**. Dos seus"
+    },
+    {
+      "t": "texto",
+      "v": " 16 prazos a"
+    },
+    {
+      "t": "texto",
+      "v": "bertos, nenh"
+    },
+    {
+      "t": "texto",
+      "v": "um está atra"
+    },
+    {
+      "t": "texto",
+      "v": "sado.\n\nAinda"
+    },
+    {
+      "t": "texto",
+      "v": " hoje há **2"
+    },
+    {
+      "t": "texto",
+      "v": " audiências*"
+    },
+    {
+      "t": "texto",
+      "v": "*, e chegara"
+    },
+    {
+      "t": "texto",
+      "v": "m **8 public"
+    },
+    {
+      "t": "texto",
+      "v": "ações** que "
+    },
+    {
+      "t": "texto",
+      "v": "ninguém trat"
+    },
+    {
+      "t": "texto",
+      "v": "ou. Vale olh"
+    },
+    {
+      "t": "texto",
+      "v": "ar também os"
+    },
+    {
+      "t": "texto",
+      "v": " 8 prazos co"
+    },
+    {
+      "t": "texto",
+      "v": "m data a con"
+    },
+    {
+      "t": "texto",
+      "v": "firmar e os "
+    },
+    {
+      "t": "texto",
+      "v": "4 sem respon"
+    },
+    {
+      "t": "texto",
+      "v": "sável."
+    },
+    {
+      "t": "fim",
+      "mensagem": {
+        "id": "30690f61-750e-4580-b3c2-b0f11bc0fa52"
+      }
+    },
+    {
+      "t": "titulo",
+      "v": "Resumo do dia"
+    }
+  ]
+}

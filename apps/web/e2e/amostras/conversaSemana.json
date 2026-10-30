@@ -1,0 +1,238 @@
+{
+  "path": "/ia/conversas/3e68ca49-8a8d-459b-99e1-f68c37088c7f",
+  "corpo": {
+    "rodape": "Gerado por IA. Confira nos autos.",
+    "conversa": {
+      "id": "3e68ca49-8a8d-459b-99e1-f68c37088c7f",
+      "titulo": "Prazos desta semana",
+      "modo": "pergunte",
+      "fixada": true,
+      "criadaEm": "2026-10-29T12:12:00.000Z",
+      "atualizadaEm": "2026-10-29T12:14:11.000Z",
+      "processo": null
+    },
+    "mensagens": [
+      {
+        "id": "d89dfa80-2ce5-4c7f-a938-a78e0fb8a36f",
+        "papel": "pessoa",
+        "texto": "Quais prazos vencem esta semana?",
+        "partes": null,
+        "em": "2026-10-29T12:12:00.000Z"
+      },
+      {
+        "id": "7eceb185-c76d-4662-992b-385b5df29500",
+        "papel": "ia",
+        "texto": "Até domingo vencem 6 prazos, e um já passou: a [contestação trabalhista da Padaria Bom Grão](/prazos/f2aa25d5-4415-454f-8c75-c3edd821b373) venceu ontem, 28/10, com o Tiago. Vale confirmar com ele agora se foi protocolada.\n\nHoje vencem três, dois com você: as [alegações finais do Roberto Kühn](/prazos/07c8abcd-fa4e-4615-9cfb-5dee76da805f) e a [réplica da Ana Lúcia Ferraz](/prazos/47401106-8b38-48a2-a505-4469e46aa207). A [procuração atualizada do Eduardo Lima](/prazos/ce150d07-4a47-484b-85a3-9acd20a7a968) está sem responsável e com a data a confirmar.\n\nAmanhã vencem os embargos do Hotel Mar Azul, com o Rafael, e as custas do recurso do Gilberto Weiss, com a Camila.",
+        "partes": [
+          {
+            "id": "chamada-1-0",
+            "nome": "buscarPrazos",
+            "tipo": "ferramenta",
+            "saida": {
+              "itens": [
+                {
+                  "id": "f2aa25d5-4415-454f-8c75-c3edd821b373",
+                  "fim": "2026-10-28",
+                  "dias": 10,
+                  "tipo": "Contestação trabalhista",
+                  "quando": "Vencido · 28 out",
+                  "contagem": "uteis",
+                  "processo": {
+                    "id": "07dbdcff-531d-4955-b45d-200f8dfa3987",
+                    "cnj": "0000812-61.2026.5.12.0005",
+                    "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves"
+                  },
+                  "situacao": "confirmado",
+                  "urgencia": "vencido",
+                  "responsavel": {
+                    "id": "fM1wE9HfQHJnqV1GSEIEfy1QLHkGJY2C",
+                    "apelido": "Tiago",
+                    "iniciais": "TM"
+                  }
+                },
+                {
+                  "id": "07c8abcd-fa4e-4615-9cfb-5dee76da805f",
+                  "fim": "2026-10-29",
+                  "dias": 15,
+                  "tipo": "Alegações finais",
+                  "quando": "Hoje",
+                  "contagem": "uteis",
+                  "processo": {
+                    "id": "4b59d485-6e7c-4b73-9951-0ed4e24ab74b",
+                    "cnj": "5009876-57.2025.8.24.0038",
+                    "titulo": "Roberto Kühn × Transportes Serra Azul Ltda."
+                  },
+                  "situacao": "confirmado",
+                  "urgencia": "hoje",
+                  "responsavel": {
+                    "id": "179Q5BCDwk8K5foTgD7upNleYfNmW76h",
+                    "apelido": "Beatriz",
+                    "iniciais": "BS"
+                  }
+                },
+                {
+                  "id": "47401106-8b38-48a2-a505-4469e46aa207",
+                  "fim": "2026-10-29",
+                  "dias": 15,
+                  "tipo": "Réplica à contestação",
+                  "quando": "Hoje",
+                  "contagem": "uteis",
+                  "processo": {
+                    "id": "72b45678-7517-4f89-8e1e-a1b92f1b9e0f",
+                    "cnj": "5011873-86.2026.8.24.0023",
+                    "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A."
+                  },
+                  "situacao": "confirmado",
+                  "urgencia": "hoje",
+                  "responsavel": {
+                    "id": "179Q5BCDwk8K5foTgD7upNleYfNmW76h",
+                    "apelido": "Beatriz",
+                    "iniciais": "BS"
+                  }
+                },
+                {
+                  "id": "ce150d07-4a47-484b-85a3-9acd20a7a968",
+                  "fim": "2026-10-29",
+                  "dias": 5,
+                  "tipo": "Juntar procuração atualizada",
+                  "quando": "Hoje",
+                  "contagem": "uteis",
+                  "processo": {
+                    "id": "31a2e831-e9e6-479f-8257-f03c3037ae7c",
+                    "cnj": "5003390-24.2026.8.24.0005",
+                    "titulo": "Eduardo Lima × Saúde Litoral Planos"
+                  },
+                  "situacao": "a_confirmar",
+                  "urgencia": "hoje",
+                  "responsavel": null
+                },
+                {
+                  "id": "4818bd5d-f9fe-41bd-9984-3998e27a4fe5",
+                  "fim": "2026-10-30",
+                  "dias": 5,
+                  "tipo": "Embargos de declaração",
+                  "quando": "Amanhã",
+                  "contagem": "uteis",
+                  "processo": {
+                    "id": "6ee06095-4d31-43ee-ac83-0b50d78d4e07",
+                    "cnj": "0001145-87.2026.5.12.0045",
+                    "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha"
+                  },
+                  "situacao": "confirmado",
+                  "urgencia": "breve",
+                  "responsavel": {
+                    "id": "YxYtYHSN2csxHlP6i0QdtbtdGcQxUGg6",
+                    "apelido": "Rafael",
+                    "iniciais": "RF"
+                  }
+                },
+                {
+                  "id": "139da24f-ec4d-4bc1-9fb1-53ec3c45b8fe",
+                  "fim": "2026-10-30",
+                  "dias": 5,
+                  "tipo": "Recolher custas do recurso",
+                  "quando": "Amanhã",
+                  "contagem": "uteis",
+                  "processo": {
+                    "id": "deb9ff02-e5eb-4233-bc07-9ffcc35ed2ca",
+                    "cnj": "5000456-14.2024.8.24.0054",
+                    "titulo": "Gilberto Weiss × Cooperativa Agro Vale"
+                  },
+                  "situacao": "confirmado",
+                  "urgencia": "breve",
+                  "responsavel": {
+                    "id": "H60qNirK0xgV7En5BBZicrBrclqz91ya",
+                    "apelido": "Camila",
+                    "iniciais": "CA"
+                  }
+                }
+              ],
+              "total": 6
+            },
+            "entrada": {
+              "ate": "2026-11-01"
+            }
+          },
+          {
+            "tipo": "texto",
+            "texto": "Até domingo vencem 6 prazos, e um já passou: a [contestação trabalhista da Padaria Bom Grão](/prazos/f2aa25d5-4415-454f-8c75-c3edd821b373) venceu ontem, 28/10, com o Tiago. Vale confirmar com ele agora se foi protocolada.\n\nHoje vencem três, dois com você: as [alegações finais do Roberto Kühn](/prazos/07c8abcd-fa4e-4615-9cfb-5dee76da805f) e a [réplica da Ana Lúcia Ferraz](/prazos/47401106-8b38-48a2-a505-4469e46aa207). A [procuração atualizada do Eduardo Lima](/prazos/ce150d07-4a47-484b-85a3-9acd20a7a968) está sem responsável e com a data a confirmar.\n\nAmanhã vencem os embargos do Hotel Mar Azul, com o Rafael, e as custas do recurso do Gilberto Weiss, com a Camila."
+          }
+        ],
+        "em": "2026-10-29T12:12:19.000Z"
+      },
+      {
+        "id": "df60334d-cb90-4d97-abe7-13dc5df07166",
+        "papel": "pessoa",
+        "texto": "E as audiências?",
+        "partes": null,
+        "em": "2026-10-29T12:14:03.000Z"
+      },
+      {
+        "id": "27a20c7d-fb8f-4431-a36e-6be043e246e0",
+        "papel": "ia",
+        "texto": "Até domingo são duas, as duas hoje à tarde e nenhuma com você:\n\n- **14:30**, [conciliação do Carlos Henrique Prado](/audiencias/e3b6bda8-a4d7-46b5-ac9c-df4c8b049abc), por vídeo, com o Rafael.\n- **16:00**, [instrução do Antônio Reis](/audiencias/ada0005b-fec7-4bb6-9632-4aa932b75232), na Vara do Trabalho de Rio do Sul, com o Tiago.",
+        "partes": [
+          {
+            "id": "chamada-1-0",
+            "nome": "buscarAudiencias",
+            "tipo": "ferramenta",
+            "saida": {
+              "itens": [
+                {
+                  "id": "e3b6bda8-a4d7-46b5-ac9c-df4c8b049abc",
+                  "dia": "2026-10-29",
+                  "hora": "14:30",
+                  "tipo": "Conciliação",
+                  "local": "https://videoconf.tjsc.jus.br/sala/jec-blumenau-3",
+                  "quando": "qui., 29 out · 14:30",
+                  "porVideo": true,
+                  "processo": {
+                    "id": "d20b6e4e-da0f-4bc5-b152-c104c7422252",
+                    "cnj": "5007745-68.2026.8.24.0008",
+                    "titulo": "Carlos Henrique Prado × Construtora Vale Norte"
+                  },
+                  "situacao": "marcada",
+                  "responsavel": {
+                    "id": "YxYtYHSN2csxHlP6i0QdtbtdGcQxUGg6",
+                    "apelido": "Rafael",
+                    "iniciais": "RF"
+                  }
+                },
+                {
+                  "id": "ada0005b-fec7-4bb6-9632-4aa932b75232",
+                  "dia": "2026-10-29",
+                  "hora": "16:00",
+                  "tipo": "Instrução e julgamento",
+                  "local": "Vara do Trabalho de Rio do Sul · Rua XV de Novembro, 1200",
+                  "quando": "qui., 29 out · 16:00",
+                  "porVideo": false,
+                  "processo": {
+                    "id": "6d84e551-9877-49ff-b49c-f60fb442379c",
+                    "cnj": "0000533-40.2025.5.12.0028",
+                    "titulo": "Antônio Reis × Transportadora Vale Verde"
+                  },
+                  "situacao": "marcada",
+                  "responsavel": {
+                    "id": "fM1wE9HfQHJnqV1GSEIEfy1QLHkGJY2C",
+                    "apelido": "Tiago",
+                    "iniciais": "TM"
+                  }
+                }
+              ],
+              "total": 2
+            },
+            "entrada": {
+              "de": "2026-10-29",
+              "ate": "2026-11-01"
+            }
+          },
+          {
+            "tipo": "texto",
+            "texto": "Até domingo são duas, as duas hoje à tarde e nenhuma com você:\n\n- **14:30**, [conciliação do Carlos Henrique Prado](/audiencias/e3b6bda8-a4d7-46b5-ac9c-df4c8b049abc), por vídeo, com o Rafael.\n- **16:00**, [instrução do Antônio Reis](/audiencias/ada0005b-fec7-4bb6-9632-4aa932b75232), na Vara do Trabalho de Rio do Sul, com o Tiago."
+          }
+        ],
+        "em": "2026-10-29T12:14:11.000Z"
+      }
+    ]
+  }
+}

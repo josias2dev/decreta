@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/16cb96b7-a684-437c-831e-18f7cccdad45",
+  "path": "/publicacoes/d6f4145d-4728-4081-8ae2-eda646d09f78",
   "corpo": {
-    "id": "16cb96b7-a684-437c-831e-18f7cccdad45",
+    "id": "d6f4145d-4728-4081-8ae2-eda646d09f78",
     "situacao": "nova",
     "fonte": "manual",
     "disponibilizadaEm": "2026-10-28",
@@ -16,7 +16,7 @@
     "destinatarios": [],
     "advogados": [],
     "processo": {
-      "id": "294ea9dc-8098-4e03-b3a0-0c0fe2d5499d",
+      "id": "31a2e831-e9e6-479f-8257-f03c3037ae7c",
       "titulo": "Eduardo Lima × Saúde Litoral Planos",
       "cnj": "5003390-24.2026.8.24.0005",
       "classe": "Procedimento comum cível",
@@ -25,7 +25,7 @@
       "responsavel": null
     },
     "sugestao": {
-      "id": "ce9a2cc2-2327-46f9-8671-03f9763b8289",
+      "id": "b2a9dd93-71d5-411a-81c7-87fe6ff29cdc",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -62,13 +62,13 @@
         }
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-10-30T00:27:55.586Z",
+      "em": "2026-10-30T00:59:32.348Z",
       "desatualizada": false,
       "erro": null,
       "responsavel": null
     },
     "prazo": {
-      "id": "d7599d98-3a56-4552-b619-e8fbbb50d4fa",
+      "id": "3236d013-aba6-4481-8d00-6ecd04b339fd",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Apelação"
@@ -76,7 +76,7 @@
     "audiencia": null,
     "decisao": true,
     "sentenca": {
-      "id": "7f654dce-9b90-4d05-bc1c-5e035854764a",
+      "id": "2939804b-c1f8-430a-9a1a-15a5f164f527",
       "acao": "ler-sentenca",
       "situacao": "pronto",
       "conteudo": {
@@ -118,7 +118,7 @@
         "honorarios": "Ré paga custas e 10% do valor da condenação."
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-10-30T00:27:55.601Z",
+      "em": "2026-10-30T00:59:32.392Z",
       "desatualizada": false,
       "erro": null
     },

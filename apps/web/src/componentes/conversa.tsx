@@ -3,6 +3,7 @@ import { ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { mensagemDoErro } from "@/lib/api";
 import type { MensagemIa } from "@/lib/tipos";
+import { Markdown } from "@/lib/markdown";
 import { cn } from "@/lib/util";
 import { MarcaIa } from "./ui";
 
@@ -112,8 +113,8 @@ function Mensagem({ papel, texto, autor, escrevendo }: { papel: "pessoa" | "ia";
       <div className="mb-1">
         <MarcaIa />
       </div>
-      {texto}
-      {escrevendo && <span className="dc-ia__cursor" aria-hidden />}
+      {/* A IA costuma mandar listas e negrito mesmo pedindo texto simples. */}
+      <Markdown texto={texto} className={escrevendo && texto ? "is-escrevendo" : undefined} />
       {escrevendo && !texto && <span className="text-[var(--tinta-2)]">Lendo os autos…</span>}
     </div>
   );
