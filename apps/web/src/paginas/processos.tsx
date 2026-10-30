@@ -16,13 +16,13 @@ import type { Pagina as PaginaDaApi, ProcessoNaLista } from "@/lib/tipos";
 type Situacao = "ativos" | "arquivados" | "todos";
 const SITUACAO: Record<ProcessoNaLista["situacao"], string> = { ativo: "Ativo", suspenso: "Suspenso", arquivado: "Arquivado", encerrado: "Encerrado" };
 
-/** A sigla do tribunal (TJSC, TRT12, TRF4), o número e onde tramita, numa linha. */
+/** O tribunal (TJSC, TRT12, TRF4), o número e onde tramita, numa linha: TJSC · 5004321-25.2026.8.24.0038 · 2ª Vara Cível de Joinville. */
 function Onde({ p }: { p: ProcessoNaLista }) {
-  const sigla = (p.cnj && tribunalDoCnj(p.cnj)) || (p.tipo === "extrajudicial" ? "Extrajudicial" : null);
+  const tribunal = (p.cnj && tribunalDoCnj(p.cnj)) || (p.tipo === "extrajudicial" ? "Extrajudicial" : null);
   const resto = [p.cnj ? ondeTramita(p) : p.classe, p.situacao !== "ativo" && SITUACAO[p.situacao]].filter(Boolean).join(" · ");
   return (
     <span className="dc-onde">
-      {sigla && <span className="dc-sigla">{sigla}</span>}
+      {tribunal && <span className="dc-onde__tribunal">{tribunal}</span>}
       {p.cnj && <span className="dc-num dc-onde__cnj">{p.cnj}</span>}
       {resto && <span className="dc-onde__resto">{resto}</span>}
     </span>

@@ -39,7 +39,7 @@ export function Rolagem({ id, topo, className, children }: { id: string; topo?: 
  * Quadro (kanban) que ocupa a tela. Com mais colunas do que cabem, a roda do
  * mouse fora de uma coluna comprida leva o quadro para o lado.
  */
-export function Quadro({ id, children }: { id: string; children: ReactNode }) {
+export function Quadro({ id, className, children }: { id: string; className?: string; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const quadro = ref.current;
@@ -55,7 +55,7 @@ export function Quadro({ id, children }: { id: string; children: ReactNode }) {
     return () => quadro.removeEventListener("wheel", aoRodar);
   }, []);
   return (
-    <div ref={ref} className="dc-quadro" data-scroll-restoration-id={id}>
+    <div ref={ref} className={cn("dc-quadro", className)} data-scroll-restoration-id={id}>
       {children}
     </div>
   );

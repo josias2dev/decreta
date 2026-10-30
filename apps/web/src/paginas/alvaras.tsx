@@ -12,7 +12,7 @@ import { Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/compo
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { diaCompleto, diaCurto, diasDesde, dinheiro, haQuanto, numero, paraValor, valorNoCampo } from "@/lib/formato";
+import { diaCompleto, diasDesde, dinheiro, haQuanto, numero, paraValor, valorNoCampo } from "@/lib/formato";
 import { cn } from "@/lib/util";
 import type { Alvara, EtapaAlvara, QuadroDeAlvaras } from "@/lib/tipos";
 
@@ -46,30 +46,24 @@ export function AlvarasPage() {
   const soma = (...es: EtapaAlvara[]) => es.reduce((t, e) => ({ valor: t.valor + Number(daEtapa(e)?.total ?? 0), n: t.n + (daEtapa(e)?.itens.length ?? 0) }), { valor: 0, n: 0 });
   const sub = d ? `${alvaras(soma("novo", "aguardando_saque", "sacado").n)} em andamento` : " ";
 
+  /** Quem, o quê e quanto, sempre nas mesmas três linhas; embaixo à direita, há quanto tempo está na etapa. */
   const cartao = (a: Alvara & { etapa: EtapaAlvara }) => {
     const chegou = CHEGOU[a.etapa];
     const dia = chegou.dia(a);
-    const dias = dia ? diasDesde(dia) : 0;
     const limite = PARADO[a.etapa];
-    const compacto = a.etapa === "finalizado";
+    const parado = !!dia && limite != null && diasDesde(dia) > limite;
     return (
-      <button key={a.id} type="button" className={cn("dc-cartao dc-alvara", compacto && "dc-alvara--compacto")} onClick={() => setAberto(a.id)}>
-        <span className="dc-alvara__valor dc-num">{dinheiro(a.valor)}</span>
-        {!compacto && <span className="dc-alvara__desc">{a.descricao}</span>}
+      <button key={a.id} type="button" className={cn("dc-cartao dc-alvara", parado && "is-parado")} onClick={() => setAberto(a.id)}>
         <span className="dc-alvara__cliente">{a.cliente ?? a.processo.titulo}</span>
-        {!compacto && dia && (
-          <span className="dc-alvara__quando" title={`${chegou.rotulo} em ${diaCompleto(dia)}`}>
-            {limite != null && dias > limite ? (
-              <span className="dc-selo dc-selo--breve">
-                {chegou.rotulo} {haQuanto(dia)}
-              </span>
-            ) : dias <= 60 ? (
-              `${chegou.rotulo} ${haQuanto(dia)}`
-            ) : (
-              `${chegou.rotulo} em ${dias < 300 ? diaCurto(dia) : diaCompleto(dia)}`
-            )}
-          </span>
-        )}
+        <span className="dc-alvara__desc">{a.descricao}</span>
+        <span className="dc-alvara__pe">
+          <span className="dc-alvara__valor">{dinheiro(a.valor)}</span>
+          {dia && (
+            <span className="dc-alvara__quando" title={`${chegou.rotulo} em ${diaCompleto(dia)}${parado ? `, há mais de ${limite} dias nesta etapa` : ""}`}>
+              {haQuanto(dia)}
+            </span>
+          )}
+        </span>
       </button>
     );
   };
@@ -134,30 +128,19 @@ export function AlvarasPage() {
           <div className="dc-numeros dc-numeros--alvaras" aria-label="Totais dos alvarás">
             {[
               { rotulo: "A sacar", ...soma("novo", "aguardando_saque") },
-              { rotulo: "Sacado, falta repassar", ...soma("sacado") },
-              { rotulo: "Já repassado aos clientes", ...soma("repassado", "finalizado") },
+              { rotulo: "A repassar", ...soma("sacado") },
+              { rotulo: "Já repassado", ...soma("repassado", "finalizado") },
             ].map((t) => (
               <div key={t.rotulo} className="dc-contador">
-                <span className="dc-contador__n dc-num">{dinheiro(t.valor)}</span>
+                <span className="dc-contador__n">{dinheiro(t.valor)}</span>
                 <span className="dc-contador__rotulo">{t.rotulo}</span>
                 <span className="dc-contador__nota">{alvaras(t.n)}</span>
               </div>
             ))}
           </div>
-          <Quadro id="alvaras">
+          <Quadro id="alvaras" className="dc-quadro--alvaras">
             {d.etapas.map((e) => (
-              <ColunaDoQuadro
-                key={e.etapa}
-                id={`alvaras-${e.etapa}`}
-                titulo={
-                  <span className="dc-etapa">
-                    <span className="dc-etapa__n">{ORDEM.indexOf(e.etapa) + 1}</span>
-                    <span className="truncate">{ETAPA[e.etapa]}</span>
-                  </span>
-                }
-                valor={e.itens.length}
-                sub={<span className="dc-num">{dinheiro(e.total)}</span>}
-              >
+              <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
                 {e.itens.length ? e.itens.map((i) => cartao({ ...i, etapa: e.etapa })) : <div className="dc-quadro__vazio">Nada aqui</div>}
               </ColunaDoQuadro>
             ))}
