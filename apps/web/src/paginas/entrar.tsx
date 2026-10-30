@@ -3,19 +3,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { FundoVivo, useCorDaBarra } from "@/componentes/fundo";
+import { FundoAscii, useCorDaBarra } from "@/componentes/fundo-ascii";
 import { LogoCompleta } from "@/componentes/marca";
 import { Botao, Campo, Faixa } from "@/componentes/ui";
 import { authCall, authClient } from "@/lib/auth";
 import { euQuery } from "@/lib/consultas";
 import { cn } from "@/lib/util";
 
-/** A moldura das telas de acesso: o fundo escuro do hero da landing, a marca grande e o cartão. */
+/** A moldura das telas de acesso: o fundo em ASCII do hero da landing, a marca grande e o cartão. */
 export function CaixaDeEntrada({ titulo, sub, children, pe }: { titulo: string; sub?: ReactNode; children: ReactNode; pe?: ReactNode }) {
   useCorDaBarra("#0b0b0f");
   return (
     <div className="lp dc lp-entrar" data-theme="escuro">
-      <FundoVivo />
+      <FundoAscii miolo=".lp-entrar__meio" />
       <Link className="lp-entrar__site" to="/">
         <ArrowLeft aria-hidden />
         decreta.site

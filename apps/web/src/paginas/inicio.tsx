@@ -6,7 +6,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, type MouseEvent } from "react";
-import { useCorDaBarra } from "@/componentes/fundo";
+import { ligarFundoAscii, useCorDaBarra } from "@/componentes/fundo-ascii";
 import { euQuery } from "@/lib/consultas";
 import pagina from "@/landing/pagina.html?raw";
 
@@ -25,6 +25,13 @@ export function InicioPage() {
   useEffect(() => {
     if (eu.data) router.history.replace("/hoje");
   }, [eu.data, router]);
+
+  // O fundo em ASCII do topo, no canvas que vem no HTML da landing
+  useEffect(() => {
+    const tela = raiz.current?.querySelector<HTMLCanvasElement>("canvas.lp-ascii");
+    if (!tela) return;
+    return ligarFundoAscii(tela, { miolo: raiz.current?.querySelector(".lp-hero__texto") });
+  }, []);
 
   useEffect(() => {
     document.title = "Decreta · Prazos, publicações e peças com IA para escritórios de advocacia";
