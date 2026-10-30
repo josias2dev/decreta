@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Conversa } from "@/componentes/conversa";
 import { Dialogo } from "@/componentes/dialogo";
+import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoPrazo } from "@/componentes/novo-prazo";
@@ -365,7 +366,7 @@ function ListaDeMovimentacoes({ itens, celular }: { itens: Movimentacao[]; celul
               {m.descricao && <span className="dc-celula__2">{m.descricao}</span>}
               {m.documento && (
                 <a href={arquivo(m.documento.id)} className="dc-link mt-1 inline-flex items-center gap-1 text-[14px]">
-                  <FileText className="size-4" /> {m.documento.nome}
+                  <IconeDoArquivo nome={m.documento.nome} pequeno /> {m.documento.nome}
                   {m.documento.paginas ? ` · ${m.documento.paginas} p.` : ""}
                 </a>
               )}
@@ -405,7 +406,7 @@ function ListaDeMovimentacoes({ itens, celular }: { itens: Movimentacao[]; celul
               <td>
                 {m.documento ? (
                   <a href={arquivo(m.documento.id)} className="inline-flex items-center gap-1.5 text-[var(--tinta)] no-underline hover:underline">
-                    <FileText className="size-4 flex-none text-[var(--tinta-3)]" />
+                    <IconeDoArquivo nome={m.documento.nome} pequeno />
                     <span className="truncate">{m.documento.nome}</span>
                     {m.documento.paginas ? <span className="flex-none text-[var(--tinta-2)]"> · {m.documento.paginas} p.</span> : null}
                   </a>
@@ -737,7 +738,7 @@ function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
         <div className="dc-linhas">
           {itens.map((d) => (
             <a key={d.id} href={arquivo(d.id)} className="dc-linhas__item">
-              <FileText className="mt-0.5 size-4 flex-none text-[var(--tinta-3)]" />
+              <IconeDoArquivo nome={d.nome} mime={d.mime} />
               <span className="dc-celula min-w-0 flex-1">
                 <span className="dc-celula__1">{d.nome}</span>
                 <span className="dc-celula__2">
@@ -764,8 +765,8 @@ function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
               {itens.map((d) => (
                 <tr key={d.id}>
                   <td>
-                    <span className="flex items-start gap-2">
-                      <FileText className="mt-0.5 size-4 flex-none text-[var(--tinta-3)]" />
+                    <span className="flex items-start gap-2.5">
+                      <IconeDoArquivo nome={d.nome} mime={d.mime} />
                       <span className="dc-celula">
                         <a className="dc-celula__1 no-underline hover:underline" href={`${arquivo(d.id)}?ver=1`} target="_blank" rel="noreferrer">
                           {d.nome}

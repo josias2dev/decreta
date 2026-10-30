@@ -1,10 +1,11 @@
 /** Documentos de todo o escritório: dos autos, dos clientes e as peças baixadas. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Download, FileText, Trash2 } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
+import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Carregando, Faixa, Vazio } from "@/componentes/ui";
@@ -51,7 +52,7 @@ export function DocumentosPage() {
             <div className="dc-linhas">
               {itens.map((d) => (
                 <a key={d.id} href={arquivo(d.id)} className="dc-linhas__item">
-                  <FileText className="mt-0.5 size-4 flex-none text-[var(--tinta-3)]" />
+                  <IconeDoArquivo nome={d.nome} mime={d.mime} />
                   <span className="dc-celula min-w-0 flex-1">
                     <span className="dc-celula__1 truncate">{d.nome}</span>
                     <span className="dc-celula__2 truncate">
@@ -95,8 +96,8 @@ export function DocumentosPage() {
                 {itens.map((d) => (
                   <tr key={d.id}>
                     <td>
-                      <span className="flex items-start gap-2">
-                        <FileText className="mt-0.5 size-4 flex-none text-[var(--tinta-3)]" />
+                      <span className="flex items-start gap-2.5">
+                        <IconeDoArquivo nome={d.nome} mime={d.mime} />
                         <span className="dc-celula min-w-0">
                           <a className="dc-celula__1 no-underline hover:underline" href={`${arquivo(d.id)}?ver=1`} target="_blank" rel="noreferrer">
                             {d.nome}

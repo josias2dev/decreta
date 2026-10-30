@@ -1,11 +1,12 @@
 /** Novos negócios: a triagem de quem chega, com o checklist da pasta, até virar cliente. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { FileText, MessageCircle, Plus, UserCheck } from "lucide-react";
+import { MessageCircle, Plus, UserCheck } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { Dialogo } from "@/componentes/dialogo";
+import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
@@ -307,7 +308,7 @@ function ArquivosDaPasta({ negocioId }: { negocioId: string }) {
           <div className="dc-linhas">
             {docs.map((d) => (
               <div key={d.id} className="dc-linhas__item items-center">
-                <FileText className="size-4 flex-none text-[var(--tinta-3)]" />
+                <IconeDoArquivo nome={d.nome} mime={d.mime} pequeno />
                 <a className="dc-celula__1 min-w-0 flex-1 truncate no-underline hover:underline" href={`${API_URL}/api/app/documentos/${d.id}/arquivo?ver=1`} target="_blank" rel="noreferrer">
                   {d.nome}
                 </a>

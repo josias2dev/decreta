@@ -1,11 +1,12 @@
 import { formatarDocumento } from "@decreta/core";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { FileText, FolderPlus, MessageCircle, MessageSquarePlus, Pencil, Plus, Trash2 } from "lucide-react";
+import { FolderPlus, MessageCircle, MessageSquarePlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { Dialogo } from "@/componentes/dialogo";
+import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
@@ -268,7 +269,7 @@ export function ClientePage() {
         <div className="dc-linhas">
           {c.documentos.map((d) => (
             <a key={d.id} href={`${API_URL}/api/app/documentos/${d.id}/arquivo`} className="dc-linhas__item">
-              <FileText className="mt-0.5 size-4 flex-none text-[var(--tinta-3)]" />
+              <IconeDoArquivo nome={d.nome} mime={d.mime} />
               <span className="dc-celula min-w-0 flex-1">
                 <span className="dc-celula__1 truncate">{d.nome}</span>
                 <span className="dc-celula__2">

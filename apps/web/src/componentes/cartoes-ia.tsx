@@ -55,6 +55,7 @@ import type {
 } from "@/lib/perguntar";
 import { cn } from "@/lib/util";
 import { useAviso } from "./avisos";
+import { IconeDoArquivo } from "./icone-arquivo";
 import { Avatar, Botao, Selo } from "./ui";
 
 type Ferramenta = Extract<Parte, { tipo: "ferramenta" }>;
@@ -644,9 +645,7 @@ function CartaoDocumentos({ lista, titulo = "Documentos" }: { lista: Lista<Docum
       <Mais itens={lista.itens}>
         {(d) => (
           <a key={d.id} href={`${API_URL}/api/app/documentos/${d.id}/arquivo`} target="_blank" rel="noopener" className="dc-cartao-ia__linha dc-cartao-ia__linha--link dc-cartao-ia__linha--alta">
-            <span className="dc-arquivo" aria-hidden>
-              {/pdf/.test(d.mime) ? "PDF" : /word|docx/.test(d.mime) ? "DOC" : /image/.test(d.mime) ? "IMG" : "TXT"}
-            </span>
+            <IconeDoArquivo nome={d.nome} mime={d.mime} />
             <span className="dc-celula min-w-0 flex-1">
               <span className="dc-cartao-ia__titulo">{d.nome}</span>
               <span className="dc-cartao-ia__sub">

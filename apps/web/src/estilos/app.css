@@ -619,7 +619,6 @@ a.dc-cartao-ia__nome:hover { color: var(--acento); }
 .dc-data-bloco { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; width: 40px; height: 40px; border-radius: 8px; background: var(--acento-suave); color: var(--acento); }
 .dc-data-bloco strong { font: 600 16px/18px var(--font-sans); font-variant-numeric: tabular-nums; }
 .dc-data-bloco span { font: 600 10px/12px var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; }
-.dc-arquivo { display: grid; place-items: center; flex: none; width: 32px; height: 38px; border-radius: 6px; background: var(--superficie-2); border: 1px solid var(--borda); font: 700 9.5px/1 var(--font-sans); letter-spacing: 0.04em; color: var(--tinta-2); }
 
 /* Contagem de prazo */
 .dc-contagem { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-4); }
@@ -874,6 +873,20 @@ a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
 /* O menu do + no celular, com alvos de toque de 44px. */
 .dc-menu-flutuante.dc-celular .dc-menu-flutuante__item { height: 44px; padding: 0 var(--space-3); font-size: 15px; }
 .dc-menu-flutuante.dc-celular .dc-menu-flutuante__item svg { width: 18px; height: 18px; }
+
+/* ---------- Ícone do arquivo pelo tipo (icone-arquivo.tsx) ---------- */
+.dc-arquivo { flex: none; width: 24px; height: 28px; overflow: visible; --cor: #8a8996; }
+.dc-arquivo__folha { fill: var(--superficie); stroke: var(--borda-forte); stroke-width: 1; }
+.dc-arquivo__dobra { fill: none; stroke: var(--borda-forte); stroke-width: 1; stroke-linejoin: round; }
+.dc-arquivo__selo { fill: var(--cor); }
+.dc-arquivo__rotulo { fill: #ffffff; font: 700 6.4px/1 var(--font-sans); letter-spacing: 0.01em; }
+.dc-arquivo--pequeno { width: 14px; height: 17px; }
+.dc-arquivo--pdf { --cor: #d93f4c; }
+.dc-arquivo--doc { --cor: #2d6be4; }
+.dc-arquivo--planilha { --cor: #1e9e5d; }
+.dc-arquivo--imagem { --cor: #7c5cf2; }
+.dc-arquivo--audio { --cor: #0d9488; }
+.dc-arquivo--texto { --cor: #6b6a76; }
 
 /* ---------- Rótulos pequenos ----------
    Cabeçalho das tabelas, grupos das listas, do histórico e da busca em caixa normal, como os grupos do menu.
