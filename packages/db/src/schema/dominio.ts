@@ -592,22 +592,63 @@ export const analises = pgTable(
 ).enableRLS();
 
 export const papelMensagem = pgEnum("papel_mensagem", ["pessoa", "ia"]);
+export const modoConversa = pgEnum("modo_conversa", ["pergunte", "jurisprudencia"]);
 
-/** Conversa com a IA: o chat do processo (com `processoId`) ou o Perguntar geral de cada pessoa. */
+/**
+ * Conversa do Perguntar: de uma pessoa só (as rotas filtram por `userId`; o
+ * RLS isola o escritório). `processoId` é o processo de onde ela começou, se
+ * começou de um.
+ */
+export const conversas = pgTable(
+  "conversas",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** "Prazos desta semana": a IA dá o nome depois da primeira resposta; a pessoa pode trocar. */
+    titulo: text("titulo").notNull(),
+    modo: modoConversa("modo").notNull().default("pergunte"),
+    processoId: uuid("processo_id").references(() => processos.id, { onDelete: "set null" }),
+    fixada: boolean("fixada").notNull().default(false),
+    createdAt: createdAt(),
+    /** Última mensagem: ordena o histórico. */
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("conversas_user_idx").on(t.organizationId, t.userId, t.updatedAt), tenantPolicy("conversas")],
+).enableRLS();
+
+/**
+ * O que a IA consultou para responder, na ordem: cada ferramenta com o pedido
+ * e o resultado (é o que vira cartão na tela), e o texto entre elas.
+ */
+export type ParteDaMensagem =
+  | { tipo: "texto"; texto: string }
+  | { tipo: "ferramenta"; id: string; nome: string; entrada: unknown; saida: unknown; erro?: string };
+
+/** Conversa com a IA: o chat do processo (com `processoId`) ou uma conversa do Perguntar (com `conversaId`). */
 export const mensagensIa = pgTable(
   "mensagens_ia",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     organizationId: organizationId(),
     processoId: uuid("processo_id").references(() => processos.id, { onDelete: "cascade" }),
+    conversaId: uuid("conversa_id").references(() => conversas.id, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     papel: papelMensagem("papel").notNull(),
     texto: text("texto").notNull(),
+    partes: jsonb("partes").$type<ParteDaMensagem[]>(),
     createdAt: createdAt(),
   },
-  (t) => [index("mensagens_ia_processo_idx").on(t.organizationId, t.processoId, t.createdAt), index("mensagens_ia_user_idx").on(t.organizationId, t.userId, t.createdAt), tenantPolicy("mensagens_ia")],
+  (t) => [
+    index("mensagens_ia_processo_idx").on(t.organizationId, t.processoId, t.createdAt),
+    index("mensagens_ia_user_idx").on(t.organizationId, t.userId, t.createdAt),
+    index("mensagens_ia_conversa_idx").on(t.organizationId, t.conversaId, t.createdAt),
+    tenantPolicy("mensagens_ia"),
+  ],
 ).enableRLS();
 
 /**

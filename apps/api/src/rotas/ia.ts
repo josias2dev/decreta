@@ -1,21 +1,26 @@
-import { horaLocal, diaPorExtenso, diaDoInstante } from "@decreta/core";
-import { analises, audiencias, clientes, mensagensIa, pecas, prazos, processos, publicacoes, retornosIa, withTenant, type Tx } from "@decreta/db";
+import { horaLocal, diaPorExtenso, diaDoInstante, hojeEm } from "@decreta/core";
+import { analises, audiencias, clientes, conversas, equipe, mensagensIa, pecas, prazos, processos, publicacoes, retornosIa, tarefas, withTenant, type ParteDaMensagem, type Tx } from "@decreta/db";
 import {
   briefingDoPrazo,
   conversar,
+  conversarComAssistente,
   itemDoChecklist,
   prepararAudiencia,
+  resultadoParaGuardar,
   resumirAtendimento,
   resumirAutos,
   RODAPE_IA,
   IaRecusou,
+  tituloDaConversa,
+  tituloProvisorio,
   type Ia,
   type MensagemDaConversa,
 } from "@decreta/ia";
-import { and, asc, desc, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gt, ilike, isNull, or, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { analisar } from "../servicos/analises.ts";
+import { dadosDoEscritorio, PedidoInvalido } from "../servicos/assistente.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { corpo, ehSocio, falha, id, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
@@ -30,6 +35,19 @@ export const ROTULO_DA_ACAO: Record<string, string> = {
   "conferir-pasta": "Conferência da pasta",
   "gerar-documento": "Peça gerada",
 };
+
+/** Uma linha da resposta do Perguntar. */
+export type EventoDaConversa =
+  | { t: "inicio"; conversa: { id: string; titulo: string; modo: string }; pergunta: { id: string } }
+  | { t: "texto"; v: string }
+  | { t: "ferramenta"; id: string; nome: string; entrada: unknown }
+  | { t: "resultado"; id: string; nome: string; saida?: unknown; erro?: string }
+  | { t: "fim"; mensagem: { id: string } | null }
+  | { t: "titulo"; v: string };
+
+function conversaNaTela(k: typeof conversas.$inferSelect, processo: { id: string | null; titulo: string | null } | null) {
+  return { id: k.id, titulo: k.titulo, modo: k.modo, fixada: k.fixada, criadaEm: k.createdAt.toISOString(), atualizadaEm: k.updatedAt.toISOString(), processo: processo?.id ? { id: processo.id, titulo: processo.titulo } : null };
+}
 
 export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
@@ -211,20 +229,113 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     );
   });
 
-  /* ---------------- Perguntar (de cada pessoa) ---------------- */
+  /* ---------------- Perguntar: as conversas de cada pessoa ---------------- */
 
-  app.get("/ia/perguntar", async (c) => {
-    const msgs = await tenant(c, deps, (tx) =>
-      tx
-        .select()
-        .from(mensagensIa)
-        .where(and(isNull(mensagensIa.processoId), eq(mensagensIa.userId, c.get("userId"))))
-        .orderBy(desc(mensagensIa.createdAt))
-        .limit(60),
-    );
-    return c.json({ rodape: RODAPE_IA, mensagens: msgs.reverse().map((m) => ({ id: m.id, papel: m.papel, texto: m.texto, em: m.createdAt.toISOString(), autor: null })) });
+  /** Só a pessoa vê as próprias conversas (o RLS separa os escritórios; aqui, as pessoas). */
+  const daPessoa = (c: C) => eq(conversas.userId, c.get("userId"));
+
+  app.get("/ia/conversas", async (c) => {
+    const busca = (c.req.query("busca") ?? "").trim().slice(0, 100);
+    return tenant(c, deps, async (tx) => {
+      const termo = `%${busca.replace(/[%_\\]/g, "")}%`;
+      const linhas = await tx
+        .select({ conversa: conversas, processo: { id: processos.id, titulo: processos.titulo } })
+        .from(conversas)
+        .leftJoin(processos, eq(processos.id, conversas.processoId))
+        .where(
+          and(
+            daPessoa(c),
+            busca.length >= 2
+              ? or(ilike(conversas.titulo, termo), exists(sql`(select 1 from "mensagens_ia" where "mensagens_ia"."conversa_id" = "conversas"."id" and "mensagens_ia"."texto" ilike ${termo})`))
+              : undefined,
+          ),
+        )
+        .orderBy(desc(conversas.fixada), desc(conversas.updatedAt))
+        .limit(200);
+      return c.json({ conversas: linhas.map(({ conversa: k, processo }) => conversaNaTela(k, processo)) });
+    });
   });
 
+  app.get("/ia/conversas/:id", async (c) => {
+    const conversaId = id(c);
+    return tenant(c, deps, async (tx) => {
+      const [linha] = await tx
+        .select({ conversa: conversas, processo: { id: processos.id, titulo: processos.titulo } })
+        .from(conversas)
+        .leftJoin(processos, eq(processos.id, conversas.processoId))
+        .where(and(eq(conversas.id, conversaId), daPessoa(c)));
+      if (!linha) falha(404, "nao_encontrado");
+      const msgs = await tx.select().from(mensagensIa).where(eq(mensagensIa.conversaId, conversaId)).orderBy(asc(mensagensIa.createdAt)).limit(400);
+      return c.json({
+        rodape: RODAPE_IA,
+        conversa: conversaNaTela(linha.conversa, linha.processo),
+        mensagens: msgs.map((m) => ({ id: m.id, papel: m.papel, texto: m.texto, partes: m.partes ?? null, em: m.createdAt.toISOString() })),
+      });
+    });
+  });
+
+  app.patch("/ia/conversas/:id", async (c) => {
+    const conversaId = id(c);
+    const b = await corpo(c, z.object({ titulo: z.string().trim().min(1, "Dê um nome para a conversa.").max(120).optional(), fixada: z.boolean().optional() }));
+    await tenant(c, deps, async (tx) => {
+      // Renomear ou fixar não mexe na ordem do histórico (que é pela última mensagem).
+      const [k] = await tx.select({ updatedAt: conversas.updatedAt }).from(conversas).where(and(eq(conversas.id, conversaId), daPessoa(c)));
+      if (!k) falha(404, "nao_encontrado");
+      await tx
+        .update(conversas)
+        .set({ ...(b.titulo !== undefined ? { titulo: b.titulo } : {}), ...(b.fixada !== undefined ? { fixada: b.fixada } : {}), updatedAt: k.updatedAt })
+        .where(eq(conversas.id, conversaId));
+    });
+    return c.json({ ok: true });
+  });
+
+  app.delete("/ia/conversas/:id", async (c) => {
+    const conversaId = id(c);
+    const apagadas = await tenant(c, deps, (tx) => tx.delete(conversas).where(and(eq(conversas.id, conversaId), daPessoa(c))).returning({ id: conversas.id }));
+    if (!apagadas.length) falha(404, "nao_encontrado");
+    return c.json({ ok: true });
+  });
+
+  /** A tarefa que a IA deixou pronta num cartão vira tarefa de verdade quando a pessoa confirma (uma vez só). */
+  app.post("/ia/conversas/:id/tarefa", async (c) => {
+    const conversaId = id(c);
+    const b = await corpo(c, z.object({ mensagemId: z.string().uuid(), ferramentaId: z.string().min(1).max(200), titulo: z.string().trim().min(2).max(300).optional(), dia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }));
+    const r = await tenant(c, deps, async (tx) => {
+      const [m] = await tx
+        .select({ id: mensagensIa.id, partes: mensagensIa.partes })
+        .from(mensagensIa)
+        .innerJoin(conversas, eq(conversas.id, mensagensIa.conversaId))
+        .where(and(eq(mensagensIa.id, b.mensagemId), eq(conversas.id, conversaId), daPessoa(c)));
+      const parte = m?.partes?.find((p) => p.tipo === "ferramenta" && p.id === b.ferramentaId && p.nome === "proporTarefa");
+      if (!m || parte?.tipo !== "ferramenta" || !parte.saida) falha(404, "nao_encontrado");
+      const proposta = parte.saida as { titulo: string; dia: string; detalhe: string | null; responsavel: { id: string } | null; processo: { id: string } | null; cliente: { id: string } | null; criada?: { id: string } };
+      if (proposta.criada) return proposta.criada;
+      const [t] = await tx
+        .insert(tarefas)
+        .values({
+          organizationId: c.get("orgId"),
+          titulo: b.titulo ?? proposta.titulo,
+          dia: b.dia ?? proposta.dia,
+          detalhe: proposta.detalhe,
+          responsavelId: proposta.responsavel?.id ?? null,
+          processoId: proposta.processo?.id ?? null,
+          clienteId: proposta.cliente?.id ?? null,
+          criadaPor: c.get("userId"),
+        })
+        .returning({ id: tarefas.id });
+      parte.saida = { ...proposta, titulo: b.titulo ?? proposta.titulo, dia: b.dia ?? proposta.dia, criada: { id: t!.id } };
+      await tx.update(mensagensIa).set({ partes: m.partes }).where(eq(mensagensIa.id, m.id));
+      return { id: t!.id };
+    });
+    return c.json(r, 201);
+  });
+
+  /**
+   * Pergunta numa conversa (ou começa uma). A resposta chega aos poucos, uma
+   * linha JSON por acontecimento: o começo, cada pedaço de texto, cada
+   * ferramenta que a IA consultou e o resultado (vira cartão na tela), o fim e,
+   * na primeira resposta, o nome que a IA deu para a conversa.
+   */
   app.post("/ia/perguntar", async (c) => {
     const ia = exigirIa();
     const b = await corpo(
@@ -232,31 +343,122 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       z.object({
         texto: z.string().trim().min(1).max(4000),
         modo: z.enum(["pergunte", "jurisprudencia"]).default("pergunte"),
-        /** Onde a pessoa estava quando abriu o Perguntar. */
+        conversaId: z.string().uuid().nullable().optional(),
+        /** Processo de onde a pessoa abriu o Perguntar (só vale ao começar a conversa). */
         processoId: z.string().uuid().nullable().optional(),
-        clienteId: z.string().uuid().nullable().optional(),
       }),
     );
+    const orgId = c.get("orgId");
+    const userId = c.get("userId");
     const preparado = await tenant(c, deps, async (tx) => {
-      let contexto = `Escritório: ${c.get("orgNome")}. Pessoa que pergunta: ${c.get("userNome")}.`;
-      if (b.processoId) {
-        const ctx = await carregarContexto(tx, b.processoId, { documentos: true });
-        if (ctx) contexto += `\n\nA pessoa está vendo este processo:\n${ctx.texto}`;
-      } else if (b.clienteId) {
-        contexto += await contextoDoCliente(tx, b.clienteId);
+      let conversa: typeof conversas.$inferSelect | undefined;
+      if (b.conversaId) {
+        [conversa] = await tx.select().from(conversas).where(and(eq(conversas.id, b.conversaId), daPessoa(c)));
+        if (!conversa) falha(404, "nao_encontrado");
+        if (conversa.modo !== b.modo) await tx.update(conversas).set({ modo: b.modo }).where(eq(conversas.id, conversa.id));
+      } else {
+        const [p] = b.processoId ? await tx.select({ id: processos.id }).from(processos).where(eq(processos.id, b.processoId)) : [];
+        [conversa] = await tx.insert(conversas).values({ organizationId: orgId, userId, titulo: tituloProvisorio(b.texto), modo: b.modo, processoId: p?.id ?? null }).returning();
       }
-      const anteriores = await tx
-        .select()
-        .from(mensagensIa)
-        .where(and(isNull(mensagensIa.processoId), eq(mensagensIa.userId, c.get("userId"))))
-        .orderBy(desc(mensagensIa.createdAt))
-        .limit(12);
-      await tx.insert(mensagensIa).values({ organizationId: c.get("orgId"), processoId: null, userId: c.get("userId"), papel: "pessoa", texto: b.texto });
-      return { contexto, historico: [...anteriores.reverse().map((m) => ({ papel: m.papel, texto: m.texto })), { papel: "pessoa" as const, texto: b.texto }] };
+      const k = conversa!;
+      const [foco] = k.processoId ? await tx.select({ id: processos.id, titulo: processos.titulo, cnj: processos.cnj }).from(processos).where(eq(processos.id, k.processoId)) : [];
+      const anteriores = await tx.select().from(mensagensIa).where(eq(mensagensIa.conversaId, k.id)).orderBy(desc(mensagensIa.createdAt)).limit(40);
+      const [pergunta] = await tx.insert(mensagensIa).values({ organizationId: orgId, conversaId: k.id, userId, papel: "pessoa", texto: b.texto }).returning({ id: mensagensIa.id });
+      const [eu] = await tx.select({ cargo: equipe.cargo }).from(equipe).where(eq(equipe.userId, userId));
+      return {
+        conversa: k,
+        nova: !b.conversaId,
+        perguntaId: pergunta!.id,
+        cargo: eu?.cargo ?? null,
+        foco: foco ? `${foco.titulo}${foco.cnj ? ` (${foco.cnj})` : ""}, id ${foco.id}` : null,
+        historico: [...anteriores.reverse().map((m) => ({ papel: m.papel, texto: m.texto, partes: m.partes })), { papel: "pessoa" as const, texto: b.texto }],
+      };
     });
-    return responderAosPoucos(c, deps, ia, { metodo: b.modo === "jurisprudencia" ? "jurisprudencia" : "perguntar", contexto: preparado.contexto, historico: preparado.historico }, (tx, resposta) =>
-      tx.insert(mensagensIa).values({ organizationId: c.get("orgId"), processoId: null, userId: c.get("userId"), papel: "ia", texto: resposta }).then(() => {}),
+
+    const { conversa } = preparado;
+    const r = conversarComAssistente(
+      ia,
+      {
+        modo: b.modo,
+        quem: { nome: c.get("userNome"), cargo: preparado.cargo, escritorio: c.get("orgNome"), hoje: hojeEm(c.get("timezone")), timezone: c.get("timezone"), foco: preparado.foco },
+        historico: preparado.historico,
+        dados: dadosDoEscritorio({ db, organizationId: orgId, userId, timezone: c.get("timezone") }),
+      },
+      c.req.raw.signal,
     );
+    const encoder = new TextEncoder();
+    const corpoDaResposta = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        let aberto = true;
+        const enviar = (evento: EventoDaConversa) => {
+          if (!aberto) return;
+          try {
+            controller.enqueue(encoder.encode(`${JSON.stringify(evento)}\n`));
+          } catch {
+            aberto = false;
+          }
+        };
+        enviar({ t: "inicio", conversa: { id: conversa.id, titulo: conversa.titulo, modo: b.modo }, pergunta: { id: preparado.perguntaId } });
+        const partes: ParteDaMensagem[] = [];
+        const textoDe = () => partes.flatMap((p) => (p.tipo === "texto" ? [p.texto.trim()] : [])).filter(Boolean).join("\n\n");
+        try {
+          for await (const p of r.fullStream) {
+            if (p.type === "text-delta") {
+              const ultima = partes.at(-1);
+              if (ultima?.tipo === "texto") ultima.texto += p.text;
+              else partes.push({ tipo: "texto", texto: p.text });
+              enviar({ t: "texto", v: p.text });
+            } else if (p.type === "tool-call") {
+              partes.push({ tipo: "ferramenta", id: p.toolCallId, nome: p.toolName, entrada: p.input, saida: null });
+              enviar({ t: "ferramenta", id: p.toolCallId, nome: p.toolName, entrada: p.input });
+            } else if (p.type === "tool-result") {
+              const parte = partes.find((x) => x.tipo === "ferramenta" && x.id === p.toolCallId);
+              const saida = resultadoParaGuardar(p.toolName, p.output);
+              if (parte?.tipo === "ferramenta") parte.saida = saida;
+              enviar({ t: "resultado", id: p.toolCallId, nome: p.toolName, saida });
+            } else if (p.type === "tool-error") {
+              const erro = p.error instanceof PedidoInvalido ? p.error.message : "Não deu para consultar agora.";
+              if (!(p.error instanceof PedidoInvalido)) deps.log("ferramenta da IA falhou", { ferramenta: p.toolName, error: p.error instanceof Error ? p.error.message : String(p.error) });
+              const parte = partes.find((x) => x.tipo === "ferramenta" && x.id === p.toolCallId);
+              if (parte?.tipo === "ferramenta") parte.erro = erro;
+              enviar({ t: "resultado", id: p.toolCallId, nome: p.toolName, erro });
+            } else if (p.type === "error") {
+              throw p.error;
+            }
+          }
+        } catch (err) {
+          const parou = c.req.raw.signal.aborted;
+          if (!parou) deps.log("conversa com a IA caiu", { metodo: b.modo, error: err instanceof Error ? err.message : String(err) });
+          const aviso = parou ? "[Você parou a resposta aqui.]" : textoDe() ? "[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
+          partes.push({ tipo: "texto", texto: aviso });
+          enviar({ t: "texto", v: `\n\n${aviso}` });
+        }
+        const texto = textoDe();
+        const mensagemId = await withTenant(db, orgId, async (tx) => {
+          const [m] = await tx.insert(mensagensIa).values({ organizationId: orgId, conversaId: conversa.id, userId, papel: "ia", texto, partes }).returning({ id: mensagensIa.id });
+          await tx.update(conversas).set({ updatedAt: sql`now()` }).where(eq(conversas.id, conversa.id));
+          return m!.id;
+        }).catch((err) => {
+          deps.log("resposta da IA não foi gravada", { error: err instanceof Error ? err.message : String(err) });
+          return null;
+        });
+        enviar({ t: "fim", mensagem: mensagemId ? { id: mensagemId } : null });
+        if (preparado.nova && texto && !c.req.raw.signal.aborted) {
+          const titulo = await tituloDaConversa(ia, b.texto, texto, AbortSignal.timeout(10_000)).catch(() => null);
+          if (titulo) {
+            await withTenant(db, orgId, (tx) => tx.update(conversas).set({ titulo }).where(eq(conversas.id, conversa.id))).catch(() => {});
+            enviar({ t: "titulo", v: titulo });
+          }
+        }
+        aberto = false;
+        try {
+          controller.close();
+        } catch {
+          // a pessoa já fechou a tela
+        }
+      },
+    });
+    return new Response(corpoDaResposta, { headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff", "x-accel-buffering": "no" } });
   });
 
   app.post("/ia/atendimento", async (c) => {
@@ -282,19 +484,12 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   });
 }
 
-async function contextoDoCliente(tx: Tx, clienteId: string): Promise<string> {
-  const [cl] = await tx.select().from(clientes).where(eq(clientes.id, clienteId));
-  if (!cl) return "";
-  const ps = await tx.select({ titulo: processos.titulo, cnj: processos.cnj, situacao: processos.situacao }).from(processos).where(eq(processos.clienteId, clienteId));
-  return `\n\nA pessoa está vendo a ficha do cliente ${cl.nome}${cl.observacoes ? ` (${cl.observacoes})` : ""}. Processos: ${ps.map((p) => `${p.titulo} (${p.cnj ?? "extrajudicial"}, ${p.situacao})`).join("; ") || "nenhum"}.`;
-}
-
 /** A resposta vai chegando na tela; no fim, é gravada. Se a IA cair no meio, grava o que veio com um aviso. */
 function responderAosPoucos(
   c: C,
   deps: DepsDasRotas,
   ia: Ia,
-  pedido: { metodo: "chat-processo" | "perguntar" | "jurisprudencia"; contexto: string; historico: MensagemDaConversa[] },
+  pedido: { metodo: "chat-processo"; contexto: string; historico: MensagemDaConversa[] },
   gravar: (tx: Tx, resposta: string) => Promise<void>,
 ) {
   const orgId = c.get("orgId");

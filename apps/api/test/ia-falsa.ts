@@ -4,8 +4,14 @@ import { convertArrayToReadableStream, MockLanguageModelV4 } from "ai/test";
 
 const uso = { inputTokens: { total: 100, noCache: 100, cacheRead: 0, cacheWrite: 0 }, outputTokens: { total: 20, text: 20, reasoning: 0 } };
 
+/** Um passo do roteiro: um texto, ou ferramentas que a IA chama antes do próximo passo. */
+export type Passo = string | { ferramentas: { nome: string; entrada: unknown }[] };
+
 export interface IaFalsa extends Ia {
+  /** Texto, objeto (saída estruturada) ou, nas conversas, um roteiro: um passo por rodada da IA. */
   respostas: Partial<Record<MetodoIa, unknown>>;
+  /** O nome que a IA dá para uma conversa nova. */
+  titulo: string;
   chamadas: MetodoIa[];
   /** O último pedido de cada ação (o prompt que a IA recebeu). */
   pedidos: Partial<Record<MetodoIa, unknown>>;
@@ -15,23 +21,43 @@ export function iaFalsa(): IaFalsa {
   const respostas: Partial<Record<MetodoIa, unknown>> = {};
   const chamadas: MetodoIa[] = [];
   const pedidos: Partial<Record<MetodoIa, unknown>> = {};
-  return {
+  /** Em que passo do roteiro cada ação está (volta ao começo quando o teste troca o roteiro). */
+  const passos = new Map<unknown, number>();
+  const falsa: IaFalsa = {
     respostas,
+    titulo: "Conversa de teste",
     chamadas,
     pedidos,
     modelo: (metodo) =>
       new MockLanguageModelV4({
         doGenerate: async (opcoes) => {
           chamadas.push(metodo);
-          pedidos[metodo] = opcoes.prompt;
-          const r = respostas[metodo];
+          const sistema = JSON.stringify(opcoes.prompt.filter((m) => m.role === "system"));
+          const r = sistema.includes("título") ? falsa.titulo : respostas[metodo];
+          if (!sistema.includes("título")) pedidos[metodo] = opcoes.prompt;
           return { content: [{ type: "text", text: typeof r === "string" ? r : JSON.stringify(r ?? {}) }], finishReason: { unified: "stop", raw: "stop" }, usage: uso, warnings: [] };
         },
         doStream: async (opcoes) => {
           chamadas.push(metodo);
           pedidos[metodo] = opcoes.prompt;
-          const texto = String(respostas[metodo] ?? "");
-          const pedacos = texto.match(/[\s\S]{1,12}/g) ?? [];
+          const r = respostas[metodo];
+          let passo: Passo = String(r ?? "");
+          if (Array.isArray(r)) {
+            const i = passos.get(r) ?? 0;
+            passos.set(r, i + 1);
+            passo = (r[i] as Passo | undefined) ?? "";
+          }
+          if (typeof passo !== "string") {
+            const i = passos.get(r) ?? 0;
+            return {
+              stream: convertArrayToReadableStream([
+                { type: "stream-start", warnings: [] },
+                ...passo.ferramentas.map((f, n) => ({ type: "tool-call" as const, toolCallId: `chamada-${i}-${n}`, toolName: f.nome, input: JSON.stringify(f.entrada) })),
+                { type: "finish", finishReason: { unified: "tool-calls", raw: "tool_calls" }, usage: uso },
+              ]),
+            };
+          }
+          const pedacos = passo.match(/[\s\S]{1,12}/g) ?? [];
           return {
             stream: convertArrayToReadableStream([
               { type: "stream-start", warnings: [] },
@@ -45,4 +71,5 @@ export function iaFalsa(): IaFalsa {
       }),
     transcrever: async () => "transcrição",
   };
+  return falsa;
 }
