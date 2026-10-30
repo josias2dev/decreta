@@ -1,4 +1,4 @@
-import { createRootRoute, createRoute, createRouter, Outlet, redirect } from "@tanstack/react-router";
+import { createRootRoute, createRoute, createRouter, Outlet } from "@tanstack/react-router";
 import { AppLayout } from "./componentes/moldura";
 import { NaoEncontrada } from "./componentes/nao-encontrada";
 import type { Quando, SituacaoPublicacao } from "./lib/tipos";
@@ -13,6 +13,7 @@ import { ModelosPage } from "./paginas/modelos";
 import { EntrarPage } from "./paginas/entrar";
 import { EquipePage } from "./paginas/equipe";
 import { HojePage } from "./paginas/hoje";
+import { InicioPage } from "./paginas/inicio";
 import { MaisPage } from "./paginas/mais";
 import { NegociosPage } from "./paginas/negocios";
 import { PecaPage } from "./paginas/peca";
@@ -47,15 +48,11 @@ const redefinirRoute = createRoute({
   component: RedefinirSenhaPage,
 });
 
+// decreta.site: a landing para quem chega de fora; quem tem sessão segue para /hoje.
+const inicioRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: InicioPage });
+
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
-const indexRoute = createRoute({
-  getParentRoute: () => appRoute,
-  path: "/",
-  beforeLoad: () => {
-    throw redirect({ to: "/hoje" });
-  },
-});
 const hojeRoute = createRoute({ getParentRoute: () => appRoute, path: "/hoje", component: HojePage });
 const prazosRoute = createRoute({
   getParentRoute: () => appRoute,
@@ -127,11 +124,11 @@ const contaRoute = createRoute({ getParentRoute: () => appRoute, path: "/conta",
 const maisRoute = createRoute({ getParentRoute: () => appRoute, path: "/mais", component: MaisPage });
 
 const routeTree = rootRoute.addChildren([
+  inicioRoute,
   entrarRoute,
   conviteRoute,
   redefinirRoute,
   appRoute.addChildren([
-    indexRoute,
     hojeRoute,
     prazosRoute,
     prazoRoute,

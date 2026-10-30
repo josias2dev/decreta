@@ -1,35 +1,76 @@
 /** Entrar: e-mail e senha, o código da verificação em duas etapas e o "esqueci a senha". */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useSearch } from "@tanstack/react-router";
+import { Link, useRouter, useSearch } from "@tanstack/react-router";
+import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Marca } from "@/componentes/marca";
+import { FundoVivo, useCorDaBarra } from "@/componentes/fundo";
+import { LogoCompleta } from "@/componentes/marca";
 import { Botao, Campo, Faixa } from "@/componentes/ui";
 import { authCall, authClient } from "@/lib/auth";
 import { euQuery } from "@/lib/consultas";
+import { cn } from "@/lib/util";
 
+/** A moldura das telas de acesso: o fundo escuro do hero da landing, a marca grande e o cartão. */
 export function CaixaDeEntrada({ titulo, sub, children, pe }: { titulo: string; sub?: ReactNode; children: ReactNode; pe?: ReactNode }) {
+  useCorDaBarra("#0b0b0f");
   return (
-    <div className="dc dc-entrada">
-      <div className="dc-entrada__caixa">
-        <div className="dc-entrada__marca">
-          <Marca />
+    <div className="lp dc lp-entrar" data-theme="escuro">
+      <FundoVivo />
+      <Link className="lp-entrar__site" to="/">
+        <ArrowLeft aria-hidden />
+        decreta.site
+      </Link>
+      <main className="lp-entrar__meio">
+        <div className="lp-entrar__marca lp-e">
+          <LogoCompleta className="lp-entrar__logo" />
         </div>
-        <section className="dc-painel">
-          <div className="dc-painel__corpo">
-            <div className="flex flex-col gap-1">
-              <h1 className="dc-h1" style={{ fontSize: 22, lineHeight: "28px" }}>
-                {titulo}
-              </h1>
-              {sub && <p className="dc-sub m-0">{sub}</p>}
-            </div>
-            {children}
+        <section className="lp-cartao-entrar lp-e lp-e--2">
+          <div>
+            <h1 className="lp-cartao-entrar__titulo">{titulo}</h1>
+            {sub && <p className="lp-cartao-entrar__sub">{sub}</p>}
           </div>
+          {children}
+          {pe && <div className="lp-cartao-entrar__pe">{pe}</div>}
         </section>
-        {pe && <div className="flex justify-center text-[13px] text-[var(--tinta-2)]">{pe}</div>}
-      </div>
+      </main>
+      <footer className="lp-entrar__rodape">
+        <span className="lp-seguro">
+          <Lock aria-hidden />
+          Conexão segura · verificação em duas etapas
+        </span>
+        <span>© 2026 Decreta</span>
+      </footer>
     </div>
   );
 }
+
+/** Seis casas para o código do app autenticador. Por baixo é um campo só: colar e o preenchimento automático funcionam. */
+function CodigoDeSeis({ valor, aoMudar }: { valor: string; aoMudar: (v: string) => void }) {
+  const [foco, setFoco] = useState(false);
+  return (
+    <div className="lp-digitos">
+      {Array.from({ length: 6 }, (_, i) => (
+        <span key={i} className={cn("lp-digito", foco && i === Math.min(valor.length, 5) && "is-foco")} aria-hidden>
+          {valor[i] ?? ""}
+        </span>
+      ))}
+      <input
+        id="en-codigo"
+        className="lp-digitos__campo"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        aria-label="Código de 6 números"
+        value={valor}
+        onChange={(e) => aoMudar(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        onFocus={() => setFoco(true)}
+        onBlur={() => setFoco(false)}
+        autoFocus
+      />
+    </div>
+  );
+}
+
+const Seta = () => <ArrowRight className="lp-seta" aria-hidden />;
 
 type Etapa = "senha" | "codigo" | "reserva" | "esqueci" | "enviado";
 
@@ -89,20 +130,33 @@ export function EntrarPage() {
 
   if (etapa === "codigo" || etapa === "reserva") {
     return (
-      <CaixaDeEntrada titulo="Código de verificação" sub={etapa === "codigo" ? "Abra o app autenticador e digite os 6 números do Decreta." : "Digite um dos códigos de recuperação que você guardou."}>
+      <CaixaDeEntrada
+        titulo="Código de verificação"
+        sub={etapa === "codigo" ? "Abra o app autenticador e digite os 6 números do Decreta." : "Digite um dos códigos de recuperação que você guardou."}
+        pe={
+          <button type="button" className="lp-link-sm lp-link-sm--neutro" onClick={() => (setCodigo(""), setErro(null), setEtapa("senha"))}>
+            Voltar para entrar
+          </button>
+        }
+      >
         <form className="dc-form" onSubmit={verificar}>
-          <Campo rotulo={etapa === "codigo" ? "Código" : "Código de recuperação"} htmlFor="en-codigo">
-            <input id="en-codigo" inputMode={etapa === "codigo" ? "numeric" : "text"} autoComplete="one-time-code" value={codigo} onChange={(e) => setCodigo(e.target.value)} autoFocus />
-          </Campo>
-          <label className="dc-opcao">
-            <input type="checkbox" className="dc-checa" checked={confiar} onChange={(e) => setConfiar(e.target.checked)} />
+          {etapa === "codigo" ? (
+            <CodigoDeSeis valor={codigo} aoMudar={setCodigo} />
+          ) : (
+            <Campo rotulo="Código de recuperação" htmlFor="en-codigo">
+              <input id="en-codigo" autoComplete="one-time-code" value={codigo} onChange={(e) => setCodigo(e.target.value)} autoFocus />
+            </Campo>
+          )}
+          <label className="lp-opcao">
+            <input type="checkbox" checked={confiar} onChange={(e) => setConfiar(e.target.checked)} />
             Não pedir de novo neste aparelho por 30 dias
           </label>
           {erro && <Faixa tipo="erro">{erro}</Faixa>}
-          <Botao type="submit" variante="primaria" bloco ocupado={ocupado} disabled={!codigo.trim()}>
+          <Botao type="submit" variante="primaria" bloco ocupado={ocupado} disabled={etapa === "codigo" ? codigo.length < 6 : !codigo.trim()}>
             Entrar
+            <Seta />
           </Botao>
-          <button type="button" className="dc-link self-center text-[13px]" onClick={() => (setCodigo(""), setErro(null), setEtapa(etapa === "codigo" ? "reserva" : "codigo"))}>
+          <button type="button" className="lp-link-sm self-center" onClick={() => (setCodigo(""), setErro(null), setEtapa(etapa === "codigo" ? "reserva" : "codigo"))}>
             {etapa === "codigo" ? "Perdi o celular: usar um código de recuperação" : "Usar o app autenticador"}
           </button>
         </form>
@@ -126,7 +180,7 @@ export function EntrarPage() {
             </Botao>
           </form>
         )}
-        <button type="button" className="dc-link self-center text-[13px]" onClick={() => (setErro(null), setEtapa("senha"))}>
+        <button type="button" className="lp-link-sm lp-link-sm--neutro self-center" onClick={() => (setErro(null), setEtapa("senha"))}>
           Voltar para entrar
         </button>
       </CaixaDeEntrada>
@@ -137,18 +191,22 @@ export function EntrarPage() {
     <CaixaDeEntrada titulo="Entrar no Decreta" sub="Prazos, publicações e processos do escritório." pe="Conta nova só por convite de um sócio do escritório.">
       <form className="dc-form" onSubmit={entrar}>
         <Campo rotulo="E-mail" htmlFor="en-email">
-          <input id="en-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus={!email} />
+          <input id="en-email" type="email" autoComplete="email" placeholder="voce@escritorio.adv.br" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus={!email} />
         </Campo>
-        <Campo rotulo="Senha" htmlFor="en-senha">
+        <div className="dc-campo">
+          <div className="lp-campo__linha">
+            <label htmlFor="en-senha">Senha</label>
+            <button type="button" className="lp-link-sm" onClick={() => (setErro(null), setEtapa("esqueci"))}>
+              Esqueci a senha
+            </button>
+          </div>
           <input id="en-senha" type="password" autoComplete="current-password" value={senha} onChange={(e) => setSenha(e.target.value)} autoFocus={!!email} />
-        </Campo>
+        </div>
         {erro && <Faixa tipo="erro">{erro}</Faixa>}
         <Botao type="submit" variante="primaria" bloco ocupado={ocupado} disabled={!email.includes("@") || !senha}>
           Entrar
+          <Seta />
         </Botao>
-        <button type="button" className="dc-link self-center text-[13px]" onClick={() => (setErro(null), setEtapa("esqueci"))}>
-          Esqueci a senha
-        </button>
       </form>
     </CaixaDeEntrada>
   );

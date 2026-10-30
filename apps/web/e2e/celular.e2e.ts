@@ -4,6 +4,16 @@ import { abrir, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio
 
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 
+test("landing no celular: Entrar e Pedir acesso no topo, sem rolar para o lado", async ({ page }) => {
+  const api = new ApiFalsa();
+  api.logado = false;
+  await abrir(page, "/", api);
+  const topo = page.locator(".lp-topo");
+  await expect(topo.getByRole("link", { name: "Entrar" })).toBeInViewport();
+  await expect(topo.getByRole("link", { name: "Pedir acesso" })).toBeInViewport();
+  expect(await sobraNaLateral(page)).toBe(0);
+});
+
 test("Hoje: os cinco números numa linha só, dentro da tela", async ({ page }) => {
   await abrir(page, "/hoje");
   const contadores = page.getByLabel("Números do dia").locator(".dc-contador");
