@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buscarNoDataJud, buscarNoDjen, ErroDjen, instante, lerComunicacao, textoLimpo } from "../src/index.ts";
+import { buscarDjenDoProcesso, buscarNoDataJud, buscarNoDjen, comarcaDoOrgao, ErroDjen, instante, lerComunicacao, nomeDoMunicipio, nomeDoSistema, orgaoSemComarca, partesDoDjen, textoLimpo, type ComunicacaoDjen } from "../src/index.ts";
 import datajud from "./fixtures/datajud.json";
 import djen from "./fixtures/djen.json";
 
@@ -89,7 +89,7 @@ describe("DataJud", () => {
       auth: "APIKey chave-publica",
       body: { query: { match: { numeroProcesso: "50043212520268240038" } } },
     });
-    expect(p).toMatchObject({ classe: "Procedimento Comum Cível", orgao: "2ª Vara Cível da Comarca de Joinville", assunto: "Seguro", distribuidoEm: "2026-02-10", sigilo: false });
+    expect(p).toMatchObject({ classe: "Procedimento Comum Cível", orgao: "2ª Vara Cível da Comarca de Joinville", assunto: "Seguro", distribuidoEm: "2026-02-10", sigilo: false, sistema: "eproc", municipioIbge: 4209102 });
     expect(p!.movimentos.map((m) => m.titulo)).toEqual(["Distribuição", "Juntada de laudo pericial", "Petição"]);
     expect(p!.movimentos[0]).toMatchObject({ codigo: 26, descricao: "Sorteio", chave: "datajud:26:2026-02-10T09:30:00.000Z" });
   });
@@ -103,5 +103,102 @@ describe("DataJud", () => {
     expect(instante("20260210093000")).toBe("2026-02-10T12:30:00.000Z");
     expect(instante("2026-10-21T10:00:00.000Z")).toBe("2026-10-21T10:00:00.000Z");
     expect(instante("lixo")).toBeNull();
+  });
+});
+
+describe("sistema e comarca", () => {
+  test("o nome do sistema como o tribunal escreve", () => {
+    expect(nomeDoSistema("Pje")).toBe("PJe");
+    expect(nomeDoSistema("Eproc")).toBe("eproc");
+    expect(nomeDoSistema("SAJ")).toBe("e-SAJ");
+    expect(nomeDoSistema("Outros")).toBeNull();
+    expect(nomeDoSistema(undefined)).toBeNull();
+  });
+
+  test("a cidade escrita no nome do órgão, e só quando é cidade", () => {
+    expect(comarcaDoOrgao("2ª Vara Cível da Comarca de Joinville")).toBe("Joinville");
+    expect(comarcaDoOrgao("1ª VARA DO TRABALHO DE JARAGUÁ DO SUL")).toBe("Jaraguá do Sul");
+    expect(comarcaDoOrgao("Foro Regional de Santo Amaro")).toBe("Santo Amaro");
+    expect(comarcaDoOrgao("Subseção Judiciária de Itajaí")).toBe("Itajaí");
+    expect(comarcaDoOrgao("Blumenau - 3ª Vara Cível")).toBe("Blumenau");
+    expect(comarcaDoOrgao("Vara da Fazenda Pública")).toBeNull();
+    expect(comarcaDoOrgao(null)).toBeNull();
+  });
+
+  test("o órgão sem a cidade, para ir ao lado da comarca", () => {
+    expect(orgaoSemComarca("2ª Vara Cível da Comarca de Joinville")).toBe("2ª Vara Cível");
+    expect(orgaoSemComarca("Blumenau - 3ª Vara Cível")).toBe("3ª Vara Cível");
+    expect(orgaoSemComarca("1ª Vara do Trabalho de Jaraguá do Sul")).toBe("1ª Vara do Trabalho de Jaraguá do Sul");
+    expect(orgaoSemComarca(null)).toBeNull();
+  });
+
+  test("cidade pelo código IBGE, uma consulta só por código", async () => {
+    const urls: string[] = [];
+    const f = (async (url: string) => {
+      urls.push(url);
+      return resposta({ id: 4208203, nome: "Itajaí" });
+    }) as unknown as typeof fetch;
+    expect(await nomeDoMunicipio(4208203, { fetch: f })).toBe("Itajaí");
+    expect(await nomeDoMunicipio(4208203, { fetch: f })).toBe("Itajaí");
+    expect(urls).toEqual(["https://servicodados.ibge.gov.br/api/v1/localidades/municipios/4208203"]);
+    expect(await nomeDoMunicipio(1, { fetch: (async () => resposta({}, 500)) as unknown as typeof fetch })).toBeNull();
+    expect(await nomeDoMunicipio(2, { fetch: (async () => Promise.reject(new Error("fora"))) as unknown as typeof fetch })).toBeNull();
+  });
+});
+
+describe("partes pelo DJEN", () => {
+  const comunicacao = (c: Partial<ComunicacaoDjen>): ComunicacaoDjen => ({
+    idExterno: crypto.randomUUID(),
+    disponibilizadaEm: "2026-10-28",
+    tribunal: "TJSC",
+    orgao: "2ª Vara Cível da Comarca de Joinville",
+    tipoComunicacao: "Intimação",
+    tipoDocumento: null,
+    classe: "Procedimento Comum Cível",
+    cnj: "5004321-25.2026.8.24.0038",
+    texto: "",
+    link: null,
+    destinatarios: [],
+    advogados: [],
+    ...c,
+  });
+
+  test("busca pelo número, sem máscara", async () => {
+    const urls: string[] = [];
+    const lidas = await buscarDjenDoProcesso("5004321-25.2026.8.24.0038", {
+      fetch: (async (url: URL) => {
+        urls.push(url.toString());
+        return resposta(djen);
+      }) as unknown as typeof fetch,
+      dormir: async () => {},
+    });
+    expect(urls[0]).toContain("numeroProcesso=50043212520268240038");
+    expect(urls[0]).not.toContain("numeroOab");
+    expect(lidas).toHaveLength(2);
+  });
+
+  test("junta as partes, dá a cada lado os advogados dele e acha o lado da equipe", () => {
+    const r = partesDoDjen(
+      [
+        comunicacao({ destinatarios: [{ nome: "Marina Duarte", polo: "ativo" }], advogados: [{ nome: "Beatriz Souza", oab: "41233", uf: "SC" }] }),
+        comunicacao({ destinatarios: [{ nome: "Seguradora Alfa S.A.", polo: "passivo" }], advogados: [{ nome: "Otávio Reis", oab: "30111", uf: "SC" }] }),
+        // As duas partes juntas: os advogados não dizem de quem são.
+        comunicacao({ disponibilizadaEm: "2026-10-29", orgao: "Gabinete", destinatarios: [{ nome: "MARINA DUARTE", polo: "ativo" }, { nome: "Seguradora Alfa S.A.", polo: "passivo" }], advogados: [{ nome: "Perito Qualquer" }] }),
+      ],
+      [{ numero: "41.233", uf: "sc" }],
+    );
+    expect(r.partes).toEqual([
+      { nome: "Marina Duarte", polo: "ativo", advogados: [{ nome: "Beatriz Souza", oab: "41233", uf: "SC" }] },
+      { nome: "Seguradora Alfa S.A.", polo: "passivo", advogados: [{ nome: "Otávio Reis", oab: "30111", uf: "SC" }] },
+    ]);
+    expect(r.poloDaEquipe).toBe("ativo");
+    expect(r).toMatchObject({ orgao: "Gabinete", classe: "Procedimento Comum Cível", publicacoes: 3 });
+  });
+
+  test("sem a OAB da equipe, o lado fica em aberto", () => {
+    const r = partesDoDjen([comunicacao({ destinatarios: [{ nome: "Padaria Bom Grão Ltda.", polo: "passivo" }], advogados: [{ nome: "Outra Pessoa", oab: "1", uf: "PR" }] })], [{ numero: "41233", uf: "SC" }]);
+    expect(r.poloDaEquipe).toBeNull();
+    expect(r.partes).toHaveLength(1);
+    expect(partesDoDjen([]).partes).toEqual([]);
   });
 });

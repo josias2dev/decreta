@@ -135,6 +135,8 @@ export interface OpcoesDjen {
   /** Teto de páginas por busca: um advogado com mais que isso num dia é exceção. */
   maxPaginas?: number;
   dormir?: (ms: number) => Promise<void>;
+  /** Espera por página, em ms. */
+  timeout?: number;
 }
 
 export class ErroDjen extends Error {
@@ -148,6 +150,21 @@ export class ErroDjen extends Error {
 
 /** Todas as comunicações da OAB no período. */
 export async function buscarNoDjen(busca: BuscaDjen, opcoes: OpcoesDjen = {}): Promise<ComunicacaoDjen[]> {
+  return paginar(
+    { numeroOab: busca.oab.replace(/\D/g, ""), ufOab: busca.uf.toUpperCase(), dataDisponibilizacaoInicio: busca.de, dataDisponibilizacaoFim: busca.ate },
+    opcoes,
+  );
+}
+
+/**
+ * As comunicações de um processo, pelo número: é daqui que saem as partes e os
+ * advogados (o DataJud não traz nomes). Processo sem publicação volta vazio.
+ */
+export async function buscarDjenDoProcesso(cnj: string, opcoes: OpcoesDjen = {}): Promise<ComunicacaoDjen[]> {
+  return paginar({ numeroProcesso: limparCnj(cnj) }, { maxPaginas: 3, ...opcoes });
+}
+
+async function paginar(filtro: Record<string, string>, opcoes: OpcoesDjen): Promise<ComunicacaoDjen[]> {
   const fetchImpl = opcoes.fetch ?? fetch;
   const dormir = opcoes.dormir ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
   const porPagina = opcoes.porPagina ?? 100;
@@ -157,16 +174,13 @@ export async function buscarNoDjen(busca: BuscaDjen, opcoes: OpcoesDjen = {}): P
 
   for (let pagina = 1; pagina <= maxPaginas; pagina++) {
     const url = new URL(DJEN_URL);
-    url.searchParams.set("numeroOab", busca.oab.replace(/\D/g, ""));
-    url.searchParams.set("ufOab", busca.uf.toUpperCase());
-    url.searchParams.set("dataDisponibilizacaoInicio", busca.de);
-    url.searchParams.set("dataDisponibilizacaoFim", busca.ate);
+    for (const [k, v] of Object.entries(filtro)) url.searchParams.set(k, v);
     url.searchParams.set("pagina", String(pagina));
     url.searchParams.set("itensPorPagina", String(porPagina));
 
     let res: Response | null = null;
     for (let tentativa = 0; tentativa < 4; tentativa++) {
-      res = await fetchImpl(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(30_000) });
+      res = await fetchImpl(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(opcoes.timeout ?? 30_000) });
       if (res.status !== 429 && res.status < 500) break;
       await dormir(2_000 * 2 ** tentativa);
     }
@@ -186,4 +200,81 @@ export async function buscarNoDjen(busca: BuscaDjen, opcoes: OpcoesDjen = {}): P
     await dormir(opcoes.pausa ?? 1_000);
   }
   return saida;
+}
+
+export interface AdvogadoDjen {
+  nome: string;
+  oab?: string;
+  uf?: string;
+}
+
+export interface ParteDjen {
+  nome: string;
+  polo: "ativo" | "passivo" | "terceiro";
+  /** Os advogados que receberam intimação junto com esta parte, e só com ela. */
+  advogados: AdvogadoDjen[];
+}
+
+export interface PartesDoDjen {
+  partes: ParteDjen[];
+  /** O lado em que a OAB da equipe aparece, quando dá para dizer. */
+  poloDaEquipe: "ativo" | "passivo" | null;
+  orgao: string | null;
+  classe: string | null;
+  publicacoes: number;
+}
+
+const chaveDoNome = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase("pt-BR")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const chaveDaOab = (a: AdvogadoDjen) => (a.oab ? `${a.oab.replace(/\D/g, "")}/${(a.uf ?? "").toUpperCase()}` : chaveDoNome(a.nome));
+
+/**
+ * Junta as partes de todas as comunicações. O DJEN não diz de quem é cada
+ * advogado; quando a comunicação vai a um lado só, os advogados dela são desse
+ * lado. Com a OAB da equipe entre eles, esse é o lado do cliente.
+ */
+export function partesDoDjen(itens: ComunicacaoDjen[], oabsDaEquipe: { numero: string; uf: string }[] = []): PartesDoDjen {
+  const equipe = new Set(oabsDaEquipe.map((o) => `${o.numero.replace(/\D/g, "")}/${o.uf.toUpperCase()}`));
+  const partes = new Map<string, { nome: string; polos: Map<string, number>; advogados: Map<string, AdvogadoDjen> }>();
+  const votos = { ativo: 0, passivo: 0 };
+  for (const i of itens) {
+    const polos = new Set<string>();
+    for (const d of i.destinatarios) {
+      const polo = d.polo === "ativo" || d.polo === "passivo" ? d.polo : "terceiro";
+      polos.add(polo);
+      const chave = chaveDoNome(d.nome);
+      if (!chave) continue;
+      const p = partes.get(chave) ?? { nome: d.nome, polos: new Map(), advogados: new Map() };
+      p.polos.set(polo, (p.polos.get(polo) ?? 0) + 1);
+      partes.set(chave, p);
+    }
+    if (polos.size !== 1) continue;
+    const [polo] = polos;
+    for (const d of i.destinatarios) {
+      const p = partes.get(chaveDoNome(d.nome));
+      for (const a of i.advogados) if (p && a.nome) p.advogados.set(chaveDaOab(a), a);
+    }
+    if ((polo === "ativo" || polo === "passivo") && i.advogados.some((a) => equipe.has(chaveDaOab(a)))) votos[polo]++;
+  }
+  const lista: ParteDjen[] = [...partes.values()].map((p) => ({
+    nome: p.nome,
+    polo: [...p.polos.entries()].sort((a, b) => b[1] - a[1])[0]![0] as ParteDjen["polo"],
+    advogados: [...p.advogados.values()],
+  }));
+  const ordem = { ativo: 0, passivo: 1, terceiro: 2 };
+  lista.sort((a, b) => ordem[a.polo] - ordem[b.polo]);
+  const recente = [...itens].sort((a, b) => b.disponibilizadaEm.localeCompare(a.disponibilizadaEm))[0];
+  return {
+    partes: lista,
+    poloDaEquipe: votos.ativo > votos.passivo ? "ativo" : votos.passivo > votos.ativo ? "passivo" : null,
+    orgao: recente?.orgao ?? null,
+    classe: recente?.classe ?? null,
+    publicacoes: itens.length,
+  };
 }

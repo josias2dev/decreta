@@ -1,0 +1,47 @@
+{
+  "path": "/processos/consulta?cnj=5009876-23.2026.8.24.0038",
+  "corpo": {
+    "exemplo": true,
+    "fontes": {
+      "datajud": "achou",
+      "djen": "achou"
+    },
+    "classe": "Execução de Título Extrajudicial",
+    "assunto": "Cheque",
+    "orgao": "1ª Vara Cível",
+    "comarca": "São Bento do Sul",
+    "sistema": "eproc",
+    "distribuidoEm": "2026-05-26",
+    "segredo": false,
+    "movimentacoes": 10,
+    "ultimaMovimentacao": {
+      "em": "2026-09-27T15:20:00.000Z",
+      "titulo": "Juntada de petição"
+    },
+    "cnj": "5009876-23.2026.8.24.0038",
+    "tribunal": "TJSC",
+    "cadastrado": null,
+    "partes": [
+      {
+        "nome": "Débora Amaral",
+        "polo": "ativo",
+        "advogados": "Beatriz Souza (OAB/SC 41233)",
+        "cliente": {
+          "id": "15327cef-4a65-49c1-a7ef-2808410a780e",
+          "nome": "Débora Amaral"
+        }
+      },
+      {
+        "nome": "Metalúrgica Vento Sul Ltda.",
+        "polo": "passivo",
+        "advogados": "Simone Probst (OAB/SC 25914)",
+        "cliente": null
+      }
+    ],
+    "poloCliente": "ativo",
+    "cliente": {
+      "id": "15327cef-4a65-49c1-a7ef-2808410a780e",
+      "nome": "Débora Amaral"
+    }
+  }
+}

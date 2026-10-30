@@ -162,6 +162,14 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["processo", p.id] }),
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
+  const doDiario = useMutation({
+    mutationFn: () => api<{ novas: number; atualizadas: number; encontradas: number }>(`/processos/${p.id}/partes/djen`, { method: "POST" }),
+    onSuccess: (r) => {
+      avisar(!r.encontradas ? "Nenhuma publicação deste processo no Diário ainda." : r.novas ? `${r.novas === 1 ? "1 parte nova" : `${r.novas} partes novas`} do Diário.` : r.atualizadas ? "Advogados das partes atualizados pelo Diário." : "As partes já estavam todas aqui.");
+      void qc.invalidateQueries({ queryKey: ["processo", p.id] });
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
 
   const r = p.resumo;
   const n = p.novidades.length;
@@ -220,7 +228,22 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
   );
 
   const pessoas = (
-    <Painel titulo="Partes" acao={<Botao variante="fantasma" pequeno onClick={() => setNovaParte(true)}>Adicionar</Botao>} corpo={false}>
+    <Painel
+      titulo="Partes"
+      acao={
+        <div className="dc-linha-acoes">
+          {p.cnj && !eu.data?.escritorio.demonstracao && (
+            <Botao variante="fantasma" pequeno onClick={() => doDiario.mutate()} ocupado={doDiario.isPending} title="Partes e advogados das publicações do Diário de Justiça">
+              Trazer do Diário
+            </Botao>
+          )}
+          <Botao variante="fantasma" pequeno onClick={() => setNovaParte(true)}>
+            Adicionar
+          </Botao>
+        </div>
+      }
+      corpo={false}
+    >
       {p.partes.length ? (
         <div className="dc-linhas">
           {p.partes.map((pt: Parte) => (

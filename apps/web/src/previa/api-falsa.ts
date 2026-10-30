@@ -87,6 +87,12 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
     if (!d || !url) return json(404, { erro: "nao_encontrado" });
     return new Response(await (await fetchReal(url)).blob(), { headers: { "content-type": d.mime } });
   }
+  if (caminho === "/processos/consulta") {
+    // A consulta de verdade espera o DataJud e o DJEN: a prévia mostra o "buscando" e devolve o exemplo com o número digitado.
+    await new Promise((r) => setTimeout(r, 1600));
+    const exemplo = achar(caminho, new URLSearchParams()) as { cnj: string } | undefined;
+    if (exemplo) return json(200, { ...exemplo, cnj: url.searchParams.get("cnj") ?? exemplo.cnj });
+  }
   const corpo = achar(caminho, url.searchParams);
   return corpo === undefined ? json(404, { erro: "nao_encontrado", detalhe: "Esta tela não tem dados na prévia." }) : json(200, comFotos(corpo));
 }) as typeof fetch;

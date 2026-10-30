@@ -15,6 +15,8 @@ export const DATAJUD_URL = "https://api-publica.datajud.cnj.jus.br";
 
 const nomeado = z.object({ codigo: z.union([z.number(), z.string()]).optional(), nome: z.string().optional() }).loose();
 
+const orgaoSchema = nomeado.extend({ codigoMunicipioIBGE: z.union([z.number(), z.string()]).optional() });
+
 const movimentoSchema = z
   .object({
     codigo: z.union([z.number(), z.string()]).optional(),
@@ -29,7 +31,8 @@ const fonteSchema = z
     numeroProcesso: z.string().optional(),
     classe: nomeado.optional(),
     assuntos: z.array(nomeado).optional().catch([]),
-    orgaoJulgador: nomeado.optional(),
+    orgaoJulgador: orgaoSchema.optional(),
+    sistema: nomeado.optional(),
     dataAjuizamento: z.string().optional(),
     dataHoraUltimaAtualizacao: z.string().optional(),
     grau: z.string().optional(),
@@ -53,11 +56,24 @@ export interface ProcessoDataJud {
   classe: string | null;
   assunto: string | null;
   orgao: string | null;
+  /** Código IBGE da cidade do órgão julgador: vira a comarca (ver ibge.ts). */
+  municipioIbge: number | null;
+  /** "PJe", "eproc", "e-SAJ", "Projudi". */
+  sistema: string | null;
   grau: string | null;
   distribuidoEm: string | null;
   sigilo: boolean;
   atualizadoEm: string | null;
   movimentos: MovimentoDataJud[];
+}
+
+const SISTEMAS: Record<string, string> = { pje: "PJe", eproc: "eproc", saj: "e-SAJ", esaj: "e-SAJ", "e-saj": "e-SAJ", projudi: "Projudi", tucujuris: "Tucujuris", sei: "SEI" };
+
+/** O nome do sistema como o tribunal escreve ("Pje" → "PJe"). "Outros" e "Inexistente" não dizem nada. */
+export function nomeDoSistema(nome: string | undefined): string | null {
+  const chave = (nome ?? "").trim().toLocaleLowerCase("pt-BR");
+  if (!chave || /^(outros?|inexistente|n[ãa]o informado)$/.test(chave)) return null;
+  return SISTEMAS[chave] ?? SISTEMAS[chave.split(/\s+/)[0]!] ?? nome!.trim();
 }
 
 /** "20260115103000" ou ISO → ISO. */
@@ -106,6 +122,8 @@ export function lerProcessoDataJud(bruto: unknown): ProcessoDataJud | null {
     classe: p.classe?.nome ? nomeProprio(p.classe.nome) : null,
     assunto: p.assuntos?.[0]?.nome ? caixaDeFrase(p.assuntos[0].nome) : null,
     orgao: p.orgaoJulgador?.nome ? nomeProprio(p.orgaoJulgador.nome) : null,
+    municipioIbge: Number(p.orgaoJulgador?.codigoMunicipioIBGE) || null,
+    sistema: nomeDoSistema(p.sistema?.nome),
     grau: p.grau ?? null,
     distribuidoEm: distribuido ? distribuido.slice(0, 10) : null,
     sigilo: (p.nivelSigilo ?? 0) > 0,

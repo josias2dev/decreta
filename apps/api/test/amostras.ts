@@ -5,6 +5,7 @@
  *   TEST_OWNER_URL=... bun apps/api/test/amostras.ts
  */
 import { setSystemTime } from "bun:test";
+import { dvCnj } from "@decreta/core";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createTestDatabase } from "@decreta/db/testing";
@@ -61,6 +62,8 @@ try {
   const processoId = pubMarina.processoId;
   await guardar("processos", "/processos");
   await guardar("processo", `/processos/${processoId}`);
+  // Um número que não está no escritório: a consulta da demonstração responde com o exemplo inventado.
+  await guardar("consultaCnj", `/processos/consulta?cnj=${encodeURIComponent(`5009876-${dvCnj("5009876", "2026", "8", "24", "0038")}.2026.8.24.0038`)}`);
   await guardar("movimentacoes", `/processos/${processoId}/movimentacoes`);
   await guardar("pecasDoProcesso", `/processos/${processoId}/pecas`);
   await guardar("documentos", `/documentos?processo=${processoId}`);

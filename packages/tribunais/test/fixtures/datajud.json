@@ -14,7 +14,7 @@
           "grau": "G1",
           "dataAjuizamento": "20260210093000",
           "nivelSigilo": 0,
-          "orgaoJulgador": { "codigo": 1234, "nome": "2ª VARA CÍVEL DA COMARCA DE JOINVILLE" },
+          "orgaoJulgador": { "codigo": 1234, "nome": "2ª VARA CÍVEL DA COMARCA DE JOINVILLE", "codigoMunicipioIBGE": 4209102 },
           "assuntos": [{ "codigo": 7621, "nome": "Seguro" }],
           "movimentos": [
             { "codigo": 85, "nome": "Petição", "dataHora": "2026-10-28T13:40:00.000Z" },

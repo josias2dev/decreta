@@ -104,6 +104,16 @@
 .dc-faixa--ok { background: var(--cumprido-suave); color: var(--cumprido); }
 .dc-faixa--ia { background: var(--acento-suave); color: var(--acento); }
 .dc-faixa svg { width: 16px; height: 16px; flex: none; }
+/* O que o tribunal mandou, no Novo processo */
+.dc-consulta { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--borda); border-radius: var(--radius-md); background: var(--superficie); }
+.dc-consulta--buscando { flex-direction: row; align-items: center; gap: var(--space-2); color: var(--tinta-2); font: 400 13px/18px var(--font-sans); }
+.dc-consulta--buscando svg { width: 16px; height: 16px; flex: none; }
+.dc-consulta__titulo { font: 600 12px/16px var(--font-sans); color: var(--tinta-2); }
+.dc-consulta__partes { display: flex; flex-direction: column; gap: var(--space-1); }
+.dc-consulta__parte { display: flex; align-items: center; gap: var(--space-2); padding: 6px var(--space-2); margin: 0 calc(-1 * var(--space-2)); border-radius: var(--radius-md); cursor: pointer; }
+.dc-consulta__parte:hover, .dc-consulta__parte.is-on { background: var(--superficie-2); }
+.dc-consulta__parte input { accent-color: var(--primaria); flex: none; }
+.dc-consulta__selo { flex: none; font: 500 12px/16px var(--font-sans); color: var(--cumprido); background: var(--cumprido-suave); padding: 2px 8px; border-radius: 999px; }
 .dc-separador { height: 1px; background: var(--borda); border: 0; margin: 0; }
 .dc-linha-acoes { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .dc-tabela tr[data-link] { cursor: pointer; }

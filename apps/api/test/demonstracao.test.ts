@@ -10,7 +10,7 @@ import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { atualizarDoDataJud, capturarDjen } from "../src/servicos/captura.ts";
-import { cnpjValido, cpfValido } from "@decreta/core";
+import { cnpjValido, cpfValido, dvCnj } from "@decreta/core";
 
 /** Um prazo da lista. */
 type Item = { tipo: string; processo: { titulo: string } };
@@ -66,6 +66,24 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     expect(ligar.status).toBe(403);
     const buscar = await app.request("/api/app/publicacoes/buscar", { method: "POST", headers: { cookie, origin: env.WEB_ORIGIN } });
     expect(buscar.status).toBe(409);
+  });
+
+  test("a consulta pelo número responde com um exemplo inventado, sem ir ao tribunal", async () => {
+    const cnj = `5012345-${dvCnj("5012345", "2026", "8", "24", "0038")}.2026.8.24.0038`;
+    const c = await call(`/processos/consulta?cnj=${cnj}`);
+    expect(c).toMatchObject({ cnj, tribunal: "TJSC", exemplo: true, cadastrado: null, fontes: { datajud: "achou", djen: "achou" }, sistema: "eproc" });
+    expect(c.comarca).toBeTruthy();
+    expect(c.partes).toHaveLength(2);
+    // O cliente do exemplo é um dos cadastrados, do lado da equipe.
+    expect(c.cliente).toEqual(c.partes[0].cliente);
+    expect(c.cliente).not.toBeNull();
+    expect(c.poloCliente).toBe(c.partes[0].polo);
+    expect(c.partes[0].advogados).toContain("Beatriz Souza (OAB/SC 41233)");
+    // Mesmo número, mesma resposta.
+    expect(await call(`/processos/consulta?cnj=${cnj}`)).toEqual(c);
+    const { itens } = await call("/processos");
+    const trazer = await app.request(`/api/app/processos/${itens[0].id}/partes/djen`, { method: "POST", headers: { cookie, origin: env.WEB_ORIGIN } });
+    expect(trazer.status).toBe(409);
   });
 
   test("documentos inventados têm verificadores válidos", () => {

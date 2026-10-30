@@ -3,12 +3,13 @@
  * do DataJud pelos processos ativos. Cada rodada fica em `capturas`, com o
  * que achou e o erro, para a tela de Publicações dizer quando foi a última.
  */
-import { dataDaPublicacao, limparCnj, nomeProprio, somarDias, tribunalDoCnj, type Dia } from "@decreta/core";
-import { capturas, equipe, escritorios, movimentacoes, organization, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
-import { buscarNoDataJud, buscarNoDjen, type ComunicacaoDjen, type OpcoesDjen } from "@decreta/tribunais";
+import { dataDaPublicacao, limparCnj, somarDias, tribunalDoCnj, type Dia } from "@decreta/core";
+import { capturas, equipe, escritorios, movimentacoes, organization, partes, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
+import { buscarNoDataJud, buscarNoDjen, orgaoSemComarca, partesDoDjen, type ComunicacaoDjen, type OpcoesDjen } from "@decreta/tribunais";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { calendarioDoEscritorio } from "./calendario.ts";
+import { comarcaDoDataJud, completarPartes } from "./consulta.ts";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
@@ -37,6 +38,7 @@ export async function gravarComunicacoes(tx: Tx, organizationId: string, oab: st
   const processoDoCnj = new Map(doEscritorio.map((p) => [p.cnj!, p.id]));
   const calendarios = new Map<string, Awaited<ReturnType<typeof calendarioDoEscritorio>>>();
   const novas: string[] = [];
+  const novasDoProcesso = new Map<string, ComunicacaoDjen[]>();
   for (const i of itens) {
     const tribunal = i.tribunal ?? (i.cnj ? tribunalDoCnj(i.cnj) : null) ?? "TJSC";
     let cal = calendarios.get(tribunal);
@@ -63,7 +65,16 @@ export async function gravarComunicacoes(tx: Tx, organizationId: string, oab: st
       })
       .onConflictDoNothing()
       .returning({ id: publicacoes.id });
-    if (linha[0]) novas.push(linha[0].id);
+    if (linha[0]) {
+      novas.push(linha[0].id);
+      const processoId = i.cnj ? processoDoCnj.get(i.cnj) : undefined;
+      if (processoId && i.destinatarios.length) novasDoProcesso.set(processoId, [...(novasDoProcesso.get(processoId) ?? []), i]);
+    }
+  }
+  // Ficha ainda sem a outra parte: as partes da publicação entram nela.
+  for (const [processoId, lista] of novasDoProcesso) {
+    const [{ n } = { n: 0 }] = await tx.select({ n: sql<number>`count(*)::int` }).from(partes).where(eq(partes.processoId, processoId));
+    if (n < 2) await completarPartes(tx, organizationId, processoId, partesDoDjen(lista).partes);
   }
   return novas;
 }
@@ -124,6 +135,7 @@ export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: st
     await withTenant(deps.db, organizationId, (tx) => tx.update(processos).set({ datajudEm: new Date() }).where(eq(processos.id, processoId)));
     return 0;
   }
+  const comarca = p.comarca ?? (await comarcaDoDataJud(dados, deps.fetch));
   return withTenant(deps.db, organizationId, async (tx) => {
     let novas = 0;
     for (const m of dados.movimentos) {
@@ -141,8 +153,10 @@ export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: st
         datajudEm: new Date(),
         classe: p.classe ?? dados.classe,
         assunto: p.assunto ?? dados.assunto,
-        orgao: p.orgao ?? (dados.orgao ? nomeProprio(dados.orgao) : null),
+        orgao: p.orgao ?? orgaoSemComarca(dados.orgao),
         distribuidoEm: p.distribuidoEm ?? dados.distribuidoEm,
+        comarca,
+        sistema: p.sistema ?? dados.sistema,
         tribunal: p.tribunal ?? tribunalDoCnj(p.cnj!),
         segredo: p.segredo || dados.sigilo,
         ultimaMovimentacaoEm: ultima && (!p.ultimaMovimentacaoEm || new Date(ultima) > p.ultimaMovimentacaoEm) ? new Date(ultima) : p.ultimaMovimentacaoEm,

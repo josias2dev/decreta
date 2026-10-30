@@ -1,5 +1,6 @@
 import { formatarCnj, hojeEm, lerCnj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
 import { alvaras, audiencias, clientes, documentos, movimentacoes, partes, pecas, prazos, processos, resultados, type Tx } from "@decreta/db";
+import { buscarDjenDoProcesso, partesDoDjen } from "@decreta/tribunais";
 import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, or, sql, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import { registrar } from "../auditoria.ts";
 import { naTela, ultimaAnalise } from "../servicos/analises.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { atualizarDoDataJud, autorDoAto } from "../servicos/captura.ts";
+import { comunicacoesGuardadas, completarPartes, consultarCnj, oabsDaEquipe } from "../servicos/consulta.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
@@ -37,6 +39,8 @@ const dadosDoProcesso = z.object({
   sistema: z.string().max(40).nullable().optional(),
   fase: z.string().max(200).nullable().optional(),
   valorCausa: z.string().regex(/^\d+(\.\d{1,2})?$/).nullable().optional(),
+  distribuidoEm: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  segredo: z.boolean().optional(),
   situacao: z.enum(["ativo", "suspenso", "arquivado", "encerrado"]).optional(),
   observacoes: z.string().max(5000).nullable().optional(),
   partes: z.array(parte).max(40).optional(),
@@ -155,6 +159,8 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
           sistema: b.sistema ?? (cnj && tribunalDoCnj(cnj) === "TJSC" ? "eproc" : null),
           fase: b.fase ?? null,
           valorCausa: b.valorCausa ?? null,
+          distribuidoEm: b.distribuidoEm ?? null,
+          segredo: b.segredo ?? false,
           observacoes: b.observacoes ?? null,
         })
         .returning({ id: processos.id });
@@ -164,6 +170,16 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     if (cnj) await deps.enfileirar({ nome: "processo.datajud", organizationId: c.get("orgId"), processoId: novo.id });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "processo.criado", detalhes: { processoId: novo.id, cnj }, ip: ip(c) }, deps.log);
     return c.json(novo, 201);
+  });
+
+  /**
+   * O que o tribunal sabe do número, para o Novo processo vir preenchido
+   * (DataJud e DJEN; na demonstração, um exemplo inventado). Não grava nada.
+   */
+  app.get("/processos/consulta", async (c) => {
+    const cnj = c.req.query("cnj") ?? "";
+    if (!lerCnj(cnj)) falha(422, "cnj_invalido", "Confira o número: o dígito verificador não bate.");
+    return c.json(await consultarCnj(deps.captura, c.get("orgId"), cnj, c.get("demonstracao")));
   });
 
   app.get("/processos/:id", async (c) => {
@@ -315,6 +331,32 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const parteId = id(c, "parte");
     await tenant(c, deps, (tx) => tx.delete(partes).where(and(eq(partes.id, parteId), eq(partes.processoId, processoId))));
     return c.json({ ok: true });
+  });
+
+  /**
+   * "Trazer partes do Diário": as partes e os advogados das publicações do
+   * processo, as guardadas e as do DJEN pelo número. Só acrescenta.
+   */
+  app.post("/processos/:id/partes/djen", async (c) => {
+    const processoId = id(c);
+    if (c.get("demonstracao")) falha(409, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");
+    const { cnj, guardadas, oabs } = await tenant(c, deps, async (tx) => {
+      const [p] = await tx.select({ cnj: processos.cnj }).from(processos).where(eq(processos.id, processoId));
+      if (!p) falha(404, "nao_encontrado");
+      return { cnj: p.cnj, guardadas: await comunicacoesGuardadas(tx, processoId), oabs: await oabsDaEquipe(tx) };
+    });
+    let doDjen: Awaited<ReturnType<typeof buscarDjenDoProcesso>> = [];
+    if (cnj) {
+      try {
+        doDjen = await buscarDjenDoProcesso(cnj, { fetch: deps.captura.fetch, ...deps.captura.djen, timeout: 20_000, maxPaginas: 2 });
+      } catch (err) {
+        deps.log("djen do processo falhou", { processoId, error: err instanceof Error ? err.message : String(err) });
+        if (!guardadas.length) falha(503, "djen_fora", "O Diário não respondeu agora. Tente de novo em alguns minutos.");
+      }
+    }
+    const { partes: achadas } = partesDoDjen([...guardadas, ...doDjen], oabs);
+    const r = await tenant(c, deps, (tx) => completarPartes(tx, c.get("orgId"), processoId, achadas));
+    return c.json({ ...r, encontradas: achadas.length });
   });
 
   /** Atualizar do DataJud agora (o botão da ficha). Tribunal fora do ar não derruba a tela. */

@@ -260,6 +260,30 @@ export interface Parte {
   documento: string | null;
 }
 
+/** O que o tribunal sabe do número (GET /processos/consulta), para o Novo processo vir preenchido. */
+export interface ConsultaDoCnj {
+  cnj: string;
+  tribunal: string | null;
+  cadastrado: { id: string; titulo: string } | null;
+  /** Demonstração: dados inventados. */
+  exemplo: boolean;
+  fontes: { datajud: SituacaoDaFonte; djen: SituacaoDaFonte };
+  classe: string | null;
+  assunto: string | null;
+  orgao: string | null;
+  comarca: string | null;
+  sistema: string | null;
+  distribuidoEm: string | null;
+  segredo: boolean;
+  movimentacoes: number;
+  ultimaMovimentacao: { em: string; titulo: string } | null;
+  partes: { nome: string; polo: "ativo" | "passivo" | "terceiro"; advogados: string | null; cliente: { id: string; nome: string } | null }[];
+  poloCliente: "ativo" | "passivo" | null;
+  cliente: { id: string; nome: string } | null;
+}
+
+export type SituacaoDaFonte = "achou" | "nao_achou" | "falhou" | "desligado";
+
 export interface Processo {
   id: string;
   titulo: string;
