@@ -44,6 +44,8 @@ interface ItemDoMenu {
   rotulo: string;
   icone: LucideIcon;
   n?: (m: Eu["menu"]) => { n: number; hoje?: boolean } | null;
+  /** A IA: o ícone fica em azul-tinta. */
+  ia?: boolean;
 }
 
 export const MENU: { titulo: string; itens: ItemDoMenu[] }[] = [
@@ -54,7 +56,7 @@ export const MENU: { titulo: string; itens: ItemDoMenu[] }[] = [
       { to: "/prazos", rotulo: "Prazos", icone: Hourglass, n: (m) => (m.prazos ? { n: m.prazos, hoje: m.prazosHoje > 0 } : null) },
       { to: "/publicacoes", rotulo: "Publicações", icone: Inbox, n: (m) => (m.publicacoes ? { n: m.publicacoes } : null) },
       { to: "/agenda", rotulo: "Agenda", icone: CalendarDays },
-      { to: "/perguntar", rotulo: "Perguntar", icone: Sparkles },
+      { to: "/perguntar", rotulo: "Perguntar", icone: Sparkles, ia: true },
     ],
   },
   {
@@ -84,6 +86,9 @@ const NAV_CELULAR: { to: Destino | "/mais"; rotulo: string; icone: LucideIcon }[
   { to: "/clientes", rotulo: "Clientes", icone: Users },
   { to: "/mais", rotulo: "Mais", icone: LayoutGrid },
 ];
+
+/** O atalho da busca como o teclado da pessoa mostra: ⌘K no Mac, Ctrl K no resto. */
+const ATALHO_BUSCA = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
 
 /** Telas do celular que têm ações próprias embaixo e não mostram a navegação. */
 const SEM_NAVEGACAO = [/^\/prazos\/[^/]+$/, /^\/publicacoes\/[^/]+$/, /^\/pecas/, /^\/perguntar/, /^\/audiencias\//];
@@ -171,40 +176,39 @@ function Moldura({ eu }: { eu: Eu }) {
               <Building2 />
             </span>
           )}
-          <span className="min-w-0">
-            <strong className="truncate">{eu.escritorio.nome}</strong>
-            <small>
-              Advocacia · {eu.escritorio.pessoas} {eu.escritorio.pessoas === 1 ? "pessoa" : "pessoas"}
-            </small>
-          </span>
+          <strong className="min-w-0">{eu.escritorio.nome}</strong>
         </div>
         <button type="button" className="dc-menu__busca" onClick={() => setBuscando(true)}>
           <Search />
           <span>Buscar</span>
-          <span className="dc-tecla">⌘K</span>
+          <span className="dc-tecla">{ATALHO_BUSCA}</span>
         </button>
-        {MENU.map((g) => (
-          <div key={g.titulo} className="dc-menu__grupo">
-            <span className="dc-menu__titulo">{g.titulo}</span>
-            {g.itens.map((i) => {
-              const n = i.n?.(eu.menu);
-              return (
-                <Link key={i.to} to={i.to} activeProps={{ className: "is-on" }} activeOptions={{ exact: false }}>
-                  <i.icone />
-                  {i.rotulo}
-                  {n && <span className={cn("dc-menu__n", n.hoje && "dc-menu__n--hoje")}>{numero(n.n)}</span>}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
-        <Link to="/conta" className="dc-menu__pe">
-          <Avatar pessoa={eu.usuario} />
-          <span className="min-w-0">
-            {eu.usuario.nome}
-            <small>{eu.usuario.cargo ?? "Equipe"}</small>
-          </span>
-        </Link>
+        <div className="dc-menu__lista">
+          {MENU.map((g) => (
+            <div key={g.titulo} className="dc-menu__grupo">
+              <span className="dc-menu__titulo">{g.titulo}</span>
+              {g.itens.map((i) => {
+                const n = i.n?.(eu.menu);
+                return (
+                  <Link key={i.to} to={i.to} className={cn(i.ia && "dc-menu__ia")} activeProps={{ className: "is-on" }} activeOptions={{ exact: false }}>
+                    <i.icone />
+                    {i.rotulo}
+                    {n && <span className={cn("dc-menu__n", n.hoje && "dc-menu__n--hoje")}>{numero(n.n)}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <div className="dc-menu__pe">
+          <Link to="/conta" className="dc-menu__conta">
+            <Avatar pessoa={eu.usuario} />
+            <span className="min-w-0">
+              <strong className="truncate">{eu.usuario.nome}</strong>
+              <small className="truncate">{eu.usuario.cargo ?? "Equipe"}</small>
+            </span>
+          </Link>
+        </div>
       </nav>
       <div className="dc-conteudo">
         <div className="dc-veu" aria-hidden="true" />

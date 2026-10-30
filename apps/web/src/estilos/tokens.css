@@ -26,10 +26,10 @@
   --cumprido: #17704a;
   --cumprido-suave: #e7f5ee;
   --menu: #f4f4f5;
-  --menu-hover: #e9e9ec;
+  --menu-hover: #eaeaed;
   --menu-borda: #e4e4e7;
   --menu-icone: #8a8996;
-  --menu-icone-ativo: #aab4ff;
+  --menu-icone-ativo: #3346c4;
   --anel: rgba(51, 70, 196, 0.18);
   --foco: var(--acento);
   --sombra-card: 0 1px 2px rgba(27, 25, 45, 0.03), 0 10px 28px -24px rgba(27, 25, 45, 0.28);

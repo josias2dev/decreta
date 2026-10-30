@@ -8,11 +8,11 @@
 .dc-app { flex-wrap: nowrap; }
 .dc-app > .dc-menu { flex: 0 0 var(--layout-menu); position: sticky; top: 0; height: 100vh; overflow-y: auto; }
 .dc-app > .dc-menu > * { flex-shrink: 0; }
+/* Só os itens rolam (em telas baixas): a marca, a busca e a pessoa ficam paradas. */
+.dc-app > .dc-menu > .dc-menu__lista { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0 calc(-1 * var(--space-2)); padding: 0 var(--space-2) var(--space-3);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--space-3)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--space-3)), transparent); }
 .dc-menu__busca { width: 100%; text-align: left; }
 .dc-menu__busca span:first-of-type { flex: 1; }
-.dc-menu__pe { text-decoration: none; }
-.dc-menu a.dc-menu__pe { height: auto; border-radius: 0; padding: 10px var(--space-4) 12px; font: 600 13px/18px var(--font-sans); color: var(--tinta); }
-.dc-menu__pe:hover { background: var(--menu-hover); }
 .dc-pagina--larga { max-width: none; }
 
 /* ---------- Moldura no celular ---------- */
