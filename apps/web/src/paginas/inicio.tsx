@@ -1,7 +1,8 @@
 /**
  * A landing do Decreta (decreta.site). A marcação vem pronta do canvas do Claude Design
  * (landing/pagina.html, estilos em estilos/landing.css e landing-secoes.css); aqui entram
- * o fundo em ASCII, os links para as telas, o contato e o atalho para quem já tem sessão.
+ * o fundo em ASCII, os links para as telas, o contato, as imagens da tela do produto e o atalho
+ * para quem já tem sessão.
  */
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
@@ -9,11 +10,16 @@ import { useEffect, useRef, type MouseEvent } from "react";
 import { ligarFundoAscii, useCorDaBarra } from "@/componentes/fundo-ascii";
 import { euQuery } from "@/lib/consultas";
 import pagina from "@/landing/pagina.html?raw";
+import vitrineCelular from "@/landing/vitrine-celular.webp";
+import vitrineComputador from "@/landing/vitrine-computador.webp";
 
 /** Para onde vão "Pedir acesso", "Falar com a equipe" e o contato do rodapé: o WhatsApp da equipe, com a mensagem pronta. */
 const CONTATO = `https://wa.me/5546999074372?text=${encodeURIComponent("Olá! Quero conhecer o Decreta para o meu escritório.")}`;
 
-const html = pagina.replaceAll("__CONTATO__", CONTATO);
+const html = pagina
+  .replaceAll("__CONTATO__", CONTATO)
+  .replace("__VITRINE_COMPUTADOR__", vitrineComputador)
+  .replace("__VITRINE_CELULAR__", vitrineCelular);
 
 export function InicioPage() {
   const router = useRouter();
@@ -32,7 +38,7 @@ export function InicioPage() {
     if (!r) return;
     const desligar = [...r.querySelectorAll<HTMLCanvasElement>("canvas.lp-ascii")].map((tela) =>
       tela.closest(".lp-hero")
-        ? ligarFundoAscii(tela, { miolo: r.querySelector(".lp-hero__texto"), ia: true, evitar: [...r.querySelectorAll(".lp-vitrine, .lp-flutua")] })
+        ? ligarFundoAscii(tela, { miolo: r.querySelector(".lp-hero__texto"), ia: true, evitar: [...r.querySelectorAll(".lp-vitrine__img")] })
         : ligarFundoAscii(tela, { miolo: tela.parentElement?.querySelector(".lp-fim__centro") }),
     );
     return () => desligar.forEach((f) => f());

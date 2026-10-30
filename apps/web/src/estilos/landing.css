@@ -41,9 +41,6 @@
 .lp-alvo-tag b { grid-row: span 2; display: inline-flex; align-items: center; height: 18px; padding: 0 5px; border-radius: var(--radius-sm); background: #3346c4; color: #fff; font: 600 10.5px/1 var(--font-sans); letter-spacing: 0.04em; }
 .lp-alvo-tag span { font: 500 12.5px/18px var(--font-sans); color: #ededf0; }
 .lp-alvo-tag small { font: 400 12px/17px var(--font-sans); color: #a6a6b1; }
-.lp-hero .lp-navegador { border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 40px 90px -40px rgba(0, 0, 0, 0.95); }
-.lp-hero .lp-flutua { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 30px 60px -24px rgba(0, 0, 0, 0.8); }
-.lp-hero .lp-aparelho { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 40px 90px -40px rgba(0, 0, 0, 0.95); }
 .lp-hero__texto { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .lp .lp-novo { white-space: nowrap; display: inline-flex; align-items: center; gap: 10px; height: 32px; padding: 0 12px 0 6px; border: 1px solid var(--borda); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--superficie) 85%, transparent); box-shadow: var(--sombra-leve); font: 500 13px/18px var(--font-sans); color: var(--tinta-2); text-decoration: none; transition: border-color .15s; }
 .lp .lp-novo:hover { border-color: var(--borda-forte); }
@@ -58,42 +55,10 @@
 .lp-checks li { display: inline-flex; align-items: center; gap: 6px; }
 .lp-checks svg { width: 15px; height: 15px; color: var(--tinta); stroke-width: 2.5; }
 
-/* Vitrine do hero: navegador com a tela de prazo e briefing (computador), celular (telas menores) */
-.lp-vitrine { position: relative; margin: 64px auto 0; perspective: 1800px; }
-.lp-vitrine--celular { display: none; }
-.lp-navegador { position: relative; border: 1px solid var(--borda); border-radius: 14px; background: var(--superficie); overflow: hidden; transform-origin: 50% 0;
-  box-shadow: 0 1px 2px rgba(27, 25, 45, 0.04), 0 40px 90px -48px rgba(27, 25, 45, 0.5), 0 14px 28px -20px rgba(27, 25, 45, 0.2);
-  -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%); mask-image: linear-gradient(to bottom, #000 72%, transparent 100%); }
-.lp-navegador__barra { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 14px; background: var(--menu); border-bottom: 1px solid var(--borda); }
-.lp-navegador__pontos { display: flex; gap: 6px; width: 52px; }
-.lp-navegador__pontos span { width: 10px; height: 10px; border-radius: 50%; background: var(--borda-forte); }
-.lp-navegador__url { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; max-width: 380px; height: 24px; margin: 0 auto; padding: 0 10px; border: 1px solid var(--borda); border-radius: var(--radius-md); background: var(--superficie); font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
-.lp-navegador__url svg { width: 12px; height: 12px; }
-.lp-navegador__tela { height: 640px; overflow: hidden; }
-.lp-navegador .dc-app { min-height: 0; height: 100%; flex-wrap: nowrap; }
-.lp-navegador .dc-menu { flex: 0 0 232px; }
-.lp-navegador .dc-conteudo { flex: 1 1 auto; }
-.lp-navegador .dc-app > .dc-conteudo { height: auto; overflow: hidden; }
-
-.lp-flutua { position: absolute; z-index: 2; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); box-shadow: 0 2px 6px rgba(27, 25, 45, 0.05), 0 28px 56px -28px rgba(27, 25, 45, 0.42); }
-.lp-flutua--pub { top: 176px; right: -32px; width: 320px; }
-.lp-flutua--peca { bottom: 72px; left: -32px; width: 352px; }
-.lp-flutua__topo { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; }
-.lp-flutua__topo .dc-ia__marca { margin-top: 1px; }
-.lp-flutua__titulo { display: block; font: 600 14px/20px var(--font-sans); color: var(--tinta); }
-.lp-flutua__meta { display: block; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
-.lp-flutua__lista { margin: 0; padding: 0 16px; list-style: none; border-top: 1px solid var(--borda); }
-.lp-flutua__lista li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--superficie-2); font: 500 13px/18px var(--font-sans); color: var(--tinta); }
-.lp-flutua__lista li span:first-child { min-width: 0; }
-.lp-flutua__lista small { display: block; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
-.lp-flutua__pe { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; }
-.lp-flutua__pe .dc-btn { flex: 1; }
-.lp-arquivo { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
-.lp-arquivo__icone { width: 34px; height: 40px; }
-.lp-arquivo__nome { display: block; font: 600 14px/20px var(--font-sans); color: var(--tinta); }
-.lp-arquivo__meta { display: block; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
-.lp-arquivo + .lp-flutua__pe { border-top: 1px solid var(--borda); }
-.lp-arquivo + .lp-flutua__pe .dc-btn { flex: none; }
+/* Vitrine do hero: imagem da tela de prazo e briefing (computador) ou do celular (telas menores).
+   A do computador tem 32px de cada lado para os cartões que saem da janela. */
+.lp-vitrine { display: block; position: relative; margin: 64px auto 0; perspective: 1800px; }
+.lp-vitrine__img { display: block; width: calc(100% + 64px); max-width: none; height: auto; margin: 0 -32px; transform-origin: 50% 0; }
 
 /* Régua de fatos logo abaixo do hero */
 .lp-fatos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px 32px; margin: 40px 0 0; padding: 32px 0 0; list-style: none; border-top: 1px solid var(--borda); }
@@ -117,11 +82,6 @@
 .lp-link svg { width: 16px; height: 16px; transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
 .lp-link:hover svg { transform: translateX(3px); }
 .lp-fato > div { padding-top: 5px; }
-
-/* Briefing da IA em duas colunas, na vitrine do hero */
-.lp-ia-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; }
-.lp-ia-grade .lp-largo { grid-column: 1 / -1; }
-.lp-ia-grade .lp-divide { padding-top: 14px; border-top: 1px solid var(--acento-borda); }
 
 /* Celular: aparelho com a tela Hoje e o resumo da manhã no WhatsApp */
 .lp-aparelho { position: relative; width: 300px; padding: 8px; border-radius: 50px; background: #1c1c21; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 0 1px rgba(27, 25, 45, 0.08), 0 50px 90px -46px rgba(27, 25, 45, 0.6); }
@@ -211,16 +171,10 @@
 
 /* ---------- Telas menores ---------- */
 @media (max-width: 1279px) {
-  .lp-flutua--pub { display: none; }
-  .lp-flutua--peca { left: 16px; }
-}
-@media (max-width: 1199px) {
-  .lp-navegador .dc-colunas { grid-template-columns: minmax(0, 1fr); }
-  .lp-navegador .dc-colunas > aside { display: none; }
+  .lp-vitrine__img { width: 100%; margin: 0; }
 }
 @media (max-width: 1023px) {
-  .lp-vitrine--computador { display: none; }
-  .lp-vitrine--celular { display: flex; justify-content: center; }
+  .lp-vitrine__img { width: 300px; max-width: 100%; margin: 0 auto; }
   .lp-fatos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lp-rodape__grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lp-rodape__marca { grid-column: 1 / -1; }
@@ -242,7 +196,6 @@
   .lp-secao { padding: 80px 0; }
   .lp-h2 { font-size: 32px; line-height: 1.12; letter-spacing: -0.032em; }
   .lp-texto { font-size: 16px; line-height: 26px; }
-  .lp-ia-grade { grid-template-columns: minmax(0, 1fr); }
   .lp-zap { right: 0; bottom: 24px; width: 248px; }
   .lp-rodape__grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
   .lp-rodape ul a { display: inline-block; padding: 2px 0; }
@@ -252,8 +205,6 @@
 @keyframes lp-entra { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes lp-surge { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
 @keyframes lp-assenta { from { transform: rotateX(16deg) scale(0.94); } to { transform: none; } }
-@keyframes lp-flutua-entra { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: none; } }
-@keyframes lp-chega { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: no-preference) {
   .lp-e { animation: lp-entra 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
   .lp-e--2 { animation-delay: 0.06s; }
@@ -261,27 +212,15 @@
   .lp-e--4 { animation-delay: 0.18s; }
   .lp-e--5 { animation-delay: 0.24s; }
   .lp-e--6 { animation-delay: 0.32s; }
-  .lp-flutua--pub { animation: lp-flutua-entra 0.8s 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .lp-flutua--peca { animation: lp-flutua-entra 0.8s 3.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  /* A tela do produto trabalha uma vez, ao abrir: a publicação chega, a IA lê e sugere o prazo,
-     a peça fica pronta e a Beatriz confirma. O movimento está no produto, não no fundo. */
-  .lp-hero .dc-tempo li, .lp-hero .dc-ia__sec, .lp-hero .dc-selo--cumprido, .lp-flutua__lista li { animation: lp-chega 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .lp-flutua__lista li:nth-child(1) { animation-delay: 1s; }
-  .lp-flutua__lista li:nth-child(2) { animation-delay: 1.2s; }
-  .lp-hero .dc-tempo li:nth-child(3) { animation-delay: 1.1s; }
-  .lp-hero .dc-tempo li:nth-child(2) { animation-delay: 1.7s; }
-  .lp-hero .dc-ia__sec:nth-child(1 of .dc-ia__sec) { animation-delay: 1.9s; }
-  .lp-hero .dc-ia__sec:nth-child(2 of .dc-ia__sec) { animation-delay: 2.2s; }
-  .lp-hero .dc-ia__sec:nth-child(3 of .dc-ia__sec) { animation-delay: 2.5s; }
-  .lp-hero .dc-ia__sec:nth-child(4 of .dc-ia__sec) { animation-delay: 2.8s; }
-  .lp-hero .dc-tempo li:nth-child(1), .lp-hero .dc-selo--cumprido { animation-delay: 3.7s; }
   /* Rolagem: cada bloco sobe e aparece ao entrar na tela; a tela do produto se assenta. */
   @supports (animation-timeline: view()) {
     .lp-a { animation: lp-surge linear both; animation-timeline: view(); animation-range: entry 0% entry 75%; }
     .lp-a--2 { animation-range: entry 8% entry 83%; }
     .lp-a--3 { animation-range: entry 16% entry 91%; }
     .lp-a--4 { animation-range: entry 24% entry 99%; }
-    .lp-navegador { animation: lp-assenta linear both; animation-timeline: view(); animation-range: entry 0% cover 42%; }
+    @media (min-width: 1024px) {
+      .lp-vitrine__img { animation: lp-assenta linear both; animation-timeline: view(); animation-range: entry 0% cover 42%; }
+    }
   }
 }
 
@@ -290,5 +229,5 @@
 @media (pointer: coarse), (max-width: 760px) {
   .lp-topo { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--menu); }
   .lp-topo[data-theme="escuro"] { background: #0b0b0f; }
-  .lp-a, .lp-navegador { animation: none; }
+  .lp-a, .lp-vitrine__img { animation: none; }
 }

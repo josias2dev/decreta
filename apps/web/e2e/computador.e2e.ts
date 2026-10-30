@@ -27,6 +27,19 @@ test("landing: sem sessão fica na página, mostra as seções e Entrar abre o l
   expect(await sobraNaLateral(page)).toBe(0);
 });
 
+test("landing: a tela do produto no topo é imagem e a roda do mouse em cima dela rola a página", async ({ page }) => {
+  const api = new ApiFalsa();
+  api.logado = false;
+  await abrir(page, "/", api);
+  const vitrine = page.locator(".lp-hero .lp-vitrine__img");
+  await expect.poll(() => vitrine.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  expect(await vitrine.evaluate((img: HTMLImageElement) => img.currentSrc)).toContain("vitrine-computador");
+  const caixa = (await vitrine.boundingBox())!;
+  await page.mouse.move(caixa.x + caixa.width / 2, Math.min(caixa.y + caixa.height / 2, 800));
+  await page.mouse.wheel(0, 600);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(300);
+});
+
 test("landing: com sessão vai direto para Hoje", async ({ page }) => {
   await abrir(page, "/");
   await expect(page).toHaveURL(/\/hoje$/);
