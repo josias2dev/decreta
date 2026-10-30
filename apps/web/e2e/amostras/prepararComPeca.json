@@ -13,11 +13,16 @@
       "fim": "2026-10-29"
     },
     "tipoSugerido": "alegacoes-finais",
-    "leu": [
+    "documentos": [
       "Ata da audiência de instrução.docx · evento 36",
       "Contestação.docx · evento 14",
       "Petição inicial.docx · evento 1"
     ],
+    "briefing": false,
+    "assina": {
+      "nome": "Beatriz Souza",
+      "oab": "OAB/SC 41.233"
+    },
     "modelos": [
       {
         "id": "37a4b1fa-fa28-4fcb-a90a-6219495c4e70",

@@ -88,6 +88,18 @@ test("Mais: o resto do menu, sem repetir a navegação de baixo", async ({ page 
   for (const item of ["Hoje", "Prazos", "Processos", "Clientes"]) await expect(miolo.getByRole("link", { name: new RegExp(`^${item}`) })).toHaveCount(0);
 });
 
+test("peça: os três passos, as partes do tipo e gerar preso embaixo", async ({ page }) => {
+  await abrir(page, `/pecas?prazo=${ids.prazo}`, new ApiFalsa().responder("/eu", euComIa));
+  await expect(page.getByText(/^Partes: Síntese do laudo · /)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Gerar peça" })).toBeInViewport();
+  await page.getByRole("button", { name: "Manifestação sobre laudo pericial" }).tap();
+  const folha = page.getByRole("dialog", { name: "Tipo de peça" });
+  await folha.getByRole("option", { name: "Petição de juntada" }).tap();
+  await expect(folha).toBeHidden();
+  await expect(page.getByText("Partes: Pedido de juntada com a lista dos documentos e o motivo.")).toBeVisible();
+  expect(await sobraNaLateral(page)).toBe(0);
+});
+
 test("peça sem a IA: o botão de baixo é escrever à mão", async ({ page }) => {
   await abrir(page, `/pecas?prazo=${ids.prazo}`);
   await expect(page.getByRole("button", { name: "Escrever à mão" })).toBeInViewport();

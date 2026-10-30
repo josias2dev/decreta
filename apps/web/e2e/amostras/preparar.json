@@ -13,15 +13,19 @@
       "fim": "2026-11-23"
     },
     "tipoSugerido": "manifestacao-laudo",
-    "leu": [
+    "documentos": [
       "Petição da ré · pedido de esclarecimentos.docx · evento 89",
       "Laudo pericial.docx · evento 87",
       "Quesitos da autora.docx · evento 44",
       "Decisão de saneamento.docx · evento 38",
       "Réplica.docx · evento 31",
-      "Contestação.docx · evento 24",
-      "Briefing do prazo"
+      "Contestação.docx · evento 24"
     ],
+    "briefing": true,
+    "assina": {
+      "nome": "Beatriz Souza",
+      "oab": "OAB/SC 41.233"
+    },
     "modelos": [
       {
         "id": "37a4b1fa-fa28-4fcb-a90a-6219495c4e70",

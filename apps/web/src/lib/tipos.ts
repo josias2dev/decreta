@@ -527,16 +527,27 @@ export interface Feriados {
   suspensaoDeFimDeAno: { de: string; ate: string };
 }
 
+export interface TipoDePeca {
+  id: string;
+  nome: string;
+  /** As partes da peça, na ordem ("Endereçamento, síntese do laudo, ..., fecho."): o que a IA segue. */
+  estrutura: string;
+}
+
 export interface Catalogo {
   total: number;
-  grupos: { nome: string; tipos: { id: string; nome: string }[] }[];
+  grupos: { nome: string; tipos: TipoDePeca[] }[];
 }
 
 export interface PreparoDaPeca {
   processo: ProcessoResumido;
   prazo: { id: string; tipo: string; fim: string } | null;
   tipoSugerido: string;
-  leu: string[];
+  /** Os documentos dos autos que a IA lê, além dos dados e das movimentações. */
+  documentos: string[];
+  briefing: boolean;
+  /** Quem assina a peça: o responsável pelo prazo ou pelo processo. */
+  assina: { nome: string; oab: string | null } | null;
   /** Os modelos do escritório que a IA vai seguir. */
   modelos: { id: string; titulo: string }[];
   ultima: { id: string; titulo: string; tipo: string; instrucoes: string | null; texto: string; situacao: "rascunho" | "revisada"; atualizadaEm: string } | null;

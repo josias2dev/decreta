@@ -110,10 +110,33 @@ test("peça sem a IA: escreve à mão e guarda", async ({ page }) => {
   api.responder("/pecas/manual", { id: ids.peca }, 201);
   await abrir(page, `/pecas?prazo=${ids.prazo}`, api);
   await expect(page.getByText(/Dá para escrever a peça à mão/)).toBeVisible();
-  await page.getByRole("button", { name: "Editar texto" }).click();
+  await page.getByRole("button", { name: "Escrever à mão" }).click();
   await page.getByLabel("Texto da peça").fill("# Excelentíssimo Senhor Doutor Juiz\n\nManifesta-se sobre o laudo.");
   await page.getByRole("button", { name: "Salvar texto" }).click();
   await expect.poll(() => api.mudancas("/pecas/manual")[0]?.corpo).toMatchObject({ processoId: ids.processo, prazoId: ids.prazo, tipo: "manifestacao-laudo" });
+});
+
+test("peça: o pedido em três passos, o botão de gerar à vista e as partes do tipo na folha", async ({ page }) => {
+  const api = await abrir(page, `/pecas?prazo=${ids.prazo}`, new ApiFalsa().responder("/eu", euComIa));
+  const pedido = page.getByRole("complementary", { name: "Pedido para a IA" });
+  for (const passo of ["Tipo de peça", "O que a IA lê", "Instruções"]) await expect(pedido.getByRole("heading", { name: passo })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Gerar peça" })).toBeInViewport();
+  await expect(pedido.getByText(/assinada por Beatriz Souza · OAB\/SC 41\.233/)).toBeVisible();
+  // Antes de gerar, a folha mostra as partes do tipo sugerido pelo prazo, e o fecho com quem assina.
+  const folha = page.getByRole("article", { name: /Partes da peça/ });
+  await expect(folha.getByRole("heading", { name: "I – Síntese do laudo" })).toBeVisible();
+  await expect(folha.getByText("Beatriz Souza")).toBeVisible();
+  // Os autos abrem a lista dos documentos que a IA lê.
+  await pedido.getByRole("button", { name: /Autos do processo/ }).click();
+  await expect(pedido.getByText("Laudo pericial.docx · evento 87")).toBeVisible();
+  // Trocar o tipo pela busca troca as partes na folha.
+  await pedido.getByRole("button", { name: "Manifestação sobre laudo pericial" }).click();
+  await page.getByLabel("Buscar tipo de peça").fill("apela");
+  await page.getByLabel("Buscar tipo de peça").press("Enter");
+  await expect(folha.getByRole("heading", { name: "I – Petição de interposição e razões" })).toBeVisible();
+  await pedido.getByLabel("Instruções para a IA").fill("Atacar a falta de fundamentação.");
+  await page.getByRole("button", { name: "Gerar peça" }).click();
+  await expect.poll(() => api.mudancas("/pecas")[0]?.corpo).toMatchObject({ tipo: "apelacao", instrucoes: "Atacar a falta de fundamentação.", prazoId: ids.prazo });
 });
 
 test("peça: só o papel do rascunho rola, e o editor cresce com o texto em vez de rolar por dentro", async ({ page }) => {

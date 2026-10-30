@@ -61,3 +61,26 @@ export function blocos(markdown: string): Bloco[] {
   fechar();
   return saida;
 }
+
+/**
+ * As partes da peça, na ordem, a partir da estrutura do catálogo
+ * ("Endereçamento, síntese do laudo, ..., fecho."). O endereçamento vem à
+ * parte, e o fecho a folha mostra sempre, com quem assina.
+ */
+export function partesDaPeca(estrutura: string): { enderecamento: string | null; partes: string[] } {
+  const pedacos: string[] = [];
+  let atual = "";
+  let dentro = 0;
+  for (const ch of estrutura.trim().replace(/\.$/, "")) {
+    if (ch === "(") dentro++;
+    else if (ch === ")") dentro--;
+    if ((ch === "," || ch === ":") && dentro === 0) {
+      pedacos.push(atual);
+      atual = "";
+    } else atual += ch;
+  }
+  pedacos.push(atual);
+  const limpos = pedacos.map((p) => p.trim()).filter(Boolean).map((p) => p[0]!.toLocaleUpperCase("pt-BR") + p.slice(1));
+  const enderecamento = limpos.find((p) => p.startsWith("Endereçamento")) ?? null;
+  return { enderecamento, partes: limpos.filter((p) => p !== enderecamento && !/^(fecho|local|data e assinatura|assinaturas)$/i.test(p)) };
+}

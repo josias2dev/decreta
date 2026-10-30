@@ -8,15 +8,18 @@
         "tipos": [
           {
             "id": "inicial-civel",
-            "nome": "Petição inicial cível"
+            "nome": "Petição inicial cível",
+            "estrutura": "Endereçamento, qualificação das partes, dos fatos, do direito, da tutela de urgência (se houver), dos pedidos, valor da causa, provas, fecho."
           },
           {
             "id": "inicial-trabalhista",
-            "nome": "Reclamação trabalhista"
+            "nome": "Reclamação trabalhista",
+            "estrutura": "Endereçamento, qualificação, contrato de trabalho, dos fatos e fundamentos por verba, pedidos líquidos (CLT, art. 840, § 1º), valor da causa, fecho."
           },
           {
             "id": "inicial-jec",
-            "nome": "Inicial do Juizado Especial"
+            "nome": "Inicial do Juizado Especial",
+            "estrutura": "Endereçamento ao JEC, qualificação, fatos, direito, pedidos, valor (até 40 salários mínimos), fecho."
           }
         ]
       },
@@ -25,15 +28,18 @@
         "tipos": [
           {
             "id": "contestacao",
-            "nome": "Contestação"
+            "nome": "Contestação",
+            "estrutura": "Endereçamento, síntese da inicial, preliminares (CPC, art. 337), mérito com impugnação específica, pedidos, provas, fecho."
           },
           {
             "id": "contestacao-trabalhista",
-            "nome": "Contestação trabalhista"
+            "nome": "Contestação trabalhista",
+            "estrutura": "Endereçamento, síntese, preliminares, prejudiciais (prescrição), mérito por pedido, impugnação de documentos e valores, pedidos, fecho."
           },
           {
             "id": "replica",
-            "nome": "Réplica à contestação"
+            "nome": "Réplica à contestação",
+            "estrutura": "Endereçamento, síntese da contestação, das preliminares, do mérito ponto a ponto, dos documentos novos, pedidos, fecho."
           }
         ]
       },
@@ -42,23 +48,28 @@
         "tipos": [
           {
             "id": "apelacao",
-            "nome": "Apelação"
+            "nome": "Apelação",
+            "estrutura": "Petição de interposição e razões: tempestividade, preparo, síntese, razões de reforma (error in judicando/procedendo), pedido de provimento."
           },
           {
             "id": "contrarrazoes",
-            "nome": "Contrarrazões de apelação"
+            "nome": "Contrarrazões de apelação",
+            "estrutura": "Petição de juntada e contrarrazões: tempestividade, síntese, preliminares de não conhecimento, mérito pela manutenção, pedido de desprovimento."
           },
           {
             "id": "embargos-declaracao",
-            "nome": "Embargos de declaração"
+            "nome": "Embargos de declaração",
+            "estrutura": "Endereçamento, tempestividade (5 dias úteis), apontamento da omissão, contradição, obscuridade ou erro material, pedido."
           },
           {
             "id": "agravo-instrumento",
-            "nome": "Agravo de instrumento"
+            "nome": "Agravo de instrumento",
+            "estrutura": "Endereçamento ao tribunal, cabimento (CPC, art. 1.015), tempestividade, peças obrigatórias, razões, pedido de efeito suspensivo, pedido final."
           },
           {
             "id": "recurso-ordinario",
-            "nome": "Recurso ordinário trabalhista"
+            "nome": "Recurso ordinário trabalhista",
+            "estrutura": "Interposição e razões: pressupostos, depósito recursal e custas, razões por tópico, pedido."
           }
         ]
       },
@@ -67,27 +78,33 @@
         "tipos": [
           {
             "id": "manifestacao-laudo",
-            "nome": "Manifestação sobre laudo pericial"
+            "nome": "Manifestação sobre laudo pericial",
+            "estrutura": "Endereçamento, síntese do laudo, concordância ou impugnação ponto a ponto, quesitos complementares, pedidos (esclarecimentos, nova perícia), fecho."
           },
           {
             "id": "manifestacao-documentos",
-            "nome": "Manifestação sobre documentos"
+            "nome": "Manifestação sobre documentos",
+            "estrutura": "Endereçamento, qualificação resumida (\"já qualificada nos autos\"), breve síntese, manifestação ponto a ponto, pedidos, fecho."
           },
           {
             "id": "alegacoes-finais",
-            "nome": "Alegações finais"
+            "nome": "Alegações finais",
+            "estrutura": "Endereçamento, síntese do processo, da prova produzida, do direito, pedidos finais, fecho."
           },
           {
             "id": "especificacao-provas",
-            "nome": "Especificação de provas"
+            "nome": "Especificação de provas",
+            "estrutura": "Endereçamento, provas pretendidas com a justificativa de cada uma, rol de testemunhas se for o caso, fecho."
           },
           {
             "id": "cumprimento-sentenca",
-            "nome": "Cumprimento de sentença"
+            "nome": "Cumprimento de sentença",
+            "estrutura": "Endereçamento, título, memória de cálculo, pedido de intimação para pagar em 15 dias (CPC, art. 523), multa e honorários, fecho."
           },
           {
             "id": "juntada",
-            "nome": "Petição de juntada"
+            "nome": "Petição de juntada",
+            "estrutura": "Endereçamento, pedido de juntada com a lista dos documentos e o motivo, fecho."
           }
         ]
       },
@@ -96,19 +113,23 @@
         "tipos": [
           {
             "id": "notificacao",
-            "nome": "Notificação extrajudicial"
+            "nome": "Notificação extrajudicial",
+            "estrutura": "Notificante e notificado, fatos, o que se exige e em que prazo, consequências, local, data e assinatura."
           },
           {
             "id": "parecer",
-            "nome": "Parecer"
+            "nome": "Parecer",
+            "estrutura": "Consulta, fatos, análise jurídica por questão, conclusão objetiva, ressalvas."
           },
           {
             "id": "contrato-honorarios",
-            "nome": "Contrato de honorários"
+            "nome": "Contrato de honorários",
+            "estrutura": "Partes, objeto, honorários e forma de pagamento, despesas, obrigações, rescisão, foro, assinaturas."
           },
           {
             "id": "acordo",
-            "nome": "Minuta de acordo"
+            "nome": "Minuta de acordo",
+            "estrutura": "Partes, objeto, valor e parcelas, multa por atraso, quitação, honorários e custas, pedido de homologação."
           }
         ]
       },
@@ -117,7 +138,8 @@
         "tipos": [
           {
             "id": "outro",
-            "nome": "Outra peça"
+            "nome": "Outra peça",
+            "estrutura": "Estrutura usual da peça descrita nas instruções."
           }
         ]
       }

@@ -1,25 +1,47 @@
 /**
- * Gerar peça: escolhe o modelo, diz o que quer, a IA escreve no timbre e a
- * pessoa revisa, edita e baixa o DOCX.
+ * Gerar peça. À esquerda o pedido em três passos (o tipo, o que a IA lê e as
+ * instruções), com o botão de gerar sempre à vista; à direita a peça como vai
+ * sair. Antes de gerar, a folha mostra as partes do tipo escolhido no timbre,
+ * com quem assina; depois, o rascunho, que a pessoa revisa, edita e baixa.
  */
-import { blocos, trechos, type Bloco } from "@decreta/core";
+import { blocos, partesDaPeca, trechos, type Bloco } from "@decreta/core";
+import * as Popover from "@radix-ui/react-popover";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { BookMarked, Check, Download, FileText, Pencil, RefreshCw } from "lucide-react";
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { BookMarked, Check, ChevronDown, ChevronsUpDown, Download, FolderOpen, ListChecks, Pencil, RefreshCw, Search, Sparkles, type LucideIcon } from "lucide-react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
-import { Botao, Campo, Carregando, Cnj, Faixa, MarcaIa, Painel, RetornoDaIa, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
+import { Botao, Campo, Carregando, Cnj, Faixa, MarcaIa, RetornoDaIa, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCurto, diaDoInstante, diaMes, hora } from "@/lib/formato";
-import type { Catalogo, Escritorio, Peca, PreparoDaPeca, Timbre } from "@/lib/tipos";
+import type { Catalogo, Escritorio, Peca, PreparoDaPeca, ProcessoResumido, Timbre, TipoDePeca } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
 const paginas = (texto: string) => Math.max(1, Math.round(texto.length / 2800));
+const semAcento = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
+const ROMANOS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
+/** O exemplo na caixa de instruções, pelo tipo e, sem um próprio, pelo grupo. */
+const EXEMPLO_DO_TIPO: Record<string, string> = {
+  "manifestacao-laudo": "Ex.: concordar com o laudo e pedir o julgamento; rebater a falta de vistoria.",
+  juntada: "Ex.: juntar a procuração atualizada e o comprovante de residência.",
+  "especificacao-provas": "Ex.: prova testemunhal com três testemunhas e perícia médica.",
+  "cumprimento-sentenca": "Ex.: valor atualizado de R$ 18.400,00, com a multa de 10%.",
+  "embargos-declaracao": "Ex.: a sentença não tratou do pedido de lucros cessantes.",
+  outro: "Diga qual é a peça e o que ela deve pedir.",
+};
+const EXEMPLO_DO_GRUPO: Record<string, string> = {
+  "Petições iniciais": "Ex.: pedir tutela de urgência para restabelecer o plano e dano moral de R$ 10 mil.",
+  Defesas: "Ex.: alegar prescrição e impugnar o valor do dano moral.",
+  Recursos: "Ex.: atacar a falta de fundamentação sobre o nexo causal.",
+  Manifestações: "Ex.: o que pedir, o que rebater e o que destacar.",
+  "Extrajudicial e consultivo": "Ex.: prazo de 10 dias para pagar, sob pena de ação.",
+};
 
 export function PecaPage() {
   const celular = useCelular();
@@ -34,7 +56,7 @@ export function PecaPage() {
   const prazoId = search.prazo ?? pecaSalva.data?.prazoId ?? undefined;
   const processoId = search.processo ?? pecaSalva.data?.processoId;
   const consulta = prazoId ? `prazo=${prazoId}` : processoId ? `processo=${processoId}` : null;
-  // O tipo vai junto: a lista "A IA lê" mostra os modelos do escritório daquele tipo.
+  // O tipo vai junto: "O que a IA lê" mostra os modelos do escritório daquele tipo.
   const prep = useQuery({
     queryKey: ["pecas", "preparar", consulta, tipoEscolhido],
     queryFn: () => api<PreparoDaPeca>(`/pecas/preparar?${consulta}${tipoEscolhido ? `&tipo=${encodeURIComponent(tipoEscolhido)}` : ""}`),
@@ -51,8 +73,11 @@ export function PecaPage() {
   const [aoVivo, setAoVivo] = useState<string | null>(null);
   const [gerando, setGerando] = useState(false);
   const [edicao, setEdicao] = useState<string | null>(null);
-  const [trocando, setTrocando] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  // O tipo sob o mouse na lista de tipos: a folha vazia mostra as partes dele antes da escolha.
+  const [tipoEmVista, setTipoEmVista] = useState<string | null>(null);
+  // No celular, com o rascunho pronto, o pedido fica num resumo; "Ajustar" abre os passos de novo.
+  const [ajustando, setAjustando] = useState(false);
   // No computador só o papel do rascunho rola (no celular, a tela toda).
   const papel = useRef<HTMLDivElement>(null);
   const lido = useRef(0);
@@ -67,14 +92,26 @@ export function PecaPage() {
     const el = papel.current;
     if (el) el.scrollTop = lido.current * (el.scrollHeight - el.clientHeight);
   }, [editando]);
-  const tipos = catalogo.data?.grupos.flatMap((g) => g.tipos) ?? [];
-  const nomeDoTipo = tipos.find((t) => t.id === tipo)?.nome ?? "Escolha o tipo";
+  const tipoNoCatalogo = (id: string) => {
+    for (const g of catalogo.data?.grupos ?? []) {
+      const t = g.tipos.find((x) => x.id === id);
+      if (t) return { ...t, grupo: g.nome };
+    }
+    return undefined;
+  };
+  const tipoAtual = tipoNoCatalogo(tipo);
+  const nomeDoTipo = tipoAtual?.nome ?? "Escolha o tipo";
 
   async function gerar() {
     if (!prep.data) return;
     setGerando(true);
     setAoVivo("");
     setEdicao(null);
+    setAjustando(false);
+    setTipoEmVista(null);
+    // Com o pedido em cima da peça (tablet), a tela desce até a folha para ver a IA escrevendo.
+    const rascunho = papel.current?.closest(".dc-peca__rascunho");
+    if (rascunho && rascunho.getBoundingClientRect().top > window.innerHeight * 0.6) rascunho.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
       const { headers } = await aosPoucos(
         "/pecas",
@@ -148,7 +185,6 @@ export function PecaPage() {
   const iaLigada = !!eu.data?.ia;
   const timbre = escritorio.data?.timbre ?? { nome: eu.data?.escritorio.nome ?? "" };
   const docx = pecaId && texto && !gerando ? `${API_URL}/api/app/pecas/${pecaId}/docx` : undefined;
-  const sobreOPrazo = p.prazo ? `Sugerido pelo prazo de ${diaCurto(p.prazo.fim)}` : "Escolha o modelo da peça";
   const quandoGerou = peca && !gerando ? `${diaDoInstante(peca.atualizadaEm) === eu.data?.hoje ? "às" : `em ${diaCurto(diaDoInstante(peca.atualizadaEm))} às`} ${hora(peca.atualizadaEm)}` : null;
   const revisada = peca?.situacao === "revisada";
   const revisao = pecaSalva.data?.revisao;
@@ -157,39 +193,63 @@ export function PecaPage() {
     : null;
   const podeAvaliar = !!pecaId && !!texto && !gerando && edicao === null;
   const revisar = () => salvar.mutate({ situacao: "revisada" });
+  const comRascunho = !!texto || editando;
+  // Mudou o tipo ou as instruções depois do rascunho: gerar de novo volta a ser o principal.
+  const mudouOPedido = !!peca?.texto && !gerando && (tipo !== peca.tipo || instrucoes.trim() !== (peca.instrucoes ?? "").trim());
+  const livre = tipo === "outro";
+  const faltaDizer = livre && !instrucoes.trim();
+  const sugerido = p.prazo && tipo === p.tipoSugerido && tipo !== "outro" ? "sugerido pelo prazo" : null;
+  const { partes } = partesDaPeca(tipoAtual?.estrutura ?? "");
 
-  const leu = (
-    <ul className="dc-lista-check m-0 list-none p-0">
-      {(p.leu.length ? p.leu : ["Dados do processo e as movimentações"]).map((l) => (
-        <li key={l}>
-          <Check /> {l}
-        </li>
-      ))}
-      {p.leu.length > 0 && (
-        <li className="text-[var(--tinta-2)]">
-          <Check /> Dados do processo e as movimentações
-        </li>
-      )}
-      {p.modelos.map((m) => (
-        <li key={m.id}>
-          <BookMarked /> Modelo do escritório: {m.titulo}
-        </li>
-      ))}
-    </ul>
+  const escolherTipo = (t: string) => {
+    setTipo(t);
+    setTipoEmVista(null);
+  };
+  const seletor = (
+    <SeletorDeTipo catalogo={catalogo.data} tipo={tipo} nome={nomeDoTipo} sugerido={p.prazo ? p.tipoSugerido : null} aoEscolher={escolherTipo} aoVer={comRascunho ? undefined : setTipoEmVista} />
   );
   const campoInstrucoes = (
-    <textarea
-      aria-label="Instruções para a IA"
-      rows={4}
-      value={instrucoes}
-      onChange={(e) => setInstrucoes(e.target.value)}
-      placeholder="Concordar com o laudo e pedir o julgamento. Rebater a falta de vistoria."
-      className="w-full"
-    />
+    <div className="dc-campo">
+      <textarea
+        aria-label="Instruções para a IA"
+        rows={4}
+        value={instrucoes}
+        onChange={(e) => setInstrucoes(e.target.value)}
+        placeholder={EXEMPLO_DO_TIPO[tipo] ?? EXEMPLO_DO_GRUPO[tipoAtual?.grupo ?? ""] ?? EXEMPLO_DO_GRUPO["Manifestações"]}
+        className="dc-pedido__instrucoes"
+      />
+    </div>
   );
+  const passos = (
+    <>
+      <Passo n={1} titulo="Tipo de peça" nota={sugerido}>
+        {seletor}
+        <p className="dc-pedido__efeito">{celular && partes.length && !livre ? `Partes: ${partes.map((x) => x.replace(/\s*\(.*\)$/, "")).join(" · ")}.` : livre ? "A IA monta as partes pelo que você disser nas instruções." : "Define as partes da peça e a ordem delas."}</p>
+      </Passo>
+      <Passo n={2} titulo="O que a IA lê">
+        <Fontes p={p} />
+      </Passo>
+      <Passo n={3} titulo="Instruções" nota={livre ? "necessário" : "opcional"}>
+        {campoInstrucoes}
+        <p className="dc-pedido__efeito">O que pedir, rebater ou destacar. A IA segue isto antes do modelo.</p>
+      </Passo>
+    </>
+  );
+  const assinatura = (
+    <p className="dc-pedido__assina">
+      No timbre do escritório
+      {p.assina && (
+        <>
+          , assinada por <strong>{p.assina.nome}</strong>
+          {p.assina.oab && ` · ${p.assina.oab}`}
+        </>
+      )}
+    </p>
+  );
+  const rotuloGerar = gerando ? "Escrevendo…" : texto ? "Gerar de novo" : "Gerar peça";
   const botaoGerar = (bloco: boolean) => (
-    <Botao variante={texto ? "secundaria" : "primaria"} bloco={bloco} onClick={() => void gerar()} ocupado={gerando} disabled={!iaLigada || !tipo}>
-      {texto ? <RefreshCw /> : <FileText />} {gerando ? "Escrevendo…" : texto ? "Gerar de novo" : "Gerar peça"}
+    <Botao variante={!texto || mudouOPedido || ajustando ? "primaria" : "secundaria"} bloco={bloco} onClick={() => void gerar()} ocupado={gerando} disabled={!iaLigada || !tipo || faltaDizer}>
+      {texto && !gerando ? <RefreshCw /> : <Sparkles />} {rotuloGerar}
     </Botao>
   );
   const semIa = !iaLigada && <Faixa tipo="aviso">A IA ainda não está ligada neste escritório. Dá para escrever a peça à mão e baixar no timbre.</Faixa>;
@@ -200,9 +260,7 @@ export function PecaPage() {
     ) : texto ? (
       <Folha texto={texto} timbre={timbre} escrevendo={gerando} />
     ) : (
-      <div className="dc-folha">
-        <Vazio titulo="Nenhum rascunho ainda">{iaLigada ? "Escolha o tipo, diga o que quer e gere. A IA escreve no timbre do escritório. Ou escreva à mão em Editar texto." : "Clique em Editar texto para escrever."}</Vazio>
-      </div>
+      <Estrutura tipo={tipoNoCatalogo(tipoEmVista ?? tipo)} timbre={timbre} processo={p.processo} assina={p.assina} />
     );
   const editar = () => setEdicao(texto || "# Excelentíssimo Senhor Doutor Juiz de Direito\n\n");
   const acoesDaEdicao = edicao !== null && (
@@ -216,28 +274,13 @@ export function PecaPage() {
     </>
   );
 
-  const trocar = (
-    <Dialogo aberto={trocando} aoFechar={() => setTrocando(false)} titulo="Tipo de peça" descricao={`${catalogo.data?.total ?? ""} modelos`}>
-      <EscolherTipo
-        catalogo={catalogo.data}
-        tipo={tipo}
-        aoEscolher={(t) => {
-          setTipo(t);
-          setTrocando(false);
-        }}
-      />
-    </Dialogo>
-  );
-
   const guardar = peca && pecaId && <GuardarComoModelo pecaId={pecaId} titulo={peca.titulo} aberto={guardando} aoFechar={() => setGuardando(false)} />;
-  const pe = (solto: boolean) => (
-    <div className={cn("dc-peca__pe", solto && "dc-peca__pe--solto")}>
-      <span>Gerado por IA. Confira nos autos antes de protocolar.</span>
-      {podeAvaliar && <RetornoDaIa key={pecaId} alvo={{ pecaId: pecaId! }} />}
-    </div>
-  );
 
   if (celular) {
+    const resumo = [`${p.documentos.length} ${p.documentos.length === 1 ? "documento" : "documentos"}`, p.briefing && "briefing", p.modelos.length && `${p.modelos.length} ${p.modelos.length === 1 ? "modelo" : "modelos"}`, instrucoes.trim() ? "com instruções" : "sem instruções"]
+      .filter((x): x is string => !!x)
+      .map((x) => x.replaceAll(" ", "\u00a0"))
+      .join(" · ");
     return (
       <TelaCelular
         titulo="Gerar peça"
@@ -246,7 +289,16 @@ export function PecaPage() {
         rodape={
           edicao !== null ? (
             <div className="dc-rodape__par">{acoesDaEdicao}</div>
-          ) : texto && !gerando ? (
+          ) : gerando ? (
+            botaoGerar(true)
+          ) : ajustando ? (
+            <div className="dc-rodape__par">
+              <Botao bloco onClick={() => setAjustando(false)}>
+                Voltar ao rascunho
+              </Botao>
+              {botaoGerar(true)}
+            </div>
+          ) : texto ? (
             <>
               <a className="dc-btn dc-btn--primaria dc-btn--md dc-btn--bloco" href={docx} download>
                 <Download /> Baixar DOCX no timbre
@@ -260,8 +312,8 @@ export function PecaPage() {
             </>
           ) : iaLigada ? (
             <div className="dc-rodape__par">
-              <Botao bloco onClick={editar} disabled={gerando}>
-                <Pencil /> Escrever
+              <Botao bloco onClick={editar}>
+                <Pencil /> Escrever à mão
               </Botao>
               {botaoGerar(true)}
             </div>
@@ -273,36 +325,41 @@ export function PecaPage() {
         }
       >
         {semIa}
-        <section className="dc-secao">
-          <span className="dc-rotulo">Tipo de peça</span>
-          <div className="dc-cartao" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        {!comRascunho || ajustando ? (
+          <>
+            {passos}
+            {iaLigada && assinatura}
+          </>
+        ) : (
+          <button
+            type="button"
+            className="dc-cartao dc-pedido-resumo"
+            onClick={() => {
+              setAjustando(true);
+              window.scrollTo({ top: 0 });
+            }}
+            aria-label={`Pedido: ${nomeDoTipo}. Ajustar`}
+          >
             <span className="flex min-w-0 flex-col">
               <span className="dc-cartao__titulo">{nomeDoTipo}</span>
-              <span className="dc-cartao__linha">{sobreOPrazo}</span>
+              <span className="dc-cartao__linha">{resumo}</span>
             </span>
-            <Botao variante="fantasma" onClick={() => setTrocando(true)}>
-              Trocar
-            </Botao>
-          </div>
-        </section>
-        <section className="dc-secao">
-          <span className="dc-rotulo">A IA vai ler</span>
-          <div className="dc-painel">{leu}</div>
-        </section>
-        <section className="dc-secao">
-          <span className="dc-rotulo">Instruções</span>
-          <div className="dc-campo">{campoInstrucoes}</div>
-        </section>
-        {(texto || edicao !== null) && (
+            <span className="dc-link">Ajustar</span>
+          </button>
+        )}
+        {comRascunho && !ajustando && (
           <section className="dc-secao">
             <div className="dc-secao__topo">
               <span className="inline-flex items-center gap-2 font-semibold">
-                <MarcaIa /> {gerando ? "Escrevendo…" : revisada ? "Peça revisada" : "Rascunho pronto"}
+                <MarcaIa /> {gerando ? "Escrevendo…" : revisada ? "Peça revisada" : editando ? "Editando o texto" : "Rascunho pronto"}
               </span>
               {quandoGerou && <span className="dc-nota">{quandoGerou}</span>}
             </div>
             <div className="dc-folha-fundo">{folha}</div>
-            {pe(true)}
+            <div className="dc-peca__pe dc-peca__pe--solto">
+              <span>Gerado por IA. Confira nos autos antes de protocolar.</span>
+              {podeAvaliar && <RetornoDaIa key={pecaId} alvo={{ pecaId: pecaId! }} />}
+            </div>
             {podeAvaliar &&
               (revisada ? (
                 <>
@@ -322,14 +379,14 @@ export function PecaPage() {
               ))}
           </section>
         )}
-        {trocar}
         {guardar}
       </TelaCelular>
     );
   }
 
+  const emVista = tipoEmVista && tipoEmVista !== tipo ? tipoNoCatalogo(tipoEmVista) : undefined;
   return (
-    <Pagina cheia>
+    <Pagina cheia className="dc-pagina--peca">
       <div className="dc-topo-pagina">
         <Trilha>
           {p.prazo ? <Link to="/prazos">Prazos</Link> : <Link to="/processos">Processos</Link>}
@@ -353,67 +410,65 @@ export function PecaPage() {
             </>
           }
           acoes={
-            edicao !== null ? (
-              acoesDaEdicao
-            ) : (
-              <>
-                {podeAvaliar &&
-                  (revisada ? (
-                    <Botao variante="fantasma" onClick={() => setGuardando(true)}>
-                      <BookMarked /> Guardar como modelo
+            edicao !== null
+              ? acoesDaEdicao
+              : texto && (
+                  <>
+                    <Botao onClick={editar} disabled={gerando}>
+                      <Pencil /> Editar texto
                     </Botao>
-                  ) : (
-                    <Botao variante="fantasma" onClick={revisar} ocupado={salvar.isPending && salvar.variables?.situacao === "revisada"}>
-                      <Check /> Marcar como revisada
-                    </Botao>
-                  ))}
-                <Botao onClick={editar} disabled={gerando}>
-                  <Pencil /> Editar texto
-                </Botao>
-                {docx ? (
-                  <a className="dc-btn dc-btn--primaria dc-btn--md" href={docx} download>
-                    <Download /> Baixar DOCX no timbre
-                  </a>
-                ) : (
-                  <Botao variante="primaria" disabled>
-                    <Download /> Baixar DOCX no timbre
-                  </Botao>
-                )}
-              </>
-            )
+                    {docx ? (
+                      <a className="dc-btn dc-btn--primaria dc-btn--md" href={docx} download>
+                        <Download /> Baixar DOCX no timbre
+                      </a>
+                    ) : (
+                      <Botao variante="primaria" disabled>
+                        <Download /> Baixar DOCX no timbre
+                      </Botao>
+                    )}
+                  </>
+                )
           }
         />
       </div>
-      {semIa}
       <div className="dc-colunas dc-colunas--esquerda dc-peca">
-        <div className="dc-pilha dc-rola dc-peca__lado">
-          <Painel titulo="Tipo de peça" acao={catalogo.data && <span className="dc-nota">{catalogo.data.total} modelos</span>} corpo={false}>
-            <EscolherTipo catalogo={catalogo.data} tipo={tipo} aoEscolher={setTipo} />
-          </Painel>
-          <Painel titulo="A IA lê" corpo={false}>
-            {leu}
-          </Painel>
-          <Painel titulo="Instruções" acao={<span className="dc-nota">opcional</span>}>
-            <div className="dc-campo">{campoInstrucoes}</div>
-            {botaoGerar(true)}
-          </Painel>
-        </div>
+        <aside className="dc-painel dc-pedido" aria-label="Pedido para a IA">
+          <div className="dc-pedido__passos dc-rola">{passos}</div>
+          <div className="dc-pedido__pe">
+            {iaLigada ? (
+              <>
+                {mudouOPedido && <p className="dc-pedido__aviso">O pedido mudou. Gerar de novo troca o rascunho.</p>}
+                {botaoGerar(true)}
+                {assinatura}
+              </>
+            ) : (
+              <>
+                <Botao variante="primaria" bloco onClick={editar} disabled={editando}>
+                  <Pencil /> Escrever à mão
+                </Botao>
+                <p className="dc-pedido__assina">A IA ainda não está ligada neste escritório. Dá para escrever a peça à mão e baixar no timbre.</p>
+              </>
+            )}
+          </div>
+        </aside>
         <section className="dc-painel dc-peca__rascunho">
           <div className="dc-painel__topo">
             <span className="inline-flex min-w-0 items-center gap-2">
-              <MarcaIa />
-              <span className="dc-painel__titulo">{gerando ? "Escrevendo…" : revisada ? "Peça revisada" : "Rascunho"}</span>
-              {texto && !gerando && (
-                <span className="dc-nota">
+              {comRascunho && <MarcaIa />}
+              <span className="dc-painel__titulo whitespace-nowrap">{editando ? "Editando o texto" : gerando ? "Escrevendo…" : revisada ? "Peça revisada" : texto ? "Rascunho" : "Como a peça vai sair"}</span>
+              {texto && !gerando ? (
+                <span className="dc-nota truncate">
                   {quandoGerou ? `gerado ${quandoGerou} · ` : ""}
                   {paginas(texto)} {paginas(texto) === 1 ? "página" : "páginas"}
                 </span>
+              ) : (
+                emVista && !comRascunho && <span className="dc-nota truncate">vendo {emVista.nome}</span>
               )}
             </span>
-            {revisada && quemRevisou && !gerando && (
-              <span className="inline-flex items-center gap-1.5 text-[13px] text-[var(--tinta-2)]">
-                <Check className="size-3.5 text-[var(--acento)]" /> {quemRevisou}
-              </span>
+            {!comRascunho && iaLigada && (
+              <Botao variante="fantasma" pequeno onClick={editar}>
+                <Pencil /> Escrever à mão
+              </Botao>
             )}
           </div>
           <div
@@ -428,12 +483,313 @@ export function PecaPage() {
           >
             {folha}
           </div>
-          {pe(false)}
+          {comRascunho ? (
+            <div className="dc-peca__pe">
+              {revisada && quemRevisou && !gerando ? (
+                <span className="dc-peca__revisada">
+                  <Check aria-hidden /> {quemRevisou}
+                </span>
+              ) : (
+                <span>Gerado por IA. Confira nos autos antes de protocolar.</span>
+              )}
+              {/* Revisar fica junto do aviso: quem confere a peça assina embaixo dela. */}
+              {podeAvaliar &&
+                (revisada ? (
+                  <Botao pequeno onClick={() => setGuardando(true)}>
+                    <BookMarked /> Guardar como modelo
+                  </Botao>
+                ) : (
+                  <Botao pequeno onClick={revisar} ocupado={salvar.isPending && salvar.variables?.situacao === "revisada"}>
+                    <Check /> Marcar como revisada
+                  </Botao>
+                ))}
+              {podeAvaliar && <RetornoDaIa key={pecaId} alvo={{ pecaId: pecaId! }} />}
+            </div>
+          ) : (
+            <div className="dc-peca__pe">Uma prévia das partes. A IA escreve cada uma com os fatos dos autos.</div>
+          )}
         </section>
       </div>
-      {trocar}
       {guardar}
     </Pagina>
+  );
+}
+
+/** Um passo do pedido: o número, o título e, à direita, uma nota curta. */
+function Passo({ n, titulo, nota, children }: { n: number; titulo: string; nota?: ReactNode; children: ReactNode }) {
+  return (
+    <section className="dc-pedido__passo" aria-label={titulo}>
+      <div className="dc-pedido__topo">
+        <span className="dc-pedido__n" aria-hidden>
+          {n}
+        </span>
+        <h2 className="dc-pedido__titulo">{titulo}</h2>
+        {nota && <span className="dc-pedido__nota">{nota}</span>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * O tipo de peça num campo de escolha. No computador abre uma lista com busca
+ * logo embaixo; no celular, uma folha que sobe de baixo.
+ */
+function SeletorDeTipo({
+  catalogo,
+  tipo,
+  nome,
+  sugerido,
+  aoEscolher,
+  aoVer,
+}: {
+  catalogo: Catalogo | undefined;
+  tipo: string;
+  nome: string;
+  sugerido: string | null;
+  aoEscolher: (t: string) => void;
+  aoVer?: (t: string | null) => void;
+}) {
+  const celular = useCelular();
+  const [aberto, setAberto] = useState(false);
+  const abrir = (v: boolean) => {
+    setAberto(v);
+    if (!v) aoVer?.(null);
+  };
+  const escolher = (t: string) => {
+    aoEscolher(t);
+    abrir(false);
+  };
+  const gatilho = (
+    <button type="button" className="dc-seletor" aria-haspopup="listbox" aria-expanded={aberto} onClick={celular ? () => abrir(true) : undefined}>
+      <span className="dc-seletor__nome">{nome}</span>
+      <ChevronsUpDown aria-hidden />
+    </button>
+  );
+  const lista = catalogo ? <ListaDeTipos catalogo={catalogo} tipo={tipo} sugerido={sugerido} aoEscolher={escolher} aoVer={aoVer} focar={!celular} /> : <Carregando linhas={3} />;
+  if (celular)
+    return (
+      <>
+        {gatilho}
+        <Dialogo aberto={aberto} aoFechar={() => abrir(false)} titulo="Tipo de peça" className="dc-dialogo--tipos">
+          {lista}
+        </Dialogo>
+      </>
+    );
+  return (
+    <Popover.Root open={aberto} onOpenChange={abrir}>
+      <Popover.Trigger asChild>{gatilho}</Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content className="dc-menu-flutuante dc-tipos-flutuante" align="start" sideOffset={4} collisionPadding={12}>
+          {lista}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
+function ListaDeTipos({
+  catalogo,
+  tipo,
+  sugerido,
+  aoEscolher,
+  aoVer,
+  focar,
+}: {
+  catalogo: Catalogo;
+  tipo: string;
+  sugerido: string | null;
+  aoEscolher: (t: string) => void;
+  aoVer?: (t: string | null) => void;
+  focar: boolean;
+}) {
+  const [busca, setBusca] = useState("");
+  const [ativo, setAtivo] = useState(tipo);
+  const lista = useRef<HTMLDivElement>(null);
+  const termo = semAcento(busca.trim());
+  const grupos = catalogo.grupos.map((g) => ({ ...g, tipos: termo ? g.tipos.filter((t) => semAcento(`${t.nome} ${g.nome}`).includes(termo)) : g.tipos })).filter((g) => g.tipos.length);
+  const todos = grupos.flatMap((g) => g.tipos);
+  useLayoutEffect(() => {
+    lista.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "center" });
+  }, []);
+  const ver = (id: string) => {
+    setAtivo(id);
+    aoVer?.(id);
+  };
+  const teclas = (e: KeyboardEvent<HTMLInputElement>) => {
+    const i = todos.findIndex((t) => t.id === ativo);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const prox = todos[(i + (e.key === "ArrowDown" ? 1 : -1) + todos.length) % todos.length];
+      if (!prox) return;
+      ver(prox.id);
+      lista.current?.querySelector(`[data-tipo="${prox.id}"]`)?.scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const t = todos[i] ?? todos[0];
+      if (t) aoEscolher(t.id);
+    }
+  };
+  return (
+    <div className="dc-tipos">
+      <label className="dc-tipos__busca">
+        <Search aria-hidden />
+        <input
+          autoFocus={focar}
+          value={busca}
+          onChange={(e) => {
+            setBusca(e.target.value);
+            setAtivo("");
+          }}
+          onKeyDown={teclas}
+          placeholder="Buscar tipo de peça"
+          aria-label="Buscar tipo de peça"
+        />
+      </label>
+      <div ref={lista} className="dc-tipos__lista dc-rola" role="listbox" aria-label="Tipos de peça" onMouseLeave={() => aoVer?.(null)}>
+        {grupos.map((g) => (
+          <div key={g.nome} role="group" aria-label={g.nome}>
+            <div className="dc-tipos__grupo" aria-hidden>
+              {g.nome}
+            </div>
+            {g.tipos.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="option"
+                data-tipo={t.id}
+                aria-selected={t.id === tipo}
+                className={cn("dc-tipos__item", t.id === ativo && "is-ativo")}
+                onMouseEnter={() => ver(t.id)}
+                onClick={() => aoEscolher(t.id)}
+              >
+                <span>{t.nome}</span>
+                {t.id === sugerido && t.id !== "outro" && <span className="dc-tipos__sugerido">do prazo</span>}
+                {t.id === tipo && <Check aria-hidden />}
+              </button>
+            ))}
+          </div>
+        ))}
+        {!todos.length && <p className="dc-tipos__nada">Nenhum tipo com “{busca.trim()}”. Escolha Outra peça e diga qual é nas instruções.</p>}
+      </div>
+    </div>
+  );
+}
+
+/** O que a IA lê, cada um com o que faz na peça. Os autos e os modelos abrem a lista. */
+function Fontes({ p }: { p: PreparoDaPeca }) {
+  const [aberta, setAberta] = useState<"autos" | "modelos" | null>(null);
+  const alternar = (q: "autos" | "modelos") => setAberta(aberta === q ? null : q);
+  const m = p.modelos.length;
+  return (
+    <div className="dc-fontes">
+      <Fonte icone={FolderOpen} titulo="Autos do processo" efeito="Fatos, datas e números saem só daqui" conta={p.documentos.length || undefined} aberta={aberta === "autos"} aoAbrir={() => alternar("autos")}>
+        {[...p.documentos, "Dados do processo e as movimentações"].map((d) => (
+          <li key={d}>{d}</li>
+        ))}
+      </Fonte>
+      {p.briefing && <Fonte icone={ListChecks} titulo="Briefing do prazo" efeito="O que o juízo decidiu e o que fazer" />}
+      <Fonte
+        icone={BookMarked}
+        titulo={m === 1 ? "Modelo do escritório" : "Modelos do escritório"}
+        efeito={m ? "Estrutura e estilo, sem copiar os fatos" : "Nenhum deste tipo ainda"}
+        conta={m || undefined}
+        apagada={!m}
+        aberta={aberta === "modelos"}
+        aoAbrir={m ? () => alternar("modelos") : undefined}
+      >
+        {p.modelos.map((x) => (
+          <li key={x.id}>{x.titulo}</li>
+        ))}
+      </Fonte>
+    </div>
+  );
+}
+
+function Fonte({
+  icone: Icone,
+  titulo,
+  efeito,
+  conta,
+  apagada,
+  aberta,
+  aoAbrir,
+  children,
+}: {
+  icone: LucideIcon;
+  titulo: string;
+  efeito: string;
+  conta?: number;
+  apagada?: boolean;
+  aberta?: boolean;
+  aoAbrir?: () => void;
+  children?: ReactNode;
+}) {
+  const linha = (
+    <>
+      <Icone className="dc-fonte__icone" aria-hidden />
+      <span className="dc-fonte__texto">
+        <span className="dc-fonte__titulo">{titulo}</span>
+        <span className="dc-fonte__efeito">{efeito}</span>
+      </span>
+      {conta != null && <span className="dc-fonte__conta">{conta}</span>}
+      {aoAbrir && <ChevronDown className="dc-fonte__seta" aria-hidden />}
+    </>
+  );
+  return (
+    <div className={cn("dc-fonte", aberta && "is-aberta", apagada && "is-apagada")}>
+      {aoAbrir ? (
+        <button type="button" className="dc-fonte__linha" aria-expanded={!!aberta} onClick={aoAbrir}>
+          {linha}
+        </button>
+      ) : (
+        <div className="dc-fonte__linha">{linha}</div>
+      )}
+      {aberta && children && <ul className="dc-fonte__lista">{children}</ul>}
+    </div>
+  );
+}
+
+/**
+ * A folha antes de gerar: o timbre, o endereçamento, as partes do tipo
+ * escolhido (em linhas cinza, onde a IA vai escrever) e o fecho com quem
+ * assina. Trocar o tipo troca as partes na hora.
+ */
+function Estrutura({ tipo, timbre, processo, assina }: { tipo: TipoDePeca | undefined; timbre: Timbre; processo: ProcessoResumido; assina: PreparoDaPeca["assina"] }) {
+  if (!tipo)
+    return (
+      <div className="dc-folha">
+        <Carregando linhas={6} />
+      </div>
+    );
+  const { enderecamento, partes } = partesDaPeca(tipo.estrutura);
+  const livre = tipo.id === "outro";
+  return (
+    <article key={tipo.id} className="dc-folha dc-estrutura" aria-label={`Partes da peça: ${tipo.nome}`}>
+      <CabecalhoDoTimbre timbre={timbre} />
+      {enderecamento && (
+        <div className="dc-estrutura__enderecamento">
+          <span>{enderecamento === "Endereçamento" && processo.orgao ? `Endereçamento · ${processo.orgao}` : enderecamento}</span>
+          <i />
+        </div>
+      )}
+      <p className="dc-estrutura__nome">{tipo.nome}</p>
+      {(livre ? ["As partes que você descrever nas instruções"] : partes).map((parte, i) => (
+        <section key={parte} className="dc-estrutura__parte">
+          <h3>{livre ? parte : `${ROMANOS[i] ?? i + 1} – ${parte}`}</h3>
+          <div className="dc-estrutura__linhas" aria-hidden>
+            <i />
+            <i />
+            <i />
+          </div>
+        </section>
+      ))}
+      <footer className="dc-estrutura__fecho">
+        <span>[cidade], [data].</span>
+        <strong>{assina?.nome ?? "Quem assina"}</strong>
+        {assina?.oab && <span>{assina.oab}</span>}
+      </footer>
+    </article>
   );
 }
 
@@ -547,32 +903,6 @@ function GuardarComoModelo({ pecaId, titulo, aberto, aoFechar }: { pecaId: strin
   );
 }
 
-function EscolherTipo({ catalogo, tipo, aoEscolher }: { catalogo: Catalogo | undefined; tipo: string; aoEscolher: (t: string) => void }) {
-  const doTipo = catalogo?.grupos.find((g) => g.tipos.some((t) => t.id === tipo))?.nome ?? null;
-  const [aberto, setAberto] = useState<string | null>(null);
-  const grupoAberto = aberto ?? doTipo;
-  if (!catalogo) return <Carregando linhas={3} />;
-  return (
-    <div className="dc-catalogo" role="listbox" aria-label="Tipo de peça">
-      {catalogo.grupos.map((g) => (
-        <Fragment key={g.nome}>
-          <button type="button" className={cn(grupoAberto === g.nome && "is-grupo-on")} aria-expanded={grupoAberto === g.nome} onClick={() => setAberto(grupoAberto === g.nome ? "" : g.nome)}>
-            <span>{g.nome}</span>
-            <span>{g.tipos.length}</span>
-          </button>
-          {grupoAberto === g.nome &&
-            g.tipos.map((t) => (
-              <button key={t.id} type="button" role="option" aria-selected={t.id === tipo} className={cn("dc-catalogo__tipo", t.id === tipo && "is-on")} onClick={() => aoEscolher(t.id)}>
-                <span>{t.nome}</span>
-                {t.id === tipo ? <Check /> : <span />}
-              </button>
-            ))}
-        </Fragment>
-      ))}
-    </div>
-  );
-}
-
 function Inline({ texto }: { texto: string }) {
   return (
     <>
@@ -593,8 +923,6 @@ function Inline({ texto }: { texto: string }) {
 
 /** A peça como o DOCX vai sair: timbre no alto, endereçamento, seções e parágrafos com recuo. */
 export function Folha({ texto, timbre, escrevendo }: { texto: string; timbre: Timbre; escrevendo?: boolean }) {
-  const cor = timbre.cor ? (timbre.cor.startsWith("#") ? timbre.cor : `#${timbre.cor}`) : undefined;
-  const linha = [timbre.registro, timbre.endereco, timbre.contato].filter(Boolean).join(" · ");
   const saida: ReactNode[] = [];
   let lista: { numerado: boolean; itens: string[] } | null = null;
   const fecharLista = () => {
@@ -648,13 +976,21 @@ export function Folha({ texto, timbre, escrevendo }: { texto: string; timbre: Ti
   fecharLista();
   return (
     <article className="dc-folha" aria-busy={escrevendo || undefined}>
-      <header className="dc-folha__timbre" style={cor ? { borderColor: cor } : undefined}>
-        {timbre.logoDocumentoId && <img src={`/api/app/escritorio/logo?v=${timbre.logoDocumentoId}`} alt="" className="dc-folha__logo" />}
-        <strong style={cor ? { color: cor } : undefined}>{timbre.nome}</strong>
-        {linha && <span>{linha}</span>}
-      </header>
+      <CabecalhoDoTimbre timbre={timbre} />
       {saida}
       {escrevendo && <span className="dc-ia__cursor" aria-hidden />}
     </article>
+  );
+}
+
+function CabecalhoDoTimbre({ timbre }: { timbre: Timbre }) {
+  const cor = timbre.cor ? (timbre.cor.startsWith("#") ? timbre.cor : `#${timbre.cor}`) : undefined;
+  const linha = [timbre.registro, timbre.endereco, timbre.contato].filter(Boolean).join(" · ");
+  return (
+    <header className="dc-folha__timbre" style={cor ? { borderColor: cor } : undefined}>
+      {timbre.logoDocumentoId && <img src={`/api/app/escritorio/logo?v=${timbre.logoDocumentoId}`} alt="" className="dc-folha__logo" />}
+      <strong style={cor ? { color: cor } : undefined}>{timbre.nome}</strong>
+      {linha && <span>{linha}</span>}
+    </header>
   );
 }

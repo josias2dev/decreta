@@ -362,13 +362,118 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 /* No computador a tela fica parada e cada coluna rola por si. No rascunho só o papel rola: o título
    do rascunho fica em cima e o aviso da IA embaixo, sempre à vista. */
 .dc-pagina--cheia > .dc-peca { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
-.dc-peca__lado { min-height: 0; overflow-y: auto; }
 .dc-peca__rascunho { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .dc-peca__rascunho > * { flex: none; }
 .dc-peca__rascunho > .dc-folha-fundo { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .dc-peca__rascunho > .dc-folha-fundo > .dc-folha { margin: 0 auto; }
 /* O rodapé tem a altura de quando mostra o retorno, para o papel não pular ao editar. */
 .dc-peca__rascunho > .dc-peca__pe { box-sizing: border-box; min-height: 41px; }
+
+.dc-peca__revisada { display: inline-flex; align-items: center; gap: 6px; color: var(--tinta-2); }
+.dc-peca__revisada svg { width: 14px; height: 14px; flex: none; color: var(--acento); }
+.dc-peca__rascunho > .dc-peca__pe > .dc-btn { flex: none; }
+
+/* O pedido: os três passos rolam (se a tela for baixa) e o botão de gerar fica preso embaixo, sempre à vista. */
+.dc-pedido { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-pedido__passos { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding: 14px var(--space-4) var(--space-4); }
+.dc-pedido__pe { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 12px var(--space-4) 14px; border-top: 1px solid var(--borda); }
+.dc-pedido__assina { margin: 0; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); text-align: center; text-wrap: balance; }
+.dc-pedido__assina strong { font-weight: 500; color: var(--tinta-2); }
+.dc-pedido__aviso { margin: 0; font: 500 12px/16px var(--font-sans); color: var(--acento); text-align: center; }
+.dc-pedido__instrucoes { resize: none; min-height: 92px; max-height: 240px; field-sizing: content; }
+.dc-pedido__passo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dc-pedido__topo { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.dc-pedido__n { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 999px; background: var(--superficie-2); box-shadow: inset 0 0 0 1px var(--borda); color: var(--tinta-2); font: 600 11px/1 var(--font-sans); font-variant-numeric: tabular-nums; }
+.dc-pedido__titulo { flex: 1; min-width: 0; margin: 0; font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-pedido__nota { flex: none; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
+.dc-pedido__efeito { margin: 0; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
+
+/* O tipo de peça: um campo de escolha, e a lista com busca que abre embaixo dele. */
+.dc-seletor { display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 8px 0 10px; box-sizing: border-box; border: 1px solid var(--borda-forte); border-radius: var(--radius-md); background: var(--superficie); box-shadow: var(--sombra-leve); font: 500 14px/20px var(--font-sans); color: var(--tinta); text-align: left; cursor: pointer; }
+.dc-seletor:hover { border-color: color-mix(in srgb, var(--borda-forte) 60%, var(--tinta-3)); }
+.dc-seletor:focus-visible, .dc-seletor[aria-expanded="true"] { outline: none; border-color: var(--foco); box-shadow: 0 0 0 3px var(--anel); }
+.dc-seletor__nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-seletor svg { width: 15px; height: 15px; flex: none; color: var(--tinta-3); }
+.dc-tipos-flutuante { display: flex; flex-direction: column; width: var(--radix-popover-trigger-width); max-height: min(460px, var(--radix-popover-content-available-height)); padding: 0; overflow: hidden; }
+.dc-tipos { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+.dc-tipos__busca { flex: none; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-bottom: 1px solid var(--borda); }
+.dc-tipos__busca svg { width: 15px; height: 15px; flex: none; color: var(--tinta-3); }
+.dc-tipos__busca input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: none; background: transparent; font: 400 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-tipos__busca input::placeholder { color: var(--tinta-3); }
+.dc-tipos__lista { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 4px 4px; }
+.dc-tipos__grupo { padding: 10px 8px 4px; font: 500 12px/16px var(--font-sans); color: var(--tinta-3); }
+.dc-tipos__item { display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 8px; border: 0; border-radius: var(--radius-md); background: transparent; font: 400 14px/20px var(--font-sans); color: var(--tinta); text-align: left; cursor: pointer; }
+.dc-tipos__item > span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-tipos__item.is-ativo { background: var(--superficie-2); }
+.dc-tipos__item[aria-selected="true"] { font-weight: 500; }
+.dc-tipos__item svg { width: 15px; height: 15px; flex: none; color: var(--acento); }
+.dc-tipos__sugerido { flex: none; padding: 0 6px; border-radius: 999px; background: var(--acento-suave); color: var(--acento); font: 500 11.5px/18px var(--font-sans); }
+.dc-tipos__nada { margin: 0; padding: 16px 8px; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
+/* No celular a lista é uma folha alta: a busca fica parada e só a lista rola. */
+.dc-dialogo.dc-dialogo--tipos { height: 82dvh; overflow: hidden; padding-bottom: 0; gap: var(--space-3); }
+.dc-dialogo--tipos .dc-tipos__busca { height: 44px; border: 1px solid var(--borda-forte); border-radius: 6px; }
+.dc-dialogo--tipos .dc-tipos__busca input { font-size: 16px; }
+.dc-dialogo--tipos .dc-tipos__lista { margin: 0 calc(-1 * var(--space-2)); padding: 0 var(--space-2) calc(var(--space-4) + env(safe-area-inset-bottom)); }
+.dc-dialogo--tipos .dc-tipos__item { height: 44px; font-size: 15px; }
+
+/* O que a IA lê: uma linha por fonte, com o que ela faz na peça. */
+.dc-fontes { display: flex; flex-direction: column; border: 1px solid var(--borda); border-radius: var(--radius-md); overflow: hidden; }
+.dc-fonte + .dc-fonte { border-top: 1px solid var(--borda); }
+.dc-fonte__linha { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 7px 10px 7px 12px; box-sizing: border-box; border: 0; background: transparent; font: inherit; color: var(--tinta); text-align: left; }
+button.dc-fonte__linha { cursor: pointer; }
+button.dc-fonte__linha:hover { background: color-mix(in srgb, var(--superficie-2) 60%, transparent); }
+button.dc-fonte__linha:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--anel); }
+.dc-fonte__icone { width: 16px; height: 16px; flex: none; color: var(--acento); }
+.dc-fonte__texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.dc-fonte__titulo { font: 500 14px/20px var(--font-sans); }
+.dc-fonte__efeito { font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
+.dc-fonte__conta { flex: none; font: 500 12px/16px var(--font-sans); color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+.dc-fonte__seta { width: 14px; height: 14px; flex: none; color: var(--tinta-3); transition: transform .15s; }
+.dc-fonte.is-aberta .dc-fonte__seta { transform: rotate(180deg); }
+.dc-fonte.is-apagada .dc-fonte__icone { color: var(--tinta-3); }
+.dc-fonte.is-apagada .dc-fonte__titulo { color: var(--tinta-2); }
+.dc-fonte__lista { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0 12px 10px 38px; list-style: none; }
+.dc-fonte__lista li { font: 400 12px/16px var(--font-sans); color: var(--tinta-2); }
+
+/* A folha antes de gerar: as partes do tipo em linhas cinza, no timbre, com quem assina. */
+.dc-estrutura { animation: dc-estrutura-surge .2s ease-out; }
+@keyframes dc-estrutura-surge { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.dc-estrutura i { display: block; height: 7px; border-radius: 4px; background: #ececf0; }
+.dc-estrutura__enderecamento { display: flex; flex-direction: column; gap: 8px; }
+.dc-estrutura__enderecamento span { font: 600 11.5px/16px var(--font-sans); letter-spacing: 0.02em; text-transform: uppercase; color: #6b6a76; }
+.dc-estrutura__enderecamento i { width: 72%; height: 8px; background: #e2e2e8; }
+.dc-folha p.dc-estrutura__nome { margin: 30px 0 22px; text-align: center; text-indent: 0; font: 600 14px/20px var(--font-sans); letter-spacing: 0.02em; text-transform: uppercase; color: #1c1c22; }
+.dc-estrutura__parte { margin-bottom: 20px; }
+.dc-folha .dc-estrutura__parte h3 { margin: 0 0 9px; font: 600 12.5px/18px var(--font-sans); letter-spacing: 0.02em; text-transform: uppercase; color: #3a3a44; }
+.dc-estrutura__linhas { display: flex; flex-direction: column; gap: 8px; }
+.dc-estrutura__linhas i:first-child { margin-left: 2.5em; }
+.dc-estrutura__parte:nth-of-type(3n + 1) .dc-estrutura__linhas i:last-child { width: 62%; }
+.dc-estrutura__parte:nth-of-type(3n + 2) .dc-estrutura__linhas i:last-child { width: 84%; }
+.dc-estrutura__parte:nth-of-type(3n) .dc-estrutura__linhas i:last-child { width: 46%; }
+.dc-estrutura__fecho { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 30px; font: 400 13px/18px var(--font-sans); color: #6b6a76; }
+.dc-estrutura__fecho strong { margin-top: 22px; font: 600 13.5px/18px var(--font-sans); color: #1c1c22; }
+
+/* No celular, com o rascunho pronto, o pedido vira um resumo que abre de novo os passos. */
+.dc-pedido-resumo { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; font: inherit; text-align: left; cursor: pointer; }
+.dc-celular .dc-pedido__passo { gap: 10px; }
+.dc-celular .dc-pedido__titulo { font-size: 15px; }
+.dc-celular .dc-pedido__efeito, .dc-celular .dc-fonte__efeito { font-size: 13px; line-height: 18px; }
+.dc-celular .dc-seletor { height: 44px; padding: 0 12px 0 14px; border-radius: 6px; font-size: 15px; }
+.dc-celular .dc-fontes { border-radius: var(--radius-lg); background: var(--superficie); }
+.dc-celular .dc-fonte__linha { min-height: 56px; padding: 8px 14px; }
+.dc-celular .dc-fonte__titulo { font-size: 15px; }
+.dc-celular .dc-fonte__lista { padding: 0 14px 12px 40px; }
+.dc-celular .dc-fonte__lista li { font-size: 13px; line-height: 18px; }
+.dc-celular .dc-pedido__assina { font-size: 13px; line-height: 18px; text-align: left; margin-top: calc(-1 * var(--space-3)); }
+
+/* Tablet: o pedido em cima e a peça embaixo, e a página rola inteira. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .dc-app .dc-pagina--cheia.dc-pagina--peca { flex: none; height: auto; min-height: 0; }
+  .dc-pagina--peca > .dc-peca { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .dc-pagina--peca .dc-pedido, .dc-pagina--peca .dc-peca__rascunho { overflow: visible; }
+  .dc-pagina--peca .dc-pedido__passos { overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .dc-pagina--peca .dc-peca__rascunho > .dc-folha-fundo { flex: none; overflow: visible; }
+}
 
 /* ---------- Modelos ---------- */
 .dc-filtro-tipo { flex: 0 1 260px; }
@@ -471,10 +576,10 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-quadro__coluna { min-height: 0; }
 .dc-quadro__corpo { display: flex; flex-direction: column; gap: var(--space-2); min-height: 0; overflow-y: auto; margin: 0 -4px; padding: 0 4px 4px; }
 /* Coluna com mais cartões do que cabem: o último esmaece embaixo, avisando que tem mais (some ao chegar no fim).
-   O pedido da peça (à esquerda do rascunho) faz o mesmo. */
+   Os passos do pedido da peça (à esquerda do rascunho) fazem o mesmo. */
 @property --dc-esmaece { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @supports (animation-timeline: scroll()) {
-  .dc-quadro__corpo, .dc-peca__lado { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); animation: dc-esmaece linear both; animation-timeline: scroll(self block); animation-range: calc(100% - 32px) 100%; }
+  .dc-quadro__corpo, .dc-pedido__passos { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--dc-esmaece)), transparent); animation: dc-esmaece linear both; animation-timeline: scroll(self block); animation-range: calc(100% - 32px) 100%; }
 }
 @keyframes dc-esmaece { from { --dc-esmaece: 32px; } to { --dc-esmaece: 0px; } }
 

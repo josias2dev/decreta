@@ -2,8 +2,11 @@
  * API de mentira da prévia: responde no próprio navegador com as amostras de
  * e2e/amostras (o escritório de demonstração), como a dos testes de tela.
  * Endereço sem amostra própria usa a do mesmo tipo (qualquer processo abre o
- * processo de amostra). O que muda algo responde "ok" e não guarda nada.
+ * processo de amostra). O que muda algo responde "ok" e não guarda nada, menos
+ * a peça: Gerar peça escreve uma de mentira aos poucos e a guarda enquanto a
+ * prévia está aberta, para revisar, editar e gerar de novo.
  */
+import { aosPedacos, pecaDeMentira } from "./peca-gerada";
 import { PECA_LONGA } from "./peca-longa";
 
 type Amostra = { path: string; corpo: unknown };
@@ -59,6 +62,37 @@ const sessao = {
   user: { id: eu.usuario.id, name: eu.usuario.nome, email: "teste@decreta.site", emailVerified: true, twoFactorEnabled: false },
 };
 
+/** A IA fica ligada na prévia; o que ela não faz aqui responde com um aviso. */
+const euComIa = { ...eu, ia: true };
+const SEM_IA_NA_PREVIA = /^\/(ia\/(briefing|resumo|audiencia|chat)\/|(clientes|negocios)\/[^/]+\/conferir$|documentos\/[^/]+\/ler$|publicacoes\/[^/]+\/(sentenca|sugerir)$)/;
+
+/** A peça que a prévia escreveu ou que a pessoa escreveu à mão, enquanto a prévia está aberta. */
+const ID_DA_PECA = "00000000-0000-4000-8000-00000000beef";
+type PecaGuardada = { id: string; processoId: string; prazoId: string | null; tipo: string; titulo: string; instrucoes: string; texto: string; situacao: "rascunho" | "revisada"; atualizadaEm: string; rodape: string; revisao: unknown; modelos: unknown[] };
+let pecaGuardada: PecaGuardada | null = null;
+const catalogo = amostras.find((a) => a.path === "/pecas/catalogo")!.corpo as { grupos: { tipos: { id: string; nome: string; estrutura: string }[] }[] };
+const preparos = amostras.filter((a) => a.path.startsWith("/pecas/preparar")).map((a) => a.corpo as { processo: { id: string; titulo: string; cnj: string | null; orgao: string | null }; assina: { nome: string; oab: string | null } | null });
+const tipoDePeca = (id: string) => catalogo.grupos.flatMap((g) => g.tipos).find((t) => t.id === id);
+
+function guardarPeca(b: { processoId: string; prazoId?: string | null; tipo: string; instrucoes?: string; texto: string }): PecaGuardada {
+  const prep = preparos.find((x) => x.processo.id === b.processoId) ?? preparos[0]!;
+  pecaGuardada = {
+    id: ID_DA_PECA,
+    processoId: b.processoId,
+    prazoId: b.prazoId ?? null,
+    tipo: b.tipo,
+    titulo: `${tipoDePeca(b.tipo)?.nome ?? "Peça"} · ${prep.processo.titulo.split(" × ")[0]}`,
+    instrucoes: b.instrucoes ?? "",
+    texto: b.texto,
+    situacao: "rascunho",
+    atualizadaEm: new Date().toISOString(),
+    rodape: "Gerado por IA. Confira nos autos.",
+    revisao: null,
+    modelos: [],
+  };
+  return pecaGuardada;
+}
+
 const fetchReal = window.fetch.bind(window);
 
 window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
@@ -72,6 +106,29 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
   const caminho = url.pathname.slice("/api/app".length);
   const metodo = pedido.method;
 
+  if (caminho === "/eu") return json(200, comFotos(euComIa));
+  if (metodo === "POST" && SEM_IA_NA_PREVIA.test(caminho)) return json(503, { erro: "ia_desligada", detalhe: "Na prévia, a IA só escreve a peça e responde no Perguntar." });
+  if (metodo === "POST" && caminho === "/pecas") {
+    const b = (await pedido.json()) as { processoId: string; prazoId?: string | null; tipo: string; instrucoes: string };
+    const prep = preparos.find((x) => x.processo.id === b.processoId) ?? preparos[0]!;
+    const tipo = tipoDePeca(b.tipo) ?? tipoDePeca("outro")!;
+    const texto = pecaDeMentira({ tipo, instrucoes: b.instrucoes, processo: prep.processo, assina: prep.assina });
+    guardarPeca({ ...b, texto });
+    return new Response(aosPedacos(texto), { headers: { "content-type": "text/plain; charset=utf-8", "x-peca-id": ID_DA_PECA } });
+  }
+  if (metodo === "POST" && caminho === "/pecas/manual") return json(201, { id: guardarPeca((await pedido.json()) as PecaGuardada).id });
+  if (caminho === `/pecas/${ID_DA_PECA}` && pecaGuardada) {
+    if (metodo === "PUT") {
+      const b = (await pedido.json()) as { texto?: string; situacao?: "rascunho" | "revisada" };
+      const revisou = b.situacao === "revisada";
+      const mudou = b.texto !== undefined && b.texto !== pecaGuardada.texto;
+      Object.assign(pecaGuardada, b.texto !== undefined ? { texto: b.texto } : {}, { atualizadaEm: new Date().toISOString() });
+      if (revisou) Object.assign(pecaGuardada, { situacao: "revisada", revisao: { por: { ...eu.usuario, oab: "OAB/SC 41.233" }, em: new Date().toISOString() } });
+      else if (mudou) Object.assign(pecaGuardada, { situacao: "rascunho", revisao: null });
+      return json(200, { ok: true, situacao: pecaGuardada.situacao });
+    }
+    if (metodo === "GET") return json(200, pecaGuardada);
+  }
   if (metodo === "POST" && caminho === "/ia/perguntar") {
     const eventos = amostras.find((a) => a.path === "/ia/perguntar?eventos")!.corpo as unknown[];
     return new Response(`${eventos.map((e) => JSON.stringify(e)).join("\n")}\n`, { headers: { "content-type": "application/x-ndjson" } });

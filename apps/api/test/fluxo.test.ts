@@ -255,7 +255,7 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
   test("peça gerada aos poucos e baixada em DOCX no timbre", async () => {
     await call("/escritorio", { method: "PUT", json: { timbre: { nome: "Souza & Mendes Advocacia", registro: "OAB/SC 1.234", endereco: "Rua das Palmeiras, 100, Joinville/SC" } } });
     const prep = await json(call(`/pecas/preparar?prazo=${prazoId}`));
-    expect(prep).toMatchObject({ tipoSugerido: "manifestacao-laudo", leu: ["Briefing do prazo"] });
+    expect(prep).toMatchObject({ tipoSugerido: "manifestacao-laudo", documentos: [], briefing: true });
     ia.respostas["gerar-documento"] = "# Excelentíssimo Senhor Doutor Juiz de Direito da 2ª Vara Cível da Comarca de Joinville\n\n**Marina Duarte**, já qualificada, manifesta-se sobre o laudo.\n\n## I – Dos pedidos\n\n- a homologação do laudo.";
     const r = await call("/pecas", { method: "POST", json: { processoId, prazoId, tipo: "manifestacao-laudo", instrucoes: "Concordar com o laudo." } });
     expect(r.status).toBe(200);

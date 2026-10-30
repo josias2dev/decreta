@@ -8,7 +8,7 @@ import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { modelosParaPeca } from "../servicos/modelos.ts";
-import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
+import { pessoasDoEscritorio, type Pessoa } from "../servicos/pessoas.ts";
 import { corpo, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 function briefingEmTexto(b: Briefing): string {
@@ -19,10 +19,13 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
 
   app.get("/pecas/catalogo", (c) =>
-    c.json({ total: CATALOGO.length, grupos: GRUPOS_DE_PECA.map((g) => ({ nome: g, tipos: CATALOGO.filter((t) => t.grupo === g).map((t) => ({ id: t.id, nome: t.nome })) })) }),
+    c.json({
+      total: CATALOGO.length,
+      grupos: GRUPOS_DE_PECA.map((g) => ({ nome: g, tipos: CATALOGO.filter((t) => t.grupo === g).map((t) => ({ id: t.id, nome: t.nome, estrutura: t.estrutura })) })),
+    }),
   );
 
-  /** O que a tela Gerar peça precisa antes de gerar: o tipo sugerido pelo prazo e o que a IA vai ler. */
+  /** O que a tela Gerar peça precisa antes de gerar: o tipo sugerido pelo prazo, o que a IA vai ler e quem assina. */
   app.get("/pecas/preparar", async (c) => {
     const prazoId = c.req.query("prazo");
     const processoIdPedido = c.req.query("processo");
@@ -44,11 +47,15 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [rascunho] = await tx.select().from(pecas).where(prazo ? eq(pecas.prazoId, prazo.id) : eq(pecas.processoId, processoId)).orderBy(desc(pecas.updatedAt)).limit(1);
       const tipo = (tipoPedido && tipoDePeca(tipoPedido)) || (rascunho && tipoDePeca(rascunho.tipo)) || sugerido;
       const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: sobreOCaso(p, prazo?.tipo) });
+      const advogado = quemAssina(await pessoasDoEscritorio(db, tx, c.get("orgId")), prazo, p, c.get("userId"));
       return c.json({
         processo: { id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao },
         prazo: prazo ? { id: prazo.id, tipo: prazo.tipo, fim: prazo.fim } : null,
         tipoSugerido: sugerido.id,
-        leu: [...docs.map((d) => (d.evento != null ? `${d.nome} · evento ${d.evento}` : d.nome)), ...(briefing ? ["Briefing do prazo"] : [])],
+        /** Os documentos dos autos com texto (além dos dados e das movimentações, que vão sempre). */
+        documentos: docs.map((d) => (d.evento != null ? `${d.nome} · evento ${d.evento}` : d.nome)),
+        briefing: !!briefing,
+        assina: advogado ? { nome: advogado.nome, oab: advogado.oab } : null,
         /** Os modelos do escritório que a IA vai seguir para o tipo escolhido. */
         modelos: doBanco.map((m) => ({ id: m.id, titulo: m.titulo })),
         ultima: rascunho ? { id: rascunho.id, titulo: rascunho.titulo, tipo: rascunho.tipo, instrucoes: rascunho.instrucoes, texto: rascunho.texto, situacao: rascunho.situacao, atualizadaEm: rascunho.updatedAt.toISOString() } : null,
@@ -109,9 +116,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const ctx = await carregarContexto(tx, p.id, { documentos: true });
       const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: [sobreOCaso(p, prazo?.tipo), b.instrucoes].join(" ") });
       const [esc] = await tx.select().from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
-      const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
-      const advogadoId = prazo?.responsavelId ?? p.responsavelId ?? c.get("userId");
-      const advogado = pessoas.get(advogadoId) ?? pessoas.get(c.get("userId"));
+      const advogado = quemAssina(await pessoasDoEscritorio(db, tx, c.get("orgId")), prazo, p, c.get("userId"));
       const titulo = `${tipo.nome} · ${p.titulo.split(" × ")[0]}`;
       const valores = { tipo: tipo.id, titulo, instrucoes: b.instrucoes, texto: "", situacao: "rascunho" as const, criadaPor: c.get("userId"), revisadaPor: null, revisadaEm: null, modelos: doBanco.map((m) => m.id) };
       const pecaId = b.pecaId
@@ -210,6 +215,11 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       },
     });
   });
+}
+
+/** Quem assina a peça: o responsável pelo prazo, senão o do processo, senão quem pediu. */
+function quemAssina(pessoas: Map<string, Pessoa>, prazo: { responsavelId: string | null } | undefined, p: { responsavelId: string | null }, userId: string): Pessoa | undefined {
+  return pessoas.get(prazo?.responsavelId ?? p.responsavelId ?? userId) ?? pessoas.get(userId);
 }
 
 /** Do que é o caso, em palavras: o que a busca dos modelos compara. */
