@@ -3,7 +3,7 @@
  * tarefas, num lugar só. A tela Hoje e o resumo da manhã no WhatsApp leem
  * daqui.
  */
-import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, somarDias, urgenciaDoPrazo, type Calendario, type Dia, type Urgencia } from "@decreta/core";
+import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, nomeDaAudiencia, somarDias, urgenciaDoPrazo, type Calendario, type Dia, type Urgencia } from "@decreta/core";
 import { alvaras, analises, audiencias, negocios, prazos, processos, publicacoes, tarefas, type Database, type Tx } from "@decreta/db";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
@@ -141,7 +141,7 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       id: a.id,
       urgencia: "audiencia",
       quando: horaLocal(a.em, timeZone),
-      titulo: `Audiência de ${a.tipo.toLocaleLowerCase("pt-BR")}${a.porVideo ? " · por vídeo" : ""}`,
+      titulo: `${nomeDaAudiencia(a.tipo)}${a.porVideo ? " · por vídeo" : ""}`,
       detalhe: detalheDoProcesso(processo),
       cnj: processo.cnj,
       processoId: a.processoId,

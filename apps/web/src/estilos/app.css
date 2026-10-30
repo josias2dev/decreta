@@ -684,3 +684,154 @@ a.dc-cartao-ia__nome:hover { color: var(--acento); }
 .dc-celular .dc-cartao-ia__numeros .dc-contador { padding: 10px 6px; align-items: center; text-align: center; }
 .dc-celular .dc-cartao-ia__numeros .dc-contador__n { font-size: 20px; line-height: 26px; }
 .dc-celular .dc-cartao-ia__numeros .dc-contador__rotulo { order: 0; font-size: 11px; line-height: 14px; justify-content: center; }
+
+/* ---------- Agenda: lista, semana e mês ---------- */
+/* Vista (segmentos) e anterior/próximo grudados num botão só. */
+.dc-segmentos { display: inline-flex; flex: none; gap: 2px; height: 32px; padding: 2px; box-sizing: border-box; background: var(--superficie-2); border: 1px solid var(--borda); border-radius: var(--radius-md); }
+.dc-segmentos__item { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 100%; padding: 0 10px; border: 0; border-radius: 4px; background: transparent; color: var(--tinta-2); font: 500 13px/18px var(--font-sans); white-space: nowrap; cursor: pointer; }
+.dc-segmentos__item svg { width: 15px; height: 15px; flex: none; color: var(--tinta-3); }
+.dc-segmentos__item:hover { color: var(--tinta); }
+.dc-segmentos__item.is-on { background: var(--superficie); color: var(--tinta); box-shadow: 0 0 0 1px var(--borda), 0 1px 2px rgba(27, 25, 45, 0.08); }
+.dc-segmentos__item.is-on svg { color: var(--tinta); }
+.dc-segmentos__item:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
+.dc-grupo { display: inline-flex; flex: none; }
+.dc-grupo > .dc-btn { width: 32px; padding: 0; border-radius: 0; }
+.dc-grupo > .dc-btn:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.dc-grupo > .dc-btn:last-child { margin-left: -1px; border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.dc-grupo > .dc-btn:focus-visible { position: relative; z-index: 1; }
+
+.dc-agenda-barra { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.dc-agenda-barra__periodo { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.dc-agenda-barra__titulo { margin: 0 0 0 var(--space-1); min-width: 0; font: 600 16px/22px var(--font-sans); letter-spacing: -0.015em; color: var(--tinta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-celular .dc-agenda-barra { gap: var(--space-2); }
+.dc-celular .dc-agenda-barra .dc-segmentos { flex: 1 1 auto; height: 40px; border-radius: 6px; }
+.dc-celular .dc-segmentos__item { font-size: 14px; border-radius: 5px; }
+.dc-celular .dc-segmentos__item svg { display: none; }
+.dc-celular .dc-grupo > .dc-btn { width: 44px; height: 40px; padding: 0; }
+.dc-topo .dc-btn--fantasma.dc-topo__texto-btn { width: auto; padding: 0 10px; }
+
+/* O título de cada dia (na lista e ao lado do mês), com o feriado quando há. */
+.dc-agenda__dia { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.dc-secao__titulo.dc-agenda__dia { font-size: 15px; }
+.dc-agenda__dia.is-hoje { color: var(--acento); }
+.dc-agenda__feriado { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: var(--radius-pill); background: var(--superficie-2); color: var(--tinta-2); font: 500 12px/16px var(--font-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* Mês e semana ocupam a altura que sobra; cada dia (ou o dia ao lado) rola por dentro. */
+.dc-pagina--cheia > .dc-semana, .dc-pagina--cheia > .dc-agenda-mes { flex: 1 1 auto; min-height: 0; }
+.dc-pagina--cheia > .dc-painel.dc-semana { display: grid; }
+.dc-agenda-mes { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: minmax(0, 1fr); gap: var(--space-4); }
+@media (max-width: 1400px) { .dc-agenda-mes { grid-template-columns: minmax(0, 1fr) 300px; } }
+/* Tablet: o dia escolhido vai para baixo do mês, a semana rola para o lado e os segmentos ficam sem ícone. */
+@media (max-width: 1100px) {
+  .dc-agenda-mes { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); }
+  .dc-agenda-mes .dc-legenda { display: none; }
+  .dc-segmentos__item svg { display: none; }
+  .dc-pagina--cheia > .dc-painel.dc-semana { overflow-x: auto; grid-template-columns: repeat(5, minmax(136px, 1fr)) repeat(2, minmax(88px, 0.62fr)); }
+}
+/* Na tela grande o calendário usa a largura (a lista vai junto, para o título não pular ao trocar de vista). */
+.dc-pagina--agenda { max-width: 1600px; }
+.dc-agenda-mes__dia { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-agenda-mes__dia > .dc-painel__topo { flex: none; }
+.dc-agenda-mes__dia > .dc-rola { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.dc-agenda-mes__dia .dc-painel__titulo { overflow: hidden; }
+
+/* Rótulo de um compromisso no mês: audiência em branco com a hora, prazo com a cor da urgência, tarefa com o quadradinho. */
+.dc-marca { display: flex; align-items: center; gap: 5px; flex: none; min-width: 0; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 4px; font: 500 12px/16px var(--font-sans); color: var(--tinta); text-decoration: none; white-space: nowrap; overflow: hidden; }
+.dc-marca__texto { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dc-marca__hora { flex: none; font-weight: 600; }
+a.dc-marca:hover { filter: brightness(0.96); }
+a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
+.dc-marca--audiencia { background: var(--superficie); box-shadow: inset 0 0 0 1px var(--borda-forte); }
+.dc-marca--vencido { background: var(--vencido-suave); color: var(--vencido); }
+.dc-marca--hoje { background: var(--hoje-suave); color: var(--hoje); }
+.dc-marca--breve { background: var(--breve-suave); color: var(--breve); }
+.dc-marca--prazo { background: var(--superficie-2); color: var(--tinta-2); }
+.dc-marca--vencido::before, .dc-marca--hoje::before, .dc-marca--breve::before, .dc-marca--prazo::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.dc-marca--tarefa, .dc-marca--feita { font-weight: 400; color: var(--tinta-2); }
+.dc-marca--tarefa::before, .dc-marca--feita::before { content: ""; flex: none; width: 9px; height: 9px; box-sizing: border-box; border: 1.5px solid var(--borda-forte); border-radius: 2px; }
+.dc-marca--feita { color: var(--tinta-3); }
+.dc-marca--feita::before { border-color: var(--tinta-3); background: var(--tinta-3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 7px no-repeat; opacity: .7; }
+
+/* Mês no computador: segunda a sexta largos, sábado e domingo estreitos. */
+.dc-mes { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-mes__cabeca, .dc-mes__semanas, .dc-semana { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) repeat(2, minmax(0, 0.62fr)); }
+.dc-mes__cabeca { flex: none; height: 32px; align-items: center; background: var(--superficie-2); border-bottom: 1px solid var(--borda); }
+.dc-mes__cabeca span { padding: 0 12px; font: 500 11px/16px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); }
+.dc-mes__semanas { flex: 1 1 auto; min-height: 0; }
+.dc-mes__dia { display: flex; flex-direction: column; gap: 4px; min-width: 0; min-height: 0; padding: 6px 6px 4px; box-sizing: border-box; overflow: hidden; border-right: 1px solid var(--superficie-2); border-bottom: 1px solid var(--superficie-2); cursor: pointer; }
+.dc-mes__dia:nth-child(7n) { border-right: 0; }
+.dc-mes__dia:nth-last-child(-n + 7) { border-bottom: 0; }
+.dc-mes__dia:nth-child(7n), .dc-mes__dia:nth-child(7n - 1), .dc-mes__dia.is-feriado, .dc-semana__dia:nth-child(n + 6), .dc-semana__dia.is-feriado { background: color-mix(in srgb, var(--superficie-2) 70%, var(--superficie)); }
+.dc-mes__dia:hover { background: color-mix(in srgb, var(--superficie-2) 80%, var(--superficie)); }
+.dc-mes__dia.is-on { background: var(--acento-suave); box-shadow: inset 0 0 0 1px var(--acento-borda); }
+.dc-mes__topo { display: flex; align-items: center; gap: 6px; flex: none; min-width: 0; height: 24px; }
+.dc-mes__n { display: inline-grid; place-items: center; flex: none; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border: 0; border-radius: var(--radius-pill); background: transparent; font: 500 13px/1 var(--font-sans); color: var(--tinta); cursor: pointer; }
+.dc-mes__n:hover { background: var(--superficie-2); }
+.dc-mes__n:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
+.dc-mes__dia.is-fora .dc-mes__n { color: var(--tinta-3); }
+.dc-mes__dia.is-hoje .dc-mes__n { background: var(--acento); color: var(--on-acento); font-weight: 600; }
+.dc-mes__feriado, .dc-semana__feriado { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11px/16px var(--font-sans); color: var(--tinta-3); }
+.dc-mes__itens { display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+.dc-mes__dia.is-fora .dc-mes__itens { opacity: 0.6; }
+.dc-mes__mais { align-self: flex-start; flex: none; max-width: 100%; height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 6px; border: 0; border-radius: 4px; background: transparent; font: 500 12px/16px var(--font-sans); color: var(--tinta-2); cursor: pointer; }
+.dc-mes__mais:hover { background: var(--superficie-2); color: var(--tinta); }
+.dc-legenda { display: flex; flex-wrap: wrap; gap: 6px; flex: none; margin: 0; padding: var(--space-3) var(--space-4); list-style: none; border-top: 1px solid var(--borda); }
+.dc-legenda .dc-marca { cursor: default; }
+
+/* Semana no computador: uma coluna por dia, cada uma rola sozinha. */
+.dc-semana { grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+.dc-semana__dia { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.dc-semana__dia + .dc-semana__dia { border-left: 1px solid var(--borda); }
+.dc-semana__topo { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px var(--space-2); flex: none; padding: 10px 12px; box-sizing: border-box; border: 0; border-bottom: 1px solid var(--borda); background: transparent; text-align: left; cursor: pointer; }
+.dc-semana__topo:hover { background: color-mix(in srgb, var(--superficie-2) 70%, transparent); }
+.dc-semana__topo:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--anel); }
+.dc-semana__dia.is-on:not(.is-hoje) .dc-semana__topo { background: var(--acento-suave); }
+.dc-semana__nome { grid-column: 1 / -1; font: 500 11px/16px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); }
+.dc-semana__n { display: inline-grid; place-items: center; min-width: 28px; height: 28px; margin-left: -4px; padding: 0 4px; box-sizing: border-box; border-radius: var(--radius-pill); font: 600 20px/1 var(--font-sans); letter-spacing: -0.02em; color: var(--tinta); }
+.dc-semana__dia.is-hoje .dc-semana__nome { color: var(--acento); }
+.dc-semana__dia.is-hoje .dc-semana__n { background: var(--acento); color: var(--on-acento); font-size: 16px; }
+.dc-semana__itens { display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--space-2); }
+
+/* Compromisso na semana: a barra da esquerda tem a cor (grafite na audiência, a urgência no prazo). */
+.dc-evento { --cor: var(--borda-forte); --cor-meta: var(--tinta-2); display: flex; flex-direction: column; gap: 2px; flex: none; padding: 6px 8px 7px 9px; box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borda); border-left: 3px solid var(--cor); border-radius: 6px; box-shadow: var(--sombra-leve); color: var(--tinta); text-decoration: none; cursor: pointer; }
+.dc-evento:hover { border-color: var(--borda-forte); border-left-color: var(--cor); }
+.dc-evento:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
+.dc-evento__meta { display: flex; align-items: center; gap: 5px; min-width: 0; min-height: 18px; font: 600 12px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--cor-meta); }
+.dc-evento__meta svg { width: 13px; height: 13px; flex: none; }
+.dc-evento__meta .dc-avatar { width: 18px; height: 18px; margin-left: auto; font-size: 8.5px; }
+.dc-evento__meta .dc-checa { width: 14px; height: 14px; margin: 0; }
+.dc-evento__confirmar { padding: 0 6px; border-radius: var(--radius-pill); background: var(--acento-suave); color: var(--acento); font: 500 11px/16px var(--font-sans); white-space: nowrap; }
+.dc-evento__titulo { font: 500 13px/18px var(--font-sans); color: var(--tinta); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.dc-evento__sobre { font: 400 12px/16px var(--font-sans); color: var(--tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-evento--audiencia { --cor: var(--primaria); --cor-meta: var(--tinta); }
+.dc-evento--vencido { --cor: var(--vencido); --cor-meta: var(--vencido); }
+.dc-evento--hoje { --cor: var(--hoje); --cor-meta: var(--hoje); }
+.dc-evento--breve { --cor: var(--breve); --cor-meta: var(--breve); }
+.dc-evento--tarefa, .dc-evento--feita { --cor: var(--borda); font-weight: 500; }
+.dc-evento--feita { opacity: 0.65; }
+.dc-evento--feita .dc-evento__titulo { color: var(--tinta-3); text-decoration: line-through; }
+
+/* Celular: o mês (ou a semana) com pontinhos para escolher o dia; o dia aparece embaixo. */
+.dc-mini { padding: 6px 4px 4px; touch-action: pan-y; }
+.dc-mini__cabeca, .dc-mini__dias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.dc-mini__cabeca span { padding: 2px 0 2px; text-align: center; font: 500 11px/16px var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--tinta-3); }
+.dc-mini__dia { display: flex; flex-direction: column; align-items: center; gap: 2px; height: 46px; padding: 3px 0 0; box-sizing: border-box; border: 0; background: transparent; color: var(--tinta); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.dc-mini__dia:focus-visible { outline: none; }
+.dc-mini__dia:focus-visible .dc-mini__n { box-shadow: 0 0 0 3px var(--anel); }
+.dc-mini__n { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; font: 500 16px/1 var(--font-sans); }
+.dc-mini__dia:nth-child(7n) .dc-mini__n, .dc-mini__dia:nth-child(7n - 1) .dc-mini__n, .dc-mini__dia.is-feriado .dc-mini__n { color: var(--tinta-3); }
+.dc-mini__dia.is-fora { opacity: 0.4; }
+.dc-mini__dia.is-hoje .dc-mini__n { color: var(--acento); font-weight: 700; }
+.dc-mini__dia.is-on .dc-mini__n { background: var(--primaria); color: var(--on-primaria); font-weight: 600; }
+.dc-mini__dia.is-on.is-hoje .dc-mini__n { background: var(--acento); color: var(--on-acento); }
+.dc-mini__pontos { display: flex; gap: 3px; height: 5px; }
+.dc-mini__pontos i { width: 5px; height: 5px; border-radius: 50%; }
+.dc-mini__pontos .is-audiencia { width: 10px; border-radius: 3px; background: var(--primaria); }
+.dc-mini__pontos .is-vencido { background: var(--vencido); }
+.dc-mini__pontos .is-hoje { background: var(--hoje); }
+.dc-mini__pontos .is-breve { background: var(--breve); }
+.dc-mini__pontos .is-prazo { background: var(--borda-forte); }
+.dc-mini__pontos .is-tarefa { box-sizing: border-box; border: 1.25px solid var(--tinta-3); }
+/* O menu do + no celular, com alvos de toque de 44px. */
+.dc-menu-flutuante.dc-celular .dc-menu-flutuante__item { height: 44px; padding: 0 var(--space-3); font-size: 15px; }
+.dc-menu-flutuante.dc-celular .dc-menu-flutuante__item svg { width: 18px; height: 18px; }

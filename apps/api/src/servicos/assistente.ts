@@ -12,6 +12,7 @@ import {
   hojeEm,
   horaLocal,
   instanteLocal,
+  nomeDaAudiencia,
   nomeDoDiaDaSemana,
   somarDias,
   urgenciaDoPrazo,
@@ -461,7 +462,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
           if (!x) dias.set(d, (x = { dia: d, rotulo: rotuloDoDia(d, dia), itens: [] }));
           return x.itens;
         };
-        for (const { a, processo } of auds) em(diaDoInstante(a.em, e.timezone)).push({ tipo: "audiencia", id: a.id, hora: horaLocal(a.em, e.timezone), titulo: `Audiência de ${a.tipo.toLocaleLowerCase("pt-BR")}`, porVideo: a.porVideo, processo });
+        for (const { a, processo } of auds) em(diaDoInstante(a.em, e.timezone)).push({ tipo: "audiencia", id: a.id, hora: horaLocal(a.em, e.timezone), titulo: nomeDaAudiencia(a.tipo), porVideo: a.porVideo, processo });
         for (const { p, processo } of przs) em(p.fim).push({ tipo: "prazo", id: p.id, titulo: p.tipo, urgencia: urgenciaDoPrazo(p, dia, cal) as UrgenciaNaIa, processo });
         for (const { t: tf, processo } of tars) em(tf.dia).push({ tipo: "tarefa", id: tf.id, titulo: tf.titulo, concluida: !!tf.concluidaEm, processo: processo?.id ? processo : null });
         return { dias: [...dias.values()].sort((a, b) => a.dia.localeCompare(b.dia)) };

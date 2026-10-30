@@ -97,6 +97,34 @@ test("peça revisada: quem revisou e guardar como modelo, no meio da tela", asyn
   await expect(page.getByRole("button", { name: "Guardar como modelo" })).toBeVisible();
 });
 
+test("agenda no celular: o mês com pontinhos, o dia embaixo e arrastar troca o mês", async ({ page }) => {
+  await abrir(page, "/agenda?vista=mes");
+  await expect(page.locator(".dc-topo__sobre")).toHaveText("Outubro de 2026");
+  await expect(page.getByRole("heading", { name: "Hoje, 29 out" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Audiência de conciliação/ })).toBeVisible();
+  await page.getByRole("button", { name: /^sexta, 30 de outubro/ }).tap();
+  await expect(page.getByRole("heading", { name: "Amanhã, 30 out" })).toBeVisible();
+  // Arrastar para a esquerda vai para o mês seguinte.
+  await page.locator(".dc-mini").evaluate((el) => {
+    const toque = (x: number) => new Touch({ identifier: 1, target: el, clientX: x, clientY: 300 });
+    el.dispatchEvent(new TouchEvent("touchstart", { touches: [toque(300)], changedTouches: [toque(300)], bubbles: true }));
+    el.dispatchEvent(new TouchEvent("touchend", { touches: [], changedTouches: [toque(140)], bubbles: true }));
+  });
+  await expect(page.locator(".dc-topo__sobre")).toHaveText("Novembro de 2026");
+  await page.getByRole("button", { name: "Próximo mês" }).tap();
+  await expect(page.locator(".dc-topo__sobre")).toHaveText("Dezembro de 2026");
+  await page.getByRole("button", { name: "Hoje", exact: true }).tap();
+  await expect(page.locator(".dc-topo__sobre")).toHaveText("Outubro de 2026");
+  await page.getByRole("radio", { name: "Semana" }).tap();
+  await expect(page.locator(".dc-topo__sobre")).toHaveText("26 out a 1 nov");
+  await expect(page.locator(".dc-mini__dia")).toHaveCount(7);
+  await page.getByRole("button", { name: "Nova tarefa ou audiência" }).tap();
+  await page.getByRole("menuitem", { name: "Nova audiência" }).tap();
+  await expect(page.getByRole("heading", { name: "Nova audiência" })).toBeVisible();
+  await expect(page.locator("#na-dia")).toHaveValue("2026-10-29");
+  expect(await sobraNaLateral(page)).toBe(0);
+});
+
 const ROTAS = [
   "/hoje",
   "/prazos",

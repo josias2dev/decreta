@@ -297,6 +297,35 @@ test("alvarás: cada coluna do quadro rola sozinha e o título fica", async ({ p
   expect(await finalizado.evaluate((e: HTMLElement) => e.offsetWidth - e.clientWidth)).toBe(0);
 });
 
+test("agenda: lista, semana e mês, com o dia escolhido ao lado do mês", async ({ page }) => {
+  await abrir(page, "/agenda");
+  await expect(page.getByRole("heading", { name: "29 out a 11 nov" })).toBeVisible();
+  await page.getByRole("radio", { name: "Mês" }).click();
+  await expect(page).toHaveURL(/vista=mes/);
+  await expect(page.getByRole("heading", { name: "Outubro de 2026" })).toBeVisible();
+  // O feriado aparece no dia; o dia escolhido abre ao lado, e a tarefa nova já vem nele.
+  await expect(page.locator(".dc-mes__dia", { hasText: "Nossa Senhora Aparecida" })).toBeVisible();
+  await page.getByRole("button", { name: /^sexta, 30 de outubro/ }).click();
+  await expect(page.getByRole("heading", { name: "Amanhã, 30 out" })).toBeVisible();
+  await page.getByRole("button", { name: "Tarefa", exact: true }).click();
+  await expect(page.locator("#nt-dia")).toHaveValue("2026-10-30");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Próximo mês" }).click();
+  await expect(page.getByRole("heading", { name: "Novembro de 2026" })).toBeVisible();
+  // O mês novo começa no dia 1 (um domingo): a semana é a dele.
+  await page.getByRole("radio", { name: "Semana" }).click();
+  await expect(page.getByRole("heading", { name: "26 out a 1 nov" })).toBeVisible();
+  await page.getByRole("button", { name: "Próxima semana" }).click();
+  await expect(page.getByRole("heading", { name: "2 a 8 nov" })).toBeVisible();
+  await page.getByRole("button", { name: "Hoje", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "26 out a 1 nov" })).toBeVisible();
+  await expect(page.locator(".dc-evento").first()).toBeVisible();
+  expect(await sobraNaLateral(page)).toBe(0);
+  // A vista escolhida volta na próxima vez.
+  await page.goto("/agenda");
+  await expect(page.getByRole("radio", { name: "Semana" })).toHaveAttribute("aria-checked", "true");
+});
+
 for (const rota of ["/prazos", "/processos", "/clientes", "/agenda", "/negocios", "/alvaras", "/documentos", "/modelos", "/configuracoes", "/conta"]) {
   test(`${rota} abre sem erro e sem rolar para o lado`, async ({ page }) => {
     const erros: string[] = [];

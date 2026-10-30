@@ -1,39 +1,129 @@
-/** Agenda (audiências, vencimentos e tarefas dia a dia) e a tela da audiência com a preparação da IA. */
+/** Agenda (audiências, vencimentos e tarefas: em lista, na semana ou no mês) e a tela da audiência com a preparação da IA. */
+import * as Menu from "@radix-ui/react-dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
-import { Check, ChevronLeft, ChevronRight, Plus, Video } from "lucide-react";
-import { useState } from "react";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { CalendarDays, CalendarRange, Check, ChevronLeft, ChevronRight, Gavel, List, ListTodo, Plus, Video, type LucideIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import {
+  DiasNoCelular,
+  emOrdem,
+  fimDoMes,
+  gradeDoMes,
+  inicioDaSemana,
+  inicioDoMes,
+  intervalo,
+  Legenda,
+  MesDoCalendario,
+  nomeDoDia,
+  nomeDoMes,
+  SemanaDoCalendario,
+  somarDias,
+  somarMeses,
+  type FeriadosDoPeriodo,
+} from "@/componentes/calendario";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
-import { Avatar, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
+import { Avatar, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Segmentos, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { diaCompleto, diaDaSemana, diaMes, ondeTramita } from "@/lib/formato";
-import type { Agenda, Audiencia, ItemDaAgenda, PreparacaoDeAudiencia } from "@/lib/tipos";
+import { diaCompleto, diaDaSemana, diaMes, juntar, ondeTramita } from "@/lib/formato";
+import type { Agenda, Audiencia, Feriados, ItemDaAgenda, PreparacaoDeAudiencia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
-const somar = (dia: string, n: number) => {
-  const d = new Date(`${dia}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-};
 const SITUACAO = { marcada: "Marcada", realizada: "Realizada", cancelada: "Cancelada", redesignada: "Redesignada" } as const;
+
+export const VISTAS_DA_AGENDA = ["lista", "semana", "mes"] as const;
+export type VistaDaAgenda = (typeof VISTAS_DA_AGENDA)[number];
+const VISTAS: { id: VistaDaAgenda; rotulo: string; icone: LucideIcon }[] = [
+  { id: "lista", rotulo: "Lista", icone: List },
+  { id: "semana", rotulo: "Semana", icone: CalendarRange },
+  { id: "mes", rotulo: "Mês", icone: CalendarDays },
+];
+/** A última vista escolhida volta na próxima vez (só neste aparelho). */
+const GUARDADA = "decreta.agenda.vista";
+function vistaGuardada(): VistaDaAgenda | null {
+  try {
+    const v = localStorage.getItem(GUARDADA);
+    return VISTAS_DA_AGENDA.includes(v as VistaDaAgenda) ? (v as VistaDaAgenda) : null;
+  } catch {
+    return null;
+  }
+}
+function guardarVista(v: VistaDaAgenda) {
+  try {
+    localStorage.setItem(GUARDADA, v);
+  } catch {
+    // Sem armazenamento (aba anônima): a vista vale só agora.
+  }
+}
+
+/**
+ * O que cada vista mostra (de/ate, para o título e a contagem) e o que busca:
+ * a lista, duas semanas a partir do dia; a semana, de segunda a domingo; o mês,
+ * as semanas inteiras que o cobrem.
+ */
+function periodoDa(vista: VistaDaAgenda, dia: string) {
+  if (vista === "mes") return { de: inicioDoMes(dia), ate: fimDoMes(dia), busca: gradeDoMes(dia) };
+  const de = vista === "semana" ? inicioDaSemana(dia) : dia;
+  const ate = somarDias(de, vista === "semana" ? 6 : 13);
+  return { de, ate, busca: { de, ate } };
+}
+/** Anterior e próximo. Na semana e no mês que têm hoje, o dia escolhido volta a ser hoje. */
+function passo(vista: VistaDaAgenda, dia: string, n: number, hoje: string) {
+  const novo = vista === "mes" ? somarMeses(dia, n) : somarDias(dia, n * (vista === "semana" ? 7 : 14));
+  const p = periodoDa(vista, novo);
+  return vista !== "lista" && hoje >= p.de && hoje <= p.ate ? hoje : novo;
+}
+const contar = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
 export function AgendaPage() {
   const celular = useCelular();
   const eu = useQuery(euQuery);
   const qc = useQueryClient();
   const avisar = useAviso();
-  const hoje = eu.data?.hoje;
-  const [de, setDe] = useState<string | null>(null);
-  const inicio = de ?? hoje ?? "";
-  const ate = inicio ? somar(inicio, 13) : "";
-  const agenda = useQuery({ queryKey: ["agenda", inicio], queryFn: () => api<Agenda>(`/agenda?de=${inicio}&ate=${ate}`), enabled: !!inicio, placeholderData: (a) => a });
+  const search = useSearch({ from: "/app/agenda" });
+  const navigate = useNavigate({ from: "/agenda" });
+  const hoje = eu.data?.hoje ?? "";
+  const vista = search.vista ?? vistaGuardada() ?? "lista";
+  const dia = search.dia ?? hoje;
+  const p = dia ? periodoDa(vista, dia) : null;
+  const buscar = (de: string, ate: string) => ({ queryKey: ["agenda", de, ate], queryFn: () => api<Agenda>(`/agenda?de=${de}&ate=${ate}`) });
+  const agenda = useQuery({ ...buscar(p?.busca.de ?? "", p?.busca.ate ?? ""), enabled: !!p, placeholderData: (a) => a });
+  // O ano do período e, na virada, o seguinte: os feriados marcam o calendário.
+  const anos = p ? [...new Set([p.busca.de.slice(0, 4), p.busca.ate.slice(0, 4)])] : [];
+  const feriadosDoAno = useQuery({ queryKey: ["feriados", anos[0]], queryFn: () => api<Feriados>(`/feriados?ano=${anos[0]}`), enabled: !!anos[0], staleTime: 3_600_000 });
+  const feriadosDaVirada = useQuery({ queryKey: ["feriados", anos[1]], queryFn: () => api<Feriados>(`/feriados?ano=${anos[1]}`), enabled: !!anos[1], staleTime: 3_600_000 });
+  const feriados = useMemo(() => {
+    const m: FeriadosDoPeriodo = new Map();
+    const marcar = (dia: string, nome: string, fechado: boolean) => {
+      const antes = m.get(dia);
+      m.set(dia, { nome: antes && antes.nome !== nome ? `${antes.nome} · ${nome}` : nome, fechado: (antes?.fechado ?? false) || fechado });
+    };
+    for (const ano of [feriadosDoAno.data, feriadosDaVirada.data]) {
+      if (!ano) continue;
+      for (const f of ano.dias) marcar(f.dia, f.nome.replace(/\s*\(.*\)$/, ""), f.tipo !== "reduzido");
+      // A suspensão de fim de ano (20/12 a 20/01) não fecha o fórum: só o começo e o fim ganham o nome.
+      marcar(ano.suspensaoDeFimDeAno.de, "Início da suspensão de prazos", false);
+      marcar(ano.suspensaoDeFimDeAno.ate, "Fim da suspensão de prazos", false);
+    }
+    return m;
+  }, [feriadosDoAno.data, feriadosDaVirada.data]);
+
+  // Anterior e próximo já ficam carregados: trocar de semana ou de mês é na hora.
+  useEffect(() => {
+    if (!hoje || !dia) return;
+    for (const n of [-1, 1]) {
+      const b = periodoDa(vista, passo(vista, dia, n, hoje)).busca;
+      void qc.prefetchQuery(buscar(b.de, b.ate));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vista, dia, hoje, qc]);
+
   const [nova, setNova] = useState<"tarefa" | "audiencia" | null>(null);
   const tarefa = useMutation({
     mutationFn: ({ id, feita }: { id: string; feita: boolean }) => api(`/tarefas/${id}/${feita ? "concluir" : "reabrir"}`, { method: "POST" }),
@@ -44,85 +134,157 @@ export function AgendaPage() {
     },
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
+  const marcar = (i: ItemDaAgenda, feita: boolean) => tarefa.mutate({ id: i.id, feita });
+
+  const ir = (mudanca: { vista?: VistaDaAgenda; dia?: string }) => {
+    if (mudanca.vista) guardarVista(mudanca.vista);
+    void navigate({
+      search: (s) => {
+        const novoDia = mudanca.dia ?? s.dia;
+        return { ...s, ...mudanca, dia: novoDia && novoDia !== hoje ? novoDia : undefined };
+      },
+      replace: true,
+    });
+  };
+  const anterior = () => ir({ dia: passo(vista, dia, -1, hoje) });
+  const proximo = () => ir({ dia: passo(vista, dia, 1, hoje) });
+  const escolher = (d: string) => ir({ dia: d });
 
   const a = agenda.data;
-  const navegar = (
-    <div className="flex items-center gap-1">
-      <Botao variante="fantasma" pequeno aria-label="Semanas anteriores" onClick={() => setDe(somar(inicio, -14))}>
-        <ChevronLeft />
-      </Botao>
-      <Botao variante="fantasma" pequeno onClick={() => setDe(null)} disabled={!de || de === hoje}>
-        Hoje
-      </Botao>
-      <Botao variante="fantasma" pequeno aria-label="Próximas semanas" onClick={() => setDe(somar(inicio, 14))}>
-        <ChevronRight />
-      </Botao>
+  const porDia = useMemo(() => new Map((a?.dias ?? []).map((d) => [d.dia, d.itens])), [a]);
+  const titulo = !p ? " " : vista === "mes" ? nomeDoMes(p.de) : intervalo(p.de, p.ate, hoje);
+  const noPeriodo = p ? (a?.dias ?? []).filter((d) => d.dia >= p.de && d.dia <= p.ate).flatMap((d) => d.itens) : [];
+  const n = (tipo: ItemDaAgenda["tipo"]) => noPeriodo.filter((i) => i.tipo === tipo).length;
+  const resumo = !a
+    ? " "
+    : noPeriodo.length
+      ? juntar([n("audiencia") && contar(n("audiencia"), "audiência", "audiências"), n("prazo") && contar(n("prazo"), "prazo", "prazos"), n("tarefa") && contar(n("tarefa"), "tarefa", "tarefas")].filter(Boolean) as string[])
+      : "Nada marcado neste período";
+  const calendario = vista !== "lista";
+  const diaDoDialogo = calendario ? dia : undefined;
+
+  const tituloDoDia = (d: string) => (
+    <>
+      {nomeDoDia(d, hoje)}, {diaMes(d)}
+      {feriados.get(d) && <span className="dc-agenda__feriado">{feriados.get(d)!.nome}</span>}
+    </>
+  );
+  const linhas = (itens: ItemDaAgenda[], compacta?: boolean) => (
+    <div className="dc-linhas">
+      {emOrdem(itens).map((i) => (
+        <LinhaDaAgenda key={`${i.tipo}-${i.id}`} item={i} compacta={compacta} aoMarcar={(feita) => marcar(i, feita)} />
+      ))}
     </div>
   );
-  const sub = a ? `${diaMes(a.de)} a ${diaMes(a.ate)} · ${a.dias.reduce((n, d) => n + d.itens.length, 0)} compromissos` : " ";
-  const dias = a?.dias ?? [];
-
+  const dias = (a?.dias ?? []).filter((d) => p && d.dia >= p.de && d.dia <= p.ate);
   const lista = !a ? (
     <Carregando />
   ) : dias.length ? (
     dias.map((d) => (
       <section key={d.dia} className="dc-secao">
-        <h2 className="dc-secao__titulo" style={{ fontSize: 15, color: d.dia === a.hoje ? "var(--acento)" : undefined }}>
-          {d.dia === a.hoje ? "Hoje" : d.dia === somar(a.hoje, 1) ? "Amanhã" : diaDaSemana(d.dia).replace("-feira", "").replace(/^./, (x) => x.toUpperCase())}, {diaMes(d.dia)}
-        </h2>
-        <div className="dc-painel">
-          <div className="dc-linhas">
-            {d.itens.map((i) => (
-              <LinhaDaAgenda key={`${i.tipo}-${i.id}`} item={i} aoMarcar={(feita) => tarefa.mutate({ id: i.id, feita })} />
-            ))}
-          </div>
-        </div>
+        <h2 className={cn("dc-secao__titulo dc-agenda__dia", d.dia === hoje && "is-hoje")}>{tituloDoDia(d.dia)}</h2>
+        <div className="dc-painel">{linhas(d.itens)}</div>
       </section>
     ))
   ) : (
     <Vazio titulo="Nada nestas duas semanas">Audiências e tarefas aparecem aqui, com os vencimentos de prazo.</Vazio>
   );
+  const doDia = porDia.get(dia) ?? [];
+  const vazioDoDia = (
+    <Vazio titulo={feriados.get(dia)?.fechado ? feriados.get(dia)!.nome : "Nada neste dia"}>
+      {dia < hoje ? "Nenhuma audiência, prazo aberto ou tarefa." : `Nenhuma audiência, prazo ou tarefa. ${celular ? "Toque em + para" : "Use Tarefa ou Audiência para"} marcar algo neste dia.`}
+    </Vazio>
+  );
 
   const dialogos = (
     <>
-      <NovaTarefa aberto={nova === "tarefa"} aoFechar={() => setNova(null)} />
-      <NovaAudiencia aberto={nova === "audiencia"} aoFechar={() => setNova(null)} />
+      <NovaTarefa aberto={nova === "tarefa"} aoFechar={() => setNova(null)} dia={diaDoDialogo} />
+      <NovaAudiencia aberto={nova === "audiencia"} aoFechar={() => setNova(null)} dia={diaDoDialogo} />
     </>
+  );
+  const vistas = <Segmentos rotulo="Ver a agenda em" opcoes={VISTAS} valor={vista} aoMudar={(v) => ir({ vista: v })} />;
+  const setas = (
+    <div className="dc-grupo">
+      <Botao aria-label={vista === "mes" ? "Mês anterior" : vista === "semana" ? "Semana anterior" : "Semanas anteriores"} onClick={anterior}>
+        <ChevronLeft />
+      </Botao>
+      <Botao aria-label={vista === "mes" ? "Próximo mês" : vista === "semana" ? "Próxima semana" : "Próximas semanas"} onClick={proximo}>
+        <ChevronRight />
+      </Botao>
+    </div>
   );
 
   if (celular) {
+    const escolherDia = p && (
+      <DiasNoCelular
+        de={vista === "mes" ? p.busca.de : p.de}
+        ate={vista === "mes" ? p.busca.ate : p.ate}
+        mes={vista === "mes" ? p.de : undefined}
+        hoje={hoje}
+        escolhido={dia}
+        porDia={porDia}
+        feriados={feriados}
+        aoEscolher={escolher}
+        aoAnterior={anterior}
+        aoProximo={proximo}
+      />
+    );
     return (
       <TelaCelular
         titulo="Agenda"
-        sobre={sub}
+        sobre={titulo}
         voltar
         direita={
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Nova tarefa" onClick={() => setNova("tarefa")}>
-            <Plus />
-          </button>
+          <>
+            <button type="button" className="dc-btn dc-btn--fantasma dc-topo__texto-btn" onClick={() => ir({ dia: hoje })}>
+              Hoje
+            </button>
+            <Menu.Root>
+              <Menu.Trigger className="dc-btn dc-btn--fantasma" aria-label="Nova tarefa ou audiência">
+                <Plus />
+              </Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Content className="dc-menu-flutuante dc dc-celular" align="end" sideOffset={4}>
+                  <Menu.Item className="dc-menu-flutuante__item" onSelect={() => setNova("tarefa")}>
+                    <ListTodo aria-hidden /> Nova tarefa
+                  </Menu.Item>
+                  <Menu.Item className="dc-menu-flutuante__item" onSelect={() => setNova("audiencia")}>
+                    <Gavel aria-hidden /> Nova audiência
+                  </Menu.Item>
+                </Menu.Content>
+              </Menu.Portal>
+            </Menu.Root>
+          </>
         }
         fixo={
-          <div className="flex items-center justify-between">
-            {navegar}
-            <Botao pequeno onClick={() => setNova("audiencia")}>
-              <Plus /> Audiência
-            </Botao>
+          <div className="dc-agenda-barra">
+            {vistas}
+            {setas}
           </div>
         }
       >
-        {lista}
+        {calendario ? (
+          <>
+            {escolherDia}
+            <section className="dc-secao">
+              <h2 className={cn("dc-secao__titulo dc-agenda__dia", dia === hoje && "is-hoje")}>{tituloDoDia(dia)}</h2>
+              {!a ? <Carregando linhas={2} /> : doDia.length ? <div className="dc-painel">{linhas(doDia)}</div> : vazioDoDia}
+            </section>
+          </>
+        ) : (
+          lista
+        )}
         {dialogos}
       </TelaCelular>
     );
   }
   return (
-    <Pagina cheia>
+    <Pagina cheia className="dc-pagina--agenda">
       <Cabecalho
         titulo="Agenda"
-        sub={sub}
+        sub={resumo}
         acoes={
           <>
-            {navegar}
             <Botao onClick={() => setNova("audiencia")}>
               <Plus /> Audiência
             </Botao>
@@ -132,34 +294,68 @@ export function AgendaPage() {
           </>
         }
       />
-      <Rolagem id="agenda" topo={inicio} className="dc-rola--secoes">
-        {lista}
-      </Rolagem>
+      <div className="dc-agenda-barra">
+        <div className="dc-agenda-barra__periodo">
+          <Botao onClick={() => ir({ dia: hoje })}>Hoje</Botao>
+          {setas}
+          <h2 className="dc-agenda-barra__titulo" aria-live="polite">
+            {titulo}
+          </h2>
+        </div>
+        {vistas}
+      </div>
+      {vista === "lista" && (
+        <Rolagem id="agenda" topo={dia} className="dc-rola--secoes">
+          {lista}
+        </Rolagem>
+      )}
+      {vista === "semana" && p && <SemanaDoCalendario semana={p.de} hoje={hoje} escolhido={dia} porDia={porDia} feriados={feriados} aoEscolher={escolher} aoMarcar={marcar} />}
+      {vista === "mes" && p && (
+        <div className="dc-agenda-mes">
+          <MesDoCalendario mes={p.de} hoje={hoje} escolhido={dia} porDia={porDia} feriados={feriados} aoEscolher={escolher} />
+          <Painel
+            className="dc-agenda-mes__dia"
+            corpo={false}
+            titulo={<h2 className={cn("dc-painel__titulo dc-agenda__dia", dia === hoje && "is-hoje")}>{tituloDoDia(dia)}</h2>}
+            acao={doDia.length > 0 && <span className="dc-nota dc-num">{contar(doDia.length, "compromisso", "compromissos")}</span>}
+          >
+            <div className="dc-rola">{!a ? <Carregando linhas={3} /> : doDia.length ? linhas(doDia, true) : vazioDoDia}</div>
+            <Legenda />
+          </Painel>
+        </div>
+      )}
       {dialogos}
     </Pagina>
   );
 }
 
-function LinhaDaAgenda({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (feita: boolean) => void }) {
+function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; compacta?: boolean; aoMarcar: (feita: boolean) => void }) {
   const processo = i.processo ? (
-    <span className="dc-celula__2">
-      {i.processo.titulo} · <Cnj cnj={i.processo.cnj} />
+    <span className={cn("dc-celula__2", compacta && "truncate")}>
+      {i.processo.titulo}
+      {!compacta && (
+        <>
+          {" · "}
+          <Cnj cnj={i.processo.cnj} className="whitespace-nowrap" />
+        </>
+      )}
     </span>
   ) : i.detalhe ? (
-    <span className="dc-celula__2">{i.detalhe}</span>
+    <span className={cn("dc-celula__2", compacta && "truncate")}>{i.detalhe}</span>
   ) : null;
   const pessoa = i.responsavel ? (
-    <span className="dc-pessoa flex-none text-[13px] text-[var(--tinta-2)]">
+    <span className="dc-pessoa flex-none text-[13px] text-[var(--tinta-2)]" title={i.responsavel.nome}>
       <Avatar pessoa={i.responsavel} />
-      <span className="max-md:hidden">{i.responsavel.apelido}</span>
+      {!compacta && <span className="max-md:hidden">{i.responsavel.apelido}</span>}
     </span>
-  ) : (
+  ) : compacta ? null : (
     <span className="flex-none text-[13px] text-[var(--tinta-3)] max-md:hidden">Sem responsável</span>
   );
+  const marcador = cn("flex-none", compacta ? "w-[64px]" : "w-[64px] md:w-[76px]");
   if (i.tipo === "tarefa") {
     return (
       <label className="dc-linhas__item cursor-pointer items-center">
-        <span className="w-[64px] flex-none md:w-[76px]">
+        <span className={marcador}>
           <input type="checkbox" className="dc-checa" checked={!!i.concluida} onChange={(e) => aoMarcar(e.target.checked)} aria-label={`Feita: ${i.titulo}`} />
         </span>
         <span className="dc-celula min-w-0 flex-1">
@@ -173,7 +369,7 @@ function LinhaDaAgenda({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (f
   const destino = i.tipo === "audiencia" ? ({ to: "/audiencias/$id", params: { id: i.id } } as const) : ({ to: "/prazos/$id", params: { id: i.id } } as const);
   return (
     <Link {...destino} className="dc-linhas__item items-center">
-      <span className="w-[64px] flex-none md:w-[76px]">
+      <span className={marcador}>
         {i.tipo === "audiencia" ? (
           <span className="dc-selo dc-selo--prazo dc-num">
             {i.porVideo && <Video />}
@@ -196,14 +392,14 @@ function LinhaDaAgenda({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (f
   );
 }
 
-function NovaTarefa({ aberto, aoFechar, processo }: { aberto: boolean; aoFechar: () => void; processo?: { id: string; titulo: string } }) {
+function NovaTarefa({ aberto, aoFechar, processo, dia }: { aberto: boolean; aoFechar: () => void; processo?: { id: string; titulo: string }; dia?: string }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
   const [proc, setProc] = useState(processo ?? null);
   const [f, setF] = useState({ titulo: "", detalhe: "", dia: "", responsavelId: eu.data?.usuario.id ?? "" });
   const criar = useMutation({
-    mutationFn: () => api("/tarefas", { json: { titulo: f.titulo, detalhe: f.detalhe || null, dia: f.dia || eu.data?.hoje, responsavelId: f.responsavelId || null, processoId: proc?.id ?? null } }),
+    mutationFn: () => api("/tarefas", { json: { titulo: f.titulo, detalhe: f.detalhe || null, dia: f.dia || dia || eu.data?.hoje, responsavelId: f.responsavelId || null, processoId: proc?.id ?? null } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["agenda"] });
       void qc.invalidateQueries({ queryKey: ["hoje"] });
@@ -235,7 +431,7 @@ function NovaTarefa({ aberto, aoFechar, processo }: { aberto: boolean; aoFechar:
         </Campo>
         <div className="dc-grade-2">
           <Campo rotulo="Dia" htmlFor="nt-dia">
-            <input id="nt-dia" type="date" value={f.dia || eu.data?.hoje || ""} onChange={(e) => setF({ ...f, dia: e.target.value })} />
+            <input id="nt-dia" type="date" value={f.dia || dia || eu.data?.hoje || ""} onChange={(e) => setF({ ...f, dia: e.target.value })} />
           </Campo>
           <Campo rotulo="Quem faz" htmlFor="nt-resp">
             <select id="nt-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
@@ -260,15 +456,17 @@ function NovaTarefa({ aberto, aoFechar, processo }: { aberto: boolean; aoFechar:
   );
 }
 
-function NovaAudiencia({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => void }) {
+function NovaAudiencia({ aberto, aoFechar, dia }: { aberto: boolean; aoFechar: () => void; dia?: string }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
   const [proc, setProc] = useState<{ id: string; titulo: string } | null>(null);
   const vazio = { dia: "", hora: "14:00", tipo: "Instrução e julgamento", porVideo: false, local: "" };
   const [f, setF] = useState(vazio);
+  // O dia escolhido no calendário já vem no campo (se não for passado).
+  const noDia = f.dia || (dia && eu.data && dia >= eu.data.hoje ? dia : "");
   const criar = useMutation({
-    mutationFn: () => api("/audiencias", { json: { processoId: proc!.id, dia: f.dia, hora: f.hora, tipo: f.tipo, porVideo: f.porVideo, local: f.local || null } }),
+    mutationFn: () => api("/audiencias", { json: { processoId: proc!.id, dia: noDia, hora: f.hora, tipo: f.tipo, porVideo: f.porVideo, local: f.local || null } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["agenda"] });
       void qc.invalidateQueries({ queryKey: ["hoje"] });
@@ -289,7 +487,7 @@ function NovaAudiencia({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => 
           <Botao variante="fantasma" onClick={aoFechar}>
             Cancelar
           </Botao>
-          <Botao variante="primaria" onClick={() => criar.mutate()} ocupado={criar.isPending} disabled={!proc || !f.dia || f.tipo.trim().length < 2}>
+          <Botao variante="primaria" onClick={() => criar.mutate()} ocupado={criar.isPending} disabled={!proc || !noDia || f.tipo.trim().length < 2}>
             Pôr na agenda
           </Botao>
         </>
@@ -304,7 +502,7 @@ function NovaAudiencia({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => 
         </Campo>
         <div className="dc-grade-2">
           <Campo rotulo="Dia" htmlFor="na-dia">
-            <input id="na-dia" type="date" value={f.dia} min={eu.data?.hoje} onChange={(e) => setF({ ...f, dia: e.target.value })} />
+            <input id="na-dia" type="date" value={noDia} min={eu.data?.hoje} onChange={(e) => setF({ ...f, dia: e.target.value })} />
           </Campo>
           <Campo rotulo="Hora" htmlFor="na-hora">
             <input id="na-hora" type="time" value={f.hora} onChange={(e) => setF({ ...f, hora: e.target.value })} />

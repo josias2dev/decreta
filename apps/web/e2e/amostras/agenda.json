@@ -450,7 +450,7 @@
             "tipo": "audiencia",
             "id": "1a922727-ff1d-447e-be18-19382714f9a1",
             "hora": "13:30",
-            "titulo": "Audiência de una",
+            "titulo": "Audiência una",
             "porVideo": false,
             "processo": {
               "id": "07dbdcff-531d-4955-b45d-200f8dfa3987",
@@ -977,7 +977,7 @@
             "tipo": "audiencia",
             "id": "e4c30e2b-c93d-4b24-9b79-0fa569040b5d",
             "hora": "10:00",
-            "titulo": "Audiência de inicial",
+            "titulo": "Audiência inicial",
             "porVideo": false,
             "processo": {
               "id": "4970f69d-46c1-4015-8256-73b4c54f47ba",

@@ -1,4 +1,4 @@
-import { diaDoInstante, ehDia, hojeEm, horaLocal, instanteLocal, somarDias, urgenciaDoPrazo } from "@decreta/core";
+import { diaDoInstante, ehDia, hojeEm, horaLocal, instanteLocal, nomeDaAudiencia, somarDias, urgenciaDoPrazo } from "@decreta/core";
 import { audiencias, prazos, processos, tarefas } from "@decreta/db";
 import { itemDoChecklist } from "@decreta/ia";
 import { and, asc, eq, gte, isNull, lt, lte, ne } from "drizzle-orm";
@@ -55,7 +55,7 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
         return x.itens;
       };
       for (const { a, processo } of auds)
-        em(diaDoInstante(a.em, tz)).push({ tipo: "audiencia", id: a.id, hora: horaLocal(a.em, tz), titulo: `Audiência de ${a.tipo.toLocaleLowerCase("pt-BR")}`, porVideo: a.porVideo, processo: { id: a.processoId, ...processo }, responsavel: resumir(pessoas, a.responsavelId), situacao: a.situacao });
+        em(diaDoInstante(a.em, tz)).push({ tipo: "audiencia", id: a.id, hora: horaLocal(a.em, tz), titulo: nomeDaAudiencia(a.tipo), porVideo: a.porVideo, processo: { id: a.processoId, ...processo }, responsavel: resumir(pessoas, a.responsavelId), situacao: a.situacao });
       for (const { p, processo } of przs)
         em(p.fim).push({ tipo: "prazo", id: p.id, titulo: p.tipo, urgencia: urgenciaDoPrazo(p, hoje, cal), processo: { id: p.processoId, ...processo }, responsavel: resumir(pessoas, p.responsavelId), aConfirmar: !p.confirmadoEm });
       for (const t of tars) em(t.dia).push({ tipo: "tarefa", id: t.id, titulo: t.titulo, detalhe: t.detalhe, concluida: !!t.concluidaEm, processoId: t.processoId, responsavel: resumir(pessoas, t.responsavelId) });

@@ -225,8 +225,8 @@ export const useAbrirBusca = () => useContext(AbrirBusca);
  * listas e quadros: ocupa a altura da tela, que fica parada, e só a lista
  * (ou cada coluna do quadro) rola.
  */
-export function Pagina({ children, larga, cheia }: { children: ReactNode; larga?: boolean; cheia?: boolean }) {
-  return <main className={cn("dc-pagina", larga && "dc-pagina--larga", cheia && "dc-pagina--cheia")}>{children}</main>;
+export function Pagina({ children, larga, cheia, className }: { children: ReactNode; larga?: boolean; cheia?: boolean; className?: string }) {
+  return <main className={cn("dc-pagina", larga && "dc-pagina--larga", cheia && "dc-pagina--cheia", className)}>{children}</main>;
 }
 
 /**

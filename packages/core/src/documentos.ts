@@ -83,3 +83,9 @@ export function nomeProprio(valor: string): string {
     })
     .join(" ");
 }
+
+/** "Conciliação" → "Audiência de conciliação"; "Inicial" e "Una" → "Audiência inicial", "Audiência una" (sem o "de"). */
+export function nomeDaAudiencia(tipo: string): string {
+  const t = tipo.trim().replace(/^audiência\s+(de\s+)?/i, "").toLocaleLowerCase("pt-BR");
+  return /^(una|inicial)\b/.test(t) ? `Audiência ${t}` : `Audiência de ${t}`;
+}

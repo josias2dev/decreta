@@ -9,6 +9,7 @@ import {
   formatarCnj,
   formatarDocumento,
   formatarTelefone,
+  nomeDaAudiencia,
   nomeProprio,
   hojeEm,
   indiceDataJud,
@@ -66,6 +67,10 @@ describe("documentos e telefone", () => {
     expect(nomeProprio("PADARIA BOM GRÃO LTDA")).toBe("Padaria Bom Grão Ltda");
     expect(nomeProprio("2ª VARA CÍVEL DA COMARCA DE JOINVILLE")).toBe("2ª Vara Cível da Comarca de Joinville");
     expect(nomeProprio("Banco Horizonte S.A.")).toBe("Banco Horizonte S.A.");
+    expect(nomeDaAudiencia("Conciliação")).toBe("Audiência de conciliação");
+    expect(nomeDaAudiencia("Inicial")).toBe("Audiência inicial");
+    expect(nomeDaAudiencia("Una")).toBe("Audiência una");
+    expect(nomeDaAudiencia("Audiência de instrução e julgamento")).toBe("Audiência de instrução e julgamento");
   });
 });
 

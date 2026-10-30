@@ -1,7 +1,7 @@
 /** Componentes do design system (classes dc-*) em React. */
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, RefreshCw, Search, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ChevronRight, RefreshCw, Search, ThumbsDown, ThumbsUp, type LucideIcon } from "lucide-react";
 import { Children, Fragment, forwardRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { api, mensagemDoErro } from "@/lib/api";
@@ -66,6 +66,20 @@ export function Chip({ ligado, n, alerta, onClick, children }: { ligado?: boolea
       {children}
       {n != null && <span className="dc-chip__n">{n}</span>}
     </button>
+  );
+}
+
+/** Escolha de uma entre poucas opções (como a vista da agenda): a ligada fica em branco, levantada. */
+export function Segmentos<T extends string>({ opcoes, valor, aoMudar, rotulo }: { opcoes: { id: T; rotulo: string; icone?: LucideIcon }[]; valor: T; aoMudar: (id: T) => void; rotulo: string }) {
+  return (
+    <div className="dc-segmentos" role="radiogroup" aria-label={rotulo}>
+      {opcoes.map((o) => (
+        <button key={o.id} type="button" role="radio" aria-checked={o.id === valor} className={cn("dc-segmentos__item", o.id === valor && "is-on")} onClick={() => aoMudar(o.id)}>
+          {o.icone && <o.icone aria-hidden />}
+          {o.rotulo}
+        </button>
+      ))}
+    </div>
   );
 }
 

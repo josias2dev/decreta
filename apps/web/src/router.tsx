@@ -4,7 +4,7 @@ import { VOLTAM_AO_TOPO } from "./componentes/rolagem";
 import { NaoEncontrada } from "./componentes/nao-encontrada";
 import type { Quando, SituacaoPublicacao } from "./lib/tipos";
 import { ConvitePage, RedefinirSenhaPage } from "./paginas/acesso";
-import { AgendaPage, AudienciaPage } from "./paginas/agenda";
+import { AgendaPage, AudienciaPage, VISTAS_DA_AGENDA, type VistaDaAgenda } from "./paginas/agenda";
 import { AlvarasPage } from "./paginas/alvaras";
 import { ClientePage, ClientesPage } from "./paginas/clientes";
 import { ConfiguracoesPage } from "./paginas/configuracoes";
@@ -107,7 +107,15 @@ const clientesRoute = createRoute({
   component: ClientesPage,
 });
 const clienteRoute = createRoute({ getParentRoute: () => appRoute, path: "/clientes/$id", component: ClientePage });
-const agendaRoute = createRoute({ getParentRoute: () => appRoute, path: "/agenda", component: AgendaPage });
+const agendaRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/agenda",
+  validateSearch: (s: Record<string, unknown>): { vista?: VistaDaAgenda; dia?: string } => ({
+    ...(VISTAS_DA_AGENDA.includes(s.vista as VistaDaAgenda) ? { vista: s.vista as VistaDaAgenda } : {}),
+    ...(typeof s.dia === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.dia) ? { dia: s.dia } : {}),
+  }),
+  component: AgendaPage,
+});
 const audienciaRoute = createRoute({ getParentRoute: () => appRoute, path: "/audiencias/$id", component: AudienciaPage });
 const perguntarRoute = createRoute({
   getParentRoute: () => appRoute,
