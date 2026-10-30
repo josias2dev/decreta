@@ -1,4 +1,4 @@
-import { formatarCnj, hojeEm, lerCnj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
+import { cnpjValido, cpfValido, formatarCnj, formatarDocumento, hojeEm, lerCnj, limparCnpj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
 import { alvaras, audiencias, clientes, documentos, movimentacoes, partes, pecas, prazos, processos, resultados, type Tx } from "@decreta/db";
 import { buscarDjenDoProcesso, partesDoDjen } from "@decreta/tribunais";
 import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, or, sql, type SQL } from "drizzle-orm";
@@ -20,7 +20,19 @@ const parte = z.object({
   nome: z.string().trim().min(2).max(300),
   polo: z.enum(["ativo", "passivo", "terceiro"]),
   papel: z.string().trim().max(80).nullable().optional(),
-  documento: z.string().max(20).nullable().optional(),
+  /** CPF ou CNPJ; guardado sem pontuação, e o CNPJ com as letras. */
+  documento: z
+    .string()
+    .max(20)
+    .nullable()
+    .optional()
+    .transform((v, ctx) => {
+      if (!v?.trim()) return v === undefined ? undefined : null;
+      if (cnpjValido(v)) return limparCnpj(v);
+      if (cpfValido(v)) return v.replace(/\D/g, "");
+      ctx.addIssue({ code: "custom", message: "Confira o CPF ou o CNPJ." });
+      return z.NEVER;
+    }),
   advogados: z.string().max(500).nullable().optional(),
   cliente: z.boolean().default(false),
 });
@@ -231,7 +243,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         cliente: linha.cliente?.id ? linha.cliente : null,
         responsavel: resumir(pessoas, p.responsavelId),
         link: linkDoTribunal(p.tribunal, p.sistema),
-        partes: pts.map((x) => ({ id: x.id, nome: x.nome, polo: x.polo, papel: x.papel, advogados: x.advogados, cliente: x.cliente, documento: x.documento })),
+        partes: pts.map((x) => ({ id: x.id, nome: x.nome, polo: x.polo, papel: x.papel, advogados: x.advogados, cliente: x.cliente, documento: x.documento ? formatarDocumento(x.documento) : null })),
         contadores: { movimentacoes: nMov?.n ?? 0, prazos: nPrazos?.n ?? 0, documentos: nDocs?.n ?? 0 },
         resumo: naTela(resumo, contexto?.base),
         novidades: novidades.map((m) => (m.evento != null ? `${m.titulo.toLocaleLowerCase("pt-BR")}, evento ${m.evento}` : m.titulo.toLocaleLowerCase("pt-BR"))),

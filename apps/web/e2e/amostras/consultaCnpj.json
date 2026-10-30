@@ -1,0 +1,33 @@
+{
+  "path": "/consultas/cnpj/74061928000112",
+  "corpo": {
+    "cnpj": "74.061.928/0001-12",
+    "fonte": "achou",
+    "empresa": {
+      "cnpj": "74061928000112",
+      "razaoSocial": "Malharia Fio Azul Ltda.",
+      "nomeFantasia": "Fio Azul",
+      "situacao": "Ativa",
+      "ativa": true,
+      "situacaoDesde": "2014-03-15",
+      "abertura": "2014-03-15",
+      "atividade": "Confecção de peças do vestuário",
+      "naturezaJuridica": "Sociedade Empresária Limitada",
+      "endereco": {
+        "logradouro": "Rua Vale Verde",
+        "numero": "434",
+        "complemento": null,
+        "bairro": "América",
+        "cidade": "São Bento do Sul",
+        "uf": "SC",
+        "cep": "89534-334"
+      },
+      "telefone": "(47) 3734-0334",
+      "email": null,
+      "fonte": "BrasilAPI",
+      "enderecoEmTexto": "Rua Vale Verde, 434, América, São Bento do Sul/SC, CEP 89534-334"
+    },
+    "cliente": null,
+    "exemplo": true
+  }
+}

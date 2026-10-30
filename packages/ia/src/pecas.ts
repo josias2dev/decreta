@@ -83,6 +83,8 @@ export interface PedidoDePeca {
   escritorio: { nome: string; advogado: string; oab: string | null; cidade: string | null };
   /** Peças que o escritório escolheu como modelo, as mais parecidas com esta. */
   modelos?: ModeloParaIa[];
+  /** Documento e endereço das partes, da ficha do cliente e da Receita Federal, uma por linha. */
+  qualificacao?: string | null;
 }
 
 export interface ModeloParaIa {
@@ -125,6 +127,7 @@ Estrutura usual: ${tipo.estrutura}`,
       prazo?.briefing && `## Briefing do prazo\n${prazo.briefing}`,
       pedido.instrucoes.trim() && `## Instruções de quem pediu\n${pedido.instrucoes.trim()}`,
       pedido.modelos?.length && textoDosModelos(pedido.modelos),
+      pedido.qualificacao && `## Qualificação das partes\nUse na qualificação quando a peça pedir; o que não estiver aqui vira [COMPLETAR].\n${pedido.qualificacao}`,
       `## Quem assina\n${escritorio.advogado}${escritorio.oab ? `, ${escritorio.oab}` : ""}, ${escritorio.nome}${escritorio.cidade ? `, ${escritorio.cidade}` : ""}.`,
       pedido.contextoDoProcesso,
     ]

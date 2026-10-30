@@ -8,6 +8,7 @@ import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaDoInstante, ondeTramita } from "@/lib/formato";
 import type { Canal, ClienteNaLista, ConsultaDoCnj, Pagina } from "@/lib/tipos";
 import { useAviso } from "./avisos";
+import { CamposDoCliente, fichaVazia } from "./campos-cliente";
 import { Dialogo } from "./dialogo";
 import { Botao, Campo, Dados, Faixa } from "./ui";
 
@@ -18,19 +19,19 @@ export function NovoCliente({ aberto, aoFechar, aoCriar, nomeInicial }: { aberto
   const qc = useQueryClient();
   const navigate = useNavigate();
   const avisar = useAviso();
-  const [f, setF] = useState({ nome: "", tipo: "pf" as "pf" | "pj", documento: "", telefone: "", email: "" });
+  const [f, setF] = useState(fichaVazia);
   // Aberto a partir de uma parte do processo: já vem com o nome dela.
   useEffect(() => {
     if (aberto && nomeInicial) setF((v) => ({ ...v, nome: nomeInicial, tipo: pareceEmpresa(nomeInicial) ? "pj" : "pf" }));
   }, [aberto, nomeInicial]);
   const criar = useMutation({
-    mutationFn: () => api<{ id: string }>("/clientes", { json: { ...f, documento: f.documento || null, telefone: f.telefone || null, email: f.email || null } }),
+    mutationFn: () => api<{ id: string }>("/clientes", { json: { ...f, documento: f.documento || null, telefone: f.telefone || null, email: f.email || null, endereco: f.endereco.trim() || null } }),
     onSuccess: (r) => {
       void qc.invalidateQueries({ queryKey: ["clientes"] });
       void qc.invalidateQueries({ queryKey: ["eu"] });
       avisar("Cliente cadastrado.");
       aoFechar();
-      setF({ nome: "", tipo: "pf", documento: "", telefone: "", email: "" });
+      setF(fichaVazia());
       if (aoCriar) aoCriar({ id: r.id, nome: f.nome });
       else void navigate({ to: "/clientes/$id", params: { id: r.id } });
     },
@@ -44,6 +45,7 @@ export function NovoCliente({ aberto, aoFechar, aoCriar, nomeInicial }: { aberto
       aberto={aberto}
       aoFechar={aoFechar}
       titulo="Novo cliente"
+      descricao="Empresa: digite o CNPJ e o resto vem da Receita. Pessoa: o CEP traz a rua."
       acoes={
         <>
           <Botao variante="fantasma" onClick={aoFechar}>
@@ -64,20 +66,7 @@ export function NovoCliente({ aberto, aoFechar, aoCriar, nomeInicial }: { aberto
             <input type="radio" name="tipo" checked={f.tipo === "pj"} onChange={() => setF({ ...f, tipo: "pj" })} /> Empresa
           </label>
         </div>
-        <Campo rotulo="Nome" htmlFor="cli-nome">
-          <input id="cli-nome" autoFocus value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} autoComplete="off" />
-        </Campo>
-        <div className="dc-grade-2">
-          <Campo rotulo={f.tipo === "pf" ? "CPF" : "CNPJ"} htmlFor="cli-doc">
-            <input id="cli-doc" inputMode="numeric" value={f.documento} onChange={(e) => setF({ ...f, documento: e.target.value })} />
-          </Campo>
-          <Campo rotulo="WhatsApp ou telefone" htmlFor="cli-tel">
-            <input id="cli-tel" inputMode="tel" value={f.telefone} onChange={(e) => setF({ ...f, telefone: e.target.value })} placeholder="(47) 99999-0000" />
-          </Campo>
-        </div>
-        <Campo rotulo="E-mail" htmlFor="cli-email">
-          <input id="cli-email" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-        </Campo>
+        <CamposDoCliente f={f} setF={setF} prefixo="cli" focar />
         {criar.error && <Faixa tipo="erro">{mensagemDoErro(criar.error)}</Faixa>}
       </form>
     </Dialogo>

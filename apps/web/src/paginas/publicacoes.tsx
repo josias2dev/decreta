@@ -2,10 +2,11 @@
  * Publicações: a caixa de entrada do DJEN. No computador, a lista à esquerda e
  * a selecionada à direita; no celular, a lista e uma tela por publicação.
  */
+import { lerPublicacaoColada, TIPOS_DE_COMUNICACAO } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
@@ -17,7 +18,7 @@ import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
-import type { CaixaDePublicacoes, Contagem, ContagemNaTela, LeituraDaSentenca, Pessoa, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
+import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, ContagemNaTela, LeituraDaSentenca, Pessoa, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { atualizarPrazos } from "./prazo";
 
@@ -934,38 +935,61 @@ function AjustarAudiencia({ pub, audiencia, aberto, aoFechar, aoMarcar }: { pub:
   );
 }
 
-/** Publicação que chegou por outro caminho (e-mail, sistema do tribunal). */
+/**
+ * Publicação que chegou por outro caminho (e-mail, sistema do tribunal). A
+ * pessoa cola o texto; o número, a data e o tipo saem dele, e o processo vem
+ * pelo número. O que ela escolher à mão vale mais que o texto.
+ */
 function ColarPublicacao({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => void }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const navigate = useNavigate();
   const celular = useCelular();
   const eu = useQuery(euQuery);
-  const [proc, setProc] = useState<{ id: string; titulo: string } | null>(null);
-  const [f, setF] = useState({ cnj: "", disponibilizadaEm: "", tipoComunicacao: "Intimação", texto: "" });
+  /** `undefined`: o do texto. `null`: a pessoa tirou e vai buscar outro. */
+  const [proc, setProc] = useState<{ id: string; titulo: string } | null | undefined>(undefined);
+  const vazio = { texto: "", cnj: null as string | null, disponibilizadaEm: null as string | null, tipoComunicacao: null as string | null };
+  const [f, setF] = useState(vazio);
+  const lido = useMemo(() => lerPublicacaoColada(f.texto), [f.texto]);
+  const cnj = f.cnj ?? lido.cnj ?? "";
+  const dia = f.disponibilizadaEm ?? lido.disponibilizadaEm ?? eu.data?.hoje ?? "";
+  const tipo = f.tipoComunicacao ?? lido.tipoComunicacao ?? "Intimação";
+  const digitos = (lido.cnj ?? "").replace(/\D/g, "");
+  const pelo = useQuery({
+    queryKey: ["processos", "pelo-numero", digitos],
+    queryFn: () => api<PaginaDaApi<ProcessoNaLista>>(`/processos?busca=${digitos}&situacao=todas`),
+    enabled: !!digitos && proc === undefined,
+    staleTime: 60_000,
+  });
+  const doTexto = proc === undefined ? (pelo.data?.itens.find((p) => p.cnj === lido.cnj) ?? null) : null;
+  const processo = proc === undefined ? doTexto : proc;
+  const fechar = () => {
+    setProc(undefined);
+    setF(vazio);
+    aoFechar();
+  };
   const criar = useMutation({
     mutationFn: () =>
       api<{ id: string }>("/publicacoes", {
-        json: { processoId: proc?.id ?? null, cnj: proc ? null : f.cnj || null, disponibilizadaEm: f.disponibilizadaEm || eu.data?.hoje, tipoComunicacao: f.tipoComunicacao, texto: f.texto },
+        json: { processoId: processo?.id ?? null, cnj: processo ? null : cnj || null, disponibilizadaEm: dia, tipoComunicacao: tipo, texto: f.texto },
       }),
     onSuccess: (r) => {
       void qc.invalidateQueries({ queryKey: ["publicacoes"] });
       avisar("Publicação guardada. A IA está lendo.");
-      setProc(null);
-      setF({ cnj: "", disponibilizadaEm: "", tipoComunicacao: "Intimação", texto: "" });
-      aoFechar();
+      fechar();
       void (celular ? navigate({ to: "/publicacoes/$id", params: { id: r.id } }) : navigate({ to: "/publicacoes", search: { id: r.id } }));
     },
   });
+  const doTextoAjuda = (campo: "cnj" | "disponibilizadaEm" | "tipoComunicacao") => (f[campo] === null && lido[campo] ? "Achado no texto" : undefined);
   return (
     <Dialogo
       aberto={aberto}
-      aoFechar={aoFechar}
+      aoFechar={fechar}
       titulo="Colar publicação"
-      descricao="Para a intimação que chegou por e-mail ou pelo sistema do tribunal e não veio do DJEN."
+      descricao="Para a intimação que chegou por e-mail ou pelo sistema do tribunal. Cole o texto: o número do processo, a data e o tipo saem dele."
       acoes={
         <>
-          <Botao variante="fantasma" onClick={aoFechar}>
+          <Botao variante="fantasma" onClick={fechar}>
             Cancelar
           </Botao>
           <Botao variante="primaria" onClick={() => criar.mutate()} ocupado={criar.isPending} disabled={f.texto.trim().length < 20}>
@@ -975,29 +999,29 @@ function ColarPublicacao({ aberto, aoFechar }: { aberto: boolean; aoFechar: () =
       }
     >
       <div className="dc-form">
-        <Campo rotulo="Processo">
-          <EscolherProcesso valor={proc} aoEscolher={setProc} />
+        <Campo rotulo="Teor" htmlFor="cp-texto">
+          <textarea id="cp-texto" rows={7} value={f.texto} onChange={(e) => setF({ ...f, texto: e.target.value })} placeholder="Cole aqui o texto inteiro da publicação" autoFocus />
         </Campo>
-        {!proc && (
-          <Campo rotulo="Ou o número CNJ" htmlFor="cp-cnj">
-            <input id="cp-cnj" inputMode="numeric" value={f.cnj} onChange={(e) => setF({ ...f, cnj: e.target.value })} placeholder="0000000-00.0000.0.00.0000" />
+        <Campo rotulo="Processo" ajuda={doTexto ? "Achado pelo número no texto" : undefined}>
+          <EscolherProcesso valor={processo} aoEscolher={setProc} />
+        </Campo>
+        {!processo && (
+          <Campo rotulo="Ou o número CNJ" htmlFor="cp-cnj" ajuda={doTextoAjuda("cnj") && (pelo.isFetching ? "Achado no texto · procurando o processo…" : "Achado no texto · não há processo cadastrado com este número")}>
+            <input id="cp-cnj" className="dc-num" inputMode="numeric" value={cnj} onChange={(e) => setF({ ...f, cnj: e.target.value })} placeholder="0000000-00.0000.0.00.0000" />
           </Campo>
         )}
         <div className="dc-grade-2">
-          <Campo rotulo="Disponibilizada em" htmlFor="cp-dia">
-            <input id="cp-dia" type="date" value={f.disponibilizadaEm || eu.data?.hoje || ""} onChange={(e) => setF({ ...f, disponibilizadaEm: e.target.value })} />
+          <Campo rotulo="Disponibilizada em" htmlFor="cp-dia" ajuda={doTextoAjuda("disponibilizadaEm")}>
+            <input id="cp-dia" type="date" value={dia} onChange={(e) => setF({ ...f, disponibilizadaEm: e.target.value })} />
           </Campo>
-          <Campo rotulo="Tipo" htmlFor="cp-tipo">
-            <select id="cp-tipo" value={f.tipoComunicacao} onChange={(e) => setF({ ...f, tipoComunicacao: e.target.value })}>
-              {["Intimação", "Citação", "Notificação", "Edital", "Despacho", "Sentença", "Acórdão"].map((t) => (
+          <Campo rotulo="Tipo" htmlFor="cp-tipo" ajuda={doTextoAjuda("tipoComunicacao")}>
+            <select id="cp-tipo" value={tipo} onChange={(e) => setF({ ...f, tipoComunicacao: e.target.value })}>
+              {TIPOS_DE_COMUNICACAO.map((t) => (
                 <option key={t}>{t}</option>
               ))}
             </select>
           </Campo>
         </div>
-        <Campo rotulo="Teor" htmlFor="cp-texto">
-          <textarea id="cp-texto" rows={7} value={f.texto} onChange={(e) => setF({ ...f, texto: e.target.value })} placeholder="Cole aqui o texto inteiro da publicação" />
-        </Campo>
         {criar.error && <Faixa tipo="erro">{mensagemDoErro(criar.error)}</Faixa>}
       </div>
     </Dialogo>

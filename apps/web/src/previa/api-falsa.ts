@@ -67,6 +67,11 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
   if (url.origin !== location.origin || !url.pathname.startsWith("/api/")) return fetchReal(entrada, init);
   await new Promise((r) => setTimeout(r, 120));
 
+  if (url.pathname === "/api/auth/organization/get-full-organization") {
+    // O diálogo da Equipe lê os membros daqui (o papel de cada um).
+    const { pessoas } = achar("/equipe", new URLSearchParams()) as { pessoas: { id: string; email: string; papel: string }[] };
+    return json(200, { id: eu.escritorio.id, members: pessoas.map((p) => ({ id: `membro-${p.id}`, userId: p.id, role: p.papel, user: { email: p.email } })), invitations: [] });
+  }
   if (url.pathname.startsWith("/api/auth/")) return json(200, url.pathname === "/api/auth/get-session" ? sessao : { ok: true });
   if (!url.pathname.startsWith("/api/app/")) return json(404, { erro: "nao_encontrado" });
   const caminho = url.pathname.slice("/api/app".length);
@@ -92,6 +97,40 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
     await new Promise((r) => setTimeout(r, 1600));
     const exemplo = achar(caminho, new URLSearchParams()) as { cnj: string } | undefined;
     if (exemplo) return json(200, { ...exemplo, cnj: url.searchParams.get("cnj") ?? exemplo.cnj });
+  }
+  // CNPJ, CPF, CEP e OAB: a amostra com o número digitado. O CNPJ 85.172.639/0001-07 vem baixado, para mostrar o aviso.
+  const consulta = /^\/consultas\/(cnpj|cpf|cep)\/(\w+)$/.exec(caminho);
+  if (consulta) {
+    await new Promise((r) => setTimeout(r, 700));
+    const [, tipo, numero] = consulta;
+    const amostra = amostras.find((a) => a.path.startsWith(`/consultas/${tipo}/`))!.corpo as Record<string, unknown> & { empresa?: Record<string, unknown> };
+    if (tipo === "cpf") {
+      const { itens } = achar("/clientes", new URLSearchParams()) as { itens: { id: string; nome: string; documento: string | null }[] };
+      const dono = itens.find((c) => c.documento?.replace(/\D/g, "") === numero);
+      return json(200, { cpf: numero, cliente: dono ? { id: dono.id, nome: dono.nome } : null });
+    }
+    if (tipo === "cnpj" && numero === "85172639000107")
+      return json(200, { ...amostra, cnpj: "85.172.639/0001-07", empresa: { ...amostra.empresa, cnpj: numero, razaoSocial: "Auto Peças Rota 101 Ltda.", nomeFantasia: "Rota 101", situacao: "Baixada", ativa: false, situacaoDesde: "2025-06-30", atividade: "Comércio de peças para veículos" } });
+    if (tipo === "cep") {
+      const cep = `${numero!.slice(0, 5)}-${numero!.slice(5)}`;
+      return json(200, { ...amostra, cep, endereco: { ...(amostra.endereco as object), cep } });
+    }
+    return json(200, { ...amostra, cnpj: numero, empresa: { ...amostra.empresa, cnpj: numero } });
+  }
+  if (caminho === "/consultas/oab") {
+    await new Promise((r) => setTimeout(r, 900));
+    const amostra = achar(caminho, new URLSearchParams()) as Record<string, unknown>;
+    const numero = url.searchParams.get("numero");
+    const { pessoas } = achar("/equipe", new URLSearchParams()) as { pessoas: { nome: string; oabNumero: string | null }[] };
+    const dono = pessoas.find((p) => p.oabNumero?.replace(/\D/g, "") === numero);
+    return json(200, { ...amostra, oab: `OAB/${url.searchParams.get("uf")} ${numero}`, fonte: dono ? "achou" : "nao_achou", nomes: dono ? [{ nome: dono.nome, publicacoes: 25 }] : [] });
+  }
+  // A busca pelo número inteiro, sem máscara (o Colar publicação procura assim).
+  const numeroInteiro = url.searchParams.get("busca")?.replace(/\D/g, "");
+  if (caminho === "/processos" && numeroInteiro?.length === 20) {
+    const lista = achar(caminho, new URLSearchParams()) as { itens: { cnj: string | null }[] };
+    const itens = lista.itens.filter((p) => p.cnj?.replace(/\D/g, "") === numeroInteiro);
+    return json(200, { ...lista, itens, total: itens.length });
   }
   const corpo = achar(caminho, url.searchParams);
   return corpo === undefined ? json(404, { erro: "nao_encontrado", detalhe: "Esta tela não tem dados na prévia." }) : json(200, comFotos(corpo));

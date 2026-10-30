@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router"
 import { FolderPlus, MessageCircle, MessageSquarePlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { CamposDoCliente } from "@/componentes/campos-cliente";
 import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { Dialogo } from "@/componentes/dialogo";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
@@ -405,18 +406,22 @@ export function ClientePage() {
 function EditarCliente({ c, aberto, aoFechar }: { c: Cliente; aberto: boolean; aoFechar: () => void }) {
   const qc = useQueryClient();
   const avisar = useAviso();
-  const inicial = () => ({ nome: c.nome, tipo: c.tipo, documento: c.documento ? formatarDocumento(c.documento) : "", telefone: telefone(c.telefone), email: c.email ?? "", endereco: c.endereco ?? "", observacoes: c.observacoes ?? "" });
-  const [f, setF] = useState(inicial);
+  const inicial = () => ({ ficha: { nome: c.nome, tipo: c.tipo, documento: c.documento ? formatarDocumento(c.documento) : "", telefone: telefone(c.telefone), email: c.email ?? "", endereco: c.endereco ?? "" }, observacoes: c.observacoes ?? "" });
+  const [f, setF] = useState(() => inicial().ficha);
+  const [observacoes, setObservacoes] = useState(() => inicial().observacoes);
   const [visto, setVisto] = useState(aberto);
   if (aberto !== visto) {
     setVisto(aberto);
-    if (aberto) setF(inicial());
+    if (aberto) {
+      setF(inicial().ficha);
+      setObservacoes(inicial().observacoes);
+    }
   }
   const salvar = useMutation({
     mutationFn: () =>
       api(`/clientes/${c.id}`, {
         method: "PUT",
-        json: { nome: f.nome, tipo: f.tipo, documento: f.documento || null, telefone: f.telefone || null, email: f.email || null, endereco: f.endereco || null, observacoes: f.observacoes || null },
+        json: { nome: f.nome, tipo: f.tipo, documento: f.documento || null, telefone: f.telefone || null, email: f.email || null, endereco: f.endereco || null, observacoes: observacoes || null },
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["cliente", c.id] });
@@ -442,31 +447,17 @@ function EditarCliente({ c, aberto, aoFechar }: { c: Cliente; aberto: boolean; a
       }
     >
       <div className="dc-form">
-        <Campo rotulo="Nome" htmlFor="ec-nome">
-          <input id="ec-nome" value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} />
-        </Campo>
-        <div className="dc-grade-2">
-          <Campo rotulo="Tipo" htmlFor="ec-tipo">
-            <select id="ec-tipo" value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value as "pf" | "pj" })}>
-              <option value="pf">Pessoa física</option>
-              <option value="pj">Pessoa jurídica</option>
-            </select>
-          </Campo>
-          <Campo rotulo={f.tipo === "pf" ? "CPF" : "CNPJ"} htmlFor="ec-doc">
-            <input id="ec-doc" inputMode="numeric" value={f.documento} onChange={(e) => setF({ ...f, documento: e.target.value })} />
-          </Campo>
-          <Campo rotulo="Telefone ou WhatsApp" htmlFor="ec-tel">
-            <input id="ec-tel" inputMode="tel" value={f.telefone} onChange={(e) => setF({ ...f, telefone: e.target.value })} />
-          </Campo>
-          <Campo rotulo="E-mail" htmlFor="ec-email">
-            <input id="ec-email" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-          </Campo>
+        <div className="flex gap-4">
+          <label className="dc-opcao">
+            <input type="radio" name="ec-tipo" checked={f.tipo === "pf"} onChange={() => setF({ ...f, tipo: "pf" })} /> Pessoa física
+          </label>
+          <label className="dc-opcao">
+            <input type="radio" name="ec-tipo" checked={f.tipo === "pj"} onChange={() => setF({ ...f, tipo: "pj" })} /> Empresa
+          </label>
         </div>
-        <Campo rotulo="Endereço" htmlFor="ec-end">
-          <input id="ec-end" value={f.endereco} onChange={(e) => setF({ ...f, endereco: e.target.value })} />
-        </Campo>
+        <CamposDoCliente f={f} setF={setF} ignorar={c.id} prefixo="ec" />
         <Campo rotulo="Observações" htmlFor="ec-obs">
-          <textarea id="ec-obs" rows={3} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
+          <textarea id="ec-obs" rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
         </Campo>
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
       </div>

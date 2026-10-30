@@ -86,6 +86,18 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     expect(trazer.status).toBe(409);
   });
 
+  test("CNPJ, CEP e OAB respondem com exemplos inventados, sem ir à Receita nem ao Diário", async () => {
+    const cnpj = documentoValido("740619280001");
+    const c = await call(`/consultas/cnpj/${cnpj}`);
+    expect(c).toMatchObject({ fonte: "achou", exemplo: true, cliente: null, empresa: { cnpj, naturezaJuridica: "Sociedade Empresária Limitada" } });
+    expect(c.empresa.enderecoEmTexto).toContain("/SC, CEP 89");
+    expect(await call(`/consultas/cnpj/${cnpj}`)).toEqual(c);
+    expect(await call("/consultas/cep/89204000")).toMatchObject({ cep: "89204-000", fonte: "achou", exemplo: true, endereco: { uf: "SC", cep: "89204-000" } });
+    // A OAB de quem está na equipe aparece com o nome da pessoa; outra qualquer, não.
+    expect(await call("/consultas/oab?numero=41233&uf=SC")).toMatchObject({ fonte: "achou", exemplo: true, nomes: [{ nome: "Beatriz Souza" }] });
+    expect(await call("/consultas/oab?numero=99999&uf=SC")).toMatchObject({ fonte: "nao_achou", nomes: [] });
+  });
+
   test("documentos inventados têm verificadores válidos", () => {
     expect(cpfValido(documentoValido("318204567"))).toBe(true);
     expect(cnpjValido(documentoValido("418273650001"))).toBe(true);

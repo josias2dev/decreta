@@ -284,6 +284,61 @@ export interface ConsultaDoCnj {
 
 export type SituacaoDaFonte = "achou" | "nao_achou" | "falhou" | "desligado";
 
+export interface Endereco {
+  logradouro: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
+  cep: string | null;
+}
+
+/** A empresa pelo CNPJ (GET /consultas/cnpj/:numero), dos dados abertos da Receita. */
+export interface ConsultaDoCnpj {
+  cnpj: string;
+  fonte: SituacaoDaFonte;
+  empresa: {
+    cnpj: string;
+    razaoSocial: string;
+    nomeFantasia: string | null;
+    situacao: string;
+    ativa: boolean;
+    situacaoDesde: string | null;
+    abertura: string | null;
+    atividade: string | null;
+    naturezaJuridica: string | null;
+    endereco: Endereco | null;
+    enderecoEmTexto: string | null;
+    telefone: string | null;
+    email: string | null;
+    fonte: string;
+  } | null;
+  cliente: { id: string; nome: string } | null;
+  exemplo: boolean;
+}
+
+export interface ConsultaDoCpf {
+  cpf: string;
+  cliente: { id: string; nome: string } | null;
+}
+
+export interface ConsultaDoCep {
+  cep: string;
+  fonte: SituacaoDaFonte;
+  endereco: Endereco | null;
+  exemplo: boolean;
+}
+
+/** Os nomes que o Diário mostra com a OAB (GET /consultas/oab). */
+export interface ConsultaDaOab {
+  oab: string;
+  fonte: SituacaoDaFonte;
+  nomes: { nome: string; publicacoes: number }[];
+  dias: number;
+  exemplo: boolean;
+}
+
 export interface Processo {
   id: string;
   titulo: string;

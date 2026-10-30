@@ -12,7 +12,7 @@ import { createTestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
 import { createApp } from "../src/app.ts";
 import { createAuth } from "../src/auth.ts";
-import { criarDemonstracao } from "../src/demonstracao.ts";
+import { criarDemonstracao, documentoValido } from "../src/demonstracao.ts";
 import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { createRotas } from "../src/rotas/index.ts";
@@ -64,6 +64,10 @@ try {
   await guardar("processo", `/processos/${processoId}`);
   // Um número que não está no escritório: a consulta da demonstração responde com o exemplo inventado.
   await guardar("consultaCnj", `/processos/consulta?cnj=${encodeURIComponent(`5009876-${dvCnj("5009876", "2026", "8", "24", "0038")}.2026.8.24.0038`)}`);
+  await guardar("consultaCnpj", `/consultas/cnpj/${documentoValido("740619280001")}`);
+  await guardar("consultaCpf", `/consultas/cpf/${documentoValido("427315698")}`);
+  await guardar("consultaCep", "/consultas/cep/89204000");
+  await guardar("consultaOab", "/consultas/oab?numero=41233&uf=SC");
   await guardar("movimentacoes", `/processos/${processoId}/movimentacoes`);
   await guardar("pecasDoProcesso", `/processos/${processoId}/pecas`);
   await guardar("documentos", `/documentos?processo=${processoId}`);

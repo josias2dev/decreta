@@ -1,0 +1,17 @@
+{
+  "path": "/consultas/cep/89204000",
+  "corpo": {
+    "cep": "89204-000",
+    "fonte": "achou",
+    "endereco": {
+      "logradouro": "Rua dos Pinheirais",
+      "numero": null,
+      "complemento": null,
+      "bairro": "Vila Nova",
+      "cidade": "Joinville",
+      "uf": "SC",
+      "cep": "89204-000"
+    },
+    "exemplo": true
+  }
+}

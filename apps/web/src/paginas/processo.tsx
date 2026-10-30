@@ -1,9 +1,11 @@
 /** Ficha do processo: resumo da IA, movimentações, prazos, documentos e o chat dos autos. */
+import { limparCnpj } from "@decreta/core";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { ArrowRight, Download, ExternalLink, FileText, LoaderCircle, MessageSquare, Plus, RefreshCw, Trash2, Upload } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { DaReceita, documentoDigitado, useEmpresa, usePreencher } from "@/componentes/campos-cliente";
 import { Conversa } from "@/componentes/conversa";
 import { Dialogo } from "@/componentes/dialogo";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
@@ -975,10 +977,19 @@ function EditarProcesso({ p, aberto, aoFechar }: { p: Processo; aberto: boolean;
 function NovaParte({ processoId, aberto, aoFechar }: { processoId: string; aberto: boolean; aoFechar: () => void }) {
   const qc = useQueryClient();
   const avisar = useAviso();
-  const vazio = { nome: "", polo: "passivo" as Parte["polo"], papel: "", advogados: "", cliente: false };
+  const vazio = { nome: "", polo: "passivo" as Parte["polo"], papel: "", documento: "", advogados: "", cliente: false };
   const [f, setF] = useState(vazio);
+  const { preencher } = usePreencher(setF);
+  // Mais de 11 posições, barra ou letra é CNPJ: a empresa vem da Receita. CPF só confere os dígitos.
+  const ehCnpj = limparCnpj(f.documento).length > 11 || /[a-z/]/i.test(f.documento);
+  const doc = documentoDigitado(ehCnpj ? "pj" : "pf", f.documento);
+  const empresa = useEmpresa(ehCnpj ? doc.pronto : null);
+  const razao = empresa.consulta?.empresa?.razaoSocial;
+  useEffect(() => {
+    if (razao) preencher({ nome: razao });
+  }, [razao, preencher]);
   const criar = useMutation({
-    mutationFn: () => api(`/processos/${processoId}/partes`, { json: { nome: f.nome, polo: f.polo, papel: f.papel || null, advogados: f.advogados || null, cliente: f.cliente } }),
+    mutationFn: () => api(`/processos/${processoId}/partes`, { json: { nome: f.nome, polo: f.polo, papel: f.papel || null, documento: f.documento.trim() || null, advogados: f.advogados || null, cliente: f.cliente } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["processo", processoId] });
       avisar("Parte adicionada.");
@@ -996,13 +1007,17 @@ function NovaParte({ processoId, aberto, aoFechar }: { processoId: string; abert
           <Botao variante="fantasma" onClick={aoFechar}>
             Cancelar
           </Botao>
-          <Botao variante="primaria" onClick={() => criar.mutate()} ocupado={criar.isPending} disabled={f.nome.trim().length < 2}>
+          <Botao variante="primaria" onClick={() => criar.mutate()} ocupado={criar.isPending} disabled={f.nome.trim().length < 2 || doc.invalido}>
             Adicionar
           </Botao>
         </>
       }
     >
       <div className="dc-form">
+        <Campo rotulo="CPF ou CNPJ" htmlFor="np-doc" erro={doc.invalido ? "Confira o número: os dígitos não batem." : null} ajuda={f.documento ? undefined : "Opcional. Empresa: o nome vem da Receita e entra na qualificação da peça"}>
+          <input id="np-doc" className="dc-num" value={f.documento} onChange={(e) => setF({ ...f, documento: e.target.value })} autoCapitalize="characters" autoComplete="off" />
+        </Campo>
+        <DaReceita consulta={empresa.consulta} buscando={empresa.buscando} tipoDoCadastro="parte" />
         <Campo rotulo="Nome" htmlFor="np-nome">
           <input id="np-nome" value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} />
         </Campo>

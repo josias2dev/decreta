@@ -13,6 +13,7 @@ import { painelDoDia } from "../servicos/hoje.ts";
 import { tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { rotasDaAgenda } from "./agenda.ts";
 import { rotasDosClientes } from "./clientes.ts";
+import { rotasDasConsultas } from "./consultas.ts";
 import { rotasDosDocumentos } from "./documentos.ts";
 import { rotasDoEscritorio } from "./escritorio.ts";
 import { rotasDaIa } from "./ia.ts";
@@ -108,6 +109,7 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDasPublicacoes(app, deps);
   rotasDosProcessos(app, deps);
   rotasDosClientes(app, deps);
+  rotasDasConsultas(app, deps);
   rotasDaIa(app, deps);
   rotasDasPecas(app, deps);
   rotasDosModelos(app, deps);

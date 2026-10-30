@@ -1,5 +1,25 @@
 import { describe, expect, test } from "bun:test";
-import { buscarDjenDoProcesso, buscarNoDataJud, buscarNoDjen, comarcaDoOrgao, ErroDjen, instante, lerComunicacao, nomeDoMunicipio, nomeDoSistema, orgaoSemComarca, partesDoDjen, textoLimpo, type ComunicacaoDjen } from "../src/index.ts";
+import { enderecoEmTexto } from "@decreta/core";
+import {
+  buscarCep,
+  buscarCnpj,
+  buscarDjenDoProcesso,
+  buscarNoDataJud,
+  buscarNoDjen,
+  comarcaDoOrgao,
+  ErroDaReceita,
+  ErroDjen,
+  ErroDoCep,
+  instante,
+  lerComunicacao,
+  nomeDoMunicipio,
+  nomeDoSistema,
+  nomesDaOab,
+  orgaoSemComarca,
+  partesDoDjen,
+  textoLimpo,
+  type ComunicacaoDjen,
+} from "../src/index.ts";
 import datajud from "./fixtures/datajud.json";
 import djen from "./fixtures/djen.json";
 
@@ -200,5 +220,128 @@ describe("partes pelo DJEN", () => {
     expect(r.poloDaEquipe).toBeNull();
     expect(r.partes).toHaveLength(1);
     expect(partesDoDjen([]).partes).toEqual([]);
+  });
+
+  test("a OAB e os nomes que aparecem com ela", () => {
+    const r = nomesDaOab(
+      [
+        comunicacao({ advogados: [{ nome: "Beatriz Souza", oab: "41233", uf: "SC" }, { nome: "Otávio Reis", oab: "30111", uf: "SC" }] }),
+        comunicacao({ advogados: [{ nome: "BEATRIZ SOUZA", oab: "41233", uf: "SC" }] }),
+        // Mesmo número em outro estado é outra pessoa.
+        comunicacao({ advogados: [{ nome: "Carlos Prado", oab: "41233", uf: "PR" }] }),
+      ],
+      { numero: "41.233", uf: "sc" },
+    );
+    expect(r).toEqual([{ nome: "Beatriz Souza", publicacoes: 2 }]);
+    expect(nomesDaOab([], { numero: "1", uf: "SC" })).toEqual([]);
+  });
+});
+
+/** Responde pela URL; o que não estiver na lista cai como rede fora do ar. */
+const rotas = (r: Record<string, () => Response>) =>
+  (async (url: URL | string) => {
+    const u = url.toString();
+    const achou = Object.entries(r).find(([k]) => u.startsWith(k));
+    if (!achou) throw new TypeError("fetch failed");
+    return achou[1]();
+  }) as unknown as typeof fetch;
+
+describe("CNPJ", () => {
+  // Empresa inventada; o CNPJ só tem os verificadores certos.
+  const brasilApi = {
+    cnpj: "11222333000181",
+    razao_social: "PADARIA BOM GRAO LTDA",
+    nome_fantasia: "BOM GRAO",
+    descricao_situacao_cadastral: "ATIVA",
+    data_situacao_cadastral: "2015-03-02",
+    data_inicio_atividade: "2015-03-02",
+    cnae_fiscal_descricao: "Fabricação de produtos de panificação",
+    natureza_juridica: "Sociedade Empresária Limitada",
+    descricao_tipo_de_logradouro: "RUA",
+    logradouro: "DAS PALMEIRAS",
+    numero: "120",
+    complemento: "SALA 3",
+    bairro: "CENTRO",
+    municipio: "JOINVILLE",
+    uf: "SC",
+    cep: "89201100",
+    ddd_telefone_1: "4734550000",
+    email: "CONTATO@BOMGRAO.EXEMPLO",
+    qsa: [{ nome_socio: "NAO LIDO" }],
+  };
+
+  test("pela BrasilAPI, com endereço e situação", async () => {
+    const e = await buscarCnpj("11.222.333/0001-81", { fetch: rotas({ "https://brasilapi.com.br/api/cnpj/v1/11222333000181": () => resposta(brasilApi) }) });
+    expect(e).toEqual({
+      cnpj: "11222333000181",
+      razaoSocial: "Padaria Bom Grao Ltda",
+      nomeFantasia: "Bom Grao",
+      situacao: "Ativa",
+      ativa: true,
+      situacaoDesde: "2015-03-02",
+      abertura: "2015-03-02",
+      atividade: "Fabricação de produtos de panificação",
+      naturezaJuridica: "Sociedade Empresária Limitada",
+      endereco: { logradouro: "Rua das Palmeiras", numero: "120", complemento: "Sala 3", bairro: "Centro", cidade: "Joinville", uf: "SC", cep: "89201-100" },
+      telefone: "4734550000",
+      email: "contato@bomgrao.exemplo",
+      fonte: "BrasilAPI",
+    });
+    expect(enderecoEmTexto(e!.endereco!)).toBe("Rua das Palmeiras, 120, Sala 3, Centro, Joinville/SC, CEP 89201-100");
+  });
+
+  test("BrasilAPI fora: vale o CNPJá; baixada vem marcada", async () => {
+    const e = await buscarCnpj("12.ABC.345/01DE-35", {
+      fetch: rotas({
+        "https://brasilapi.com.br": () => resposta({ message: "erro" }, 502),
+        "https://open.cnpja.com/office/12ABC34501DE35": () =>
+          resposta({
+            taxId: "12ABC34501DE35",
+            alias: null,
+            founded: "2026-08-10",
+            statusDate: "2026-09-30",
+            status: { id: 8, text: "Baixada" },
+            company: { name: "TRANSPORTES SERRA DOURADA LTDA", nature: { text: "Sociedade Empresária Limitada" } },
+            address: { street: "Avenida Brasil", number: "900", details: null, district: "Centro", city: "Blumenau", state: "SC", zip: "89010000" },
+            phones: [{ area: "47", number: "33220000" }],
+            emails: [],
+            mainActivity: { text: "Transporte rodoviário de carga" },
+          }),
+      }),
+    });
+    expect(e).toMatchObject({ cnpj: "12ABC34501DE35", razaoSocial: "Transportes Serra Dourada Ltda", situacao: "Baixada", ativa: false, situacaoDesde: "2026-09-30", telefone: "4733220000", email: null, fonte: "CNPJá" });
+    expect(e!.endereco).toMatchObject({ cidade: "Blumenau", cep: "89010-000" });
+  });
+
+  test("as duas dizem que não existe: null; nenhuma responde: erro", async () => {
+    const naoTem = rotas({ "https://brasilapi.com.br": () => resposta({ type: "not_found" }, 404), "https://open.cnpja.com": () => resposta({}, 404) });
+    expect(await buscarCnpj("52.930.471/0001-00", { fetch: naoTem })).toBeNull();
+    expect(buscarCnpj("63.718.294/0001-01", { fetch: rotas({}) })).rejects.toBeInstanceOf(ErroDaReceita);
+  });
+
+  test("guarda a resposta por um dia", async () => {
+    let pedidos = 0;
+    const contar = rotas({ "https://brasilapi.com.br": () => (pedidos++, resposta({ ...brasilApi, cnpj: "41827365000171" })) });
+    await buscarCnpj("41827365000171", { fetch: contar, agora: () => 0 });
+    await buscarCnpj("41827365000171", { fetch: contar, agora: () => 3_600_000 });
+    expect(pedidos).toBe(1);
+    await buscarCnpj("41827365000171", { fetch: contar, agora: () => 90_000_000 });
+    expect(pedidos).toBe(2);
+  });
+});
+
+describe("CEP", () => {
+  test("pela ViaCEP, e pela BrasilAPI quando a ViaCEP cai", async () => {
+    const via = rotas({ "https://viacep.com.br/ws/89201100/json/": () => resposta({ cep: "89201-100", logradouro: "Rua das Palmeiras", bairro: "Centro", localidade: "Joinville", uf: "SC" }) });
+    expect(await buscarCep("89201-100", { fetch: via })).toEqual({ logradouro: "Rua das Palmeiras", numero: null, complemento: null, bairro: "Centro", cidade: "Joinville", uf: "SC", cep: "89201-100" });
+    const brasil = rotas({ "https://brasilapi.com.br/api/cep/v1/89010000": () => resposta({ cep: "89010000", street: "Avenida Brasil", neighborhood: "Centro", city: "Blumenau", state: "SC" }) });
+    expect(await buscarCep("89010000", { fetch: brasil })).toMatchObject({ logradouro: "Avenida Brasil", cidade: "Blumenau", cep: "89010-000" });
+  });
+
+  test("CEP que não existe é null; sem resposta é erro", async () => {
+    const naoTem = rotas({ "https://viacep.com.br": () => resposta({ erro: "true" }), "https://brasilapi.com.br": () => resposta({}, 404) });
+    expect(await buscarCep("99999-998", { fetch: naoTem })).toBeNull();
+    expect(await buscarCep("123", { fetch: naoTem })).toBeNull();
+    expect(buscarCep("89999-997", { fetch: rotas({}) })).rejects.toBeInstanceOf(ErroDoCep);
   });
 });

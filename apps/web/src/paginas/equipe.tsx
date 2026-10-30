@@ -1,7 +1,7 @@
 /** Equipe: quem está no escritório, o papel de cada um, a OAB que o DJEN busca e os convites. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy, MailPlus, Pencil } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
@@ -11,7 +11,7 @@ import { authCall, authClient, ehSocio, papelLabel, PAPEIS, type Papel } from "@
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaDoInstante, telefone } from "@/lib/formato";
-import type { Equipe, PessoaDaEquipe } from "@/lib/tipos";
+import type { ConsultaDaOab, Equipe, PessoaDaEquipe } from "@/lib/tipos";
 
 export const equipeQuery = { queryKey: ["equipe"], queryFn: () => api<Equipe>("/equipe") } as const;
 
@@ -213,6 +213,63 @@ function Convidar({ aberto, aoFechar, papelDeQuemConvida }: { aberto: boolean; a
   );
 }
 
+const chaveDoNome = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase("pt-BR")
+    .split(/[^a-z]+/)
+    .filter((p) => p.length > 2);
+
+/** O nome do Diário é o da pessoa: o primeiro e o último nome dela aparecem lá. */
+function mesmaPessoa(doDiario: string, daEquipe: string) {
+  const d = new Set(chaveDoNome(doDiario));
+  const e = chaveDoNome(daEquipe);
+  return e.length > 0 && d.has(e[0]!) && d.has(e[e.length - 1]!);
+}
+
+/**
+ * "Conferir no Diário": a OAB digitada errada faz a busca de publicações voltar
+ * vazia sem aviso. O Diário mostra o nome de quem tem o número.
+ */
+function ConferirOab({ numero, uf, nome }: { numero: string; uf: string; nome: string }) {
+  const digitos = numero.replace(/\D/g, "");
+  const conferir = useMutation({ mutationFn: () => api<ConsultaDaOab>(`/consultas/oab?numero=${digitos}&uf=${uf}`) });
+  const { reset } = conferir;
+  // Outro número ou outra UF: a conferência anterior não vale mais.
+  useEffect(() => reset(), [digitos, uf, reset]);
+  if (digitos.length < 2) return null;
+  const r = conferir.data;
+  const dono = r?.nomes[0];
+  const exemplo = r?.exemplo ? " Na demonstração, só a OAB de quem está na equipe aparece." : "";
+  return (
+    <div className="flex flex-col gap-2">
+      {!r && (
+        <div>
+          <Botao variante="fantasma" pequeno onClick={() => conferir.mutate()} ocupado={conferir.isPending}>
+            Conferir no Diário
+          </Botao>
+        </div>
+      )}
+      {conferir.error && <Faixa tipo="erro">{mensagemDoErro(conferir.error)}</Faixa>}
+      {r?.fonte === "achou" && dono && (
+        <Faixa tipo={mesmaPessoa(dono.nome, nome) ? "ok" : "aviso"}>
+          {mesmaPessoa(dono.nome, nome)
+            ? `No Diário, a ${r.oab} aparece com o nome ${dono.nome} em ${dono.publicacoes === 1 ? "1 publicação" : `${dono.publicacoes} publicações`} dos últimos ${r.dias} dias.`
+            : `No Diário, a ${r.oab} aparece com o nome ${dono.nome}, não ${nome}. Confira o número e a UF.`}
+          {exemplo}
+        </Faixa>
+      )}
+      {r?.fonte === "nao_achou" && (
+        <Faixa tipo="aviso">
+          Nenhuma publicação com a {r.oab} nos últimos {r.dias} dias. Se {nome.split(" ")[0]} tem processos, confira o número e a UF.{exemplo}
+        </Faixa>
+      )}
+      {r?.fonte === "falhou" && <Faixa tipo="aviso">O Diário não respondeu agora. Dá para salvar e conferir depois.</Faixa>}
+    </div>
+  );
+}
+
 function EditarPessoa({ p, aoFechar, socio, eu }: { p: PessoaDaEquipe; aoFechar: () => void; socio: boolean; eu?: string }) {
   const qc = useQueryClient();
   const avisar = useAviso();
@@ -305,6 +362,7 @@ function EditarPessoa({ p, aoFechar, socio, eu }: { p: PessoaDaEquipe; aoFechar:
               </select>
             </Campo>
           </div>
+          <ConferirOab numero={f.oabNumero} uf={f.oabUf} nome={p.nome} />
           <Campo rotulo="WhatsApp" htmlFor="ep-zap">
             <input id="ep-zap" inputMode="tel" value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: e.target.value })} placeholder="(47) 99123-4567" />
           </Campo>

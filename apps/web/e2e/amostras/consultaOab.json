@@ -1,0 +1,15 @@
+{
+  "path": "/consultas/oab?numero=41233&uf=SC",
+  "corpo": {
+    "oab": "OAB/SC 41233",
+    "dias": 60,
+    "exemplo": true,
+    "fonte": "achou",
+    "nomes": [
+      {
+        "nome": "Beatriz Souza",
+        "publicacoes": 25
+      }
+    ]
+  }
+}

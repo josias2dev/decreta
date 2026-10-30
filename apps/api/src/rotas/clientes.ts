@@ -1,6 +1,6 @@
-import { cnpjValido, cpfValido, formatarDocumento, formatarTelefone, telefoneWhatsapp } from "@decreta/core";
+import { cnpjValido, cpfValido, formatarDocumento, formatarTelefone, limparDocumento, telefoneWhatsapp } from "@decreta/core";
 import { atendimentos, clientes, documentos, processos } from "@decreta/db";
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
@@ -24,7 +24,7 @@ const dadosDoCliente = z.object({
 });
 
 function documentoLimpo(tipo: "pf" | "pj", documento: string | null | undefined): string | null {
-  const d = (documento ?? "").replace(/\D/g, "");
+  const d = limparDocumento(tipo, documento ?? "");
   if (!d) return null;
   if (tipo === "pf" ? !cpfValido(d) : !cnpjValido(d)) falha(422, "documento_invalido", tipo === "pf" ? "Confira o CPF." : "Confira o CNPJ.");
   return d;
@@ -152,7 +152,11 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [cl] = await tx.select({ tipo: clientes.tipo }).from(clientes).where(eq(clientes.id, clienteId));
       if (!cl) falha(404, "nao_encontrado");
       const valores: Partial<typeof clientes.$inferInsert> = Object.fromEntries(Object.entries(b).filter(([, v]) => v !== undefined));
-      if (b.documento !== undefined) valores.documento = documentoLimpo(b.tipo ?? cl.tipo, b.documento);
+      if (b.documento !== undefined) {
+        valores.documento = documentoLimpo(b.tipo ?? cl.tipo, b.documento);
+        if (valores.documento && (await tx.select({ id: clientes.id }).from(clientes).where(and(eq(clientes.documento, valores.documento), ne(clientes.id, clienteId)))).length)
+          falha(409, "cliente_existe", "Outro cliente já tem este documento.");
+      }
       await tx.update(clientes).set(valores).where(eq(clientes.id, clienteId));
     });
     return c.json({ ok: true });

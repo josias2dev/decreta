@@ -278,3 +278,26 @@ export function partesDoDjen(itens: ComunicacaoDjen[], oabsDaEquipe: { numero: s
     publicacoes: itens.length,
   };
 }
+
+/**
+ * Quem o DJEN diz que é dono da OAB: os nomes que aparecem com esse número nas
+ * comunicações, do mais visto ao menos. Serve para conferir a OAB da equipe,
+ * que, digitada errada, faz a captura voltar vazia sem aviso.
+ */
+export function nomesDaOab(itens: ComunicacaoDjen[], oab: { numero: string; uf: string }): { nome: string; publicacoes: number }[] {
+  const alvo = `${oab.numero.replace(/\D/g, "")}/${oab.uf.toUpperCase()}`;
+  const nomes = new Map<string, { nome: string; publicacoes: number }>();
+  for (const i of itens) {
+    const vistos = new Set<string>();
+    for (const a of i.advogados) {
+      if (!a.oab || chaveDaOab(a) !== alvo) continue;
+      const chave = chaveDoNome(a.nome);
+      if (vistos.has(chave)) continue;
+      vistos.add(chave);
+      const n = nomes.get(chave) ?? { nome: a.nome, publicacoes: 0 };
+      n.publicacoes++;
+      nomes.set(chave, n);
+    }
+  }
+  return [...nomes.values()].sort((a, b) => b.publicacoes - a.publicacoes);
+}

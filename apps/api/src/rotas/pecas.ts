@@ -6,6 +6,7 @@ import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
+import { paraQualificar, qualificacaoDasPartes } from "../servicos/cadastros.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { modelosParaPeca } from "../servicos/modelos.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
@@ -107,6 +108,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         ? await tx.select({ conteudo: analises.conteudo }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.situacao, "pronto"))).orderBy(desc(analises.createdAt)).limit(1)
         : [];
       const ctx = await carregarContexto(tx, p.id, { documentos: true });
+      const qualificar = await paraQualificar(tx, p.id);
       const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: [sobreOCaso(p, prazo?.tipo), b.instrucoes].join(" ") });
       const [esc] = await tx.select().from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
@@ -128,10 +130,13 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
           escritorio: { nome: esc?.timbre?.nome ?? c.get("orgNome"), advogado: advogado?.nome ?? c.get("userNome"), oab: advogado?.oab ?? null, cidade: p.comarca },
           modelos: doBanco.map((m) => ({ titulo: m.titulo, tese: m.tese, texto: m.texto })),
         },
+        qualificar,
       };
     });
+    // A Receita é consultada fora da transação: pode levar alguns segundos.
+    const qualificacao = await qualificacaoDasPartes({ fetch: deps.captura.fetch, log: deps.log }, preparado.qualificar, c.get("demonstracao"));
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "peca.gerada", detalhes: { pecaId: preparado.pecaId, tipo: tipo.id }, ip: ip(c) }, deps.log);
-    return transmitirPeca(c, deps, ia, preparado.pecaId, preparado.pedido);
+    return transmitirPeca(c, deps, ia, preparado.pecaId, { ...preparado.pedido, qualificacao });
   });
 
   /** Peça escrita à mão, sem a IA: guarda o texto e devolve o id. */
