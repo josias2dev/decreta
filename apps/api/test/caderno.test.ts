@@ -225,6 +225,13 @@ describe.skipIf(!hasTestDatabase)("captura pelo caderno do DJEN", () => {
     test("avisa quando a leitura dos cadernos parou", async () => {
       expect((await saude("2026-11-10")).alertas).toEqual(["A leitura dos cadernos do DJEN está parada desde 03/11. A busca pela OAB das 12:40 e das 18:40 continua."]);
     });
+
+    test("escritório que desligou a captura não recebe aviso dela", async () => {
+      await t.owner`update escritorios set captura_djen = false where organization_id = ${souza}`;
+      // Nem "leitura parada" nem "a busca pela OAB continua": as duas estão desligadas por escolha do escritório.
+      expect((await saude("2026-11-10")).alertas).toEqual([]);
+      await t.owner`update escritorios set captura_djen = true where organization_id = ${souza}`;
+    });
   });
 
   describe("pela API", () => {
@@ -301,6 +308,30 @@ describe.skipIf(!hasTestDatabase)("captura pelo caderno do DJEN", () => {
       expect((await certidaoDe(outro, "3")).certidao).toBeNull();
       const semCertidao = (async () => new Response("", { status: 404 })) as unknown as typeof fetch;
       expect(await certidaoDaPublicacao({ db: t.db, arquivos, fetch: semCertidao }, outro, pub.id)).toBeNull();
+    });
+  });
+
+  describe("versão nova que não deu para ler", () => {
+    const tjsc28 = async () => (await cadernosDe(souza)).find((c) => c.tribunal === "TJSC" && c.dia === "2026-10-28")!;
+
+    test("o dia já lido fica lido, mas avisa que a versão nova falhou", async () => {
+      const antes = await tjsc28();
+      // O tribunal publica a versão 3 (cancelando a comunicação 5), e o arquivo chega corrompido.
+      cadernos.set("TJSC/2026-10-28", { versao: 3, itens: [comunicacao(1, { cnj: DE_OUTRO, oab: "41233" }), comunicacao(5, { cnj: DA_CARTEIRA, oab: "99999", extra: { ativo: false, motivo_cancelamento: "Erro material" } })], hashErrado: true });
+      await capturarCadernos(captura, ["2026-10-28"]);
+      expect(await tjsc28()).toMatchObject({ situacao: "lido", versao: antes.versao, erro: expect.stringContaining("hash") });
+      expect((await withTenant(t.db, souza, (tx) => saudeDaCaptura(tx, "2026-10-29"))).alertas).toContain(
+        "Não deu para ler a versão nova do caderno do TJSC de 28/10 no DJEN: o tribunal mudou o caderno, e um cancelamento pode não ter chegado. Tento de novo na próxima leitura; confira as publicações desse dia.",
+      );
+    });
+
+    test("a rodada seguinte tenta de novo o dia que falhou e marca o cancelamento", async () => {
+      cadernos.set("TJSC/2026-10-28", { ...cadernos.get("TJSC/2026-10-28")!, hashErrado: false });
+      baixados.length = 0;
+      await capturarCadernos(captura, ["2026-11-03"]);
+      expect(baixados).toContain("TJSC/2026-10-28");
+      expect(await tjsc28()).toMatchObject({ situacao: "lido", versao: 3, erro: null });
+      expect((await publicacoesDe(souza)).find((p) => p.id_externo === "5")).toMatchObject({ motivo_cancelamento: "Erro material" });
     });
   });
 });

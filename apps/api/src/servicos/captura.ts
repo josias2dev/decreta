@@ -154,7 +154,12 @@ interface EscritorioNoCaderno {
   tribunais: Set<string>;
   /** "TJSC/2026-10-28" → versão do caderno já lida. */
   lidos: Map<string, number>;
+  /** "TJSC/2026-10-28" dos últimos dias que deram erro (ou cuja versão nova falhou): a rodada tenta de novo. */
+  pendentes: Set<string>;
 }
+
+/** Quantos dias para trás a rodada volta a tentar o caderno que deu erro. */
+const JANELA_DA_RELEITURA = 7;
 
 /** Os tribunais da carteira, o tribunal de justiça de cada OAB e os superiores, onde correm os recursos. */
 function tribunaisDoCaderno(carteira: string[], ufsDasOabs: string[]): Set<string> {
@@ -180,10 +185,15 @@ async function escritoriosDoCaderno(db: Database, dias: Dia[]): Promise<Escritor
         .filter((o) => o.numero);
       const carteira = await tx.select({ cnj: processos.cnj, tribunal: processos.tribunal }).from(processos).where(isNotNull(processos.cnj));
       if (!oabs.length && !carteira.length) return null;
+      const desde = somarDias([...dias].sort()[0]!, -JANELA_DA_RELEITURA);
       const lidos = await tx
         .select({ tribunal: cadernosDjen.tribunal, dia: cadernosDjen.dia, versao: cadernosDjen.versao })
         .from(cadernosDjen)
-        .where(and(inArray(cadernosDjen.dia, dias), eq(cadernosDjen.situacao, "lido"), isNotNull(cadernosDjen.versao)));
+        .where(and(sql`${cadernosDjen.dia} >= ${desde}`, eq(cadernosDjen.situacao, "lido"), isNotNull(cadernosDjen.versao)));
+      const comErro = await tx
+        .select({ tribunal: cadernosDjen.tribunal, dia: cadernosDjen.dia })
+        .from(cadernosDjen)
+        .where(and(sql`${cadernosDjen.dia} >= ${desde}`, isNotNull(cadernosDjen.erro)));
       return {
         organizationId: id,
         oabs,
@@ -193,6 +203,7 @@ async function escritoriosDoCaderno(db: Database, dias: Dia[]): Promise<Escritor
           oabs.map((o) => o.uf),
         ),
         lidos: new Map(lidos.map((l) => [`${l.tribunal}/${l.dia}`, l.versao!])),
+        pendentes: new Set(comErro.filter((l) => !dias.includes(l.dia)).map((l) => `${l.tribunal}/${l.dia}`)),
       };
     });
     if (e) saida.push(e);
@@ -229,8 +240,9 @@ export async function capturarCadernos(deps: DepsDaCaptura, dias: Dia[]): Promis
   const cadernos: CadernoDaRodada[] = [];
   const novas: { organizationId: string; publicacaoId: string }[] = [];
   /** A rodada de cada escritório, para a tela dizer quando foi a última captura. */
-  const rodada = new Map(todos.map((e) => [e.organizationId, { encontradas: 0, novas: 0, erros: [] as string[], tentativas: e.tribunais.size * dias.length }]));
+  const rodada = new Map(todos.map((e) => [e.organizationId, { encontradas: 0, novas: 0, erros: [] as string[], tentativas: 0 }]));
   let falhas = 0;
+  let tentativas = 0;
   // Quando cada tribunal enviou ao DJEN pela última vez: a lista fora do ar não impede a leitura dos cadernos.
   const envios = tribunais.length
     ? await ultimosEnviosAoDjen({ fetch: deps.fetch, ...deps.djen }).catch((err: unknown) => {
@@ -244,7 +256,11 @@ export async function capturarCadernos(deps: DepsDaCaptura, dias: Dia[]): Promis
     const ultimoEnvio = envios.get(tribunal) ?? null;
     /** O último envio já visto não é apagado por uma rodada em que a lista falhou. */
     const comEnvio = ultimoEnvio ? { ultimoEnvio } : {};
-    for (const dia of dias) {
+    // Os dias da rodada e os dos últimos dias que deram erro, para não perder um cancelamento do tribunal.
+    const pendentes = [...new Set(interessados.flatMap((e) => [...e.pendentes].filter((p) => p.startsWith(`${tribunal}/`)).map((p) => p.slice(tribunal.length + 1))))].sort();
+    for (const dia of [...pendentes, ...dias]) {
+      tentativas++;
+      for (const e of interessados) rodada.get(e.organizationId)!.tentativas++;
       const versoes = interessados.map((e) => e.lidos.get(`${tribunal}/${dia}`));
       const versaoLida = versoes.every((v) => v != null) ? Math.min(...(versoes as number[])) : undefined;
       const conta = new Map(interessados.map((e) => [e.organizationId, { casadas: 0, novas: 0, canceladas: 0 }]));
@@ -336,7 +352,7 @@ export async function capturarCadernos(deps: DepsDaCaptura, dias: Dia[]): Promis
       tx.insert(capturas).values({ organizationId, fonte: "djen", iniciadaEm, terminadaEm: new Date(), encontradas: r.encontradas, novas: r.novas, erro: r.erros.length === r.tentativas ? r.erros.join("; ").slice(0, 1000) : null }),
     );
   }
-  if (falhas && falhas === tribunais.length * dias.length) throw new Error(`DJEN: nenhum caderno pôde ser lido (${falhas})`);
+  if (falhas && falhas === tentativas) throw new Error(`DJEN: nenhum caderno pôde ser lido (${falhas})`);
   return { cadernos, novas };
 }
 
@@ -381,6 +397,9 @@ export async function saudeDaCaptura(tx: Tx, hoje: Dia): Promise<SaudeDaCaptura>
     .from(publicacoes)
     .where(and(isNull(publicacoes.processoId), isNull(publicacoes.canceladaEm), inArray(publicacoes.situacao, ["nova", "pendente"])));
   if (!linhas.length) return { tribunais: [], alertas: [], semProcesso };
+  // Captura desligada pelo escritório: o histórico fica, os avisos não (a busca pela OAB também está desligada).
+  const [esc] = await tx.select({ ligado: escritorios.capturaDjen }).from(escritorios);
+  const avisar = esc?.ligado ?? true;
 
   const [anterior] = diasDoCaderno(hoje) as [Dia, Dia];
   const alertas: string[] = [];
@@ -399,6 +418,11 @@ export async function saudeDaCaptura(tx: Tx, hoje: Dia): Promise<SaudeDaCaptura>
       lido: l ? { dia: l.dia, versao: l.versao, total: l.total, casadas: l.casadas, canceladas: l.canceladas, em: l.lidoEm.toISOString() } : null,
       envio,
     });
+    // Dia já lido cuja versão nova não deu para ler: o tribunal pode ter cancelado uma comunicação.
+    const releitura = doTribunal.find((x) => x.situacao === "lido" && x.erro && x.dia >= somarDias(hoje, -JANELA_DA_RELEITURA));
+    if (releitura) {
+      alertas.push(`Não deu para ler a versão nova do caderno do ${tribunal} de ${formatarDiaCurto(releitura.dia)} no DJEN: o tribunal mudou o caderno, e um cancelamento pode não ter chegado. Tento de novo na próxima leitura; confira as publicações desse dia.`);
+    }
     const comErro = doTribunal.find((x) => x.situacao === "erro" && x.dia >= anterior);
     if (comErro) {
       alertas.push(`Não deu para ler o caderno do ${tribunal} de ${formatarDiaCurto(comErro.dia)} no DJEN. Tento de novo na próxima leitura; a ${REFORCO} cobre o dia.`);
@@ -411,7 +435,7 @@ export async function saudeDaCaptura(tx: Tx, hoje: Dia): Promise<SaudeDaCaptura>
       alertas.push(`O ${tribunal} não publicou o caderno de ${formatarDiaCurto(anterior)} no DJEN${desde}. A ${REFORCO} cobre o dia.`);
     }
   }
-  return { tribunais, alertas, semProcesso };
+  return { tribunais, alertas: avisar ? alertas : [], semProcesso };
 }
 
 /** Os cadernos da rodada da madrugada: o de hoje e o do dia útil anterior, que pode ter ganhado versão nova. */
