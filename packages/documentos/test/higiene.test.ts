@@ -150,6 +150,9 @@ describe("comandos escondidos para IA nos documentos recebidos", () => {
       "A ré deve pagar a indenização, como decidiu o tribunal.",
       "O contrato previa o uso de inteligência artificial no atendimento, o que a autora aceitou.",
       "Ignorou-se, na sentença, o depoimento da testemunha.",
+      // A perícia tem assistente técnico, e o escritório tem modelo de contrato: não é IA.
+      "Nota: intime-se ao assistente técnico da ré para acompanhar a perícia.",
+      "Seguem as instruções para o modelo de contrato de honorários.",
     ].join(" ");
     expect(comandosParaIa(peticao)).toEqual([]);
   });

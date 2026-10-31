@@ -99,12 +99,12 @@ export async function contarParaProcesso(
  */
 export async function contaDoPrazo(tx: Tx, organizationId: string, prazo: typeof prazos.$inferSelect) {
   const regras = await regrasDoProcesso(tx, organizationId, prazo.processoId);
-  const [pub] = prazo.publicacaoId ? await tx.select({ disponibilizadaEm: publicacoes.disponibilizadaEm, tipoDocumento: publicacoes.tipoDocumento, certidao: publicacoes.certidao, hash: publicacoes.hash }).from(publicacoes).where(eq(publicacoes.id, prazo.publicacaoId)) : [];
+  const [pub] = prazo.publicacaoId ? await tx.select({ disponibilizadaEm: publicacoes.disponibilizadaEm, tipoDocumento: publicacoes.tipoDocumento, certidao: publicacoes.certidao }).from(publicacoes).where(eq(publicacoes.id, prazo.publicacaoId)) : [];
   const c = contarComDoisMarcos({ publicacao: prazo.publicadoEm, intimacaoNoSistema: prazo.intimadoNoSistemaEm, dias: prazo.dias, contagem: prazo.contagem, calendario: regras.cal });
   const pelaConta = c.conta.fim !== prazo.fim ? c.conta.fim : null;
   const disponibilizadaEm = pub?.disponibilizadaEm ?? null;
-  // A certidão do DJEN já guardada, ou que dá para baixar pelo hash da comunicação.
-  const comCertidao = !!(pub && (pub.certidao || pub.hash));
+  // Só a certidão já guardada (a captura guarda logo): com o hash apenas, o DJEN pode não ter a certidão, e o tópico citaria um anexo que não existe.
+  const comCertidao = !!pub?.certidao;
   return {
     rito: regras.rito,
     documento: pub?.tipoDocumento ?? null,

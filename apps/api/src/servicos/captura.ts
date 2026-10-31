@@ -160,7 +160,8 @@ interface EscritorioNoCaderno {
 function tribunaisDoCaderno(carteira: string[], ufsDasOabs: string[]): Set<string> {
   const t = new Set([...carteira, ...ufsDasOabs.map((uf) => (uf === "DF" ? "TJDFT" : `TJ${uf}`))]);
   const ramos = [...t];
-  if (ramos.some((s) => /^TJ(?!M)|^TRF/.test(s))) t.add("STJ");
+  // Fica de fora só a Justiça Militar estadual (TJMMG, TJMRS, TJMSP); TJMG, TJMS, TJMT e TJMA são TJs comuns.
+  if (ramos.some((s) => /^TJ(?!M(MG|RS|SP)$)|^TRF/.test(s))) t.add("STJ");
   if (ramos.some((s) => s.startsWith("TRT"))) t.add("TST");
   if (t.has("STJ") || t.has("TST")) t.add("STF");
   return t;

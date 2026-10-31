@@ -128,9 +128,12 @@ describe.skipIf(!hasTestDatabase)("prazo à prova de auditoria", () => {
     expect(p.conta.tempestividade).toEndWith("Apresentada até 23/11/2026, a presente peça é tempestiva.");
   });
 
-  test("com a certidão do DJEN, o tópico cita a certidão e a ficha diz qual anexar", async () => {
+  test("com a certidão do DJEN guardada, o tópico cita a certidão e a ficha diz qual anexar", async () => {
     expect((await json(call(`/prazos/${prazoId}`))).conta.certidaoDe).toBeNull();
-    const [pub] = await t.owner<{ id: string }[]>`update publicacoes set hash = 'h900001' where id_externo = '900001' returning id`;
+    // Só o hash não basta: o DJEN pode não ter a certidão, e o tópico citaria um anexo que a pessoa não tem.
+    await t.owner`update publicacoes set hash = 'h900001' where id_externo = '900001'`;
+    expect((await json(call(`/prazos/${prazoId}`))).conta.tempestividade).not.toContain("certidão");
+    const [pub] = await t.owner<{ id: string }[]>`update publicacoes set certidao = ${`${orgId}/certidoes/900001.pdf`} where id_externo = '900001' returning id`;
     const p = await json(call(`/prazos/${prazoId}`));
     expect(p.conta.certidaoDe).toBe(pub!.id);
     expect(p.conta.tempestividade).toContain("em 28/10/2026, conforme a certidão de publicação emitida pelo próprio DJEN (anexa), e considera-se publicada em 29/10/2026");

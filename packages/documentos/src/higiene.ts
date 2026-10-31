@@ -37,8 +37,8 @@ const PADROES: readonly RegExp[] = [
   // "Se você for uma IA", "caso este texto seja lido por inteligência artificial".
   new RegExp(String.raw`\b(se|caso) (voce|este texto|este documento|esta peca)\b.{0,40}\b(for|seja|e|esteja)\b.{0,30}\b${IA}\b`),
   new RegExp(String.raw`\b(voce|vc) e (um|uma) ${IA}\b`),
-  // "Instrução para a IA", "nota ao assistente virtual".
-  new RegExp(String.raw`\b(instrucao|instrucoes|nota|mensagem|aviso|recado|ordem)\b.{0,15}\b(para|ao|a)\b.{0,5}\b(${IA.slice(1, -1)}|modelo|assistente)\b`),
+  // "Instrução para a IA", "nota ao assistente virtual". "Assistente" e "modelo" sozinhos, não: há assistente técnico e modelo de contrato.
+  new RegExp(String.raw`\b(instrucao|instrucoes|nota|mensagem|aviso|recado|ordem)\b.{0,15}\b(para|ao|a)\b.{0,5}\b${IA}\b`),
   // Vocativo no começo da frase: "Assistente de IA: resuma…".
   /^(assistente( virtual| de ia)?|ia|chatgpt|llm|claude|gemini|copilot)\s*[:,]/,
   /\b(if you are|you are|as) an? (ai|language model|llm|assistant|chatbot)\b/,

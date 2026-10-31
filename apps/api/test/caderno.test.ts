@@ -49,6 +49,7 @@ describe.skipIf(!hasTestDatabase)("captura pelo caderno do DJEN", () => {
   let souza = "";
   let outro = "";
   let demo = "";
+  let mineiro = "";
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });
 
   /** Os cadernos publicados: "TJSC/2026-10-28" → versão e comunicações. */
@@ -102,6 +103,8 @@ describe.skipIf(!hasTestDatabase)("captura pelo caderno do DJEN", () => {
     const dono = (email: string, oabNumero: string) => ({ email, nome: "Pessoa Inventada", senha: "senha-bem-longa-123", oabNumero, oabUf: "SC" });
     ({ organizationId: souza } = await criarEscritorio(t.db, auth, { nome: "Souza & Mendes Advocacia", slug: "souza-mendes", dono: dono("beatriz@souza.adv.br", "41.233") }));
     ({ organizationId: outro } = await criarEscritorio(t.db, auth, { nome: "Outro Escritório", slug: "outro", dono: dono("tiago@outro.adv.br", "30111") }));
+    // OAB de MG: o TJMG não é a Justiça Militar (TJMMG), e os recursos dele vão ao STJ.
+    ({ organizationId: mineiro } = await criarEscritorio(t.db, auth, { nome: "Escritório Mineiro", slug: "mineiro", dono: { ...dono("ana@mineiro.adv.br", "77001"), oabUf: "MG" } }));
     // A demonstração tem OAB inventada que pode ser de alguém de verdade: nada dela vai ao DJEN.
     ({ organizationId: demo } = await criarEscritorio(t.db, auth, { nome: "Demonstração", slug: SLUG_DA_DEMONSTRACAO, dono: dono("teste@decreta.site", "41233") }));
     await withTenant(t.db, souza, (tx) => tx.insert(processos).values({ organizationId: souza, titulo: "Marina Duarte × Seguradora Alfa S.A.", cnj: DA_CARTEIRA, tribunal: "TJSC" }));
@@ -145,6 +148,7 @@ describe.skipIf(!hasTestDatabase)("captura pelo caderno do DJEN", () => {
   test("também procura nos superiores (os recursos) e registra o dia sem caderno", async () => {
     const tribunais = (await cadernosDe(souza)).map((c) => `${c.tribunal}:${c.situacao}`);
     expect(tribunais).toEqual(["STF:ausente", "STJ:ausente", "TJSC:lido"]);
+    expect((await cadernosDe(mineiro)).map((c) => `${c.tribunal}:${c.situacao}`)).toEqual(["STF:ausente", "STJ:ausente", "TJMG:ausente"]);
   });
 
   test("rodar de novo na mesma versão não baixa de novo nem repete publicação", async () => {

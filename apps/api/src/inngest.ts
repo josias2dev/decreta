@@ -219,10 +219,18 @@ export function createFunctions(deps: DepsDasRotinas) {
         return e?.ligado ?? true;
       });
       if (!ligado) return { processos: 0 };
-      // Até quando o DataJud tem dados de cada tribunal: a ficha do processo diz de quando são os andamentos.
-      await step.run("ate-quando", () => conferirDataJudDoEscritorio(deps.captura, orgId));
       const ids = await step.run("processos", () => processosParaAtualizar(db, orgId));
       if (ids.length) await step.sendEvent("atualizar", ids.map((processoId) => processoDataJud.create({ organizationId: orgId, processoId })));
+      // Até quando o DataJud tem dados de cada tribunal (a ficha diz de quando são os andamentos). Vem depois e não
+      // derruba a rotina: a consulta é lenta, e os andamentos do dia já foram pedidos.
+      await step.run("ate-quando", async () => {
+        try {
+          return await conferirDataJudDoEscritorio(deps.captura, orgId);
+        } catch (err) {
+          log("até quando o DataJud tem dados falhou", { organizationId: orgId, error: err instanceof Error ? err.message : String(err) });
+          return null;
+        }
+      });
       return { processos: ids.length };
     },
   );
