@@ -230,9 +230,17 @@ export type Evento =
   | { t: "titulo"; v: string };
 
 /**
+ * Sem nenhuma linha por este tempo, a ligação caiu sem avisar (um proxy que
+ * segura a conexão, o celular sem rede); o servidor manda um "ping" a cada 15 s
+ * enquanto a IA pensa. Os testes de tela encurtam com `window.__silencioDoPerguntar`.
+ */
+const SILENCIO_MS = 45_000;
+
+/**
  * Manda a pergunta e chama `aoChegar` a cada acontecimento, até a resposta
  * terminar. `refazer` (id de uma pergunta já gravada, a última da conversa)
- * responde de novo a ela, sem gravar outra pergunta.
+ * responde de novo a ela, sem gravar outra pergunta. Ligação que fecha antes
+ * do "fim", ou que fica calada, é queda: a tela oferece "Tentar de novo".
  */
 export async function perguntar(corpo: { texto: string; modo: Modo; conversaId?: string | null; processoId?: string | null; refazer?: string }, aoChegar: (e: Evento) => void, signal?: AbortSignal): Promise<void> {
   const res = await fetch(`${API_URL}/api/app/ia/perguntar`, {
@@ -247,19 +255,31 @@ export async function perguntar(corpo: { texto: string; modo: Modo; conversaId?:
     throw new ApiError(res.status, b?.erro ?? `http_${res.status}`, b?.detalhe, b?.passaLogo);
   }
   const leitor = res.body?.getReader();
-  if (!leitor) return;
+  if (!leitor) throw new Error("resposta_sem_corpo");
+  const silencio = (globalThis as { __silencioDoPerguntar?: number }).__silencioDoPerguntar ?? SILENCIO_MS;
   const decod = new TextDecoder();
   let resto = "";
+  let terminou = false;
   const linha = (l: string) => {
     if (!l.trim()) return;
     try {
-      aoChegar(JSON.parse(l) as Evento);
+      const e = JSON.parse(l) as Evento | { t: "ping" };
+      if (e.t === "ping") return;
+      if (e.t === "fim") terminou = true;
+      aoChegar(e);
     } catch {
       // linha cortada: ignora
     }
   };
   for (;;) {
-    const { done, value } = await leitor.read();
+    let relogio: ReturnType<typeof setTimeout> | undefined;
+    const calado = new Promise<never>((_, falhar) => (relogio = setTimeout(() => falhar(new Error("sem_resposta")), silencio)));
+    const { done, value } = await Promise.race([leitor.read(), calado])
+      .catch((err: unknown) => {
+        leitor.cancel().catch(() => {});
+        throw err;
+      })
+      .finally(() => clearTimeout(relogio));
     if (done) break;
     resto += decod.decode(value, { stream: true });
     const linhas = resto.split("\n");
@@ -267,6 +287,8 @@ export async function perguntar(corpo: { texto: string; modo: Modo; conversaId?:
     linhas.forEach(linha);
   }
   linha(resto + decod.decode());
+  // Fechou limpa mas antes do "fim" (um proxy, depois de a API cair): a resposta ficou pela metade.
+  if (!terminou) throw new Error("resposta_cortada");
 }
 
 /** Junta um acontecimento às partes da resposta que está chegando. */

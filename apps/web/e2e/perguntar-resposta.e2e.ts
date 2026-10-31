@@ -145,6 +145,36 @@ test.describe("parar e cair no meio", () => {
     await expect(page.locator(".dc-chat__resposta")).toHaveCount(1);
   });
 
+  test("a ligação fecha limpa antes do fim (um proxy, depois de a API cair): é queda, com Tentar de novo", async ({ page }) => {
+    await ligarAosPoucos(page);
+    await abrir(page, "/perguntar", comIa().responder(`/ia/conversas/${CONVERSA}`, conversa(CONVERSA, "Prazos", [pessoa(PERGUNTA, "Quais prazos vencem esta semana?")])));
+    await roteiro(page, [{ e: inicio() }, ...aosPoucos(TEXTO.slice(0, 90))]);
+    await perguntarAgora(page);
+    await expect(page.getByRole("alert").filter({ hasText: "Sem conexão com o servidor" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tentar de novo" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Parar a resposta" })).toHaveCount(0);
+  });
+
+  test("ligação calada: o ping segura a espera; sem nada, vira queda em vez de escrever para sempre", async ({ page }) => {
+    await page.addInitScript(() => ((window as unknown as { __silencioDoPerguntar: number }).__silencioDoPerguntar = 600));
+    await ligarAosPoucos(page);
+    const api = await abrir(page, "/perguntar", comIa().responder(`/ia/conversas/${CONVERSA}`, conversa(CONVERSA, "Prazos", [pessoa(PERGUNTA, "Quais prazos vencem esta semana?")])));
+    // A IA pensando 1,6 s, com um ping a cada 400 ms: a resposta chega inteira.
+    const pings = Array.from({ length: 4 }, () => ({ e: { t: "ping" }, espera: 400 }));
+    await roteiro(page, [{ e: inicio() }, ...pings, ...aosPoucos(TEXTO.slice(0, 60)), { e: { t: "fim", mensagem: { id: RESPOSTA } } }]);
+    await perguntarAgora(page);
+    api.responder(`/ia/conversas/${CONVERSA}`, conversa(CONVERSA, "Prazos", [pessoa(PERGUNTA, "Quais prazos vencem esta semana?"), ia(RESPOSTA, [{ tipo: "texto", texto: TEXTO.slice(0, 60) }])]));
+    await expect(page.getByRole("button", { name: "Enviar" })).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveCount(0);
+
+    // Agora nada chega depois do começo: em vez de ficar "escrevendo", aparece a queda.
+    await roteiro(page, [{ e: inicio(uuid(105), uuid(106)) }, ...aosPoucos(TEXTO.slice(0, 40)), { portao: "nunca" }]);
+    await perguntarAgora(page, "E a semana que vem?");
+    await expect(page.getByRole("alert").filter({ hasText: "Sem conexão com o servidor" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tentar de novo" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Parar a resposta" })).toHaveCount(0);
+  });
+
   test("pergunta seguinte logo depois da primeira: o fim da primeira não mexe na segunda", async ({ page }) => {
     await ligarAosPoucos(page);
     const api = await abrir(page, "/perguntar", comIa().responder(`/ia/conversas/${CONVERSA}`, conversa(CONVERSA, "Prazos", [pessoa(PERGUNTA, "Quais prazos vencem esta semana?")])));

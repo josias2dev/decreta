@@ -141,6 +141,11 @@ test.describe("no computador", () => {
     const botao = page.getByRole("button", { name: "Ir para o fim: a resposta está chegando" });
     await expect(botao).toBeVisible();
     await expect(botao.locator(".dc-chat__ir-fim-ponto")).toBeVisible();
+    // No campo, ao lado do Parar: não fica por cima de nada da conversa.
+    await expect(page.locator(".dc-compositor__barra").getByRole("button", { name: "Ir para o fim: a resposta está chegando" })).toBeVisible();
+    const caixa = await botao.boundingBox();
+    const rolagem = await page.locator(".dc-chat__rolagem").boundingBox();
+    expect(caixa!.y).toBeGreaterThanOrEqual(rolagem!.y + rolagem!.height);
     await botao.click();
     await expect.poll(async () => (await medir(page)).doFim).toBeLessThanOrEqual(2);
     await page.waitForTimeout(400);

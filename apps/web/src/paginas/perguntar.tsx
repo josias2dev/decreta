@@ -102,7 +102,18 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
     />
   );
   const compositor = ia && !naoAchou && (
-    <Compositor modo={modo} aoMudarModo={mudarModo} aoEnviar={mandar} aoParar={() => envio?.controlador.abort()} ocupado={ocupado} rodape={RODAPE} inicial={sugerido} focar={!celular} curto={celular} />
+    <Compositor
+      modo={modo}
+      aoMudarModo={mudarModo}
+      aoEnviar={mandar}
+      aoParar={() => envio?.controlador.abort()}
+      ocupado={ocupado}
+      rodape={RODAPE}
+      inicial={sugerido}
+      focar={!celular}
+      curto={celular}
+      irParaOFim={rolagem.longe && <IrParaOFim chegando={ocupado} aoClicar={rolagem.irParaOFim} />}
+    />
   );
 
   let conversa: ReactNode;
@@ -189,7 +200,6 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
         </div>
         {compositor && (
           <div className="dc-chat__campo">
-            {rolagem.longe && <IrParaOFim chegando={ocupado} aoClicar={rolagem.irParaOFim} />}
             {compositor}
           </div>
         )}
@@ -231,7 +241,6 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
         </div>
         {!vazia && compositor && (
           <div className="dc-chat__campo">
-            {rolagem.longe && <IrParaOFim chegando={ocupado} aoClicar={rolagem.irParaOFim} />}
             {compositor}
           </div>
         )}

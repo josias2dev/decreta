@@ -591,7 +591,8 @@ const SITUACAO_DA_PUBLICACAO: Record<PublicacaoNaIa["situacao"], string> = { nov
 function CartaoPublicacoes({ lista, titulo = "Publicações", lida }: { lista: Lista<PublicacaoNaIa>; titulo?: string; lida?: boolean }) {
   return (
     <Moldura icone={Inbox} titulo={titulo} n={lida ? undefined : nDeTotal(lista, "publicação", "publicações")} acao={<IrPara to="/publicacoes">Publicações</IrPara>}>
-      <Mais itens={lista.itens}>
+      {/* Cada publicação tem três linhas: as três primeiras já ocupam o que cinco prazos ocupam. */}
+      <Mais itens={lista.itens} primeiros={3}>
         {(p) => (
           <Link key={p.id} to="/publicacoes/$id" params={{ id: p.id }} className="dc-cartao-ia__linha dc-cartao-ia__linha--link dc-cartao-ia__linha--alta">
             <span className="dc-celula min-w-0 flex-1">

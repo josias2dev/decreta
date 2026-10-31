@@ -500,7 +500,7 @@ export function useRolagemDaConversa(chave: string | null, vazia: boolean, envio
   return { caixa: setCaixa, longe, irParaOFim };
 }
 
-/** Longe do fim: o botão redondo acima do campo leva de volta (com um ponto quando a resposta ainda está chegando). */
+/** Longe do fim: o botão redondo no campo, ao lado do enviar, leva de volta (com um ponto quando a resposta ainda está chegando). */
 export function IrParaOFim({ chegando, aoClicar }: { chegando: boolean; aoClicar: () => void }) {
   return (
     <button type="button" className="dc-chat__ir-fim" onClick={aoClicar} aria-label={chegando ? "Ir para o fim: a resposta está chegando" : "Ir para o fim da conversa"} title="Ir para o fim">
@@ -524,6 +524,7 @@ export function Compositor({
   inicial,
   focar,
   curto,
+  irParaOFim,
 }: {
   modo: Modo;
   aoMudarModo: (m: Modo) => void;
@@ -536,6 +537,8 @@ export function Compositor({
   focar?: boolean;
   /** Celular: o texto de exemplo curto, para o campo vazio ficar numa linha. */
   curto?: boolean;
+  /** O botão de voltar ao fim, ao lado do enviar: no campo ele não cobre nada da conversa. */
+  irParaOFim?: ReactNode;
 }) {
   const [texto, setTexto] = useState("");
   const campo = useRef<HTMLTextAreaElement>(null);
@@ -597,15 +600,18 @@ export function Compositor({
               Jurisprudência
             </ModoBotao>
           </div>
-          {ocupado ? (
-            <button type="button" className="dc-compositor__enviar is-parar" onClick={aoParar} aria-label="Parar a resposta" title="Parar">
-              <Square />
-            </button>
-          ) : (
-            <button type="submit" className="dc-compositor__enviar" disabled={!texto.trim()} aria-label="Enviar" title="Enviar">
-              <ArrowUp />
-            </button>
-          )}
+          <div className="dc-compositor__direita">
+            {irParaOFim}
+            {ocupado ? (
+              <button type="button" className="dc-compositor__enviar is-parar" onClick={aoParar} aria-label="Parar a resposta" title="Parar">
+                <Square />
+              </button>
+            ) : (
+              <button type="submit" className="dc-compositor__enviar" disabled={!texto.trim()} aria-label="Enviar" title="Enviar">
+                <ArrowUp />
+              </button>
+            )}
+          </div>
         </div>
       </form>
       <p className="dc-compositor__nota">{rodape}</p>

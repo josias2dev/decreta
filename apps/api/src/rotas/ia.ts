@@ -53,7 +53,11 @@ export type EventoDaConversa =
   | { t: "ferramenta"; id: string; nome: string; entrada: unknown }
   | { t: "resultado"; id: string; nome: string; saida?: unknown; erro?: string }
   | { t: "fim"; mensagem: { id: string } | null }
-  | { t: "titulo"; v: string };
+  | { t: "titulo"; v: string }
+  | { t: "ping" };
+
+/** Enquanto a IA pensa calada, uma linha de "ainda aqui": a tela trata como queda o silêncio longo (ver apps/web/src/lib/perguntar.ts). */
+export const PULSO_MS = 15_000;
 
 /** Quanto a ligação espera, depois do fim, pelo nome da conversa (que a IA começa a dar no meio da resposta). */
 const ESPERA_PELO_NOME = 4_000;
@@ -513,6 +517,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
           }
         };
         enviar({ t: "inicio", conversa: { id: conversa.id, titulo: conversa.titulo, modo: b.modo }, pergunta: { id: pergunta.id }, resposta: { id: respostaId } });
+        // Para sozinho quando a ligação fecha, mesmo se algo abaixo der errado antes do fim.
+        const pulso: ReturnType<typeof setInterval> = setInterval(() => (aberto ? enviar({ t: "ping" }) : clearInterval(pulso)), PULSO_MS);
         const partes: ParteDaMensagem[] = [];
         const textoDe = () => partes.flatMap((p) => (p.tipo === "texto" ? [p.texto.trim()] : [])).filter(Boolean).join("\n\n");
         /** Só o que a IA escreveu, sem os avisos. */
@@ -621,6 +627,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
           clearTimeout(relogio);
           if (v) enviar({ t: "titulo", v });
         }
+        clearInterval(pulso);
         aberto = false;
         try {
           controller.close();
