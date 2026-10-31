@@ -2,11 +2,12 @@
  * Markdown das respostas da IA, sem HTML cru: parágrafos, listas (com um nível
  * de recuo), tabelas, citações, código, **negrito**, *itálico* e links. Link
  * para uma tela do Decreta ("/processos/ID") abre dentro do app; para um
- * documento, abre o arquivo; para fora, só http(s), em outra aba. Texto pela
- * metade (a resposta ainda chegando) aparece como texto até fechar.
+ * documento, abre o arquivo; para fora, só http(s), em outra aba; para o que
+ * não tem tela, fica só o texto. Enquanto a resposta chega, o pedaço do fim
+ * que ainda não fechou (link, negrito, tabela) não aparece cru.
  */
 import { useRouter } from "@tanstack/react-router";
-import { Fragment, type ReactNode } from "react";
+import { createContext, Fragment, useContext, type ReactNode } from "react";
 import { API_URL } from "./api";
 
 type Bloco =
@@ -26,6 +27,8 @@ const celulas = (l: string) =>
     .replace(/\|$/, "")
     .split("|")
     .map((c) => c.trim());
+/** Célula só com número, data, hora, CNJ ou valor ("29/10", "5009876-57.2025.8.24.0038", "R$ 1.520,00"): fica numa linha. */
+const ehNumero = (c: string | undefined) => !!c && c.length <= 32 && /^(R\$\s?)?\d[\d\s.,/:–-]*$/.test(c.replace(/\*\*/g, "").trim());
 const ehSeparador = (l: string) => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l);
 
 export function blocosDoMarkdown(md: string): Bloco[] {
@@ -111,14 +114,39 @@ export function blocosDoMarkdown(md: string): Bloco[] {
   return saida;
 }
 
+/**
+ * Com a resposta ainda chegando: o link pela metade mostra só o rótulo, o
+ * negrito sem fechar fica sem os asteriscos e a tabela só aparece quando
+ * chega a linha que separa o cabeçalho.
+ */
+export function semFimAberto(md: string): string {
+  const linhas = md.replace(/\s+$/, "").split("\n");
+  let n = linhas.length;
+  while (n > 0 && linhas[n - 1]!.trim().startsWith("|")) n--;
+  if (n < linhas.length && !linhas.slice(n).some(ehSeparador)) linhas.length = n;
+  let t = linhas.join("\n").replace(/\[([^\]\n]*)(\](\([^)\s]*)?)?$/, "$1");
+  const ultima = t.slice(t.lastIndexOf("\n") + 1);
+  if ((ultima.match(/\*\*/g)?.length ?? 0) % 2) {
+    const i = t.lastIndexOf("**");
+    t = t.slice(0, i) + t.slice(i + 2);
+  }
+  return t.replace(/(^|[^*])\*$/, "$1");
+}
+
 /* ------------------------------------------------------------------ */
 
-/** Telas do Decreta que a IA pode citar. */
-const INTERNO = /^\/(processos|prazos|publicacoes|audiencias|clientes|documentos|pecas|agenda|negocios|alvaras)(\/[\w-]+)?\/?(\?[\w=&%.-]*)?$/;
+/** Telas do Decreta que a IA pode citar: as listas e as que abrem um item. */
+const LISTA = /^\/(processos|prazos|publicacoes|clientes|documentos|pecas|agenda|negocios|alvaras)\/?(\?[\w=&%.-]*)?$/;
+const DO_ITEM = /^\/(processos|prazos|publicacoes|audiencias|clientes)\/[\w-]+\/?(\?[\w=&%.-]*)?$/;
+
+/** Para onde vai um link sem tela própria (o alvará leva ao processo dele); sem destino, fica só o texto. */
+export const DestinoDoLink = createContext<(alvo: string) => string | undefined>(() => undefined);
 
 function Ligacao({ href, children }: { href: string; children: ReactNode }) {
   const router = useRouter();
-  const alvo = href.trim();
+  const outro = useContext(DestinoDoLink);
+  const peca = /^\/pecas\/([\w-]+)\/?$/.exec(href.trim());
+  const alvo = peca ? `/pecas?id=${peca[1]}` : (outro(href.trim()) ?? href.trim());
   const doc = /^\/documentos\/([0-9a-f-]{36})$/i.exec(alvo);
   if (doc) {
     return (
@@ -127,7 +155,7 @@ function Ligacao({ href, children }: { href: string; children: ReactNode }) {
       </a>
     );
   }
-  if (INTERNO.test(alvo)) {
+  if (LISTA.test(alvo) || DO_ITEM.test(alvo)) {
     return (
       <a
         className="dc-md__ref"
@@ -201,10 +229,10 @@ function Linhas({ linhas }: { linhas: string[] }) {
   );
 }
 
-export function Markdown({ texto, className }: { texto: string; className?: string }) {
-  const blocos = blocosDoMarkdown(texto);
+export function Markdown({ texto, className, escrevendo }: { texto: string; className?: string; escrevendo?: boolean }) {
+  const blocos = blocosDoMarkdown(escrevendo ? semFimAberto(texto) : texto);
   return (
-    <div className={className ? `dc-md ${className}` : "dc-md"}>
+    <div className={["dc-md", escrevendo && "is-escrevendo", className].filter(Boolean).join(" ")}>
       {blocos.map((b, i) => {
         switch (b.tipo) {
           case "p":
@@ -254,7 +282,7 @@ export function Markdown({ texto, className }: { texto: string; className?: stri
                     {b.linhas.map((l, j) => (
                       <tr key={j}>
                         {b.cabeca.map((_, k) => (
-                          <td key={k} style={{ textAlign: b.alinhar[k] }}>
+                          <td key={k} style={{ textAlign: b.alinhar[k] }} className={ehNumero(l[k]) ? "is-numero" : undefined}>
                             <Inline texto={l[k] ?? ""} />
                           </td>
                         ))}

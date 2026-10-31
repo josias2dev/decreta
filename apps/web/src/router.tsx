@@ -1,7 +1,7 @@
 import { createHashHistory, createRootRoute, createRoute, createRouter, Outlet } from "@tanstack/react-router";
 import { AppLayout } from "./componentes/moldura";
 import { FOLHA, VOLTAM_AO_TOPO } from "./componentes/rolagem";
-import { NaoEncontrada } from "./componentes/nao-encontrada";
+import { ErroNaTela, NaoEncontrada } from "./componentes/nao-encontrada";
 import type { Quando, SituacaoPublicacao } from "./lib/tipos";
 import { ConvitePage, RedefinirSenhaPage } from "./paginas/acesso";
 import { AgendaPage, AudienciaPage, VISTAS_DA_AGENDA, type VistaDaAgenda } from "./paginas/agenda";
@@ -172,7 +172,10 @@ const routeTree = rootRoute.addChildren([
 export const router = createRouter({
   routeTree,
   defaultPreload: "intent",
-  scrollRestoration: true,
+  // Uma tela que quebra mostra o aviso no lugar dela; o menu fica.
+  defaultErrorComponent: ErroNaTela,
+  // O Perguntar cuida da própria rolagem (abre na última pergunta, acompanha a resposta).
+  scrollRestoration: ({ location }) => !location.pathname.startsWith("/perguntar"),
   scrollToTopSelectors: [...VOLTAM_AO_TOPO, FOLHA],
   // A prévia (vite build --mode previa) vive num arquivo só, então as rotas vão no #.
   ...(import.meta.env.MODE === "previa" ? { history: createHashHistory() } : {}),

@@ -114,7 +114,7 @@ function Mensagem({ papel, texto, autor, escrevendo }: { papel: "pessoa" | "ia";
         <MarcaIa />
       </div>
       {/* A IA costuma mandar listas e negrito mesmo pedindo texto simples. */}
-      <Markdown texto={texto} className={escrevendo && texto ? "is-escrevendo" : undefined} />
+      <Markdown texto={texto} escrevendo={escrevendo && !!texto} />
       {escrevendo && !texto && <span className="text-[var(--tinta-2)]">Lendo os autos…</span>}
     </div>
   );

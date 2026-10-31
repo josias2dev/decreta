@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, type ErrorComponentProps } from "@tanstack/react-router";
 import { ApiError, mensagemDoErro } from "@/lib/api";
 import { Marca } from "./marca";
 import { Botao, Vazio } from "./ui";
@@ -46,5 +46,24 @@ export function FalhaAoCarregar({ erro, sumiu, aoTentar }: { erro: unknown; sumi
         </Botao>
       )}
     </Vazio>
+  );
+}
+
+/** Erro ao desenhar uma tela (o roteador mostra no lugar dela, com o menu): em português, com o caminho de volta. */
+export function ErroNaTela({ reset }: ErrorComponentProps) {
+  return (
+    <div className="dc-erro-na-tela" role="alert">
+      <Vazio titulo="Algo deu errado nesta tela">
+        Tente de novo. Se continuar, volte para Hoje e abra a tela outra vez.
+        <span className="flex flex-wrap items-center justify-center gap-3">
+          <Botao pequeno onClick={reset}>
+            Tentar de novo
+          </Botao>
+          <Link to="/hoje" className="dc-link">
+            Ir para Hoje
+          </Link>
+        </span>
+      </Vazio>
+    </div>
   );
 }

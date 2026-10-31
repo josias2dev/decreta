@@ -41,6 +41,27 @@ test.describe("no computador", () => {
     await expect.poll(() => api.mudancas("/ia/perguntar").length).toBe(2);
   });
 
+  test("limite que só passa amanhã e conversa apagada: o aviso aparece, sem \"Tentar de novo\"", async ({ page }) => {
+    const dia = "Você chegou ao limite de 30 mensagens por dia no chat da IA. Amanhã, a partir da meia-noite, dá para mandar de novo.";
+    const api = comIa().responder("POST /ia/perguntar", { erro: "limite_ia", detalhe: dia, passaLogo: false }, 429);
+    await abrir(page, "/perguntar", api);
+    await page.getByRole("button", { name: /Contar um prazo/ }).click();
+    await expect(page.getByRole("alert").filter({ hasText: dia })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tentar de novo" })).toHaveCount(0);
+
+    api.responder("POST /ia/perguntar", { erro: "limite_ia", detalhe: "Você mandou muitas mensagens seguidas. Espere um minuto e mande de novo.", passaLogo: true }, 429);
+    await page.getByRole("textbox", { name: "Pergunta" }).fill("De novo");
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("alert").filter({ hasText: "Espere um minuto" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tentar de novo" })).toBeVisible();
+
+    api.responder("POST /ia/perguntar", { erro: "nao_encontrado" }, 404);
+    await page.getByRole("textbox", { name: "Pergunta" }).fill("E agora?");
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("alert").filter({ hasText: "Não encontrei. Pode ter sido apagado." })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Tentar de novo" })).toHaveCount(0);
+  });
+
   test("cartão de prazos: marcar cumprido e os links da resposta abrem as telas", async ({ page }) => {
     const api = await abrir(page, `/perguntar/${ids.conversaSemana}`, comIa());
     await expect(page.getByRole("heading", { level: 1, name: "Prazos desta semana" })).toBeVisible();
@@ -60,6 +81,23 @@ test.describe("no computador", () => {
     await cartao.getByRole("button", { name: "Criar tarefa" }).click();
     await expect.poll(() => api.mudancas(`/ia/conversas/${ids.conversaProcesso}/tarefa`)[0]?.corpo).toMatchObject({ ferramentaId: expect.any(String), mensagemId: expect.any(String) });
     await expect(cartao.getByRole("link", { name: "Ver na agenda" })).toBeVisible();
+  });
+
+  test("tarefa proposta: o 'Agora não' fica anotado, e a conversa aberta de novo não traz a tarefa", async ({ page }) => {
+    const api = await abrir(page, `/perguntar/${ids.conversaProcesso}`, comIa());
+    const cartao = page.locator(".dc-cartao-ia--tarefa");
+    await cartao.getByRole("button", { name: "Agora não" }).click();
+    await expect(cartao).toHaveCount(0);
+    const caminho = `/ia/conversas/${ids.conversaProcesso}/tarefa`;
+    await expect.poll(() => api.mudancas(caminho)[0]?.corpo).toMatchObject({ ferramentaId: expect.any(String), mensagemId: expect.any(String), descartar: true });
+
+    // Gravada com o "Agora não" (o servidor anota na parte), noutra visita: o cartão não volta, e nada é mandado de novo.
+    const k = structuredClone(amostras.conversaProcesso!.corpo);
+    for (const m of k.mensagens) for (const p of m.partes ?? []) if (p.nome === "proporTarefa") p.saida.descartada = true;
+    const outra = await abrir(page, `/perguntar/${ids.conversaProcesso}`, comIa().responder(`/ia/conversas/${ids.conversaProcesso}`, k));
+    await expect(page.locator(".dc-chat__resposta").last()).toContainText("Deixei a tarefa pronta");
+    await expect(page.locator(".dc-cartao-ia--tarefa")).toHaveCount(0);
+    expect(outra.mudancas(caminho)).toHaveLength(0);
   });
 
   test("histórico: renomear e apagar pelo menu da conversa", async ({ page }) => {

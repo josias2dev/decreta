@@ -4,12 +4,15 @@
     {
       "t": "inicio",
       "conversa": {
-        "id": "3bfea560-b3ac-4809-9d04-fc2bc438d54a",
+        "id": "da8d0572-2487-42bd-aafc-9f113a5a2758",
         "titulo": "Como está o meu dia",
         "modo": "pergunte"
       },
       "pergunta": {
-        "id": "04bc7273-77d7-4cd9-b35a-13a67e0f29cb"
+        "id": "c7566107-ab61-4939-9cd9-ae68eaf81fe4"
+      },
+      "resposta": {
+        "id": "eae7583e-14fc-422e-b421-e19cf075530f"
       }
     },
     {
@@ -39,6 +42,12 @@
         "audiencias": {
           "hoje": 2,
           "ate7dias": 4
+        },
+        "tarefas": {
+          "atrasadas": 0,
+          "hoje": 1,
+          "minhasAtrasadas": 0,
+          "minhasHoje": 0
         },
         "processos": {
           "ativos": 136,
@@ -154,7 +163,7 @@
     {
       "t": "fim",
       "mensagem": {
-        "id": "30690f61-750e-4580-b3c2-b0f11bc0fa52"
+        "id": "eae7583e-14fc-422e-b421-e19cf075530f"
       }
     },
     {

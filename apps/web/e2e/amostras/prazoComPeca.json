@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/07c8abcd-fa4e-4615-9cfb-5dee76da805f",
+  "path": "/prazos/665e02d4-f1bc-4f10-adf2-d6209d7e6d6f",
   "corpo": {
-    "id": "07c8abcd-fa4e-4615-9cfb-5dee76da805f",
+    "id": "665e02d4-f1bc-4f10-adf2-d6209d7e6d6f",
     "tipo": "Alegações finais",
     "fundamento": "art. 364, § 2º, CPC",
     "dias": 15,
@@ -21,14 +21,14 @@
     "origem": "ia",
     "confirmado": true,
     "confirmadoPor": {
-      "id": "179Q5BCDwk8K5foTgD7upNleYfNmW76h",
+      "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
       "foto": "/demonstracao/beatriz.jpg"
     },
     "responsavel": {
-      "id": "179Q5BCDwk8K5foTgD7upNleYfNmW76h",
+      "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
@@ -37,7 +37,7 @@
     "observacoes": null,
     "motivoDescarte": null,
     "processo": {
-      "id": "4b59d485-6e7c-4b73-9951-0ed4e24ab74b",
+      "id": "84c99f2b-66fa-427a-a258-cfb8b5a77cd6",
       "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
       "cnj": "5009876-57.2025.8.24.0038",
       "orgao": "4ª Vara Cível",
@@ -46,7 +46,7 @@
       "poloCliente": "ativo"
     },
     "publicacao": {
-      "id": "a4a3bbfb-b9e5-4dc0-a48f-38820cca913d",
+      "id": "08ba8258-f7c2-4d26-a545-9b0310e32b08",
       "fonte": "djen",
       "texto": "Encerrada a instrução, concedo às partes o prazo sucessivo de 15 (quinze) dias para apresentação de alegações finais por memoriais.",
       "disponibilizadaEm": "2026-10-06",
@@ -58,10 +58,10 @@
     "briefing": null,
     "pecas": [
       {
-        "id": "0b50555c-8f02-41b1-adbb-266cecf406a4",
+        "id": "236dbd08-337b-49b1-8767-5bdaeccfea2d",
         "titulo": "Alegações finais · Roberto Kühn",
         "situacao": "rascunho",
-        "atualizadaEm": "2026-10-30T00:59:22.100Z"
+        "atualizadaEm": "2026-10-31T17:18:17.197Z"
       }
     ],
     "historico": [

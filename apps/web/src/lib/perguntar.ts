@@ -18,6 +18,11 @@ export interface ConversaNaLista {
   processo: { id: string; titulo: string } | null;
 }
 
+/**
+ * `saida` undefined: a ferramenta ainda roda (resposta chegando). Numa
+ * mensagem já gravada, saida null ou ausente sem `erro` é consulta que não
+ * terminou. Com `erro`, a ferramenta não achou ou falhou (não vira cartão).
+ */
 export type Parte =
   | { tipo: "texto"; texto: string }
   | { tipo: "ferramenta"; id: string; nome: string; entrada: Record<string, unknown> | null; saida: unknown; erro?: string };
@@ -63,6 +68,8 @@ export interface PrazoNaIa {
   contagem: "uteis" | "corridos";
   processo: ProcessoCurto;
   responsavel: PessoaCurta | null;
+  /** O dia em que foi marcado cumprido (AAAA-MM-DD). Conversas antigas não têm. */
+  cumpridoEm?: string | null;
 }
 export interface ProcessoNaIa extends ProcessoCurto {
   classe: string | null;
@@ -74,6 +81,8 @@ export interface ProcessoNaIa extends ProcessoCurto {
   cliente: { id: string; nome: string } | null;
   responsavel: PessoaCurta | null;
   proximoPrazo: { id: string; tipo: string; fim: string; quando: string; urgencia: Urgencia } | null;
+  /** O último andamento. Conversas antigas não têm. */
+  ultimaMovimentacao?: { dia: string; titulo: string } | null;
 }
 export interface AudienciaNaIa {
   id: string;
@@ -152,16 +161,25 @@ export interface DiaDaAgenda {
   dia: string;
   rotulo: string;
   itens: (
-    | { tipo: "audiencia"; id: string; hora: string; titulo: string; porVideo: boolean; processo: ProcessoCurto }
+    /** situacao: "marcada", "redesignada", "realizada", "cancelada" (conversas antigas não têm). */
+    | { tipo: "audiencia"; id: string; hora: string; titulo: string; porVideo: boolean; situacao?: string; processo: ProcessoCurto }
     | { tipo: "prazo"; id: string; titulo: string; urgencia: Urgencia; processo: ProcessoCurto }
-    | { tipo: "tarefa"; id: string; titulo: string; concluida: boolean; processo: ProcessoCurto | null }
+    /** atrasada: de um dia anterior e ainda não feita (vem no primeiro dia, quando ele é hoje). */
+    | { tipo: "tarefa"; id: string; titulo: string; concluida: boolean; atrasada?: boolean; processo: ProcessoCurto | null }
   )[];
+}
+export interface AgendaNaIa {
+  dias: DiaDaAgenda[];
+  /** O último dia que veio, quando o pedido passou do teto de dias. */
+  cortadoEm?: string;
 }
 export interface Panorama {
   hoje: string;
   prazos: { vencidos: number; hoje: number; ate7dias: number; abertos: number; aConfirmar: number; semResponsavel: number };
   publicacoes: { novas: number; pendentes: number };
   audiencias: { hoje: number; ate7dias: number };
+  /** Tarefas não feitas: as atrasadas e as de hoje. Conversas antigas não têm. */
+  tarefas?: { atrasadas: number; hoje: number; minhasAtrasadas: number; minhasHoje: number };
   processos: { ativos: number; suspensos: number };
   clientes: number;
   alvaras: { pendentes: number; valorPendente: string };
@@ -178,6 +196,8 @@ export interface ContagemNaIa {
   prorrogadoDe: string | null;
   explicacao: string;
   processo: ProcessoCurto | null;
+  /** "TJSC, com os feriados de Joinville". Conversas antigas não têm. */
+  calendario?: string;
 }
 export interface TarefaProposta {
   titulo: string;
@@ -187,6 +207,8 @@ export interface TarefaProposta {
   processo: ProcessoCurto | null;
   cliente: { id: string; nome: string } | null;
   criada?: { id: string };
+  /** A pessoa disse "Agora não". */
+  descartada?: boolean;
 }
 export interface PessoaDaEquipe extends PessoaCurta {
   nome: string;
@@ -199,15 +221,20 @@ export interface PessoaDaEquipe extends PessoaCurta {
 /* ---------- A resposta chegando ---------- */
 
 export type Evento =
-  | { t: "inicio"; conversa: { id: string; titulo: string; modo: Modo }; pergunta: { id: string } }
+  /** `resposta.id` é o id com que a resposta será gravada (também se a pessoa parar ou a ligação cair). */
+  | { t: "inicio"; conversa: { id: string; titulo: string; modo: Modo }; pergunta: { id: string }; resposta: { id: string } }
   | { t: "texto"; v: string }
   | { t: "ferramenta"; id: string; nome: string; entrada: Record<string, unknown> | null }
   | { t: "resultado"; id: string; nome: string; saida?: unknown; erro?: string }
   | { t: "fim"; mensagem: { id: string } | null }
   | { t: "titulo"; v: string };
 
-/** Manda a pergunta e chama `aoChegar` a cada acontecimento, até a resposta terminar. */
-export async function perguntar(corpo: { texto: string; modo: Modo; conversaId?: string | null; processoId?: string | null }, aoChegar: (e: Evento) => void, signal?: AbortSignal): Promise<void> {
+/**
+ * Manda a pergunta e chama `aoChegar` a cada acontecimento, até a resposta
+ * terminar. `refazer` (id de uma pergunta já gravada, a última da conversa)
+ * responde de novo a ela, sem gravar outra pergunta.
+ */
+export async function perguntar(corpo: { texto: string; modo: Modo; conversaId?: string | null; processoId?: string | null; refazer?: string }, aoChegar: (e: Evento) => void, signal?: AbortSignal): Promise<void> {
   const res = await fetch(`${API_URL}/api/app/ia/perguntar`, {
     method: "POST",
     credentials: "include",
@@ -216,8 +243,8 @@ export async function perguntar(corpo: { texto: string; modo: Modo; conversaId?:
     signal,
   });
   if (!res.ok) {
-    const b = (await res.json().catch(() => null)) as { erro?: string; detalhe?: string } | null;
-    throw new ApiError(res.status, b?.erro ?? `http_${res.status}`, b?.detalhe);
+    const b = (await res.json().catch(() => null)) as { erro?: string; detalhe?: string; passaLogo?: boolean } | null;
+    throw new ApiError(res.status, b?.erro ?? `http_${res.status}`, b?.detalhe, b?.passaLogo);
   }
   const leitor = res.body?.getReader();
   if (!leitor) return;

@@ -161,7 +161,8 @@ test("minha conta: sempre claro, mesmo com o aparelho no escuro", async ({ page 
 
 test("equipe: convidar manda e-mail e papel", async ({ page }) => {
   const api = await abrir(page, "/equipe");
-  await expect(page.getByText("Beatriz Souza")).toBeVisible();
+  // Na lista da equipe (o nome também está no menu, embaixo).
+  await expect(page.locator(".dc-linhas").getByText("Beatriz Souza")).toBeVisible();
   await page.getByRole("button", { name: "Convidar" }).click();
   const dialogo = page.getByRole("dialog");
   await dialogo.getByLabel("E-mail").fill("nova.pessoa@exemplo.com.br");
@@ -248,9 +249,11 @@ test("documentos: abrir um mostra o arquivo ao lado; as setas trocam e o Esc fec
   await expect.poll(() => painel.locator('[data-pagina="1"] canvas').evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
   // A lista fica só com o nome; o resto está no painel.
   await expect(page.getByRole("columnheader", { name: "Leitura da IA" })).toBeHidden();
+  // A ordem é a da lista (a mais nova em cima): acima do PDF, o recibo; abaixo, a petição inicial.
   await page.keyboard.press("ArrowUp");
   await expect(page.getByRole("region", { name: /Recibo do pagamento administrativo/ }).locator("img")).toBeVisible();
-  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("region", { name: /Petição inicial/ }).locator("section.docx")).toContainText("Marina Duarte move ação de cobrança");
   expect(await sobraNaLateral(page)).toBe(0);
   await page.keyboard.press("Escape");

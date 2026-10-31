@@ -27,7 +27,7 @@
         "polo": "ativo",
         "advogados": "Beatriz Souza (OAB/SC 41233)",
         "cliente": {
-          "id": "15327cef-4a65-49c1-a7ef-2808410a780e",
+          "id": "e1d7a412-3f3d-4fa1-afd9-5cb455a37458",
           "nome": "Débora Amaral"
         }
       },
@@ -40,7 +40,7 @@
     ],
     "poloCliente": "ativo",
     "cliente": {
-      "id": "15327cef-4a65-49c1-a7ef-2808410a780e",
+      "id": "e1d7a412-3f3d-4fa1-afd9-5cb455a37458",
       "nome": "Débora Amaral"
     }
   }

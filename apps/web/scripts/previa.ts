@@ -10,6 +10,8 @@ if (!js || !css) throw new Error("O build da prévia não tem o JS e o CSS esper
 const ler = (f: string) => Bun.file(new URL(f, PASTA)).text();
 
 const pagina = [
+  // Sem o charset, aberta do disco a página é lida como Latin-1 e o JS quebra nos acentos.
+  '<meta charset="utf-8">',
   "<title>Prévia do Decreta</title>",
   `<style>${await ler(css)}</style>`,
   '<div id="root"></div>',

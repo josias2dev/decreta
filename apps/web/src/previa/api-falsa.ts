@@ -4,6 +4,7 @@
  * Endereço sem amostra própria usa a do mesmo tipo (qualquer processo abre o
  * processo de amostra). O que muda algo responde "ok" e não guarda nada.
  */
+import { atenderPerguntar } from "./ia-falsa";
 import { PECA_LONGA } from "./peca-longa";
 
 type Amostra = { path: string; corpo: unknown };
@@ -77,10 +78,9 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
   const caminho = url.pathname.slice("/api/app".length);
   const metodo = pedido.method;
 
-  if (metodo === "POST" && caminho === "/ia/perguntar") {
-    const eventos = amostras.find((a) => a.path === "/ia/perguntar?eventos")!.corpo as unknown[];
-    return new Response(`${eventos.map((e) => JSON.stringify(e)).join("\n")}\n`, { headers: { "content-type": "application/x-ndjson" } });
-  }
+  // O Perguntar: a resposta chega aos poucos, e as conversas novas ficam guardadas enquanto a prévia está aberta.
+  const doPerguntar = await atenderPerguntar(metodo, caminho, url.searchParams, pedido, init?.signal);
+  if (doPerguntar) return doPerguntar;
   if (metodo !== "GET") return json(200, { ok: true, id: "00000000-0000-4000-8000-000000000001" });
   // Um documento e o arquivo dele, da amostra dos documentos.
   const doc = /^\/documentos\/([0-9a-f-]{36})(\/arquivo)?$/.exec(caminho);

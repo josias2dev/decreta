@@ -95,6 +95,7 @@
 .dc-par { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .dc-vazio { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 32px var(--space-4); text-align: center; color: var(--tinta-2); font: 400 14px/20px var(--font-sans); }
 .dc-vazio strong { font: 600 15px/20px var(--font-sans); color: var(--tinta); }
+.dc-erro-na-tela { display: flex; justify-content: center; padding: 48px var(--space-4); }
 .dc-esqueleto { border-radius: var(--radius-md); background: linear-gradient(90deg, var(--superficie-2), color-mix(in srgb, var(--superficie-2) 40%, var(--superficie)), var(--superficie-2)); background-size: 200% 100%; animation: dc-brilho 1.4s ease-in-out infinite; }
 @keyframes dc-brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 .dc-erro-campo { font: 500 13px/18px var(--font-sans); color: var(--vencido); }
@@ -497,10 +498,18 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-chat__cabeca .dc-selo svg { width: 12px; height: 12px; }
 .dc-chat__privado { margin-left: auto; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); white-space: nowrap; }
 .dc-chat__cabeca .dc-btn { text-decoration: none; }
-.dc-chat__rolagem { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-6) var(--space-6) var(--space-2); overscroll-behavior: contain; }
+/* A rolagem da conversa fica com o gancho (conversa-ia.tsx): sem a âncora do navegador, que mexia na posição quando um cartão chegava. */
+.dc-chat__rolagem { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-6) var(--space-6) var(--space-2); overscroll-behavior: contain; overflow-anchor: none; }
 .dc-chat__rolagem.is-vazia { display: flex; flex-direction: column; justify-content: center; padding-bottom: 6vh; }
 .dc-chat__coluna { width: 100%; max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-4); }
-.dc-chat__campo { flex: none; padding: var(--space-2) var(--space-6) var(--space-4); }
+.dc-chat__campo { position: relative; flex: none; padding: var(--space-2) var(--space-6) var(--space-4); }
+/* Longe do fim: o botão redondo logo acima do campo; o ponto avisa que a resposta ainda está chegando. */
+.dc-chat__ir-fim { position: absolute; left: 50%; bottom: calc(100% + 6px); z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; transform: translateX(-50%); border: 1px solid var(--borda-forte); border-radius: 50%; background: var(--superficie); color: var(--tinta-2); box-shadow: 0 1px 2px rgba(27, 25, 45, 0.06), 0 8px 20px -10px rgba(27, 25, 45, 0.35); cursor: pointer; animation: dc-ir-fim .15s ease-out; }
+.dc-chat__ir-fim:hover { color: var(--tinta); }
+.dc-chat__ir-fim:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
+.dc-chat__ir-fim svg { width: 18px; height: 18px; }
+.dc-chat__ir-fim-ponto { position: absolute; top: -2px; right: -2px; width: 11px; height: 11px; box-sizing: border-box; border: 2px solid var(--superficie); border-radius: 50%; background: var(--acento); animation: dc-pulso 1.2s ease-in-out infinite; }
+@keyframes dc-ir-fim { from { opacity: 0; transform: translate(-50%, 6px); } }
 .dc-chat__campo > .dc-compositor { max-width: 860px; margin: 0 auto; }
 @media (min-width: 1800px) {
   .dc-chat__coluna, .dc-chat__campo > .dc-compositor { max-width: 980px; }
@@ -566,7 +575,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-chat__contexto-grupo a span, .dc-chat__contexto-grupo a small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-chat__contexto-grupo a span { font: 500 13px/18px var(--font-sans); }
 .dc-chat__contexto-grupo a small { font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
-@media (max-width: 1439px) { .dc-chat__contexto { display: none; } }
+/* Só em tela bem larga: abaixo de 1600 px ele apertava a conversa (594 px em 1440) e repetia os cartões. */
+@media (max-width: 1599px) { .dc-chat__contexto { display: none; } }
 
 /* Mensagens */
 .dc-chat__mensagens { display: flex; flex-direction: column; gap: 28px; padding-bottom: var(--space-2); }
@@ -588,11 +598,20 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 
 /* Passos: o que a IA consultou */
 .dc-passos { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.dc-passo { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; height: 24px; padding: 0 9px; box-sizing: border-box; border: 1px solid var(--borda); border-radius: var(--radius-pill); background: var(--superficie); font: 500 12px/16px var(--font-sans); color: var(--tinta-2); }
+/* A fileira não cresce além da conversa (o nome comprido do processo fazia a tela andar para o lado no celular). */
+.dc-chat__autor > .dc-passos, .dc-chat__autor > .dc-passo { min-width: 0; max-width: 100%; }
+.dc-passos--aberto { flex-basis: 100%; }
+.dc-passo { display: inline-flex; align-items: center; gap: 6px; max-width: min(100%, 280px); height: 24px; padding: 0 9px; box-sizing: border-box; border: 1px solid var(--borda); border-radius: var(--radius-pill); background: var(--superficie); font: 500 12px/16px var(--font-sans); color: var(--tinta-2); }
 .dc-passo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-passo svg { width: 13px; height: 13px; flex: none; color: var(--acento); }
 .dc-passo.is-lendo { border-color: var(--acento-borda); background: var(--acento-suave); color: var(--tinta); }
 .dc-passo.is-erro, .dc-passo.is-erro svg { color: var(--hoje); }
+/* Terminada a resposta, as consultas numa linha só ("Consultou 6 coisas"), que abre a lista. */
+.dc-passo--resumo { cursor: pointer; }
+.dc-passo--resumo:hover { border-color: var(--borda-forte); color: var(--tinta); }
+.dc-passo--resumo:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
+.dc-passo--resumo .dc-passo__seta { color: var(--tinta-3); transition: transform .15s; }
+.dc-passo--resumo[aria-expanded="true"] .dc-passo__seta { transform: rotate(180deg); }
 .dc-gira { animation: dc-gira .9s linear infinite; }
 @keyframes dc-gira { to { transform: rotate(360deg); } }
 
@@ -620,7 +639,9 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-md__tabela { max-width: 100%; overflow-x: auto; border: 1px solid var(--borda); border-radius: 10px; }
 .dc-md table { width: 100%; border-collapse: collapse; font: 400 13.5px/20px var(--font-sans); }
 .dc-md th { padding: 8px 12px; text-align: left; background: var(--superficie-2); font: 600 12.5px/18px var(--font-sans); color: var(--tinta-2); border-bottom: 1px solid var(--borda); white-space: nowrap; }
-.dc-md td { padding: 8px 12px; vertical-align: top; border-top: 1px solid var(--superficie-2); }
+/* Na célula a palavra não quebra no meio: a tabela larga rola dentro da caixa. Número, data e CNJ ficam numa linha. */
+.dc-md td { padding: 8px 12px; vertical-align: top; border-top: 1px solid var(--superficie-2); overflow-wrap: normal; min-width: 7em; }
+.dc-md td.is-numero { white-space: nowrap; min-width: 0; }
 .dc-md.is-escrevendo > :last-child::after { content: ""; display: inline-block; width: 7px; height: 15px; margin-left: 3px; vertical-align: -2px; border-radius: 2px; background: var(--acento); animation: dc-cursor 1s steps(2, start) infinite; }
 @keyframes dc-cursor { to { visibility: hidden; } }
 
@@ -631,6 +652,16 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-cartao-ia__topo h3 { margin: 0; font: 600 14px/20px var(--font-sans); color: var(--tinta); white-space: nowrap; }
 .dc-cartao-ia__n { font: 500 12.5px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-cartao-ia__acao { margin-left: auto; flex: none; }
+/* Enquanto a resposta chega, o cartão fica só com o topo (abre no fim, ou antes, pela seta). */
+.dc-cartao-ia.is-recolhido .dc-cartao-ia__topo { border-bottom: 0; }
+.dc-cartao-ia__abrir { display: grid; place-items: center; flex: none; width: 28px; height: 28px; margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--tinta-2); cursor: pointer; }
+.dc-cartao-ia__acao + .dc-cartao-ia__abrir { margin-left: 0; }
+.dc-cartao-ia__abrir:hover { background: var(--superficie-2); color: var(--tinta); }
+.dc-cartao-ia__abrir:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
+.dc-cartao-ia__abrir svg { width: 16px; height: 16px; }
+.dc-cartao-ia--falha .dc-cartao-ia__topo { border-bottom: 0; }
+.dc-cartao-ia--falha .dc-cartao-ia__topo > svg { color: var(--hoje); }
+.dc-cartao-ia--falha .dc-cartao-ia__topo h3 { font-weight: 500; color: var(--tinta-2); white-space: normal; }
 .dc-cartao-ia__ir { display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 6px 0 8px; border-radius: var(--radius-md); font: 500 13px/18px var(--font-sans); color: var(--tinta-2); text-decoration: none; }
 .dc-cartao-ia__ir:hover { background: var(--superficie-2); color: var(--tinta); }
 .dc-cartao-ia__ir svg { width: 14px; height: 14px; }
@@ -644,11 +675,16 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 a.dc-cartao-ia__titulo:hover { color: var(--acento); }
 .dc-cartao-ia__sub { min-width: 0; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 a.dc-cartao-ia__sub:hover { color: var(--tinta); }
-.dc-cartao-ia__trecho { margin-top: 3px; font: 400 13px/19px var(--font-sans); color: var(--tinta-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.dc-cartao-ia__trecho { margin-top: 2px; font: 400 13px/19px var(--font-sans); color: var(--tinta-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+.dc-cartao-ia__movimento { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-cartao-ia__movimento svg { width: 13px; height: 13px; margin-right: 3px; vertical-align: -2px; color: var(--tinta-3); }
 .dc-cartao-ia__trecho--solto { margin: 0; -webkit-line-clamp: 4; }
 .dc-cartao-ia__bloco .dc-cartao-ia__trecho--solto { padding: 2px var(--space-4) 12px; }
 .dc-cartao-ia__marca { display: inline-flex; align-items: center; flex: none; height: 18px; padding: 0 6px; border-radius: var(--radius-sm); background: var(--superficie-2); font: 500 11.5px/16px var(--font-sans); color: var(--tinta-2); white-space: nowrap; }
 .dc-cartao-ia__marca.is-nova { background: var(--acento-suave); color: var(--acento); }
+.dc-cartao-ia__marca.is-alerta { background: var(--vencido-suave); color: var(--vencido); }
+.dc-cartao-ia__linha.is-cancelada .dc-cartao-ia__titulo { text-decoration: line-through; color: var(--tinta-3); }
+.dc-cartao-ia__so-estreito { display: none; }
 .dc-cartao-ia__sem { font: 400 11.5px/16px var(--font-sans); color: var(--vencido); white-space: nowrap; }
 .dc-cartao-ia__lado { flex: none; display: flex; align-items: center; gap: 6px; }
 .dc-cartao-ia__lado .dc-selo svg { width: 12px; height: 12px; }
@@ -669,7 +705,7 @@ a.dc-cartao-ia__nome:hover { color: var(--acento); }
 .dc-cartao-ia__bloco { border-top: 1px solid var(--borda); }
 .dc-cartao-ia__bloco > h4, .dc-cartao-ia__dia > h4 { margin: 0; padding: 10px var(--space-4) 2px; font: 500 11px/16px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); }
 .dc-cartao-ia__dia + .dc-cartao-ia__dia { border-top: 1px solid var(--borda); }
-.dc-cartao-ia__tipo { flex: none; width: 58px; font: 600 13px/18px var(--font-sans); color: var(--tinta); }
+.dc-cartao-ia__tipo { flex: none; width: 66px; font: 600 13px/18px var(--font-sans); color: var(--tinta); }
 .dc-cartao-ia__botoes { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 12px var(--space-4); border-top: 1px solid var(--borda); }
 .dc-cartao-ia__botoes a.dc-btn { text-decoration: none; }
 .dc-cartao-ia__botoes--linha { flex: none; padding: 0; border-top: 0; margin-top: 4px; }
@@ -692,17 +728,29 @@ a.dc-cartao-ia__nome:hover { color: var(--acento); }
 .dc-linha-prazo__acoes { display: flex; justify-content: flex-end; min-width: 32px; }
 .dc-linha-prazo.is-feito .dc-cartao-ia__titulo { color: var(--tinta-3); text-decoration: line-through; }
 .dc-so-estreito { display: none; }
-/* Cartão estreito (celular, tablet, conversa com o histórico aberto): o quando e o botão em cima, o prazo embaixo, sem cortar o nome. */
+/* Cartão médio (a conversa entre dois painéis, tablet): a linha do prazo continua numa linha só, com o botão só no ícone. */
 @container (max-width: 620px) {
-  .dc-linha-prazo { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "quando quem acoes" "texto texto texto"; gap: 6px var(--space-2); }
-  .dc-linha-prazo__quando { grid-area: quando; }
-  .dc-linha-prazo__texto { grid-area: texto; }
-  .dc-linha-prazo__quem { grid-area: quem; }
-  .dc-linha-prazo__acoes { grid-area: acoes; }
+  .dc-linha-prazo { gap: var(--space-2); }
   .dc-linha-prazo__texto .dc-cartao-ia__titulo { white-space: normal; }
   .dc-so-largo { display: none; }
   .dc-so-estreito { display: inline; }
   .dc-cartao-ia__numeros .dc-contador__rotulo { white-space: nowrap; }
+}
+/* Cartão estreito (celular): o prazo em cima e o selo embaixo, com quem e o botão ao lado. */
+@container (max-width: 420px) {
+  .dc-linha-prazo { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "texto quem acoes" "quando quem acoes"; gap: 4px var(--space-2); }
+  .dc-linha-prazo__quando { grid-area: quando; }
+  .dc-linha-prazo__texto { grid-area: texto; }
+  .dc-linha-prazo__quem { grid-area: quem; align-self: center; }
+  .dc-linha-prazo__acoes { grid-area: acoes; align-self: center; }
+  /* A linha de baixo dos processos (número, vara e comarca) vai até duas linhas em vez de sumir nas reticências. */
+  .dc-cartao-ia__sub--duas { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
+  /* Clientes: os botões só com o ícone, e o nome fica com a linha. */
+  .dc-cartao-ia__linha--quebra { flex-wrap: nowrap; }
+  .dc-cartao-ia__linha--quebra .dc-cartao-ia__botoes--linha { margin-top: 0; }
+  .dc-cartao-ia__linha--quebra .dc-cartao-ia__botoes--linha .dc-btn { width: 36px; padding: 0; }
+  .dc-cartao-ia__linha--quebra .dc-cartao-ia__botoes--linha .dc-btn > span { display: none; }
+  .dc-cartao-ia__so-estreito { display: inline; }
 }
 .dc-data-bloco { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; width: 40px; height: 40px; border-radius: 8px; background: var(--acento-suave); color: var(--acento); }
 .dc-data-bloco strong { font: 600 16px/18px var(--font-sans); font-variant-numeric: tabular-nums; }
@@ -715,6 +763,15 @@ a.dc-cartao-ia__nome:hover { color: var(--acento); }
 .dc-contagem__passo--fim { background: var(--acento-suave); }
 .dc-contagem__passo--fim strong { color: var(--acento); }
 .dc-contagem__seta { width: 16px; height: 16px; flex: none; color: var(--tinta-3); }
+.dc-contagem__como { border-top: 1px solid var(--superficie-2); }
+.dc-contagem__como summary { display: flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 var(--space-4); list-style: none; font: 500 13px/18px var(--font-sans); color: var(--tinta-2); cursor: pointer; }
+.dc-contagem__como summary::-webkit-details-marker { display: none; }
+.dc-contagem__como summary:hover { color: var(--tinta); }
+.dc-contagem__como summary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--anel); }
+.dc-contagem__como summary svg { width: 14px; height: 14px; flex: none; transition: transform .15s; }
+.dc-contagem__como[open] summary svg { transform: rotate(90deg); }
+.dc-contagem__calendario { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; color: var(--tinta-3); }
+.dc-contagem__como p { margin: 0; padding: 0 var(--space-4) 12px; font: 400 13px/19px var(--font-sans); color: var(--tinta-2); }
 
 /* O campo */
 .dc-compositor { display: flex; flex-direction: column; gap: 6px; }

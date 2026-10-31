@@ -10,6 +10,8 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string,
     readonly detail?: string,
+    /** Nos limites da IA: se passa em instantes (o do minuto) ou só amanhã. */
+    readonly passaLogo?: boolean,
   ) {
     super(detail ?? code);
   }

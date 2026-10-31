@@ -1,15 +1,15 @@
 /**
  * Perguntar: conversas com a IA do escritório. No computador, a tela inteira:
- * o histórico à esquerda, a conversa no meio e, em tela larga, o que a IA
- * consultou à direita. No celular, a conversa ocupa a tela e o histórico abre
+ * o histórico à esquerda, a conversa no meio e, em tela bem larga (1600 px),
+ * o que a IA consultou à direita. No celular, a conversa ocupa a tela e o histórico abre
  * numa gaveta.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { ArrowLeft, Banknote, Calculator, CalendarDays, Ellipsis, FolderOpen, Hourglass, Inbox, MessageSquare, MessagesSquare, PanelLeft, Pencil, Pin, PinOff, Scale, Search, SquarePen, Trash2, X, type LucideIcon } from "lucide-react";
-import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Compositor, esquecerEnvio, Mensagens, NestaConversa, useDescerJunto, useEnviar, useEnvio } from "@/componentes/conversa-ia";
+import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Compositor, esquecerEnvio, esquecerNova, IrParaOFim, Mensagens, NestaConversa, useEnviar, useEnvio, useRolagemDaConversa, type Envio } from "@/componentes/conversa-ia";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo, Radix } from "@/componentes/dialogo";
 import { Botao, Carregando, Faixa, Vazio } from "@/componentes/ui";
@@ -22,6 +22,7 @@ import type { Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
 const RODAPE = "Gerado por IA. Confira nos autos.";
+const NA_PREVIA = import.meta.env.MODE === "previa";
 
 export function PerguntarPage() {
   return <Perguntar conversaId={null} />;
@@ -54,23 +55,27 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
 
   const mensagens = aberta.data?.mensagens ?? [];
   const ocupado = envio?.estado === "enviando";
-  const ultima = envio?.partes.at(-1);
   const vazia = !conversaId && !envio;
-  const caixa = useDescerJunto(`${mensagens.length}:${envio?.partes.length}:${ultima?.tipo === "texto" ? ultima.texto.length : 0}:${envio?.estado}`, conversaId, vazia);
+  const rolagem = useRolagemDaConversa(conversaId, vazia, envio);
 
-  // A resposta já guardada voltou do servidor: a cópia em andamento sai.
+  // Voltando à conversa nova, a pergunta que falhou (ou foi parada) antes de ganhar endereço sai.
+  useLayoutEffect(() => {
+    if (!conversaId) esquecerNova();
+  }, [conversaId]);
+
+  // A resposta já gravada voltou do servidor (o mesmo id do "inicio"): a cópia em andamento sai. A do erro fica, com o "Tentar de novo".
   useEffect(() => {
-    if (!conversaId || !envio || envio.estado === "enviando") return;
-    if (envio.mensagemId && mensagens.some((m) => m.id === envio.mensagemId)) esquecerEnvio(conversaId);
+    if (!conversaId || !envio || envio.estado === "enviando" || envio.estado === "erro") return;
+    const i = mensagens.findIndex((m) => m.id === envio.perguntaId);
+    // Servidor que ainda não manda o id da resposta no "inicio": vale a resposta gravada depois da pergunta.
+    const gravada = envio.respostaId ? mensagens.some((m) => m.id === envio.respostaId) : i >= 0 && mensagens.slice(i + 1).some((m) => m.papel === "ia");
+    if (gravada) esquecerEnvio(conversaId);
   }, [conversaId, envio, mensagens]);
 
-  const mandar = (texto: string) =>
-    enviar({
-      texto,
-      modo,
-      conversaId,
-      aoNascer: (id) => void navigate({ to: "/perguntar/$id", params: { id }, replace: true }),
-    });
+  const aoNascer = (id: string) => void navigate({ to: "/perguntar/$id", params: { id }, replace: true });
+  const mandar = (texto: string) => enviar({ texto, modo, conversaId, aoNascer });
+  // Caiu depois de a pergunta ser gravada: refaz a mesma, sem gravar outra.
+  const tentarDeNovo = (e: Envio) => enviar({ texto: e.pergunta, modo: e.modo, conversaId, refazer: conversaId ? e.perguntaId : null, aoNascer });
   const mudarModo = (m: Modo) => {
     if (conversaId) return setModoEscolhido(m);
     setModoNovo(m);
@@ -78,7 +83,8 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
   };
 
   const naoAchou = aberta.error instanceof ApiError && aberta.error.status === 404;
-  const ia = eu.data?.ia;
+  // Na prévia (sem servidor) o Perguntar responde com a IA de mentira dela; nas outras telas a IA continua como o /eu diz.
+  const ia = eu.data?.ia || NA_PREVIA;
   const titulo = conversaId ? (aberta.data?.conversa.titulo ?? conversas.data?.conversas.find((k) => k.id === conversaId)?.titulo ?? "Conversa") : "Nova conversa";
   const historicoEmGaveta = celular || estreito;
 
@@ -86,14 +92,17 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
     <Historico
       conversas={conversas.data?.conversas}
       ativa={conversaId}
-      aoEscolher={() => setGaveta(false)}
+      aoEscolher={() => {
+        setGaveta(false);
+        esquecerNova();
+      }}
       aoApagar={(id) => {
         if (id === conversaId) void navigate({ to: "/perguntar", replace: true });
       }}
     />
   );
   const compositor = ia && !naoAchou && (
-    <Compositor modo={modo} aoMudarModo={mudarModo} aoEnviar={mandar} aoParar={() => envio?.controlador.abort()} ocupado={ocupado} rodape={RODAPE} inicial={sugerido} focar={!celular} />
+    <Compositor modo={modo} aoMudarModo={mudarModo} aoEnviar={mandar} aoParar={() => envio?.controlador.abort()} ocupado={ocupado} rodape={RODAPE} inicial={sugerido} focar={!celular} curto={celular} />
   );
 
   let conversa: ReactNode;
@@ -135,7 +144,7 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
     conversa = (
       <div className="dc-chat__coluna">
         {modo === "jurisprudencia" && <AvisoJurisprudencia />}
-        <Mensagens conversaId={conversaId} mensagens={mensagens} envio={envio} aoTentarDeNovo={mandar} />
+        <Mensagens conversaId={conversaId} mensagens={mensagens} envio={envio} aoTentarDeNovo={tentarDeNovo} />
       </div>
     );
   }
@@ -171,14 +180,19 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
           <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Conversas" onClick={() => setGaveta(true)}>
             <MessagesSquare />
           </button>
-          <Link to="/perguntar" className="dc-btn dc-btn--fantasma" aria-label="Nova conversa">
+          <Link to="/perguntar" className="dc-btn dc-btn--fantasma" aria-label="Nova conversa" onClick={esquecerNova}>
             <SquarePen />
           </Link>
         </header>
-        <div ref={caixa} className={cn("dc-chat__rolagem", vazia && "is-vazia")}>
+        <div ref={rolagem.caixa} className={cn("dc-chat__rolagem", vazia && "is-vazia")}>
           {conversa}
         </div>
-        {compositor && <div className="dc-chat__campo">{compositor}</div>}
+        {compositor && (
+          <div className="dc-chat__campo">
+            {rolagem.longe && <IrParaOFim chegando={ocupado} aoClicar={rolagem.irParaOFim} />}
+            {compositor}
+          </div>
+        )}
         {gavetaDoHistorico}
       </div>
     );
@@ -207,17 +221,22 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
           )}
           <span className="dc-chat__privado">Só você vê esta conversa</span>
           {!comHistorico && !vazia && (
-            <Link to="/perguntar" className="dc-btn dc-btn--secundaria dc-btn--sm">
+            <Link to="/perguntar" className="dc-btn dc-btn--secundaria dc-btn--sm" onClick={esquecerNova}>
               <SquarePen /> Nova
             </Link>
           )}
         </header>
-        <div ref={caixa} className={cn("dc-chat__rolagem", vazia && "is-vazia")}>
+        <div ref={rolagem.caixa} className={cn("dc-chat__rolagem", vazia && "is-vazia")}>
           {conversa}
         </div>
-        {!vazia && compositor && <div className="dc-chat__campo">{compositor}</div>}
+        {!vazia && compositor && (
+          <div className="dc-chat__campo">
+            {rolagem.longe && <IrParaOFim chegando={ocupado} aoClicar={rolagem.irParaOFim} />}
+            {compositor}
+          </div>
+        )}
       </main>
-      {!vazia && <NestaConversa mensagens={[...mensagens, ...(envio ? [{ partes: envio.partes }] : [])]} />}
+      {!vazia && <NestaConversa key={conversaId ?? "nova"} mensagens={[...mensagens, ...(envio ? [{ partes: envio.partes }] : [])]} />}
       {gavetaDoHistorico}
     </div>
   );
@@ -300,15 +319,17 @@ function BoasVindas({
   const sugestoes: Sugestao[] =
     modo === "jurisprudencia"
       ? [
-          { icone: Scale, titulo: "Plano de saúde", texto: "Dano moral por negativa de cobertura de plano de saúde no TJSC" },
+          // Sem tribunal escrito: o servidor diz à IA qual é o do escritório.
+          { icone: Scale, titulo: "Plano de saúde", texto: "Dano moral por negativa de cobertura de plano de saúde" },
           { icone: Scale, titulo: "DPVAT", texto: "Termo inicial da correção monetária no seguro DPVAT" },
           { icone: Scale, titulo: "Honorários", texto: "Honorários na desistência da ação antes da citação" },
           { icone: Scale, titulo: "Tese para um caso", texto: "Que teses servem para o processo ", completar: true },
         ]
       : [
-          { icone: Hourglass, titulo: "Prazos da semana", texto: "Quais prazos vencem esta semana? O que é mais urgente?", n: eu.menu.prazos || null },
-          { icone: Inbox, titulo: "Publicações novas", texto: "Resuma as publicações novas e diga o que cada uma pede", n: eu.menu.publicacoes || null },
-          { icone: CalendarDays, titulo: "Minha semana", texto: "Como está a minha semana? Audiências, prazos e tarefas" },
+          // O texto pede o que o número conta: prazos em aberto até daqui a 7 dias, com os vencidos (menu.prazos), e só as publicações novas (menu.publicacoes).
+          { icone: Hourglass, titulo: "Prazos da semana", texto: "Quais prazos vencem nos próximos 7 dias? Algum já venceu?", n: eu.menu.prazos || null },
+          { icone: Inbox, titulo: "Publicações novas", texto: "Resuma as publicações novas, sem as pendentes, e diga o que cada uma pede", n: eu.menu.publicacoes || null },
+          { icone: CalendarDays, titulo: "Minha semana", texto: "O que tenho nos próximos 7 dias? Audiências, prazos e tarefas" },
           { icone: FolderOpen, titulo: "Em que pé está", texto: "Em que pé está o processo de ", completar: true },
           { icone: Calculator, titulo: "Contar um prazo", texto: "Publicado hoje, 15 dias úteis vence quando?" },
           { icone: Banknote, titulo: "Alvarás a receber", texto: "Quais alvarás ainda não foram repassados aos clientes?", n: eu.menu.alvaras || null },
