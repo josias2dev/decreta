@@ -7,7 +7,8 @@ services:
       POSTGRES_PASSWORD: dc_owner
       POSTGRES_DB: decreta
     ports:
-      - "5433:5432"
+      # Outra porta, se a 5433 já for de outro Postgres: DECRETA_PG_PORTA=5434 docker compose up -d
+      - "${DECRETA_PG_PORTA:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro

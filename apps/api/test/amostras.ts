@@ -8,6 +8,7 @@ import { setSystemTime } from "bun:test";
 import { dvCnj } from "@decreta/core";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { createTestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
 import { createApp } from "../src/app.ts";
@@ -27,7 +28,7 @@ type Item = { tipo: string; processo: { titulo: string } };
 // O relógio das telas de teste (e2e/apoio.ts): "hoje", "amanhã" e "vencido" saem iguais em qualquer dia.
 setSystemTime(new Date("2026-10-29T09:30:00-03:00"));
 
-const DESTINO = new URL("../../web/e2e/amostras/", import.meta.url).pathname;
+const DESTINO = fileURLToPath(new URL("../../web/e2e/amostras/", import.meta.url));
 const t = await createTestDatabase();
 try {
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });

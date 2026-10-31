@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --env-file=../../.env --watch src/index.ts",
+    "dev": "cd ../.. && bun run dev",
     "start": "bun src/index.ts"
   },
   "dependencies": {

@@ -39,11 +39,11 @@ Precisa de Bun 1.4.4 e Docker.
 
 ```sh
 cp .env.example .env              # e troque o BETTER_AUTH_SECRET
-docker compose up -d              # Postgres na 5433 e o Inngest de desenvolvimento na 8288
+docker compose up -d              # Postgres na 5433 (outra: DECRETA_PG_PORTA=5434 e a mesma porta no .env) e o Inngest na 8288
 bun install
 bun run db:migrate
 bun run demonstracao              # escritório de demonstração com dados inventados
-bun run dev                       # API na 8787
+bun run dev                       # API na 8787; recarrega ao mexer em apps/api e packages
 bun run web                       # telas em http://localhost:5173
 ```
 

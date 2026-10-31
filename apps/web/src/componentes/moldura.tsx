@@ -113,6 +113,8 @@ function Moldura({ eu }: { eu: Eu }) {
   const caminho = useRouterState({ select: (s) => s.location.pathname });
   const aba = useRouterState({ select: (s) => (s.location.search as { aba?: string }).aba });
   const [buscando, setBuscando] = useState(false);
+  // Se o arquivo do logo sumir, fica o ícone em vez da imagem quebrada.
+  const [semLogo, setSemLogo] = useState(false);
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
@@ -168,8 +170,8 @@ function Moldura({ eu }: { eu: Eu }) {
     <div className="dc dc-app">
       <nav className="dc-menu" aria-label="Menu principal">
         <div className="dc-menu__escritorio">
-          {eu.escritorio.logo ? (
-            <img className="dc-menu__escritorio-logo dc-menu__escritorio-logo--imagem" src="/api/app/escritorio/logo" alt="" />
+          {eu.escritorio.logo && !semLogo ? (
+            <img className="dc-menu__escritorio-logo dc-menu__escritorio-logo--imagem" src="/api/app/escritorio/logo" alt="" onError={() => setSemLogo(true)} />
           ) : (
             <span className="dc-menu__escritorio-logo">
               <Building2 />

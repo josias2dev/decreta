@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun --filter @decreta/api dev",
+    "dev": "bun --env-file=.env --watch apps/api/src/index.ts",
     "web": "bun --filter @decreta/web dev",
     "web:build": "bun --filter @decreta/web build",
     "web:previa": "bun --filter @decreta/web previa",
