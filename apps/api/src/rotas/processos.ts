@@ -1,7 +1,7 @@
 import { cnpjValido, cpfValido, formatarCnj, formatarDocumento, hojeEm, lerCnj, limparCnpj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
 import { alvaras, audiencias, clientes, documentos, movimentacoes, partes, pecas, prazos, processos, resultados, type Tx } from "@decreta/db";
 import { buscarDjenDoProcesso, partesDoDjen } from "@decreta/tribunais";
-import { and, asc, desc, eq, gt, ilike, inArray, isNotNull, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, like, or, sql, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
@@ -12,7 +12,7 @@ import { comunicacoesGuardadas, completarPartes, consultarCnj, oabsDaEquipe } fr
 import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { corpo, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { corpo, falha, id, ip, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 const POR_PAGINA = 50;
 
@@ -84,13 +84,14 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       if (responsavel === "sem") onde.push(sql`${processos.responsavelId} is null`);
       else if (responsavel) onde.push(eq(processos.responsavelId, responsavel));
       if (busca) {
-        const termo = `%${busca.replace(/[%_]/g, "")}%`;
+        // Sem diferenciar acento: "Joao" acha "João".
+        const termo = termoSemAcento(busca);
         const digitos = busca.replace(/\D/g, "");
         onde.push(
           or(
-            ilike(processos.titulo, termo),
-            ilike(processos.orgao, termo),
-            ilike(clientes.nome, termo),
+            like(semAcentoNoBanco(sql`${processos.titulo}`), termo),
+            like(semAcentoNoBanco(sql`${processos.orgao}`), termo),
+            like(semAcentoNoBanco(sql`${clientes.nome}`), termo),
             digitos.length >= 4 ? sql`regexp_replace(coalesce(${processos.cnj}, ''), '\\D', '', 'g') like ${`%${digitos}%`}` : sql`false`,
           )!,
         );

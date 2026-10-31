@@ -27,6 +27,7 @@ export interface ParteParaIa {
 }
 
 export interface MovimentacaoParaIa {
+  /** O dia no fuso do escritório (AAAA-MM-DD), com a hora depois quando há: o texto usa os 10 primeiros caracteres. */
   em: string;
   evento: number | null;
   titulo: string;
@@ -34,6 +35,7 @@ export interface MovimentacaoParaIa {
 }
 
 export interface PublicacaoParaIa {
+  id?: string;
   disponibilizadaEm: string;
   publicadaEm: string;
   tipoComunicacao: string | null;
@@ -43,6 +45,7 @@ export interface PublicacaoParaIa {
 }
 
 export interface DocumentoParaIa {
+  id?: string;
   nome: string;
   evento: number | null;
   texto: string;
@@ -58,6 +61,8 @@ export interface ContextoDoProcesso {
   processo: ProcessoParaIa;
   partes: ParteParaIa[];
   movimentacoes: MovimentacaoParaIa[];
+  /** Quantos andamentos o processo tem (as movimentações acima podem ser só as mais recentes). */
+  totalDeMovimentacoes?: number;
   publicacoes?: PublicacaoParaIa[];
   prazos?: PrazoParaIa[];
   documentos?: DocumentoParaIa[];
@@ -71,7 +76,17 @@ const dm = (iso: string) => {
   return `${d[2]}/${d[1]}/${d[0]}`;
 };
 
-export function textoDoProcesso(ctx: ContextoDoProcesso, teto = TETO_DO_CONTEXTO): string {
+export interface OpcoesDoTexto {
+  /** Quantos andamentos entram, dos mais recentes. Padrão: 80. */
+  andamentos?: number;
+  /** Como ler o que ficou de fora (no Perguntar, as ferramentas). Com ela, a lista do que não coube traz o id de cada item. */
+  comoLer?: string;
+}
+
+/** O fim do texto fica guardado para a lista do que não coube. */
+const reservaDoFim = (teto: number) => Math.min(4_000, Math.floor(teto / 10));
+
+export function textoDoProcesso(ctx: ContextoDoProcesso, teto = TETO_DO_CONTEXTO, opcoes: OpcoesDoTexto = {}): string {
   const p = ctx.processo;
   const lado = p.poloCliente === "ativo" ? "polo ativo (autor)" : p.poloCliente === "passivo" ? "polo passivo (réu)" : "terceiro";
   const linhas = [
@@ -95,29 +110,58 @@ export function textoDoProcesso(ctx: ContextoDoProcesso, teto = TETO_DO_CONTEXTO
     for (const pr of ctx.prazos.filter((x) => x.situacao === "aberto")) linhas.push(`- ${pr.tipo}: vence em ${dm(pr.fim)}`);
   }
 
+  const andamentos = Math.min(opcoes.andamentos ?? 80, ctx.movimentacoes.length);
   if (ctx.movimentacoes.length) {
     linhas.push("", "## Movimentações (mais recentes primeiro)");
     const ordenadas = [...ctx.movimentacoes].sort((a, b) => b.em.localeCompare(a.em));
-    for (const m of ordenadas.slice(0, 80)) {
+    for (const m of ordenadas.slice(0, andamentos)) {
       const ev = m.evento != null ? `evento ${m.evento}, ` : "";
       linhas.push(`- ${dm(m.em)} (${ev}${m.titulo})${m.descricao ? `: ${m.descricao}` : ""}`);
     }
   }
 
+  let texto = linhas.join("\n");
+  const limite = teto - reservaDoFim(teto);
+  const fora: string[] = [];
+  const comId = (x: { id?: string }) => (opcoes.comoLer && x.id ? `, id ${x.id}` : "");
+  /** O bloco inteiro, se cabe; se não, o começo com a marca de corte; se nem isso, só o nome, na lista do que ficou de fora. */
+  const por = (cab: string, corpo: string, marca: string, nome: string) => {
+    const sobra = limite - texto.length - cab.length - marca.length;
+    if (corpo.length <= sobra) texto += cab + corpo;
+    else if (sobra >= 500) {
+      texto += cab + corpo.slice(0, sobra) + marca;
+      fora.push(`- ${nome} (cortado acima)`);
+    } else fora.push(`- ${nome}`);
+  };
+
   if (ctx.publicacoes?.length) {
-    linhas.push("", "## Publicações (DJEN)");
+    texto += "\n\n## Publicações (DJEN)";
     for (const pub of ctx.publicacoes.slice(0, 10)) {
-      linhas.push(`### ${pub.tipoComunicacao ?? "Comunicação"} disponibilizada em ${dm(pub.disponibilizadaEm)}, publicada em ${dm(pub.publicadaEm)}`, pub.texto.trim());
+      const tipo = pub.tipoComunicacao ?? "Comunicação";
+      por(`\n### ${tipo} disponibilizada em ${dm(pub.disponibilizadaEm)}, publicada em ${dm(pub.publicadaEm)}\n`, pub.texto.trim(), "\n[publicação cortada aqui]", `Publicação: ${tipo} disponibilizada em ${dm(pub.disponibilizadaEm)}${comId(pub)}`);
     }
   }
 
-  let texto = linhas.join("\n");
-  const corte = "\n[documento cortado aqui]";
   for (const doc of ctx.documentos ?? []) {
-    const cab = `\n\n## Documento: ${doc.nome}${doc.evento != null ? ` (evento ${doc.evento})` : ""}\n`;
-    const sobra = teto - texto.length - cab.length - corte.length;
-    if (sobra < 500) break;
-    texto += cab + (doc.texto.length > sobra ? doc.texto.slice(0, sobra) + corte : doc.texto);
+    const ev = doc.evento != null ? ` (evento ${doc.evento})` : "";
+    por(`\n\n## Documento: ${doc.nome}${ev}\n`, doc.texto, "\n[documento cortado aqui]", `Documento: ${doc.nome}${ev}${comId(doc)}`);
+  }
+
+  // O que não coube vai listado, para a IA não tomar por ausente o que só ficou de fora.
+  const antigos = (ctx.totalDeMovimentacoes ?? ctx.movimentacoes.length) - andamentos;
+  if (antigos > 0) fora.unshift(`- ${antigos} ${antigos === 1 ? "andamento mais antigo" : "andamentos mais antigos"}`);
+  if (fora.length) {
+    const cab = "\n\n## Fora deste texto (não couberam)\n";
+    const dica = opcoes.comoLer ? `\n${opcoes.comoLer}` : "";
+    const lista: string[] = [];
+    for (const [i, l] of fora.entries()) {
+      if (texto.length + cab.length + [...lista, l].join("\n").length + dica.length + 20 > teto) {
+        lista.push(`- e mais ${fora.length - i}`);
+        break;
+      }
+      lista.push(l);
+    }
+    texto += cab + lista.join("\n") + dica;
   }
   return texto.length > teto ? texto.slice(0, teto) : texto;
 }

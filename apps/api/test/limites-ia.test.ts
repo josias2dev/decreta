@@ -52,9 +52,10 @@ describe.skipIf(!hasTestDatabase)("limites da IA", () => {
     });
   const perguntar = async (cookie: string, texto = "Quais prazos vencem esta semana?") => {
     const r = await call("/ia/perguntar", { method: "POST", json: { texto } }, cookie);
-    return { status: r.status, corpo: r.status === 200 ? await r.text() : ((await r.json()) as { erro: string; detalhe: string }) };
+    return { status: r.status, corpo: r.status === 200 ? await r.text() : ((await r.json()) as { erro: string; detalhe: string; passaLogo?: boolean }) };
   };
-  const barrado = (detalhe: string) => ({ status: 429, corpo: { erro: "limite_ia", detalhe } });
+  // Só o limite do minuto e o de respostas ao mesmo tempo passam logo: nos outros, a tela não oferece "Tentar de novo".
+  const barrado = (detalhe: string) => ({ status: 429, corpo: { erro: "limite_ia", detalhe, passaLogo: detalhe === AVISOS.minuto || detalhe === AVISOS.simultaneos } });
   const conversas = async (cookie: string) => ((await (await call("/ia/conversas", {}, cookie)).json()) as { conversas: { id: string }[] }).conversas;
   const zerar = () => Object.assign(limites, structuredClone(SEM_LIMITES));
 
@@ -94,7 +95,7 @@ describe.skipIf(!hasTestDatabase)("limites da IA", () => {
     expect(linhas.map((l) => [l.metodo, l.mensagem, l.custo])).toEqual([
       ["perguntar", true, 0],
       ["perguntar", false, POR_CHAMADA],
-      ["perguntar", false, POR_CHAMADA],
+      ["titulo-conversa", false, POR_CHAMADA],
     ]);
     expect(linhas.every((l) => l.origem === "tela" && l.user_id && l.estimado === (l.mensagem ? false : true))).toBe(true);
     const cols = await t.owner`select column_name from information_schema.columns where table_name = 'uso_ia'`;
@@ -142,7 +143,7 @@ describe.skipIf(!hasTestDatabase)("limites da IA", () => {
     // Os botões também: resumo dos autos e peça.
     const resumo = await call(`/ia/resumo/${processoId}`, { method: "POST" });
     expect(resumo.status).toBe(429);
-    expect(await resumo.json()).toEqual({ erro: "limite_ia", detalhe: AVISOS.demonstracao });
+    expect(await resumo.json()).toEqual({ erro: "limite_ia", detalhe: AVISOS.demonstracao, passaLogo: false });
     expect((await perguntar(ana)).status).toBe(200);
     zerar();
   });
@@ -204,6 +205,44 @@ describe.skipIf(!hasTestDatabase)("limites da IA", () => {
       expect(r.corpo as string).toContain(JSON.stringify({ t: "texto", v: `\n\n${AVISOS.gateway}` }));
     } finally {
       ia.modelo = modelo;
+    }
+  });
+
+  test("o Perguntar segura a vez enquanto a resposta chega: a terceira ao mesmo tempo espera", async () => {
+    relogio("2026-11-05T10:00:00-03:00");
+    limites.simultaneos = 2;
+    const uso = { inputTokens: { total: 100, noCache: 100, cacheRead: 0, cacheWrite: 0 }, outputTokens: { total: 20, text: 20, reasoning: 0 } };
+    let soltar = () => {};
+    const solta = new Promise<void>((ok) => (soltar = ok));
+    const modelo = ia.modelo;
+    ia.modelo = () =>
+      new MockLanguageModelV4({
+        doStream: async () => ({
+          stream: new ReadableStream({
+            async start(c) {
+              c.enqueue({ type: "stream-start", warnings: [] });
+              await solta;
+              c.enqueue({ type: "text-start", id: "t" });
+              c.enqueue({ type: "text-delta", id: "t", delta: "Pronto." });
+              c.enqueue({ type: "text-end", id: "t" });
+              c.enqueue({ type: "finish", finishReason: { unified: "stop", raw: "stop" }, usage: uso });
+              c.close();
+            },
+          }),
+        }),
+        doGenerate: async () => ({ content: [{ type: "text", text: "Conversa" }], finishReason: { unified: "stop", raw: "stop" }, usage: uso, warnings: [] }),
+      });
+    try {
+      const chegando = [await call("/ia/perguntar", { method: "POST", json: { texto: "Primeira" } }, ana), await call("/ia/perguntar", { method: "POST", json: { texto: "Segunda" } }, ana)];
+      expect(chegando.map((r) => r.status)).toEqual([200, 200]);
+      expect(await perguntar(ana, "Terceira")).toEqual(barrado(AVISOS.simultaneos));
+      soltar();
+      for (const r of chegando) expect(await r.text()).toContain("Pronto.");
+      // Terminou, a vez voltou.
+      expect((await perguntar(ana, "Quarta")).status).toBe(200);
+    } finally {
+      ia.modelo = modelo;
+      zerar();
     }
   });
 

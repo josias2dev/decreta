@@ -11,7 +11,7 @@
  */
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { LanguageModelV4, LanguageModelV4CallOptions, LanguageModelV4GenerateResult, LanguageModelV4StreamPart, LanguageModelV4Usage } from "@ai-sdk/provider";
+import type { LanguageModelV4, LanguageModelV4CallOptions, LanguageModelV4GenerateResult, LanguageModelV4StreamPart, LanguageModelV4StreamResult, LanguageModelV4Usage } from "@ai-sdk/provider";
 import type { LanguageModel } from "ai";
 import type { UsoDaTranscricao } from "./uso.ts";
 
@@ -44,6 +44,7 @@ export const METODOS = [
   "conferir-pasta",
   "ler-imagem",
   "ler-pdf",
+  "titulo-conversa",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -62,7 +63,17 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "conferir-pasta": "autos",
   "ler-imagem": "vision",
   "ler-pdf": "pdf",
+  "titulo-conversa": "juridico",
 };
+
+/** Ações que o gateway conhece por outro nome: o título da conversa conta à parte no uso_ia, mas vai ao gateway como o chat. */
+const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar" };
+
+/** O teto do dia não passa em segundos: a AI SDK não deve pedir de novo (a pessoa esperava o aviso uns 2 s a mais). */
+function semNovaTentativaNoTeto(err: unknown): never {
+  if (ehTetoDoGateway(err) && err && typeof err === "object" && "isRetryable" in err) (err as { isRetryable: boolean }).isRetryable = false;
+  throw err;
+}
 
 /** O gateway recusou porque o teto de gasto do dia acabou (429 com o código "teto-diario"), mesmo depois das novas tentativas do SDK. */
 export function ehTetoDoGateway(err: unknown): boolean {
@@ -120,6 +131,7 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
   "conferir-pasta": "high",
   "ler-imagem": "low",
   "ler-pdf": "low",
+  "titulo-conversa": "low",
 };
 
 /**
@@ -249,6 +261,14 @@ class ModeloDoGateway implements LanguageModelV4 {
   }
 
   async doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
+    return this.gerar(options).catch(semNovaTentativaNoTeto);
+  }
+
+  async doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
+    return this.transmitir(options).catch(semNovaTentativaNoTeto);
+  }
+
+  private async gerar(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
     const escolha = await this.escolher(options);
     if (!escolha) return this.openrouter.doGenerate(options);
     let custoDaRecusa: number | undefined;
@@ -264,7 +284,7 @@ class ModeloDoGateway implements LanguageModelV4 {
     return { ...r, usage: somarCusto(r.usage, custoDaRecusa) };
   }
 
-  async doStream(options: LanguageModelV4CallOptions) {
+  private async transmitir(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
     const escolha = await this.escolher(options);
     if (!escolha) return this.openrouter.doStream(options);
     let resultado: Awaited<ReturnType<LanguageModelV4["doStream"]>>;
@@ -348,7 +368,7 @@ export function createGatewayIa(config: ConfigDoGateway): Ia {
         name: "gateway",
         baseURL,
         apiKey: config.apiKey,
-        headers: { "X-Gateway-Method": metodo },
+        headers: { "X-Gateway-Method": NO_GATEWAY[metodo] ?? metodo },
         includeUsage: true,
         supportsStructuredOutputs: true,
         fetch: fetchImpl,
@@ -369,7 +389,7 @@ export function createGatewayIa(config: ConfigDoGateway): Ia {
         baseURL: urlDaAnthropic,
         apiKey: config.apiKey,
         // O alias vai à parte porque o "model" já sai com o id real: o SDK escolhe pelo id o que o modelo aceita.
-        headers: { "X-Gateway-Method": metodo, "X-Gateway-Alias": alias },
+        headers: { "X-Gateway-Method": NO_GATEWAY[metodo] ?? metodo, "X-Gateway-Alias": alias },
         fetch: fetchImpl,
       });
       claudes.set(metodo, p);

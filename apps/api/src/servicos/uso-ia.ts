@@ -52,8 +52,12 @@ export function limitesDoEnv(env: Env): LimitesDaIa {
 
 /** Passou de um limite: a tela mostra o `detalhe`. */
 export class LimiteDaIa extends HTTPException {
-  constructor(readonly motivo: string) {
-    super(429, { res: Response.json({ erro: "limite_ia", detalhe: motivo }, { status: 429 }) });
+  /** `passaLogo`: o limite do minuto e o de respostas ao mesmo tempo; a tela só oferece "Tentar de novo" nesses. */
+  constructor(
+    readonly motivo: string,
+    passaLogo = motivo === AVISOS.minuto || motivo === AVISOS.simultaneos,
+  ) {
+    super(429, { res: Response.json({ erro: "limite_ia", detalhe: motivo, passaLogo }, { status: 429 }) });
   }
 }
 

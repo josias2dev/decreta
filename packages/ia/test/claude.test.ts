@@ -213,6 +213,22 @@ describe("Claude pela rota da Anthropic", () => {
     expect(a.para("/v1/chat/completions")).toHaveLength(0);
   });
 
+  test("o teto do dia não é pedido de novo, nem com novas tentativas ligadas", async () => {
+    const a = ambiente({ anthropic: () => json({ type: "error", error: { type: "rate_limit_error", message: "teto diário do projeto atingido", code: "teto-diario" } }, 429) });
+    const erro = await generateText({ model: a.ia.modelo("perguntar"), prompt: "oi", maxRetries: 2 }).catch((e: unknown) => e);
+    expect(ehTetoDoGateway(erro)).toBe(true);
+    expect(a.para("/anthropic/v1/messages")).toHaveLength(1);
+  });
+
+  test("o título da conversa vai ao gateway como o chat", async () => {
+    const a = ambiente({ anthropic: () => json(mensagem("Prazos da semana", 0.0001)) });
+    await generateText({ model: a.ia.modelo("titulo-conversa"), prompt: "oi" });
+    const [claude] = a.para("/anthropic/v1/messages");
+    expect(claude!.headers.get("x-gateway-method")).toBe("perguntar");
+    expect(claude!.headers.get("x-gateway-alias")).toBe("juridico");
+    expect(claude!.corpo.output_config).toEqual({ effort: "low" });
+  });
+
   test("erro logo no começo do stream vai para o OpenRouter", async () => {
     const a = ambiente({ anthropic: () => sse([inicio, { type: "error", error: { type: "overloaded_error", message: "Overloaded" } }]) });
     const r = streamText({ model: a.ia.modelo("perguntar"), prompt: "oi", maxRetries: 0 });

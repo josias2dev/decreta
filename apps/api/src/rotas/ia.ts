@@ -1,11 +1,18 @@
-import { horaLocal, diaPorExtenso, diaDoInstante, hojeEm } from "@decreta/core";
+import { randomUUID } from "node:crypto";
+import { horaLocal, diaPorExtenso, diaDoInstante, ehDia, formatarDia, hojeEm } from "@decreta/core";
 import { analises, audiencias, clientes, conversas, equipe, mensagensIa, pecas, prazos, processos, publicacoes, retornosIa, tarefas, withTenant, type ParteDaMensagem, type Tx } from "@decreta/db";
 import {
   briefingDoPrazo,
   conversar,
   conversarComAssistente,
   ehTetoDoGateway,
+  FalhaNaConsulta,
+  FALHOU,
   itemDoChecklist,
+  NaoAchou,
+  PAROU_ANTES,
+  PASSOS,
+  PedidoErrado,
   prepararAudiencia,
   resultadoParaGuardar,
   resumirAtendimento,
@@ -17,15 +24,16 @@ import {
   type Ia,
   type MensagemDaConversa,
 } from "@decreta/ia";
-import { and, asc, desc, eq, exists, gt, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gt, isNull, like, or, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { analisar } from "../servicos/analises.ts";
-import { dadosDoEscritorio, PedidoInvalido } from "../servicos/assistente.ts";
+import { dadosDoEscritorio, prazosDeAgora } from "../servicos/assistente.ts";
+import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { AVISOS } from "../servicos/uso-ia.ts";
-import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 /** O nome de cada ação da IA como a equipe reconhece. */
 export const ROTULO_DA_ACAO: Record<string, string> = {
@@ -40,12 +48,61 @@ export const ROTULO_DA_ACAO: Record<string, string> = {
 
 /** Uma linha da resposta do Perguntar. */
 export type EventoDaConversa =
-  | { t: "inicio"; conversa: { id: string; titulo: string; modo: string }; pergunta: { id: string } }
+  | { t: "inicio"; conversa: { id: string; titulo: string; modo: string }; pergunta: { id: string }; resposta: { id: string } }
   | { t: "texto"; v: string }
   | { t: "ferramenta"; id: string; nome: string; entrada: unknown }
   | { t: "resultado"; id: string; nome: string; saida?: unknown; erro?: string }
   | { t: "fim"; mensagem: { id: string } | null }
   | { t: "titulo"; v: string };
+
+/** Quanto a ligação espera, depois do fim, pelo nome da conversa (que a IA começa a dar no meio da resposta). */
+const ESPERA_PELO_NOME = 4_000;
+/** Mensagens que voltam para a IA: as últimas 40 a 59, cortadas de 20 em 20 (o começo muda pouco e o cache da IA vale). */
+const HISTORICO = 40;
+const PODA = 20;
+
+/**
+ * A resposta que cada pergunta espera, neste servidor, por 15 minutos. A ligação pode cair só do lado da pessoa,
+ * com a IA ainda respondendo aqui: o "Tentar de novo" toma o lugar dela, e a antiga, quando termina, não é gravada.
+ */
+const respostaDaPergunta = new Map<string, { id: string; ate: number }>();
+const VALIDADE_DA_ESPERA = 15 * 60_000;
+function esperarResposta(perguntaId: string, respostaId: string) {
+  const agora = Date.now();
+  for (const [k, v] of respostaDaPergunta) if (v.ate < agora) respostaDaPergunta.delete(k);
+  respostaDaPergunta.set(perguntaId, { id: respostaId, ate: agora + VALIDADE_DA_ESPERA });
+}
+
+/** As mensagens gravadas depois desta. */
+const depoisDa = (mensagemId: string) => sql`${mensagensIa.createdAt} > (select "created_at" from "mensagens_ia" where "id" = ${mensagemId})`;
+
+/** A conversa como volta para a IA, sem a pergunta de agora. A IA não começa a conversa: resposta solta no começo sai. */
+async function historicoDaConversa(tx: Tx, conversaId: string, perguntaId: string) {
+  const [{ n } = { n: 0 }] = await tx.select({ n: count() }).from(mensagensIa).where(eq(mensagensIa.conversaId, conversaId));
+  const pular = Math.floor(Math.max(0, n - HISTORICO) / PODA) * PODA;
+  const msgs = await tx.select().from(mensagensIa).where(eq(mensagensIa.conversaId, conversaId)).orderBy(asc(mensagensIa.createdAt), asc(mensagensIa.id)).offset(pular);
+  const outras = msgs.filter((m) => m.id !== perguntaId);
+  const primeira = outras.findIndex((m) => m.papel === "pessoa");
+  return primeira < 0 ? [] : outras.slice(primeira);
+}
+
+/**
+ * O erro da ferramenta como fica guardado e vai para a tela. O pedido da IA que não deu (formato, "não achei",
+ * pessoa que não é da equipe) guarda o motivo, curto; a consulta que falhou por dentro guarda FALHOU e vai para o log.
+ */
+function erroDaFerramenta(err: unknown): { erro: string; log?: Record<string, unknown> } {
+  if (err instanceof PedidoErrado || err instanceof NaoAchou) return { erro: err.message };
+  // O pedido que nem chegou à ferramenta (JSON quebrado, ferramenta que não existe): a AI SDK manda o motivo em texto para a IA.
+  if (typeof err === "string") return { erro: "Pedido fora do formato." };
+  return { erro: FALHOU, log: semDados(err instanceof FalhaNaConsulta ? err.causa : err) };
+}
+
+/** O tipo e o código do erro, sem o SQL nem os valores da consulta (que podem ser o nome ou o CPF que a pessoa buscou). */
+function semDados(err: unknown): Record<string, unknown> {
+  const causa = err instanceof Error && err.cause ? err.cause : err;
+  const e = causa as { name?: string; code?: string; message?: string } | null;
+  return { tipo: e?.name ?? typeof causa, codigo: e?.code ?? null, erro: String(e?.message ?? causa).split(/[:\n]/)[0]!.slice(0, 120) };
+}
 
 function conversaNaTela(k: typeof conversas.$inferSelect, processo: { id: string | null; titulo: string | null } | null) {
   return { id: k.id, titulo: k.titulo, modo: k.modo, fixada: k.fixada, criadaEm: k.createdAt.toISOString(), atualizadaEm: k.updatedAt.toISOString(), processo: processo?.id ? { id: processo.id, titulo: processo.titulo } : null };
@@ -91,7 +148,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       preparar: async (tx) => {
         const ctx = await carregarContexto(tx, processoId, { documentos: true });
         if (!ctx) return null;
-        const hoje = new Date().toISOString().slice(0, 10).split("-").reverse().join("/");
+        const hoje = formatarDia(hojeEm(c.get("timezone")));
         return { entrada: ctx.texto, base: ctx.base, fonte: ctx.ultimoEvento ? `Autos até o evento ${ctx.ultimoEvento} · ${hoje}` : `${ctx.fonte} · ${hoje}` };
       },
       executar: (texto) => resumirAutos(ia, texto),
@@ -239,7 +296,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.get("/ia/conversas", async (c) => {
     const busca = (c.req.query("busca") ?? "").trim().slice(0, 100);
     return tenant(c, deps, async (tx) => {
-      const termo = `%${busca.replace(/[%_\\]/g, "")}%`;
+      // Sem diferenciar acento: "alvara" acha "alvará".
+      const termo = termoSemAcento(busca);
       const linhas = await tx
         .select({ conversa: conversas, processo: { id: processos.id, titulo: processos.titulo } })
         .from(conversas)
@@ -248,7 +306,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
           and(
             daPessoa(c),
             busca.length >= 2
-              ? or(ilike(conversas.titulo, termo), exists(sql`(select 1 from "mensagens_ia" where "mensagens_ia"."conversa_id" = "conversas"."id" and "mensagens_ia"."texto" ilike ${termo})`))
+              ? or(like(semAcentoNoBanco(sql`${conversas.titulo}`), termo), exists(sql`(select 1 from "mensagens_ia" where "mensagens_ia"."conversa_id" = "conversas"."id" and ${semAcentoNoBanco(sql`"mensagens_ia"."texto"`)} like ${termo})`))
               : undefined,
           ),
         )
@@ -268,6 +326,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .where(and(eq(conversas.id, conversaId), daPessoa(c)));
       if (!linha) falha(404, "nao_encontrado");
       const msgs = await tx.select().from(mensagensIa).where(eq(mensagensIa.conversaId, conversaId)).orderBy(asc(mensagensIa.createdAt)).limit(400);
+      await prazosDeAgora(tx, msgs.flatMap((m) => m.partes ?? []), c.get("orgId"), c.get("timezone"));
       return c.json({
         rodape: RODAPE_IA,
         conversa: conversaNaTela(linha.conversa, linha.processo),
@@ -298,10 +357,22 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return c.json({ ok: true });
   });
 
-  /** A tarefa que a IA deixou pronta num cartão vira tarefa de verdade quando a pessoa confirma (uma vez só). */
+  /**
+   * A tarefa que a IA deixou pronta num cartão vira tarefa de verdade quando a pessoa confirma (uma vez só).
+   * Com `descartar`, fica anotado o "Agora não": o cartão não volta quando a conversa abre de novo.
+   */
   app.post("/ia/conversas/:id/tarefa", async (c) => {
     const conversaId = id(c);
-    const b = await corpo(c, z.object({ mensagemId: z.string().uuid(), ferramentaId: z.string().min(1).max(200), titulo: z.string().trim().min(2).max(300).optional(), dia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }));
+    const b = await corpo(
+      c,
+      z.object({
+        mensagemId: z.string().uuid(),
+        ferramentaId: z.string().min(1).max(200),
+        titulo: z.string().trim().min(2).max(300).optional(),
+        dia: z.string().refine(ehDia, "Este dia não existe.").optional(),
+        descartar: z.literal(true).optional(),
+      }),
+    );
     const r = await tenant(c, deps, async (tx) => {
       const [m] = await tx
         .select({ id: mensagensIa.id, partes: mensagensIa.partes })
@@ -310,8 +381,13 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .where(and(eq(mensagensIa.id, b.mensagemId), eq(conversas.id, conversaId), daPessoa(c)));
       const parte = m?.partes?.find((p) => p.tipo === "ferramenta" && p.id === b.ferramentaId && p.nome === "proporTarefa");
       if (!m || parte?.tipo !== "ferramenta" || !parte.saida) falha(404, "nao_encontrado");
-      const proposta = parte.saida as { titulo: string; dia: string; detalhe: string | null; responsavel: { id: string } | null; processo: { id: string } | null; cliente: { id: string } | null; criada?: { id: string } };
+      const proposta = parte.saida as { titulo: string; dia: string; detalhe: string | null; responsavel: { id: string } | null; processo: { id: string } | null; cliente: { id: string } | null; criada?: { id: string }; descartada?: boolean };
       if (proposta.criada) return proposta.criada;
+      if (b.descartar) {
+        parte.saida = { ...proposta, descartada: true };
+        await tx.update(mensagensIa).set({ partes: m.partes }).where(eq(mensagensIa.id, m.id));
+        return null;
+      }
       const [t] = await tx
         .insert(tarefas)
         .values({
@@ -329,26 +405,32 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       await tx.update(mensagensIa).set({ partes: m.partes }).where(eq(mensagensIa.id, m.id));
       return { id: t!.id };
     });
-    return c.json(r, 201);
+    return r ? c.json(r, 201) : c.json({ ok: true });
   });
 
   /**
    * Pergunta numa conversa (ou começa uma). A resposta chega aos poucos, uma
-   * linha JSON por acontecimento: o começo, cada pedaço de texto, cada
-   * ferramenta que a IA consultou e o resultado (vira cartão na tela), o fim e,
-   * na primeira resposta, o nome que a IA deu para a conversa.
+   * linha JSON por acontecimento: o começo (com o id que a resposta vai ter),
+   * cada pedaço de texto, cada ferramenta que a IA consultou e o resultado (vira
+   * cartão na tela), o fim e, na primeira resposta, o nome que a IA deu para a
+   * conversa. A resposta fica gravada com o id do começo também quando a pessoa
+   * para, quando a ligação cai ou quando a IA falha.
    */
   app.post("/ia/perguntar", comLimiteDaIa(deps, { mensagem: "perguntar" }), async (c) => {
     const ia = iaDaRota(c);
     const b = await corpo(
       c,
-      z.object({
-        texto: z.string().trim().min(1).max(4000),
-        modo: z.enum(["pergunte", "jurisprudencia"]).default("pergunte"),
-        conversaId: z.string().uuid().nullable().optional(),
-        /** Processo de onde a pessoa abriu o Perguntar (só vale ao começar a conversa). */
-        processoId: z.string().uuid().nullable().optional(),
-      }),
+      z
+        .object({
+          texto: z.string().trim().min(1).max(4000),
+          modo: z.enum(["pergunte", "jurisprudencia"]).default("pergunte"),
+          conversaId: z.string().uuid().nullable().optional(),
+          /** Processo de onde a pessoa abriu o Perguntar (só vale ao começar a conversa). */
+          processoId: z.string().uuid().nullable().optional(),
+          /** "Tentar de novo" depois de a resposta cair: a última pergunta da conversa, já gravada. Não grava outra. */
+          refazer: z.string().uuid().optional(),
+        })
+        .refine((x) => !x.refazer || !!x.conversaId, { message: "Só dá para refazer a pergunta de uma conversa.", path: ["refazer"] }),
     );
     const orgId = c.get("orgId");
     const userId = c.get("userId");
@@ -363,26 +445,56 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         [conversa] = await tx.insert(conversas).values({ organizationId: orgId, userId, titulo: tituloProvisorio(b.texto), modo: b.modo, processoId: p?.id ?? null }).returning();
       }
       const k = conversa!;
+      let pergunta: { id: string; texto: string };
+      if (b.refazer) {
+        const [q] = await tx
+          .select({ id: mensagensIa.id, texto: mensagensIa.texto })
+          .from(mensagensIa)
+          .where(and(eq(mensagensIa.id, b.refazer), eq(mensagensIa.conversaId, k.id), eq(mensagensIa.papel, "pessoa")));
+        if (!q) falha(404, "nao_encontrado");
+        const [outra] = await tx.select({ id: mensagensIa.id }).from(mensagensIa).where(and(eq(mensagensIa.conversaId, k.id), eq(mensagensIa.papel, "pessoa"), depoisDa(q.id))).limit(1);
+        if (outra) falha(409, "pergunta_antiga", "Só dá para refazer a última pergunta da conversa.");
+        // A resposta que caiu no meio sai: a nova fica no lugar dela.
+        await tx.delete(mensagensIa).where(and(eq(mensagensIa.conversaId, k.id), eq(mensagensIa.papel, "ia"), depoisDa(q.id)));
+        pergunta = q;
+      } else {
+        const [q] = await tx.insert(mensagensIa).values({ organizationId: orgId, conversaId: k.id, userId, papel: "pessoa", texto: b.texto }).returning({ id: mensagensIa.id });
+        pergunta = { id: q!.id, texto: b.texto };
+      }
       const [foco] = k.processoId ? await tx.select({ id: processos.id, titulo: processos.titulo, cnj: processos.cnj }).from(processos).where(eq(processos.id, k.processoId)) : [];
-      const anteriores = await tx.select().from(mensagensIa).where(eq(mensagensIa.conversaId, k.id)).orderBy(desc(mensagensIa.createdAt)).limit(40);
-      const [pergunta] = await tx.insert(mensagensIa).values({ organizationId: orgId, conversaId: k.id, userId, papel: "pessoa", texto: b.texto }).returning({ id: mensagensIa.id });
       const [eu] = await tx.select({ cargo: equipe.cargo }).from(equipe).where(eq(equipe.userId, userId));
+      const tribunal = await tribunalPadrao(tx, orgId);
+      const anteriores = await historicoDaConversa(tx, k.id, pergunta.id);
       return {
         conversa: k,
-        nova: !b.conversaId,
-        perguntaId: pergunta!.id,
+        pergunta,
+        // O nome vem da primeira pergunta, enquanto a conversa tiver o provisório (a pessoa pode ter renomeado).
+        darNome: !anteriores.some((m) => m.papel === "pessoa") && k.titulo === tituloProvisorio(pergunta.texto),
         cargo: eu?.cargo ?? null,
+        tribunal,
+        calendario: await calendarioDoEscritorio(tx, tribunal),
         foco: foco ? `${foco.titulo}${foco.cnj ? ` (${foco.cnj})` : ""}, id ${foco.id}` : null,
-        historico: [...anteriores.reverse().map((m) => ({ papel: m.papel, texto: m.texto, partes: m.partes })), { papel: "pessoa" as const, texto: b.texto }],
+        historico: [...anteriores.map((m) => ({ papel: m.papel, texto: m.texto, partes: m.partes })), { papel: "pessoa" as const, texto: pergunta.texto }],
       };
     });
 
-    const { conversa } = preparado;
+    const { conversa, pergunta } = preparado;
+    const respostaId = randomUUID();
+    esperarResposta(pergunta.id, respostaId);
     const r = conversarComAssistente(
       ia,
       {
         modo: b.modo,
-        quem: { nome: c.get("userNome"), cargo: preparado.cargo, escritorio: c.get("orgNome"), hoje: hojeEm(c.get("timezone")), timezone: c.get("timezone"), foco: preparado.foco },
+        quem: {
+          nome: c.get("userNome"),
+          cargo: preparado.cargo,
+          escritorio: c.get("orgNome"),
+          hoje: hojeEm(c.get("timezone")),
+          timezone: c.get("timezone"),
+          tribunal: preparado.tribunal,
+          calendario: preparado.calendario,
+          foco: preparado.foco,
+        },
         historico: preparado.historico,
         dados: dadosDoEscritorio({ db, organizationId: orgId, userId, timezone: c.get("timezone") }),
       },
@@ -400,9 +512,20 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
             aberto = false;
           }
         };
-        enviar({ t: "inicio", conversa: { id: conversa.id, titulo: conversa.titulo, modo: b.modo }, pergunta: { id: preparado.perguntaId } });
+        enviar({ t: "inicio", conversa: { id: conversa.id, titulo: conversa.titulo, modo: b.modo }, pergunta: { id: pergunta.id }, resposta: { id: respostaId } });
         const partes: ParteDaMensagem[] = [];
         const textoDe = () => partes.flatMap((p) => (p.tipo === "texto" ? [p.texto.trim()] : [])).filter(Boolean).join("\n\n");
+        /** Só o que a IA escreveu, sem os avisos. */
+        let escrito = "";
+        let consultas = 0;
+        let rodadas = 0;
+        let parou = false;
+        let teto = false;
+        let aviso: string | null = null;
+        let nome: Promise<string | null> | null = null;
+        const pedirNome = () => {
+          if (preparado.darNome && !nome) nome = tituloDaConversa(ia, pergunta.texto, escrito, AbortSignal.timeout(10_000)).catch(() => null);
+        };
         try {
           for await (const p of r.fullStream) {
             if (p.type === "text-delta") {
@@ -410,7 +533,11 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
               if (ultima?.tipo === "texto") ultima.texto += p.text;
               else partes.push({ tipo: "texto", texto: p.text });
               enviar({ t: "texto", v: p.text });
+              escrito += p.text;
+              // Com o começo da resposta já dá para dar nome à conversa: fica pronto junto com a resposta.
+              if (escrito.length >= 300) pedirNome();
             } else if (p.type === "tool-call") {
+              consultas++;
               partes.push({ tipo: "ferramenta", id: p.toolCallId, nome: p.toolName, entrada: p.input, saida: null });
               enviar({ t: "ferramenta", id: p.toolCallId, nome: p.toolName, entrada: p.input });
             } else if (p.type === "tool-result") {
@@ -419,38 +546,80 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
               if (parte?.tipo === "ferramenta") parte.saida = saida;
               enviar({ t: "resultado", id: p.toolCallId, nome: p.toolName, saida });
             } else if (p.type === "tool-error") {
-              const erro = p.error instanceof PedidoInvalido ? p.error.message : "Não deu para consultar agora.";
-              if (!(p.error instanceof PedidoInvalido)) deps.log("ferramenta da IA falhou", { ferramenta: p.toolName, error: p.error instanceof Error ? p.error.message : String(p.error) });
+              const { erro, log } = erroDaFerramenta(p.error);
+              if (log) deps.log("ferramenta da IA falhou", { ferramenta: p.toolName, ...log });
               const parte = partes.find((x) => x.tipo === "ferramenta" && x.id === p.toolCallId);
               if (parte?.tipo === "ferramenta") parte.erro = erro;
               enviar({ t: "resultado", id: p.toolCallId, nome: p.toolName, erro });
+            } else if (p.type === "finish-step") {
+              rodadas++;
+            } else if (p.type === "abort") {
+              // Parar não é erro na AI SDK: o stream termina com esta parte.
+              parou = true;
             } else if (p.type === "error") {
               throw p.error;
             }
           }
         } catch (err) {
-          const parou = c.req.raw.signal.aborted;
-          if (!parou) deps.log("conversa com a IA caiu", { metodo: b.modo, error: err instanceof Error ? err.message : String(err) });
-          const aviso = parou ? "[Você parou a resposta aqui.]" : ehTetoDoGateway(err) ? AVISOS.gateway : textoDe() ? "[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
+          if (!c.req.raw.signal.aborted) {
+            deps.log("conversa com a IA caiu", { metodo: b.modo, error: err instanceof Error ? err.message : String(err) });
+            teto = ehTetoDoGateway(err);
+            aviso = teto ? AVISOS.gateway : escrito.trim() ? "[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
+          }
+        }
+        if (parou || c.req.raw.signal.aborted) {
+          parou = true;
+          aviso = "[Você parou a resposta aqui.]";
+        } else if (!aviso && !escrito.trim()) {
+          aviso =
+            rodadas >= PASSOS
+              ? `[Parei depois de ${PASSOS} rodadas de consulta, antes de escrever a resposta. Peça para eu continuar.]`
+              : consultas
+                ? "[Consultei os dados, mas não cheguei a escrever a resposta. Pergunte de novo.]"
+                : "Não consegui responder agora. Tente de novo em instantes.";
+        }
+        // Ferramenta sem resultado fica com erro: nem a tela nem a próxima pergunta a tomam por terminada.
+        for (const x of partes) {
+          if (x.tipo !== "ferramenta" || x.saida != null || x.erro) continue;
+          x.erro = PAROU_ANTES;
+          enviar({ t: "resultado", id: x.id, nome: x.nome, erro: PAROU_ANTES });
+        }
+        if (aviso) {
           partes.push({ tipo: "texto", texto: aviso });
           enviar({ t: "texto", v: `\n\n${aviso}` });
         }
         const texto = textoDe();
-        const mensagemId = await withTenant(db, orgId, async (tx) => {
-          const [m] = await tx.insert(mensagensIa).values({ organizationId: orgId, conversaId: conversa.id, userId, papel: "ia", texto, partes }).returning({ id: mensagensIa.id });
-          await tx.update(conversas).set({ updatedAt: sql`now()` }).where(eq(conversas.id, conversa.id));
-          return m!.id;
-        }).catch((err) => {
-          deps.log("resposta da IA não foi gravada", { error: err instanceof Error ? err.message : String(err) });
-          return null;
-        });
-        enviar({ t: "fim", mensagem: mensagemId ? { id: mensagemId } : null });
-        if (preparado.nova && texto && !c.req.raw.signal.aborted) {
-          const titulo = await tituloDaConversa(ia, b.texto, texto, AbortSignal.timeout(10_000)).catch(() => null);
-          if (titulo) {
-            await withTenant(db, orgId, (tx) => tx.update(conversas).set({ titulo }).where(eq(conversas.id, conversa.id))).catch(() => {});
-            enviar({ t: "titulo", v: titulo });
-          }
+        // Um "Tentar de novo" desta pergunta começou depois desta resposta: fica só a mais nova.
+        const vez = respostaDaPergunta.get(pergunta.id);
+        const substituida = !!vez && vez.id !== respostaId;
+        const gravada =
+          !substituida &&
+          (await withTenant(db, orgId, async (tx) => {
+            // A antiga que terminou enquanto esta chegava sai também (enquanto esta for a última pergunta).
+            if (b.refazer) {
+              const [outra] = await tx.select({ id: mensagensIa.id }).from(mensagensIa).where(and(eq(mensagensIa.conversaId, conversa.id), eq(mensagensIa.papel, "pessoa"), depoisDa(pergunta.id))).limit(1);
+              if (!outra) await tx.delete(mensagensIa).where(and(eq(mensagensIa.conversaId, conversa.id), eq(mensagensIa.papel, "ia"), depoisDa(pergunta.id)));
+            }
+            await tx.insert(mensagensIa).values({ id: respostaId, organizationId: orgId, conversaId: conversa.id, userId, papel: "ia", texto, partes });
+            await tx.update(conversas).set({ updatedAt: sql`now()` }).where(eq(conversas.id, conversa.id));
+            return true;
+          }).catch((err) => {
+            deps.log("resposta da IA não foi gravada", { error: err instanceof Error ? err.message : String(err) });
+            return false;
+          }));
+        enviar({ t: "fim", mensagem: gravada ? { id: respostaId } : null });
+        // Nome só para resposta de verdade: aviso de erro ou do teto não vira nome de conversa.
+        if (escrito.trim() && !parou && !teto && !substituida) pedirNome();
+        if (nome && !substituida) {
+          const gravado = (nome as Promise<string | null>).then(async (v) => {
+            if (v) await withTenant(db, orgId, (tx) => tx.update(conversas).set({ titulo: v }).where(eq(conversas.id, conversa.id))).catch(() => {});
+            return v;
+          });
+          // O nome quase sempre já chegou; se demorar, fica gravado do mesmo jeito e a ligação não espera por ele.
+          let relogio: ReturnType<typeof setTimeout> | undefined;
+          const v = await Promise.race([gravado, new Promise<null>((ok) => (relogio = setTimeout(ok, ESPERA_PELO_NOME, null)))]);
+          clearTimeout(relogio);
+          if (v) enviar({ t: "titulo", v });
         }
         aberto = false;
         try {

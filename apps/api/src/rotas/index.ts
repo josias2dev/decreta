@@ -5,12 +5,12 @@
  */
 import { hojeEm, somarDias } from "@decreta/core";
 import { alvaras, clientes, escritorios, negocios, organization, prazos, processos, publicacoes } from "@decreta/db";
-import { and, eq, ilike, inArray, lte, or, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, like, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { ehMembro, pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
-import { tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { rotasDaAgenda } from "./agenda.ts";
 import { rotasDosClientes } from "./clientes.ts";
 import { rotasDasConsultas } from "./consultas.ts";
@@ -87,18 +87,18 @@ export function createRotas(deps: DepsDasRotas) {
     const q = (c.req.query("q") ?? "").trim();
     if (q.length < 2) return c.json({ processos: [], clientes: [] });
     const digitos = q.replace(/\D/g, "");
-    const termo = `%${q.replace(/[%_]/g, "")}%`;
+    const termo = termoSemAcento(q);
     return tenant(c, deps, async (tx) => {
       const [ps, cs] = await Promise.all([
         tx
           .select({ id: processos.id, titulo: processos.titulo, cnj: processos.cnj, orgao: processos.orgao })
           .from(processos)
-          .where(or(ilike(processos.titulo, termo), digitos.length >= 4 ? sql`regexp_replace(coalesce(${processos.cnj}, ''), '\\D', '', 'g') like ${`%${digitos}%`}` : sql`false`))
+          .where(or(like(semAcentoNoBanco(sql`${processos.titulo}`), termo), digitos.length >= 4 ? sql`regexp_replace(coalesce(${processos.cnj}, ''), '\\D', '', 'g') like ${`%${digitos}%`}` : sql`false`))
           .limit(8),
         tx
           .select({ id: clientes.id, nome: clientes.nome, documento: clientes.documento, telefone: clientes.telefone })
           .from(clientes)
-          .where(or(ilike(clientes.nome, termo), digitos.length >= 4 ? or(ilike(clientes.documento, `%${digitos}%`), sql`regexp_replace(coalesce(${clientes.telefone}, ''), '\\D', '', 'g') like ${`%${digitos}%`}`) : sql`false`))
+          .where(or(like(semAcentoNoBanco(sql`${clientes.nome}`), termo), digitos.length >= 4 ? or(ilike(clientes.documento, `%${digitos}%`), sql`regexp_replace(coalesce(${clientes.telefone}, ''), '\\D', '', 'g') like ${`%${digitos}%`}`) : sql`false`))
           .limit(8),
       ]);
       return c.json({ processos: ps, clientes: cs });

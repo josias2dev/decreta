@@ -1,13 +1,13 @@
 import { cnpjValido, cpfValido, formatarDocumento, formatarTelefone, limparDocumento, telefoneWhatsapp } from "@decreta/core";
 import { atendimentos, clientes, documentos, processos } from "@decreta/db";
-import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, like, ne, or, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { conferirPastaDe, ultimaConferencia } from "../servicos/conferencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { IaDesligada } from "../servicos/prazos.ts";
-import { comLimiteDaIa, corpo, ehSocio, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, ehSocio, falha, id, ip, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 const CANAL: Record<string, string> = { presencial: "presencial", telefone: "telefone", whatsapp: "WhatsApp", video: "vídeo", email: "e-mail" };
 
@@ -37,12 +37,13 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const busca = (c.req.query("busca") ?? "").trim();
     const pagina = Math.max(1, Number(c.req.query("pagina") ?? 1) || 1);
     return tenant(c, deps, async (tx) => {
-      const termo = `%${busca.replace(/[%_]/g, "")}%`;
+      // Sem diferenciar acento: "Kuhn" acha "Kühn".
+      const termo = termoSemAcento(busca);
       const digitos = busca.replace(/\D/g, "");
       const filtro = busca
         ? or(
-            ilike(clientes.nome, termo),
-            ilike(clientes.email, termo),
+            like(semAcentoNoBanco(sql`${clientes.nome}`), termo),
+            like(semAcentoNoBanco(sql`${clientes.email}`), termo),
             digitos.length >= 3 ? or(ilike(clientes.documento, `%${digitos}%`), sql`regexp_replace(coalesce(${clientes.telefone}, ''), '\\D', '', 'g') like ${`%${digitos}%`}`) : sql`false`,
           )
         : undefined;

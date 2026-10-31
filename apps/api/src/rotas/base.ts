@@ -103,8 +103,9 @@ export function comLimiteDaIa(deps: DepsDasRotas, opcoes: { mensagem?: MetodoIa 
       throw err;
     }
     // A resposta que chega aos poucos devolve a vez quando termina (ou quando a pessoa fecha a tela).
+    // Só JSON comum volta na hora: o NDJSON do Perguntar também tem "json" no nome, mas chega aos poucos.
     const res = c.res;
-    if (!res.body || (res.headers.get("content-type") ?? "").includes("json")) return devolver();
+    if (!res.body || /^application\/json\b/i.test(res.headers.get("content-type") ?? "")) return devolver();
     const leitor = res.body.getReader();
     c.res = new Response(
       new ReadableStream<Uint8Array>({
@@ -155,6 +156,9 @@ const SEM_ACENTO = "aaaaaeeeeiiiiooooouuuucn";
 
 /** O texto no banco em minúsculas e sem acento, para comparar com `palavrasDaBusca`. */
 export const semAcentoNoBanco = (texto: SQL) => sql`translate(lower(${texto}), ${COM_ACENTO}, ${SEM_ACENTO})`;
+
+/** O que a pessoa digitou, inteiro, em minúsculas e sem acento, pronto para o LIKE contra `semAcentoNoBanco`. */
+export const termoSemAcento = (busca: string) => `%${busca.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[%_\\]/g, "")}%`;
 
 /**
  * O que a pessoa digitou, em palavras sem acento e em minúsculas: cada uma

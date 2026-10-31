@@ -47,6 +47,8 @@ export function iaFalsa(): IaFalsa {
             passos.set(r, i + 1);
             passo = (r[i] as Passo | undefined) ?? "";
           }
+          // Rodada sem ferramentas (a última): a IA de mentira não tem o que dizer.
+          if (typeof passo !== "string" && opcoes.toolChoice?.type === "none") passo = "";
           if (typeof passo !== "string") {
             const i = passos.get(r) ?? 0;
             return {
