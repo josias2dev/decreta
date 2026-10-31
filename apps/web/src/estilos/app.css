@@ -554,7 +554,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 @keyframes dc-gaveta-entra { from { transform: translateX(-100%); } }
 
 /* Nesta conversa */
-.dc-chat__contexto { flex: 0 0 288px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; min-height: 0; overflow-y: auto; padding: 14px var(--space-4) var(--space-6); border-left: 1px solid var(--borda); }
+.dc-chat__contexto { flex: 0 0 288px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; min-height: 0; overflow-y: auto; padding: 14px var(--space-4) var(--space-6); border-left: 1px solid var(--borda); animation: dc-contexto-entra .2s ease-out; }
+@keyframes dc-contexto-entra { from { opacity: 0; } }
 .dc-chat__contexto-titulo { margin: 0; font: 600 13px/24px var(--font-sans); color: var(--tinta); }
 .dc-chat__contexto-grupo h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font: 500 11px/16px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); }
 .dc-chat__contexto-grupo h3 svg { width: 13px; height: 13px; }

@@ -387,13 +387,13 @@ const GRUPOS: { chave: keyof ReturnType<typeof itensDaConversa>; titulo: string;
   { chave: "documentos", titulo: "Documentos", icone: FileText },
 ];
 
+/** Só aparece depois que a IA consulta algo: vazio, a conversa fica com a largura toda. */
 export function NestaConversa({ mensagens }: { mensagens: { partes: Parte[] | null }[] }) {
   const grupos = itensDaConversa(mensagens);
-  const algum = GRUPOS.some((g) => grupos[g.chave].size > 0);
+  if (!GRUPOS.some((g) => grupos[g.chave].size > 0)) return null;
   return (
     <aside className="dc-chat__contexto" aria-label="Nesta conversa">
       <h2 className="dc-chat__contexto-titulo">Nesta conversa</h2>
-      {!algum && <p className="dc-nota m-0">O que a IA consultar (processos, prazos, clientes, documentos) aparece aqui, para abrir com um clique.</p>}
       {GRUPOS.map((g) => {
         const itens = [...grupos[g.chave].values()];
         if (!itens.length) return null;

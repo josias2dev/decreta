@@ -86,6 +86,14 @@ test.describe("no computador", () => {
     await expect(lado.getByText("Manifestação sobre laudo pericial")).toBeVisible();
     expect(await sobraNaLateral(page)).toBe(0);
   });
+
+  test("tela larga: sem nada consultado, o painel ao lado não aparece", async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await abrir(page, `/perguntar/${ids.conversaJurisprudencia}`, comIa());
+    await expect(page.getByRole("heading", { level: 1, name: "Negativa de cirurgia e dano moral" })).toBeVisible();
+    await expect(page.getByRole("complementary", { name: "Nesta conversa" })).toHaveCount(0);
+    expect(await sobraNaLateral(page)).toBe(0);
+  });
 });
 
 test.describe("no celular", () => {

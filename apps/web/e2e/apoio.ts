@@ -35,6 +35,7 @@ export const ids = {
   conversaSemana: amostras.conversaSemana!.corpo.conversa.id as string,
   conversaProcesso: amostras.conversaProcesso!.corpo.conversa.id as string,
   conversaNova: amostras.conversaNova!.corpo.conversa.id as string,
+  conversaJurisprudencia: amostras.conversaJurisprudencia!.corpo.conversa.id as string,
 };
 
 /** /eu com a IA ligada, para as telas que mostram Refazer, Conferir e o retorno. */
