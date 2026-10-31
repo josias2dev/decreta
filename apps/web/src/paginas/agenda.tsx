@@ -574,8 +574,9 @@ export function AudienciaPage() {
     </>
   );
   const pr = a.preparacao;
-  const preparacao = (pr || eu.data?.ia) && (
-    <BlocoIa titulo="Preparação da audiência" analise={pr} aoRefazer={eu.data?.ia ? () => preparar.mutate() : undefined} refazendo={preparar.isPending} avisoDesatualizada="Chegou novidade nos autos depois desta preparação.">
+  const ia = !!eu.data?.ia && !a.processo.semIa;
+  const preparacao = (pr || ia) && (
+    <BlocoIa titulo="Preparação da audiência" analise={pr} aoRefazer={ia ? () => preparar.mutate() : undefined} refazendo={preparar.isPending} avisoDesatualizada="Chegou novidade nos autos depois desta preparação.">
       {pr?.situacao === "pronto" ? <ConteudoDaPreparacao c={pr.conteudo} /> : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA lê os autos e monta o que é a audiência, o objetivo, os pontos controvertidos e o checklist.</p>}
     </BlocoIa>
   );

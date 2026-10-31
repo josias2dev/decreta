@@ -15,7 +15,7 @@ import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { criarEscritorio } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
-import { atualizarDoDataJud, gravarComunicacoes, type DepsDaCaptura } from "../src/servicos/captura.ts";
+import { atualizarDoDataJud, conferirDataJudDoEscritorio, gravarComunicacoes, type DepsDaCaptura } from "../src/servicos/captura.ts";
 
 const CNJ = "5004321-25.2026.8.24.0038";
 /** Outro número válido do TJSC, para o processo que a captura completa. */
@@ -33,6 +33,7 @@ const DATAJUD = {
           sistema: { codigo: 4, nome: "Eproc" },
           grau: "G1",
           dataAjuizamento: "20260210093000",
+          dataHoraUltimaAtualizacao: "2026-10-16T08:00:00.000Z",
           nivelSigilo: 0,
           orgaoJulgador: { codigo: 1234, nome: "2ª VARA CÍVEL DA COMARCA DE JOINVILLE", codigoMunicipioIBGE: 4209102 },
           assuntos: [{ codigo: 10437, nome: "Seguro" }],
@@ -83,10 +84,12 @@ describe.skipIf(!hasTestDatabase)("consulta pelo número", () => {
   /** Quem está fora do ar nesta rodada. */
   const fora = new Set<string>();
   const pedidos: string[] = [];
-  const fetchFalso = (async (entrada: string | URL) => {
+  const fetchFalso = (async (entrada: string | URL, init?: RequestInit) => {
     const url = new URL(String(entrada));
     pedidos.push(url.host);
     if (fora.has(url.host)) return resposta({}, 503);
+    // O maior @timestamp do índice: até quando o DataJud tem dados do tribunal.
+    if (url.host === "api-publica.datajud.cnj.jus.br" && String(init?.body).includes("@timestamp")) return resposta({ hits: { hits: [{ _source: { "@timestamp": "2026-10-16T21:20:30.894Z" } }] } });
     if (url.host === "api-publica.datajud.cnj.jus.br") return resposta(DATAJUD);
     if (url.host === "comunicaapi.pje.jus.br") return resposta(url.searchParams.get("numeroProcesso") === "50043212520268240038" ? DJEN : { count: 0, items: [] });
     if (url.host === "servicodados.ibge.gov.br") return resposta({ id: 4209102, nome: "Joinville" });
@@ -199,6 +202,25 @@ describe.skipIf(!hasTestDatabase)("consulta pelo número", () => {
     await t.owner`update processos set orgao = null where id = ${id}`;
     await atualizarDoDataJud(captura, orgId, id);
     expect(await json(call(`/processos/${id}`))).toMatchObject({ orgao: "2ª Vara Cível", comarca: "Joinville" });
+  });
+
+  test("a ficha diz quando o tribunal mandou o processo ao DataJud (a fonte vai na tela)", async () => {
+    const { id } = (await t.owner<{ id: string }[]>`select id from processos where cnj = ${CNJ}`)[0]!;
+    await atualizarDoDataJud(captura, orgId, id);
+    const ficha = await json(call(`/processos/${id}`));
+    expect(ficha.datajudAtualizadoEm).toBe("2026-10-16T08:00:00.000Z");
+    expect(ficha.datajudEm).not.toBeNull();
+  });
+
+  test("até quando o DataJud tem dados do tribunal: conferido pela rotina, vai na ficha", async () => {
+    const { id } = (await t.owner<{ id: string }[]>`select id from processos where cnj = ${CNJ}`)[0]!;
+    expect((await json(call(`/processos/${id}`))).datajudAte).toBeNull();
+    expect(await conferirDataJudDoEscritorio(captura, orgId)).toEqual({ TJSC: "2026-10-16T21:20:30.894Z" });
+    expect((await json(call(`/processos/${id}`))).datajudAte).toBe("2026-10-16T21:20:30.894Z");
+    // DataJud fora do ar: a última conferência continua valendo.
+    fora.add("api-publica.datajud.cnj.jus.br");
+    expect(await conferirDataJudDoEscritorio(captura, orgId)).toEqual({ TJSC: "2026-10-16T21:20:30.894Z" });
+    fora.delete("api-publica.datajud.cnj.jus.br");
   });
 
   test("publicação nova de um processo sem a outra parte traz as partes para a ficha", async () => {

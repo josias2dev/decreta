@@ -75,9 +75,17 @@
 .dc-link { font: 500 14px/20px var(--font-sans); color: var(--acento); text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; }
 .dc-link:hover { color: var(--tinta); }
 
+/* Listas no celular: um ponto menor que no computador, para caber mais sem apertar (Hoje, Prazos, Publicações e as outras). */
+.dc-celular .dc-item__titulo, .dc-celular .dc-cartao__titulo { font-size: 14px; line-height: 19px; }
+.dc-celular .dc-item__meta, .dc-celular .dc-cartao__linha { font-size: 13px; line-height: 18px; }
+.dc-celular .dc-item__pe { font-size: 12px; line-height: 16px; }
+.dc-celular .dc-secao__titulo { font-size: 16px; line-height: 22px; }
+.dc-celular .dc-secao__topo .dc-link { font-size: 13px; line-height: 18px; }
+.dc-celular .dc-chips .dc-chip, .dc-celular .dc-filtros .dc-chip { height: 30px; padding: 0 11px; }
+
 /* Números do dia no celular: um card, 5 colunas, número em cima e rótulo de uma linha. */
 .dc-celular .dc-numeros--dia .dc-contador { align-items: center; gap: 0; padding: 10px 2px 9px; text-align: center; }
-.dc-celular .dc-numeros--dia .dc-contador__n { font-size: 22px; line-height: 28px; }
+.dc-celular .dc-numeros--dia .dc-contador__n { font-size: 20px; line-height: 26px; }
 .dc-celular .dc-numeros--dia .dc-contador__rotulo { order: 0; white-space: nowrap; align-items: center; gap: 4px; max-width: 100%; font-size: 11.5px; line-height: 16px; }
 .dc-celular .dc-numeros--dia .dc-contador__rotulo::before { margin-top: 0; width: 5px; height: 5px; }
 
@@ -104,6 +112,40 @@
 .dc-faixa--erro { background: var(--vencido-suave); color: var(--vencido); }
 .dc-faixa--ok { background: var(--cumprido-suave); color: var(--cumprido); }
 .dc-faixa--ia { background: var(--acento-suave); color: var(--acento); }
+
+/* Uso de IA nos casos do cliente: a recusa (Recomendação CFOAB 001/2024) */
+.dc-uso-ia { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+.dc-uso-ia p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--tinta-2); }
+.dc-celular .dc-uso-ia p { font-size: 15px; line-height: 22px; }
+
+/* Documento com texto escondido ou frase dirigida a uma IA */
+.dc-leitura-com-alerta { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* Na lista do celular o selo vai em cima da leitura, para o nome não sumir. */
+.dc-linhas__item .dc-leitura-com-alerta { flex-direction: column; align-items: flex-end; gap: 2px; }
+.dc-faixa:has(> .dc-alerta-doc) { align-items: flex-start; }
+.dc-faixa:has(> .dc-alerta-doc) > svg { margin-top: 1px; }
+.dc-doc > .dc-faixa { flex: none; margin: var(--space-3) var(--space-4) 0; }
+.dc-alerta-doc ul { display: flex; flex-direction: column; gap: 2px; margin: 6px 0 0; padding: 0; list-style: none; font-weight: 400; }
+
+/* A conta do prazo e a segunda conferência da sugestão */
+.dc-conta { display: flex; flex-direction: column; gap: var(--space-3); }
+.dc-conferencia { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.dc-conferencia p, .dc-conferencia ul { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--tinta); }
+.dc-conferencia ul { padding-left: 18px; }
+.dc-celular .dc-conferencia p, .dc-celular .dc-conferencia ul { font-size: 15px; line-height: 22px; }
+.dc-conta__tempestividade { display: flex; flex-direction: column; gap: var(--space-2); border-top: 1px solid var(--borda); padding-top: var(--space-3); }
+.dc-conta__tempestividade summary { cursor: pointer; font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-conta__tempestividade[open] { align-items: flex-start; }
+.dc-conta__tempestividade p { margin: 0; font: 400 14px/22px var(--font-sans); color: var(--tinta); }
+
+/* Captura do DJEN: um tribunal por linha, o selo à direita */
+.dc-captura { display: flex; flex-direction: column; gap: var(--space-3); }
+.dc-captura__lista { list-style: none; margin: 0; padding: 0; border: 1px solid var(--borda); border-radius: var(--radius-md); }
+.dc-captura__tribunal { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: 10px var(--space-3); }
+.dc-captura__tribunal + .dc-captura__tribunal { border-top: 1px solid var(--borda); }
+.dc-captura__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dc-captura__texto strong { font: 600 14px/20px var(--font-sans); }
+.dc-captura__erro { color: var(--vencido); }
 .dc-faixa svg { width: 16px; height: 16px; flex: none; }
 /* O que o tribunal mandou, no Novo processo */
 .dc-consulta { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--borda); border-radius: var(--radius-md); background: var(--superficie); }
@@ -254,6 +296,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-pub__selo--sem_teor { color: var(--hoje); }
 .dc-pub__selo--erro { color: var(--vencido); }
 .dc-pub__selo--lendo { color: var(--tinta-3); }
+.dc-pub__selo--sem_ia { color: var(--tinta-2); }
 .dc-celular .dc-pub { padding: 14px var(--space-4); }
 .dc-celular .dc-pub__titulo { font-size: 15px; }
 .dc-celular .dc-pub__partes { font-size: 14px; line-height: 20px; }
@@ -364,6 +407,29 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-celular .dc-conferencia__texto { font-size: 15px; line-height: 22px; }
 .dc-celular .dc-conferencia__texto strong { font-size: 15px; line-height: 22px; }
 
+/* ---------- Limites da IA à vista ---------- */
+.dc-aviso-limite { display: flex; align-items: flex-start; gap: 6px; margin: 0; font: 500 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-aviso-limite svg { flex: none; width: 14px; height: 14px; margin-top: 2px; color: var(--breve); }
+.dc-uso-hoje { display: flex; flex-direction: column; gap: var(--space-3); }
+.dc-uso-hoje__linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 6px var(--space-3); font: 400 14px/20px var(--font-sans); color: var(--tinta-2); }
+.dc-uso-hoje__linha strong { font-weight: 600; color: var(--tinta); }
+.dc-uso-hoje__barra { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--superficie-2); overflow: hidden; }
+.dc-uso-hoje__barra > span { display: block; height: 100%; background: var(--acento); transform-origin: left; }
+.dc-celular .dc-uso-hoje__linha { font-size: 15px; line-height: 22px; }
+
+/* ---------- Registro de revisão da peça ---------- */
+.dc-revisoes { margin: 0; padding: 0 var(--space-4); list-style: none; }
+.dc-revisoes li { display: grid; grid-template-columns: 16px minmax(0, 1fr); align-items: start; gap: 4px var(--space-3); padding: 12px 0 8px; }
+.dc-revisoes li + li { border-top: 1px solid var(--borda); }
+.dc-revisoes li > svg { width: 16px; height: 16px; margin-top: 2px; color: var(--acento); }
+.dc-revisoes li > .dc-btn { grid-column: 2; justify-self: start; margin-left: -10px; }
+.dc-revisoes__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; font: 400 13px/19px var(--font-sans); color: var(--tinta-2); }
+.dc-revisoes__texto strong { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-celular .dc-revisoes__texto { font-size: 14px; line-height: 20px; }
+.dc-dialogo--versoes { width: min(760px, calc(100vw - 32px)); }
+.dc-dialogo--versoes > .dc-segmentos { align-self: flex-start; }
+.dc-versao { border-radius: var(--radius-md); }
+
 /* Rodapé da peça: o aviso da IA e o retorno */
 .dc-peca__pe { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); padding: 6px var(--space-4); border-top: 1px solid var(--borda); font: 400 12px/16px var(--font-sans); color: var(--tinta-2); }
 .dc-peca__pe > span:first-child { flex: 1 1 0; min-width: 0; }
@@ -376,6 +442,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-peca__lado { min-height: 0; overflow-y: auto; }
 .dc-peca__rascunho { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .dc-peca__rascunho > * { flex: none; }
+.dc-peca__lacunas { padding: var(--space-3) var(--space-4) 0; }
 .dc-peca__rascunho > .dc-folha-fundo { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .dc-peca__rascunho > .dc-folha-fundo > .dc-folha { margin: 0 auto; }
 /* O rodapé tem a altura de quando mostra o retorno, para o papel não pular ao editar. */
@@ -585,6 +652,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-chat__balao { padding: 10px 14px; border-radius: 18px 18px 4px 18px; background: var(--primaria); color: var(--on-primaria); font: 400 14.5px/22px var(--font-sans); white-space: pre-wrap; overflow-wrap: anywhere; }
 .dc-chat__hora { font: 400 11.5px/16px var(--font-sans); color: var(--tinta-3); }
 .dc-chat__resposta { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+/* Enquanto a resposta chega, uma folga embaixo: a linha nova aparece acima da borda, sem sumir no quadro em que chega. */
+.dc-chat__resposta[aria-busy="true"] { padding-bottom: 72px; }
 .dc-chat__autor { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; min-height: 24px; }
 .dc-chat__cartoes { display: grid; gap: var(--space-3); min-width: 0; container-type: inline-size; }
 .dc-chat__pe { display: flex; align-items: center; gap: var(--space-2); margin: -4px 0 0 -10px; }
@@ -653,13 +722,23 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-cartao-ia__topo h3 { margin: 0; font: 600 14px/20px var(--font-sans); color: var(--tinta); white-space: nowrap; }
 .dc-cartao-ia__n { font: 500 12.5px/16px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-cartao-ia__acao { margin-left: auto; flex: none; }
-/* Enquanto a resposta chega, o cartão fica só com o topo (abre no fim, ou antes, pela seta). */
-.dc-cartao-ia.is-recolhido .dc-cartao-ia__topo { border-bottom: 0; }
-.dc-cartao-ia__abrir { display: grid; place-items: center; flex: none; width: 28px; height: 28px; margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--tinta-2); cursor: pointer; }
-.dc-cartao-ia__acao + .dc-cartao-ia__abrir { margin-left: 0; }
-.dc-cartao-ia__abrir:hover { background: var(--superficie-2); color: var(--tinta); }
-.dc-cartao-ia__abrir:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
-.dc-cartao-ia__abrir svg { width: 16px; height: 16px; }
+/* Na conversa, o cartão é uma linha de acesso: ícone, título e resumo. O conteúdo abre numa folha. */
+.dc-acesso-ia { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 56px; padding: 8px var(--space-3) 8px var(--space-4); box-sizing: border-box; text-align: left; font: inherit; color: var(--tinta); cursor: pointer; transition: border-color .15s, background-color .15s, box-shadow .15s; }
+.dc-acesso-ia:hover { border-color: var(--borda-forte); background: color-mix(in srgb, var(--superficie-2) 50%, var(--superficie)); }
+.dc-acesso-ia:active { background: var(--superficie-2); }
+.dc-acesso-ia:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--anel); }
+.dc-acesso-ia > svg:first-child { width: 18px; height: 18px; flex: none; color: var(--acento); }
+.dc-acesso-ia__texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.dc-acesso-ia__texto strong { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-acesso-ia__texto span { font: 400 13px/18px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-acesso-ia__seta { width: 16px; height: 16px; flex: none; color: var(--tinta-3); transition: transform .15s; }
+.dc-acesso-ia:hover .dc-acesso-ia__seta { transform: translateX(2px); color: var(--tinta-2); }
+/* A folha do cartão: o conteúdo de ponta a ponta, sem a moldura; a largura da folha decide a forma das linhas, como a da conversa. */
+.dc-dialogo--cartao { width: min(680px, calc(100vw - 32px)); padding-left: 0; padding-right: 0; container-type: inline-size; }
+.dc-dialogo--cartao > :not(.dc-cartao-ia) { padding-left: var(--space-5); padding-right: var(--space-5); }
+.dc-dialogo--cartao.dc-celular { padding-left: 0; padding-right: 0; }
+.dc-dialogo--cartao.dc-celular > :not(.dc-cartao-ia) { padding-left: var(--space-4); padding-right: var(--space-4); }
+.dc-cartao-ia--na-folha { flex: none; overflow: visible; border: 0; border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); border-radius: 0; box-shadow: none; }
 .dc-cartao-ia--falha .dc-cartao-ia__topo { border-bottom: 0; }
 .dc-cartao-ia--falha .dc-cartao-ia__topo > svg { color: var(--hoje); }
 .dc-cartao-ia--falha .dc-cartao-ia__topo h3 { font-weight: 500; color: var(--tinta-2); white-space: normal; }

@@ -1,0 +1,117 @@
+{
+  "path": "/publicacoes/saude",
+  "corpo": {
+    "tribunais": [
+      {
+        "tribunal": "TJSC",
+        "ultimo": {
+          "dia": "2026-10-29",
+          "situacao": "lido",
+          "erro": null,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "lido": {
+          "dia": "2026-10-29",
+          "versao": 1,
+          "total": 27041,
+          "casadas": 7,
+          "canceladas": 0,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "envio": "2026-10-29"
+      },
+      {
+        "tribunal": "TRF4",
+        "ultimo": {
+          "dia": "2026-10-29",
+          "situacao": "lido",
+          "erro": null,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "lido": {
+          "dia": "2026-10-29",
+          "versao": 1,
+          "total": 6312,
+          "casadas": 0,
+          "canceladas": 0,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "envio": "2026-10-29"
+      },
+      {
+        "tribunal": "TRT12",
+        "ultimo": {
+          "dia": "2026-10-29",
+          "situacao": "lido",
+          "erro": null,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "lido": {
+          "dia": "2026-10-29",
+          "versao": 1,
+          "total": 9008,
+          "casadas": 1,
+          "canceladas": 0,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "envio": "2026-10-29"
+      },
+      {
+        "tribunal": "STF",
+        "ultimo": {
+          "dia": "2026-10-29",
+          "situacao": "lido",
+          "erro": null,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "lido": {
+          "dia": "2026-10-29",
+          "versao": 1,
+          "total": 1987,
+          "casadas": 0,
+          "canceladas": 0,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "envio": null
+      },
+      {
+        "tribunal": "STJ",
+        "ultimo": {
+          "dia": "2026-10-29",
+          "situacao": "lido",
+          "erro": null,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "lido": {
+          "dia": "2026-10-29",
+          "versao": 1,
+          "total": 11420,
+          "casadas": 0,
+          "canceladas": 0,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "envio": "2026-10-29"
+      },
+      {
+        "tribunal": "TST",
+        "ultimo": {
+          "dia": "2026-10-29",
+          "situacao": "lido",
+          "erro": null,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "lido": {
+          "dia": "2026-10-29",
+          "versao": 1,
+          "total": 4115,
+          "casadas": 0,
+          "canceladas": 0,
+          "em": "2026-10-29T07:31:00.000Z"
+        },
+        "envio": "2026-10-29"
+      }
+    ],
+    "alertas": [],
+    "semProcesso": 0
+  }
+}

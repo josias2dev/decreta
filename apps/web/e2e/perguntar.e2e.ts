@@ -4,7 +4,7 @@
  * resposta nova chega aos poucos, uma linha JSON por acontecimento.
  */
 import { expect, test } from "@playwright/test";
-import { abrir, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
+import { abrir, abrirCartao, acessoAoCartao, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
 
 const comIa = () => new ApiFalsa().responder("/eu", euComIa);
 const prazoDa = (tipo: string) => (amostras.prazos!.corpo.itens as { id: string; tipo: string }[]).find((p) => p.tipo === tipo)!.id;
@@ -28,7 +28,7 @@ test.describe("no computador", () => {
     await expect.poll(() => api.mudancas("/ia/perguntar")[0]?.corpo).toMatchObject({ texto: "Como está o meu dia?", modo: "pergunte" });
     await expect(page).toHaveURL(new RegExp(`/perguntar/${ids.conversaNova}$`));
     await expect(page.getByText("Dos seus 16 prazos abertos, nenhum está atrasado.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "O escritório agora" })).toBeVisible();
+    await expect(acessoAoCartao(page, "O escritório agora")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Resumo do dia" })).toBeVisible();
   });
 
@@ -62,13 +62,43 @@ test.describe("no computador", () => {
     await expect(page.getByRole("button", { name: "Tentar de novo" })).toHaveCount(0);
   });
 
+  test("perto do limite: o aviso aparece em cima do campo antes de barrar, e a conta é pedida de novo a cada mensagem", async ({ page }) => {
+    const api = comIa().responder("/ia/uso", { mensagens: { restam: 3, limite: 150 }, gasto: 0.4, aviso: "Restam 3 mensagens hoje no chat da IA." });
+    await abrir(page, "/perguntar", api);
+    await expect(page.locator(".dc-compositor").getByRole("status")).toHaveText("Restam 3 mensagens hoje no chat da IA.");
+    const pedidosDoUso = () => api.pedidos.filter((p) => p.metodo === "GET" && p.caminho === "/ia/uso").length;
+    const antes = pedidosDoUso();
+    await page.getByRole("button", { name: /Prazos da semana/ }).click();
+    await expect.poll(pedidosDoUso).toBeGreaterThan(antes);
+  });
+
+  test("resposta com cartão: o texto vem primeiro, e o cartão é uma linha que abre o conteúdo numa folha", async ({ page }) => {
+    await abrir(page, `/perguntar/${ids.conversaSemana}`, comIa());
+    const acesso = acessoAoCartao(page, "Prazos");
+    const resposta = page.locator(".dc-chat__resposta").filter({ has: acesso });
+    await expect(acesso).toBeVisible();
+    const texto = resposta.locator(".dc-md").first();
+    expect((await texto.boundingBox())!.y).toBeLessThan((await acesso.boundingBox())!.y);
+    expect((await acesso.boundingBox())!.height).toBeLessThan(80);
+    // Na conversa, só a linha: a lista de prazos fica na folha.
+    await expect(resposta.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toHaveCount(0);
+    await acesso.click();
+    const folha = page.getByRole("dialog", { name: "Prazos" });
+    await expect(folha.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(folha.getByRole("link", { name: /Prazos/ })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(folha).toBeHidden();
+  });
+
   test("cartão de prazos: marcar cumprido e os links da resposta abrem as telas", async ({ page }) => {
     const api = await abrir(page, `/perguntar/${ids.conversaSemana}`, comIa());
     await expect(page.getByRole("heading", { level: 1, name: "Prazos desta semana" })).toBeVisible();
     const contestacao = prazoDa("Contestação trabalhista");
-    await page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" }).click();
+    const folha = await abrirCartao(page, "Prazos");
+    await folha.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" }).click();
     await expect.poll(() => api.mudancas(`/prazos/${contestacao}/cumprir`).length).toBe(1);
-    await expect(page.getByRole("button", { name: "Desfazer: Contestação trabalhista" })).toBeVisible();
+    await expect(folha.getByRole("button", { name: "Desfazer: Contestação trabalhista" })).toBeVisible();
+    await page.keyboard.press("Escape");
     await page.getByRole("link", { name: "réplica da Ana Lúcia Ferraz" }).click();
     await expect(page).toHaveURL(new RegExp(`/prazos/${prazoDa("Réplica à contestação")}$`));
   });
@@ -145,11 +175,19 @@ test.describe("no celular", () => {
     expect(await sobraNaLateral(page)).toBe(0);
   });
 
-  test("conversa aberta: cartões dentro da tela e as conversas na gaveta", async ({ page }) => {
+  test("conversa aberta: o cartão é uma linha que abre a folha de baixo, e as conversas na gaveta", async ({ page }) => {
     await abrir(page, `/perguntar/${ids.conversaSemana}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    const acesso = acessoAoCartao(page, "Prazos");
+    await expect(acesso).toBeVisible();
+    expect((await acesso.boundingBox())!.height).toBeLessThan(80);
     await expect(page.getByRole("textbox", { name: "Pergunta" })).toBeInViewport();
     expect(await sobraNaLateral(page)).toBe(0);
+    await acesso.tap();
+    const folha = page.getByRole("dialog", { name: "Prazos" });
+    await expect(folha.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeInViewport();
+    expect(await sobraNaLateral(page)).toBe(0);
+    await page.keyboard.press("Escape");
+    await expect(folha).toBeHidden();
     await page.getByRole("button", { name: "Conversas" }).tap();
     const gaveta = page.getByRole("dialog", { name: "Conversas" });
     await gaveta.getByRole("link", { name: "Processo da Marina Duarte" }).tap();

@@ -95,14 +95,18 @@ function caixaDeFrase(s: string): string {
   return baixa.charAt(0).toLocaleUpperCase("pt-BR") + baixa.slice(1);
 }
 
+/** O DataJud tem movimentos com ano 2999 ou 3020: data depois de amanhã é erro de cadastro e não entra. */
+const FOLGA_NO_FUTURO_MS = 2 * 24 * 60 * 60 * 1000;
+
 export function lerProcessoDataJud(bruto: unknown): ProcessoDataJud | null {
   const r = fonteSchema.safeParse(bruto);
   if (!r.success) return null;
   const p = r.data;
   const movimentos: MovimentoDataJud[] = [];
+  const limite = Date.now() + FOLGA_NO_FUTURO_MS;
   for (const m of p.movimentos ?? []) {
     const em = instante(m.dataHora);
-    if (!em || !m.nome) continue;
+    if (!em || !m.nome || Date.parse(em) > limite) continue;
     const complementos = (m.complementosTabelados ?? [])
       .map((c) => c.nome ?? c.descricao)
       .filter((x): x is string => !!x)
@@ -168,4 +172,28 @@ export async function buscarNoDataJud(cnj: string, opcoes: OpcoesDataJud): Promi
   const movimentos = new Map<string, MovimentoDataJud>();
   for (const l of lidos) for (const m of l.movimentos) movimentos.set(m.chave, m);
   return { ...primeiro, movimentos: [...movimentos.values()].sort((a, b) => a.em.localeCompare(b.em)) };
+}
+
+const ultimoSchema = z.object({ hits: z.object({ hits: z.array(z.object({ _source: z.object({ "@timestamp": z.string().optional() }).loose().optional() }).loose()) }).loose() }).loose();
+
+/**
+ * Até quando o índice do tribunal no DataJud tem dados: o maior `@timestamp`
+ * (qualquer número do tribunal serve). O tribunal manda as remessas com dias
+ * ou semanas de atraso; isto diz quanto. A consulta é lenta (passa de 10 s).
+ */
+export async function dataJudAtualizadoAte(cnj: string, opcoes: OpcoesDataJud): Promise<string | null> {
+  const indice = indiceDataJud(cnj);
+  if (!indice) throw new ErroDataJud(`tribunal sem índice no DataJud: ${cnj}`);
+  if (!opcoes.apiKey) throw new ErroDataJud("DATAJUD_API_KEY não configurada");
+  const fetchImpl = opcoes.fetch ?? fetch;
+  const res = await fetchImpl(`${DATAJUD_URL}/${indice}/_search`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `APIKey ${opcoes.apiKey}` },
+    body: JSON.stringify({ size: 1, sort: [{ "@timestamp": { order: "desc" } }], _source: ["@timestamp"], track_total_hits: false }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!res.ok) throw new ErroDataJud(`DataJud respondeu HTTP ${res.status}`, res.status);
+  const corpo = ultimoSchema.safeParse(await res.json().catch(() => null));
+  if (!corpo.success) throw new ErroDataJud("DataJud devolveu um formato desconhecido");
+  return instante(corpo.data.hits.hits[0]?._source?.["@timestamp"]);
 }

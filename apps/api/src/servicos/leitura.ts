@@ -4,9 +4,10 @@
  * que passa a servir para o resumo, o briefing, a conferência e a busca.
  */
 import { documentos, withTenant, type Database } from "@decreta/db";
-import { TETO_DO_TEXTO, type Armazenamento } from "@decreta/documentos";
+import { comandosParaIa, TETO_DO_TEXTO, type Armazenamento } from "@decreta/documentos";
 import { MIMES_PARA_LER, transcreverDocumento, type Ia } from "@decreta/ia";
 import { eq } from "drizzle-orm";
+import { semIa } from "./contexto.ts";
 
 /** Acima disso o gateway recusa o pedido: melhor dizer logo que não deu. */
 export const TETO_PARA_LER = 15 * 1024 * 1024;
@@ -28,8 +29,12 @@ interface Deps {
 
 /** Transcreve e grava. Devolve a leitura como ficou. */
 export async function lerDocumentoComIa(deps: Deps, organizationId: string, documentoId: string): Promise<"pronta" | "falhou" | "dispensada"> {
-  const [d] = await withTenant(deps.db, organizationId, (tx) => tx.select().from(documentos).where(eq(documentos.id, documentoId)));
-  if (!d || !deps.ia || !precisaDeLeitura(d.mime, d.texto)) {
+  const [d, recusou] = await withTenant(deps.db, organizationId, async (tx) => {
+    const [doc] = await tx.select().from(documentos).where(eq(documentos.id, documentoId));
+    return [doc, !!doc && (await semIa(tx, doc))] as const;
+  });
+  // Cliente que recusou a IA: a foto fica guardada, sem leitura.
+  if (!d || !deps.ia || recusou || !precisaDeLeitura(d.mime, d.texto)) {
     if (d?.leitura === "pendente") await withTenant(deps.db, organizationId, (tx) => tx.update(documentos).set({ leitura: null }).where(eq(documentos.id, documentoId)));
     return "dispensada";
   }
@@ -49,7 +54,9 @@ export async function lerDocumentoComIa(deps: Deps, organizationId: string, docu
     const bytes = await deps.arquivos.read(d.chave);
     const texto = await transcreverDocumento(deps.ia, { bytes, mime: d.mime, nome: d.nome });
     // Texto vazio é leitura feita: a imagem não tem texto (uma foto do local, uma assinatura solta).
-    await gravar({ texto: texto.slice(0, TETO_DO_TEXTO), leitura: "pronta" });
+    // A foto também pode trazer frase dirigida a uma IA: vira alerta como no envio.
+    const comandos = comandosParaIa(texto).map((trecho) => ({ tipo: "comando_para_ia" as const, trecho }));
+    await gravar({ texto: texto.slice(0, TETO_DO_TEXTO), leitura: "pronta", alertas: [...d.alertas.filter((a) => a.tipo !== "comando_para_ia"), ...comandos] });
     return "pronta";
   } catch (err) {
     deps.log?.("leitura do documento falhou", { documentoId, error: err instanceof Error ? err.message : String(err) });

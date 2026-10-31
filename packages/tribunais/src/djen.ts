@@ -7,7 +7,9 @@
  * novo. Campo que mudar de nome não derruba a captura: o que não se lê fica
  * vazio, e a publicação chega com o texto que veio.
  */
+import { createHash } from "node:crypto";
 import { formatarCnj, limparCnj, nomeProprio } from "@decreta/core";
+import JSZip from "jszip";
 import { z } from "zod";
 
 export const DJEN_URL = "https://comunicaapi.pje.jus.br/api/v1/comunicacao";
@@ -32,6 +34,7 @@ const itemSchema = z
     nomeClasse: texto,
     hash: texto,
     ativo: z.boolean().optional(),
+    motivo_cancelamento: texto,
     destinatarios: z.array(z.object({ nome: texto, polo: texto }).loose()).optional().catch([]),
     destinatarioadvogados: z.array(z.object({ advogado: advogadoSchema.optional() }).loose()).optional().catch([]),
   })
@@ -59,6 +62,8 @@ export interface ComunicacaoDjen {
   link: string | null;
   destinatarios: { nome: string; polo?: string }[];
   advogados: { nome: string; oab?: string; uf?: string }[];
+  /** Identifica a comunicação na certidão de publicação do DJEN. */
+  hash?: string;
 }
 
 /** "28/10/2026" ou "2026-10-28..." → "2026-10-28". */
@@ -116,6 +121,7 @@ export function lerComunicacao(bruto: unknown): ComunicacaoDjen | null {
       .map((d) => d.advogado)
       .filter((a): a is z.infer<typeof advogadoSchema> => !!a?.nome)
       .map((a) => ({ nome: nomeProprio(a.nome!), oab: a.numero_oab, uf: a.uf_oab })),
+    ...(i.hash ? { hash: i.hash } : {}),
   };
 }
 
@@ -137,6 +143,8 @@ export interface OpcoesDjen {
   dormir?: (ms: number) => Promise<void>;
   /** Espera por página, em ms. */
   timeout?: number;
+  /** Caderno: a versão que já foi lida; a mesma versão não é baixada de novo. */
+  versaoLida?: number;
 }
 
 export class ErroDjen extends Error {
@@ -201,6 +209,123 @@ async function paginar(filtro: Record<string, string>, opcoes: OpcoesDjen): Prom
   }
   return saida;
 }
+
+/* ------------------------------------------------------------------ */
+
+export const DJEN_CADERNO_URL = "https://comunicaapi.pje.jus.br/api/v1/caderno";
+
+const cadernoSchema = z
+  .object({
+    status: texto,
+    versao: z.coerce.number(),
+    total_comunicacoes: z.coerce.number().optional(),
+    hash: z.string(),
+    url: z.string().url(),
+  })
+  .loose();
+
+export interface CadernoDjen {
+  tribunal: string;
+  /** AAAA-MM-DD da disponibilização. */
+  dia: string;
+  /** Sobe quando o tribunal cancela ou corrige comunicações do dia. */
+  versao: number;
+  total: number;
+  hash: string;
+}
+
+/** Comunicação que o tribunal cancelou depois de disponibilizar. */
+export interface CanceladaNoDjen {
+  idExterno: string;
+  motivo: string | null;
+}
+
+/**
+ * O caderno do dia de um tribunal: todas as comunicações disponibilizadas
+ * naquele dia, num ZIP com um JSON por página, no mesmo formato da consulta.
+ * Sai a partir das 03:00. O ZIP é conferido pelo SHA-256 anunciado e lido um
+ * arquivo por vez (o do TJSC passa de 50 MB aberto). Dia sem caderno (fim de
+ * semana, feriado, ainda não saiu): null. A versão sobe quando o tribunal
+ * cancela ou corrige: com `versaoLida`, só a versão nova é baixada.
+ */
+export async function lerCaderno(
+  tribunal: string,
+  dia: string,
+  aoLer: (lote: ComunicacaoDjen[], canceladas: CanceladaNoDjen[]) => Promise<void>,
+  opcoes: OpcoesDjen = {},
+): Promise<CadernoDjen | null> {
+  const fetchImpl = opcoes.fetch ?? fetch;
+  /** Para as mensagens de erro, que vão à tela: 29/10/2026. */
+  const quando = dia.split("-").reverse().join("/");
+  const res = await fetchImpl(`${DJEN_CADERNO_URL}/${tribunal}/${dia}/D`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(opcoes.timeout ?? 30_000) });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ErroDjen(`DJEN respondeu HTTP ${res.status} ao caderno ${tribunal} de ${quando}`, res.status);
+  const meta = cadernoSchema.safeParse(await res.json().catch(() => null));
+  if (!meta.success) throw new ErroDjen(`DJEN devolveu o caderno ${tribunal} de ${quando} num formato desconhecido`);
+  if (meta.data.status && meta.data.status !== "Processado") return null;
+  const caderno = { tribunal, dia, versao: meta.data.versao, total: meta.data.total_comunicacoes ?? 0 };
+  if (opcoes.versaoLida != null && meta.data.versao <= opcoes.versaoLida) return { ...caderno, hash: meta.data.hash.toLowerCase() };
+
+  const arquivo = await fetchImpl(meta.data.url, { signal: AbortSignal.timeout(120_000) });
+  if (!arquivo.ok) throw new ErroDjen(`o arquivo do caderno ${tribunal} de ${quando} respondeu HTTP ${arquivo.status}`, arquivo.status);
+  const bytes = new Uint8Array(await arquivo.arrayBuffer());
+  const hash = createHash("sha256").update(bytes).digest("hex");
+  if (hash !== meta.data.hash.toLowerCase()) throw new ErroDjen(`o caderno ${tribunal} de ${quando} não bate com o hash anunciado`);
+
+  const zip = await JSZip.loadAsync(bytes);
+  const nomes = Object.values(zip.files)
+    .filter((f) => !f.dir && f.name.endsWith(".json"))
+    .map((f) => f.name)
+    .sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+  for (const nome of nomes) {
+    const corpo = respostaSchema.safeParse(JSON.parse(await zip.files[nome]!.async("string")));
+    if (!corpo.success) throw new ErroDjen(`o arquivo ${nome} do caderno ${tribunal} de ${quando} veio num formato desconhecido`);
+    const lote = corpo.data.items.map(lerComunicacao).filter((c): c is ComunicacaoDjen => !!c);
+    const canceladas = corpo.data.items
+      .map((bruto) => itemSchema.safeParse(bruto).data)
+      .filter((i) => i?.ativo === false)
+      .map((i) => ({ idExterno: i!.id, motivo: i!.motivo_cancelamento ?? null }));
+    if (lote.length || canceladas.length) await aoLer(lote, canceladas);
+  }
+  return { ...caderno, hash };
+}
+
+/**
+ * A certidão de publicação que o próprio DJEN emite, em PDF: prova a data em
+ * que a comunicação foi disponibilizada. Comunicação desconhecida: null.
+ */
+export async function certidaoDoDjen(hash: string, opcoes: OpcoesDjen = {}): Promise<Uint8Array | null> {
+  const fetchImpl = opcoes.fetch ?? fetch;
+  const res = await fetchImpl(`${DJEN_URL}/${encodeURIComponent(hash)}/certidao`, { headers: { accept: "application/pdf" }, signal: AbortSignal.timeout(opcoes.timeout ?? 30_000) });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ErroDjen(`DJEN respondeu HTTP ${res.status} à certidão`, res.status);
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (new TextDecoder().decode(bytes.subarray(0, 5)) !== "%PDF-") throw new ErroDjen("a certidão do DJEN não veio em PDF");
+  return bytes;
+}
+
+const enviosSchema = z.array(z.object({ instituicoes: z.array(z.object({ sigla: z.string(), dataUltimoEnvio: z.string().nullish() })) }));
+
+/**
+ * Quando cada tribunal enviou comunicações ao DJEN pela última vez
+ * ("TJSC" → "2026-10-30"), para a saúde da captura separar o tribunal que não
+ * enviou do caderno que não deu para ler. Uma chamada serve a todos.
+ */
+export async function ultimosEnviosAoDjen(opcoes: OpcoesDjen = {}): Promise<Map<string, string>> {
+  const fetchImpl = opcoes.fetch ?? fetch;
+  const res = await fetchImpl(`${DJEN_URL}/tribunal`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(opcoes.timeout ?? 30_000) });
+  if (!res.ok) throw new ErroDjen(`DJEN respondeu HTTP ${res.status} à lista de tribunais`, res.status);
+  const lista = enviosSchema.safeParse(await res.json().catch(() => null));
+  if (!lista.success) throw new ErroDjen("DJEN devolveu a lista de tribunais num formato desconhecido");
+  const envios = new Map<string, string>();
+  for (const t of lista.data.flatMap((uf) => uf.instituicoes)) {
+    const dia = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t.dataUltimoEnvio ?? "");
+    if (dia) envios.set(t.sigla, `${dia[3]}-${dia[2]}-${dia[1]}`);
+  }
+  return envios;
+}
+
+/* ------------------------------------------------------------------ */
 
 export interface AdvogadoDjen {
   nome: string;

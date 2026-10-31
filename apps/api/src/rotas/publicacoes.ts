@@ -6,7 +6,9 @@ import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { naTela, ultimaAnalise } from "../servicos/analises.ts";
+import { certidaoDaPublicacao, saudeDaCaptura } from "../servicos/captura.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
+import { semIa } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
@@ -17,8 +19,9 @@ const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
 type Situacao = (typeof SITUACOES)[number];
 
 /** O selo da lista: o que a IA achou, numa linha. */
-export function seloDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined): { tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro"; texto: string } {
-  if (!a) return { tipo: "lendo", texto: "IA lendo" };
+export function seloDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, semIa = false): { tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro" | "sem_ia"; texto: string } {
+  // Cliente que recusou a IA: a rotina de fundo não lê, e a pessoa trata à mão.
+  if (!a) return semIa ? { tipo: "sem_ia", texto: "Cliente sem IA" } : { tipo: "lendo", texto: "IA lendo" };
   if (a.situacao === "recusa") return { tipo: "sem_teor", texto: "Falta o teor: abrir no sistema do tribunal" };
   if (a.situacao === "erro") return { tipo: "erro", texto: "A IA não conseguiu ler" };
   const s = a.conteudo as Partial<SugestaoNaTela>;
@@ -35,6 +38,8 @@ const confirmacao = z.object({
   contagem: z.enum(["uteis", "corridos"]),
   responsavelId: z.string().min(1).nullable().optional(),
   fimManual: z.string().refine(ehDia).nullable().optional(),
+  /** Dupla intimação: o dia em que o sistema do tribunal intimou também. */
+  intimadoNoSistemaEm: z.string().refine(ehDia).nullable().optional(),
 });
 
 export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
@@ -46,7 +51,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return tenant(c, deps, async (tx) => {
       const contagens = await tx.select({ situacao: publicacoes.situacao, n: sql<number>`count(*)::int` }).from(publicacoes).groupBy(publicacoes.situacao);
       const linhas = await tx
-        .select({ pub: publicacoes, processo: { id: processos.id, titulo: processos.titulo } })
+        .select({ pub: publicacoes, processo: { id: processos.id, titulo: processos.titulo }, semIa: sql<boolean>`coalesce((select c.sem_ia from clientes c where c.id = ${processos.clienteId}), false)` })
         .from(publicacoes)
         .leftJoin(processos, eq(processos.id, publicacoes.processoId))
         .where(eq(publicacoes.situacao, situacao))
@@ -65,7 +70,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       return c.json({
         contagens: Object.fromEntries(SITUACOES.map((s) => [s, contagens.find((x) => x.situacao === s)?.n ?? 0])),
         ultimaCaptura: rodada ? { em: rodada.terminadaEm!.toISOString(), hora: horaLocal(rodada.terminadaEm!, c.get("timezone")), novas: rodada.novas, erro: rodada.erro } : null,
-        itens: linhas.map(({ pub, processo }) => {
+        itens: linhas.map(({ pub, processo, semIa: recusou }) => {
           const s = ultima.get(pub.id);
           const assunto = s?.situacao === "pronto" ? (s.conteudo as { assunto?: string }).assunto : s?.situacao === "recusa" ? "sem teor" : null;
           return {
@@ -74,10 +79,33 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
             disponibilizadaEm: pub.disponibilizadaEm,
             partes: processo?.titulo ?? (pub.destinatarios.map((d) => d.nome).join(" × ") || pub.cnj || "Sem processo vinculado"),
             processoId: processo?.id ?? null,
-            selo: seloDaSugestao(s),
+            selo: pub.canceladaEm ? { tipo: "erro" as const, texto: "Cancelada pelo tribunal" } : seloDaSugestao(s, recusou),
           };
         }),
       });
+    });
+  });
+
+  app.get("/publicacoes/saude", async (c) => tenant(c, deps, async (tx) => c.json(await saudeDaCaptura(tx, hojeEm(c.get("timezone"))))));
+
+  /** A certidão de publicação do DJEN, a prova da data. A captura já guarda; se ainda não guardou, baixa agora. */
+  app.get("/publicacoes/:id/certidao", async (c) => {
+    const pubId = id(c);
+    const orgId = c.get("orgId");
+    const [pub] = await tenant(c, deps, (tx) => tx.select({ idExterno: publicacoes.idExterno }).from(publicacoes).where(eq(publicacoes.id, pubId)));
+    if (!pub) falha(404, "nao_encontrado");
+    const bytes = await certidaoDaPublicacao({ db, arquivos: deps.arquivos, fetch: deps.captura.fetch }, orgId, pubId).catch((err: unknown) => {
+      deps.log("certidão do DJEN falhou", { organizationId: orgId, publicacaoId: pubId, error: err instanceof Error ? err.message : String(err) });
+      return falha(503, "djen_fora", "O DJEN não entregou a certidão agora. Tente de novo em alguns minutos.");
+    });
+    if (!bytes) falha(404, "sem_certidao", "Esta publicação não tem certidão no DJEN.");
+    return new Response(bytes, {
+      headers: {
+        "content-type": "application/pdf",
+        "content-disposition": `inline; filename="certidao-djen-${pub.idExterno}.pdf"`,
+        "cache-control": "private, no-store",
+        "x-content-type-options": "nosniff",
+      },
     });
   });
 
@@ -107,9 +135,12 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         cnj: pub.cnj,
         texto: pub.texto,
         link: pub.link,
+        /** Dá para abrir a certidão de publicação do DJEN. */
+        certidao: !!(pub.certidao || pub.hash),
+        cancelada: pub.canceladaEm ? { em: pub.canceladaEm.toISOString(), motivo: pub.motivoCancelamento } : null,
         destinatarios: pub.destinatarios,
         advogados: pub.advogados,
-        processo: processo ? { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, classe: processo.classe, orgao: processo.orgao, comarca: processo.comarca, responsavel: resumir(pessoas, processo.responsavelId) } : null,
+        processo: processo ? { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, classe: processo.classe, orgao: processo.orgao, comarca: processo.comarca, responsavel: resumir(pessoas, processo.responsavelId), semIa: await semIa(tx, { processoId: processo.id }) } : null,
         sugestao: sugestao && { ...sugestao, responsavel: resumir(pessoas, conteudo?.responsavelId ?? processo?.responsavelId) },
         prazo: prazo ? { id: prazo.id, confirmado: !!prazo.confirmadoEm, fim: prazo.fim, tipo: prazo.tipo } : null,
         audiencia: audiencia ? { id: audiencia.id, em: audiencia.em.toISOString(), tipo: audiencia.tipo } : null,
@@ -186,7 +217,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       if (!processoId) falha(422, "sem_processo", "Vincule a publicação a um processo antes de confirmar o prazo.");
       const [proc] = await tx.select({ responsavelId: processos.responsavelId }).from(processos).where(eq(processos.id, processoId));
       if (!proc) falha(404, "processo_nao_encontrado");
-      const conta = await contarParaProcesso(tx, c.get("orgId"), processoId, { publicacao: pub.publicadaEm, dias: b.dias, contagem: b.contagem });
+      const conta = await contarParaProcesso(tx, c.get("orgId"), processoId, { publicacao: pub.publicadaEm, intimacaoNoSistema: b.intimadoNoSistemaEm, dias: b.dias, contagem: b.contagem });
       const [existente] = await tx.select().from(prazos).where(eq(prazos.publicacaoId, pub.id));
       const valores = {
         processoId,
@@ -195,8 +226,10 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         dias: b.dias,
         contagem: b.contagem,
         publicadoEm: pub.publicadaEm,
+        intimadoNoSistemaEm: b.intimadoNoSistemaEm ?? null,
         inicio: conta.inicio,
         fim: b.fimManual ?? conta.fim,
+        fimDigitado: !!b.fimManual,
         desconsiderados: b.fimManual ? [] : conta.desconsiderados,
         responsavelId: b.responsavelId === undefined ? (existente?.responsavelId ?? proc.responsavelId) : b.responsavelId,
         confirmadoPor: c.get("userId"),

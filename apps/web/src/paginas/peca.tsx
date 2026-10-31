@@ -2,15 +2,16 @@
  * Gerar peça: escolhe o modelo, diz o que quer, a IA escreve no timbre e a
  * pessoa revisa, edita e baixa o DOCX.
  */
-import { blocos, trechos, type Bloco } from "@decreta/core";
+import { blocos, lacunas, trechos, type Bloco } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { BookMarked, Check, Download, FileText, Pencil, RefreshCw } from "lucide-react";
+import { BookMarked, Check, CircleAlert, Download, FileText, Pencil, RefreshCw } from "lucide-react";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
+import { RegistroDeRevisao } from "@/componentes/revisao-da-peca";
 import { Botao, Campo, Carregando, Cnj, Faixa, MarcaIa, Painel, RetornoDaIa, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -145,7 +146,7 @@ export function PecaPage() {
   }
 
   const p = prep.data;
-  const iaLigada = !!eu.data?.ia;
+  const iaLigada = !!eu.data?.ia && !p.processo.semIa;
   const timbre = escritorio.data?.timbre ?? { nome: eu.data?.escritorio.nome ?? "" };
   const docx = pecaId && texto && !gerando ? `${API_URL}/api/app/pecas/${pecaId}/docx` : undefined;
   const sobreOPrazo = p.prazo ? `Sugerido pelo prazo de ${diaCurto(p.prazo.fim)}` : "Escolha o modelo da peça";
@@ -157,6 +158,16 @@ export function PecaPage() {
     : null;
   const podeAvaliar = !!pecaId && !!texto && !gerando && edicao === null;
   const revisar = () => salvar.mutate({ situacao: "revisada" });
+  // Antes da revisão, o caminho é completar as lacunas e marcar como revisada; baixar vem depois.
+  const aRevisar = podeAvaliar && !revisada;
+  const faltam = aRevisar ? lacunas(texto) : 0;
+  const avisoDasLacunas = faltam > 0 && (
+    <Faixa tipo="aviso">
+      <CircleAlert />
+      <span>{faltam === 1 ? "Falta 1 lacuna no texto, marcada em amarelo." : `Faltam ${faltam} lacunas no texto, marcadas em amarelo.`} Complete antes de marcar como revisada.</span>
+    </Faixa>
+  );
+  const revisando = salvar.isPending && salvar.variables?.situacao === "revisada";
 
   const leu = (
     <ul className="dc-lista-check m-0 list-none p-0">
@@ -192,7 +203,7 @@ export function PecaPage() {
       {texto ? <RefreshCw /> : <FileText />} {gerando ? "Escrevendo…" : texto ? "Gerar de novo" : "Gerar peça"}
     </Botao>
   );
-  const semIa = !iaLigada && <Faixa tipo="aviso">A IA ainda não está ligada neste escritório. Dá para escrever a peça à mão e baixar no timbre.</Faixa>;
+  const semIa = !iaLigada && <Faixa tipo="aviso">{p.processo.semIa ? "O cliente não autorizou o uso de IA." : "A IA ainda não está ligada neste escritório."} Dá para escrever a peça à mão e baixar no timbre.</Faixa>;
 
   const folha =
     edicao !== null ? (
@@ -229,6 +240,7 @@ export function PecaPage() {
     </Dialogo>
   );
 
+  const registro = pecaId && pecaSalva.data && !gerando && <RegistroDeRevisao pecaId={pecaId} revisoes={pecaSalva.data.revisoes} hoje={eu.data?.hoje} folha={(t) => <Folha texto={t} timbre={timbre} />} />;
   const guardar = peca && pecaId && <GuardarComoModelo pecaId={pecaId} titulo={peca.titulo} aberto={guardando} aoFechar={() => setGuardando(false)} />;
   const pe = (solto: boolean) => (
     <div className={cn("dc-peca__pe", solto && "dc-peca__pe--solto")}>
@@ -246,6 +258,20 @@ export function PecaPage() {
         rodape={
           edicao !== null ? (
             <div className="dc-rodape__par">{acoesDaEdicao}</div>
+          ) : aRevisar ? (
+            <>
+              <Botao variante="primaria" bloco onClick={revisar} ocupado={revisando}>
+                <Check /> Marcar como revisada
+              </Botao>
+              <div className="dc-rodape__par">
+                <Botao bloco onClick={editar}>
+                  <Pencil /> Editar
+                </Botao>
+                <a className="dc-btn dc-btn--secundaria dc-btn--md dc-btn--bloco" href={docx} download>
+                  <Download /> Baixar DOCX
+                </a>
+              </div>
+            </>
           ) : texto && !gerando ? (
             <>
               <a className="dc-btn dc-btn--primaria dc-btn--md dc-btn--bloco" href={docx} download>
@@ -273,6 +299,31 @@ export function PecaPage() {
         }
       >
         {semIa}
+        {(texto || edicao !== null) && (
+          <section className="dc-secao">
+            <div className="dc-secao__topo">
+              <span className="inline-flex items-center gap-2 font-semibold">
+                <MarcaIa /> {gerando ? "Escrevendo…" : revisada ? "Peça revisada" : "Rascunho pronto"}
+              </span>
+              {quandoGerou && <span className="dc-nota">{quandoGerou}</span>}
+            </div>
+            {avisoDasLacunas}
+            <div className="dc-folha-fundo">{folha}</div>
+            {pe(true)}
+            {podeAvaliar && revisada && (
+              <>
+                {quemRevisou && (
+                  <Faixa tipo="ok">
+                    <Check /> {quemRevisou}
+                  </Faixa>
+                )}
+                <Botao bloco onClick={() => setGuardando(true)}>
+                  <BookMarked /> Guardar como modelo
+                </Botao>
+              </>
+            )}
+          </section>
+        )}
         <section className="dc-secao">
           <span className="dc-rotulo">Tipo de peça</span>
           <div className="dc-cartao" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -292,36 +343,9 @@ export function PecaPage() {
         <section className="dc-secao">
           <span className="dc-rotulo">Instruções</span>
           <div className="dc-campo">{campoInstrucoes}</div>
+          {aRevisar && iaLigada && botaoGerar(true)}
         </section>
-        {(texto || edicao !== null) && (
-          <section className="dc-secao">
-            <div className="dc-secao__topo">
-              <span className="inline-flex items-center gap-2 font-semibold">
-                <MarcaIa /> {gerando ? "Escrevendo…" : revisada ? "Peça revisada" : "Rascunho pronto"}
-              </span>
-              {quandoGerou && <span className="dc-nota">{quandoGerou}</span>}
-            </div>
-            <div className="dc-folha-fundo">{folha}</div>
-            {pe(true)}
-            {podeAvaliar &&
-              (revisada ? (
-                <>
-                  {quemRevisou && (
-                    <Faixa tipo="ok">
-                      <Check /> {quemRevisou}
-                    </Faixa>
-                  )}
-                  <Botao bloco onClick={() => setGuardando(true)}>
-                    <BookMarked /> Guardar como modelo
-                  </Botao>
-                </>
-              ) : (
-                <Botao bloco onClick={revisar} ocupado={salvar.isPending && salvar.variables?.situacao === "revisada"}>
-                  <Check /> Marcar como revisada
-                </Botao>
-              ))}
-          </section>
-        )}
+        {registro}
         {trocar}
         {guardar}
       </TelaCelular>
@@ -357,20 +381,24 @@ export function PecaPage() {
               acoesDaEdicao
             ) : (
               <>
-                {podeAvaliar &&
-                  (revisada ? (
-                    <Botao variante="fantasma" onClick={() => setGuardando(true)}>
-                      <BookMarked /> Guardar como modelo
-                    </Botao>
-                  ) : (
-                    <Botao variante="fantasma" onClick={revisar} ocupado={salvar.isPending && salvar.variables?.situacao === "revisada"}>
-                      <Check /> Marcar como revisada
-                    </Botao>
-                  ))}
+                {podeAvaliar && revisada && (
+                  <Botao variante="fantasma" onClick={() => setGuardando(true)}>
+                    <BookMarked /> Guardar como modelo
+                  </Botao>
+                )}
                 <Botao onClick={editar} disabled={gerando}>
                   <Pencil /> Editar texto
                 </Botao>
-                {docx ? (
+                {aRevisar ? (
+                  <>
+                    <a className="dc-btn dc-btn--secundaria dc-btn--md" href={docx} download>
+                      <Download /> Baixar DOCX no timbre
+                    </a>
+                    <Botao variante="primaria" onClick={revisar} ocupado={revisando}>
+                      <Check /> Marcar como revisada
+                    </Botao>
+                  </>
+                ) : docx ? (
                   <a className="dc-btn dc-btn--primaria dc-btn--md" href={docx} download>
                     <Download /> Baixar DOCX no timbre
                   </a>
@@ -397,6 +425,7 @@ export function PecaPage() {
             <div className="dc-campo">{campoInstrucoes}</div>
             {botaoGerar(true)}
           </Painel>
+          {registro}
         </div>
         <section className="dc-painel dc-peca__rascunho">
           <div className="dc-painel__topo">
@@ -416,6 +445,7 @@ export function PecaPage() {
               </span>
             )}
           </div>
+          {avisoDasLacunas && <div className="dc-peca__lacunas">{avisoDasLacunas}</div>}
           <div
             ref={papel}
             className="dc-folha-fundo dc-rola"

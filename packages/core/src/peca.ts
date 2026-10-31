@@ -25,6 +25,11 @@ export function trechos(linha: string): Trecho[] {
   return saida.filter((t) => t.texto.length > 0);
 }
 
+/** Quantos [COMPLETAR: ...] e [JURISPRUDÊNCIA: ...] ainda faltam no texto. */
+export function lacunas(texto: string): number {
+  return texto.split("\n").reduce((n, linha) => n + trechos(linha).filter((t) => t.marcar).length, 0);
+}
+
 export type Bloco =
   | { tipo: "enderecamento" | "secao" | "subtitulo"; texto: string }
   | { tipo: "paragrafo"; texto: string }

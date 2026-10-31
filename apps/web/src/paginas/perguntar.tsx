@@ -303,8 +303,9 @@ interface Sugestao {
   icone: LucideIcon;
   titulo: string;
   texto: string;
-  /** Só põe no campo para a pessoa completar. */
+  /** Só põe no campo para a pessoa completar; a ajuda diz o que falta escrever. */
   completar?: boolean;
+  ajuda?: string;
   n?: number | null;
 }
 
@@ -332,14 +333,14 @@ function BoasVindas({
           { icone: Scale, titulo: "Plano de saúde", texto: "Dano moral por negativa de cobertura de plano de saúde" },
           { icone: Scale, titulo: "DPVAT", texto: "Termo inicial da correção monetária no seguro DPVAT" },
           { icone: Scale, titulo: "Honorários", texto: "Honorários na desistência da ação antes da citação" },
-          { icone: Scale, titulo: "Tese para um caso", texto: "Que teses servem para o processo ", completar: true },
+          { icone: Scale, titulo: "Tese para um caso", texto: "Que teses servem para o processo ", completar: true, ajuda: "Diga o número ou o cliente do processo" },
         ]
       : [
           // O texto pede o que o número conta: prazos em aberto até daqui a 7 dias, com os vencidos (menu.prazos), e só as publicações novas (menu.publicacoes).
           { icone: Hourglass, titulo: "Prazos da semana", texto: "Quais prazos vencem nos próximos 7 dias? Algum já venceu?", n: eu.menu.prazos || null },
           { icone: Inbox, titulo: "Publicações novas", texto: "Resuma as publicações novas, sem as pendentes, e diga o que cada uma pede", n: eu.menu.publicacoes || null },
           { icone: CalendarDays, titulo: "Minha semana", texto: "O que tenho nos próximos 7 dias? Audiências, prazos e tarefas" },
-          { icone: FolderOpen, titulo: "Em que pé está", texto: "Em que pé está o processo de ", completar: true },
+          { icone: FolderOpen, titulo: "Em que pé está", texto: "Em que pé está o processo de ", completar: true, ajuda: "Diga o cliente ou o número do processo" },
           { icone: Calculator, titulo: "Contar um prazo", texto: "Publicado hoje, 15 dias úteis vence quando?" },
           { icone: Banknote, titulo: "Alvarás a receber", texto: "Quais alvarás ainda não foram repassados aos clientes?", n: eu.menu.alvaras || null },
         ];
@@ -361,7 +362,7 @@ function BoasVindas({
               <strong>{s.titulo}</strong>
               {s.n != null && <span className="dc-sugestao-ia__n dc-num">{numero(s.n)}</span>}
             </span>
-            <span className="dc-sugestao-ia__texto">{s.completar ? `${s.texto}…` : s.texto}</span>
+            <span className="dc-sugestao-ia__texto">{s.ajuda ?? s.texto}</span>
           </button>
         ))}
       </div>

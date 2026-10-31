@@ -11,23 +11,7 @@
         "total": "95008.55",
         "itens": [
           {
-            "id": "76f27a86-2e29-4970-8e19-3b82576203de",
-            "descricao": "Depósito da condenação",
-            "valor": "8771.00",
-            "valorRecebido": null,
-            "expedidoEm": "2026-10-07",
-            "sacadoEm": null,
-            "repassadoEm": null,
-            "observacoes": null,
-            "processo": {
-              "id": "cd96bca0-c9c8-4b43-b901-6622a0b6d221",
-              "titulo": "Juliano Amaral Silveira × Banco Austral S.A.",
-              "cnj": "5032163-29.2025.8.24.0033"
-            },
-            "cliente": "Juliano Amaral Silveira"
-          },
-          {
-            "id": "6e4bc58f-7f0d-4d34-a1c8-913e9a408ba9",
+            "id": "fd4f1af7-ad76-4baa-917c-268145454d70",
             "descricao": "Valor bloqueado via Sisbajud",
             "valor": "7420.55",
             "valorRecebido": null,
@@ -36,14 +20,14 @@
             "repassadoEm": null,
             "observacoes": null,
             "processo": {
-              "id": "61fbb119-189d-4fc1-a461-ea086b4bba06",
+              "id": "4fdc9865-935d-441d-b94a-8b6054f3dde1",
               "titulo": "Auto Center Pioneiro Ltda. × Distribuidora Peças Sul",
               "cnj": "5012450-53.2025.8.24.0038"
             },
             "cliente": "Auto Center Pioneiro Ltda."
           },
           {
-            "id": "1c31fca1-fafc-4863-8d00-b39f43f57f7c",
+            "id": "144875ff-9ee2-4ebd-90af-4fae4860b03d",
             "descricao": "Valor bloqueado via Sisbajud",
             "valor": "43650.00",
             "valorRecebido": null,
@@ -52,30 +36,14 @@
             "repassadoEm": null,
             "observacoes": null,
             "processo": {
-              "id": "6ba10f99-d097-4a10-8afd-8e49b85c9d02",
+              "id": "398c8851-d35e-40dd-b3f1-57a7d1e081d7",
               "titulo": "Panificadora Vento Sul Ltda. × Débora Goulart",
               "cnj": "5024837-71.2023.8.24.0038"
             },
             "cliente": "Panificadora Vento Sul Ltda."
           },
           {
-            "id": "316eb6bb-fcf8-482f-80af-caea1eb0270d",
-            "descricao": "RPV · atrasados do benefício",
-            "valor": "8959.00",
-            "valorRecebido": null,
-            "expedidoEm": "2026-10-19",
-            "sacadoEm": null,
-            "repassadoEm": null,
-            "observacoes": null,
-            "processo": {
-              "id": "6488b7c4-7009-48e4-817c-e1911bc42cf6",
-              "titulo": "Daniel Costa × Instituto Nacional do Seguro Social",
-              "cnj": "5013127-78.2023.4.04.7205"
-            },
-            "cliente": "Daniel Costa"
-          },
-          {
-            "id": "92f00936-2f79-4e0c-bd5e-89caca9db445",
+            "id": "89c18929-1f1b-49fb-93bb-66c8c20a8aa8",
             "descricao": "Valor bloqueado via Sisbajud",
             "valor": "26208.00",
             "valorRecebido": null,
@@ -84,11 +52,43 @@
             "repassadoEm": null,
             "observacoes": null,
             "processo": {
-              "id": "9b8b7767-6bf0-4767-af4b-27da9ab0f6a2",
+              "id": "95ca7488-0ea6-45ed-b089-3c98aa588a7d",
               "titulo": "Panificadora Vento Sul Ltda. × Metalúrgica Bela Vista Ltda.",
               "cnj": "5023332-11.2024.8.24.0038"
             },
             "cliente": "Panificadora Vento Sul Ltda."
+          },
+          {
+            "id": "ebacecea-2e1b-4d08-ab79-1a631829f868",
+            "descricao": "RPV · atrasados do benefício",
+            "valor": "8959.00",
+            "valorRecebido": null,
+            "expedidoEm": "2026-10-19",
+            "sacadoEm": null,
+            "repassadoEm": null,
+            "observacoes": null,
+            "processo": {
+              "id": "204d9839-ac66-4143-b856-10bbffb55f6e",
+              "titulo": "Daniel Costa × Instituto Nacional do Seguro Social",
+              "cnj": "5013127-78.2023.4.04.7205"
+            },
+            "cliente": "Daniel Costa"
+          },
+          {
+            "id": "36102ee3-cc2d-4ee8-b4bb-6c49fc5bea04",
+            "descricao": "Depósito da condenação",
+            "valor": "8771.00",
+            "valorRecebido": null,
+            "expedidoEm": "2026-10-07",
+            "sacadoEm": null,
+            "repassadoEm": null,
+            "observacoes": null,
+            "processo": {
+              "id": "08b74317-9643-4fc8-bb15-ff27f5d11bf1",
+              "titulo": "Juliano Amaral Silveira × Banco Austral S.A.",
+              "cnj": "5032163-29.2025.8.24.0033"
+            },
+            "cliente": "Juliano Amaral Silveira"
           }
         ]
       },
@@ -97,23 +97,7 @@
         "total": "22590.40",
         "itens": [
           {
-            "id": "ee5b6d4d-756c-4c63-ac18-438da1dfb247",
-            "descricao": "RPV · salário-maternidade",
-            "valor": "9612.40",
-            "valorRecebido": null,
-            "expedidoEm": "2026-10-20",
-            "sacadoEm": null,
-            "repassadoEm": null,
-            "observacoes": null,
-            "processo": {
-              "id": "ffd36196-7e5b-4269-ac71-76f82c1d4dba",
-              "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
-              "cnj": "5020176-80.2026.4.04.7201"
-            },
-            "cliente": "Vanessa Hoffmann"
-          },
-          {
-            "id": "78e347c4-049d-4b5a-9b30-dae592b54edc",
+            "id": "5a64fce8-7002-4842-a4bb-5195b7d8ffb6",
             "descricao": "Depósito recursal liberado",
             "valor": "12978.00",
             "valorRecebido": null,
@@ -122,11 +106,27 @@
             "repassadoEm": null,
             "observacoes": null,
             "processo": {
-              "id": "29b27b58-0ba8-4172-a54b-826b3f8a873e",
+              "id": "d81e0c8b-b8d6-49d0-8afd-9556dce3a084",
               "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
               "cnj": "0000977-14.2026.5.12.0004"
             },
             "cliente": "Jorge Batista"
+          },
+          {
+            "id": "26e38439-4068-4460-83bf-6063d8e27f69",
+            "descricao": "RPV · salário-maternidade",
+            "valor": "9612.40",
+            "valorRecebido": null,
+            "expedidoEm": "2026-10-20",
+            "sacadoEm": null,
+            "repassadoEm": null,
+            "observacoes": null,
+            "processo": {
+              "id": "112c068a-31b4-4451-819a-1fbd862b4458",
+              "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
+              "cnj": "5020176-80.2026.4.04.7201"
+            },
+            "cliente": "Vanessa Hoffmann"
           }
         ]
       },
@@ -135,7 +135,7 @@
         "total": "4180.00",
         "itens": [
           {
-            "id": "ba514f25-68a2-4dcc-9710-64447fba58b9",
+            "id": "0789dfb1-3868-46af-9815-4695e7687f42",
             "descricao": "Depósito judicial do réu",
             "valor": "4180.00",
             "valorRecebido": "4180.00",
@@ -144,7 +144,7 @@
             "repassadoEm": null,
             "observacoes": null,
             "processo": {
-              "id": "c45bce06-9cdf-449d-9a3b-aeef2ca52685",
+              "id": "4ea1089b-c58f-47d0-999f-12bec2832e29",
               "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
               "cnj": "5011873-86.2026.8.24.0023"
             },
@@ -157,23 +157,7 @@
         "total": "172484.00",
         "itens": [
           {
-            "id": "04eea0bf-9e76-4d6d-868d-7709cd8afeab",
-            "descricao": "Valor bloqueado via Sisbajud",
-            "valor": "23580.00",
-            "valorRecebido": "23580.00",
-            "expedidoEm": "2026-05-04",
-            "sacadoEm": "2026-05-08",
-            "repassadoEm": "2026-05-10",
-            "observacoes": null,
-            "processo": {
-              "id": "23670fe2-b8f6-476d-99e4-63ca82e3e2a7",
-              "titulo": "Transportes Lagoa Funda Ltda. × Osmar Bortolini",
-              "cnj": "5032320-77.2025.8.24.0008"
-            },
-            "cliente": "Transportes Lagoa Funda Ltda."
-          },
-          {
-            "id": "f30ab7c1-e272-4379-b834-129c00f8b9e2",
+            "id": "a6c9032d-0362-48af-905e-8b768615ed3e",
             "descricao": "Depósito da condenação",
             "valor": "18354.00",
             "valorRecebido": "18354.00",
@@ -182,14 +166,14 @@
             "repassadoEm": "2026-09-07",
             "observacoes": null,
             "processo": {
-              "id": "3574bffc-b79b-417d-9f6d-9b3e560d741b",
+              "id": "654adeb3-e971-4f5d-9e64-bf7b1e096eb4",
               "titulo": "Diego Lehmann × Energia Litoral Distribuidora S.A.",
               "cnj": "5018305-87.2023.8.24.0036"
             },
             "cliente": "Diego Lehmann"
           },
           {
-            "id": "3bd0fa2c-7a80-4e29-a68d-a5266ce0c7a0",
+            "id": "0c5bc5e6-9bf2-47e4-a24e-fd552188b6e7",
             "descricao": "Valor bloqueado via Sisbajud",
             "valor": "130550.00",
             "valorRecebido": "130550.00",
@@ -198,11 +182,27 @@
             "repassadoEm": "2025-10-13",
             "observacoes": null,
             "processo": {
-              "id": "6d376ad1-d763-44b3-82c6-9d7a1a324652",
+              "id": "2ba134a0-58fc-43be-8a04-04004a0770a2",
               "titulo": "Restaurante Nova Aliança Ltda. × André Zimmermann Goulart",
               "cnj": "5026698-58.2024.8.24.0038"
             },
             "cliente": "Restaurante Nova Aliança Ltda."
+          },
+          {
+            "id": "187ec5cd-d6df-4e89-a722-4a2f2753bd64",
+            "descricao": "Valor bloqueado via Sisbajud",
+            "valor": "23580.00",
+            "valorRecebido": "23580.00",
+            "expedidoEm": "2026-05-04",
+            "sacadoEm": "2026-05-08",
+            "repassadoEm": "2026-05-10",
+            "observacoes": null,
+            "processo": {
+              "id": "4918bd2a-13e9-4127-991a-88578464e619",
+              "titulo": "Transportes Lagoa Funda Ltda. × Osmar Bortolini",
+              "cnj": "5032320-77.2025.8.24.0008"
+            },
+            "cliente": "Transportes Lagoa Funda Ltda."
           }
         ]
       },
@@ -211,167 +211,7 @@
         "total": "339610.00",
         "itens": [
           {
-            "id": "74a7529c-b334-4942-8b5e-cc451a0241ef",
-            "descricao": "Crédito trabalhista liberado",
-            "valor": "25326.00",
-            "valorRecebido": "25326.00",
-            "expedidoEm": "2025-12-21",
-            "sacadoEm": "2025-12-25",
-            "repassadoEm": "2025-12-27",
-            "observacoes": null,
-            "processo": {
-              "id": "3e32cc3d-908b-4000-aebd-c40514ccf9da",
-              "titulo": "Ricardo Schneider × Metalúrgica Portal do Sul Ltda.",
-              "cnj": "0001154-77.2023.5.12.0005"
-            },
-            "cliente": "Ricardo Schneider"
-          },
-          {
-            "id": "7f57ec6c-7f41-4be7-8e82-74540a0476a3",
-            "descricao": "Depósito do valor da condenação",
-            "valor": "16260.00",
-            "valorRecebido": "16260.00",
-            "expedidoEm": "2026-07-10",
-            "sacadoEm": "2026-07-14",
-            "repassadoEm": "2026-07-16",
-            "observacoes": null,
-            "processo": {
-              "id": "a095b858-301f-4769-a1e0-2bb85ac9e098",
-              "titulo": "Adriana Dutra × Restaurante Serra Dourada Ltda.",
-              "cnj": "5017265-36.2024.8.24.0036"
-            },
-            "cliente": "Adriana Dutra"
-          },
-          {
-            "id": "9110d950-9e0c-44ad-abac-f914a544bc86",
-            "descricao": "RPV · atrasados do benefício",
-            "valor": "54180.00",
-            "valorRecebido": "54180.00",
-            "expedidoEm": "2026-01-03",
-            "sacadoEm": "2026-01-07",
-            "repassadoEm": "2026-01-09",
-            "observacoes": null,
-            "processo": {
-              "id": "b8731b0a-cb26-4647-b0a6-d76d4c82c20f",
-              "titulo": "Amanda Nunes × Instituto Nacional do Seguro Social",
-              "cnj": "5036746-49.2023.4.04.7201"
-            },
-            "cliente": "Amanda Nunes"
-          },
-          {
-            "id": "4f7a21cd-8645-4f29-b564-201299b602d5",
-            "descricao": "Depósito da condenação",
-            "valor": "10050.00",
-            "valorRecebido": "10050.00",
-            "expedidoEm": "2025-11-21",
-            "sacadoEm": "2025-11-25",
-            "repassadoEm": "2025-11-27",
-            "observacoes": null,
-            "processo": {
-              "id": "0433ca72-2a69-4965-840b-0de5bd60ddc1",
-              "titulo": "Amanda Nunes × Energia Litoral Distribuidora S.A.",
-              "cnj": "5027090-32.2023.8.24.0038"
-            },
-            "cliente": "Amanda Nunes"
-          },
-          {
-            "id": "b1678ac5-09f8-4092-a3ac-fb6c5ef7b093",
-            "descricao": "Valor bloqueado via Sisbajud",
-            "valor": "21945.00",
-            "valorRecebido": "21945.00",
-            "expedidoEm": "2026-02-05",
-            "sacadoEm": "2026-02-09",
-            "repassadoEm": "2026-02-11",
-            "observacoes": null,
-            "processo": {
-              "id": "6a16b65c-acb7-46bd-9ae6-49fbe07b9fe9",
-              "titulo": "Maurício Bernardi Farias × Clínica Médica Águas Claras Ltda.",
-              "cnj": "5023040-91.2025.8.24.0005"
-            },
-            "cliente": "Maurício Bernardi Farias"
-          },
-          {
-            "id": "eee82520-d167-4142-a819-7d0d56f7e1fd",
-            "descricao": "Crédito trabalhista liberado",
-            "valor": "37268.00",
-            "valorRecebido": "37268.00",
-            "expedidoEm": "2026-03-27",
-            "sacadoEm": "2026-03-31",
-            "repassadoEm": "2026-04-02",
-            "observacoes": null,
-            "processo": {
-              "id": "1e5d2fb4-7633-4062-9544-bd91221768ab",
-              "titulo": "Valéria Barbosa Moretti × Distribuidora de Alimentos Pioneira Ltda.",
-              "cnj": "0002611-79.2025.5.12.0004"
-            },
-            "cliente": "Valéria Barbosa Moretti"
-          },
-          {
-            "id": "07a788c0-a5de-4c63-a20d-b419919777c6",
-            "descricao": "Depósito do valor da condenação",
-            "valor": "18720.00",
-            "valorRecebido": "18720.00",
-            "expedidoEm": "2025-11-29",
-            "sacadoEm": "2025-12-03",
-            "repassadoEm": "2025-12-05",
-            "observacoes": null,
-            "processo": {
-              "id": "f4383c76-bba7-46e6-8430-153299a2815e",
-              "titulo": "Gisele Bittencourt × Imobiliária Ipê Amarelo Ltda.",
-              "cnj": "5023239-82.2023.8.24.0038"
-            },
-            "cliente": "Gisele Bittencourt"
-          },
-          {
-            "id": "da56f5f5-0d9d-4822-a479-9f1b5882c17d",
-            "descricao": "Acordo homologado · 1ª parcela",
-            "valor": "17052.00",
-            "valorRecebido": "17052.00",
-            "expedidoEm": "2026-08-29",
-            "sacadoEm": "2026-09-02",
-            "repassadoEm": "2026-09-04",
-            "observacoes": null,
-            "processo": {
-              "id": "dc74495a-1583-4a6e-ae02-5cdb6c18c56f",
-              "titulo": "Diego Stein Nunes × Distribuidora de Alimentos Nova Aliança Ltda.",
-              "cnj": "0001863-81.2024.5.12.0004"
-            },
-            "cliente": "Diego Stein Nunes"
-          },
-          {
-            "id": "7729bcf5-0993-44fc-b4a3-3f46e46f79bc",
-            "descricao": "RPV · atrasados do benefício",
-            "valor": "36960.00",
-            "valorRecebido": "36960.00",
-            "expedidoEm": "2026-03-17",
-            "sacadoEm": "2026-03-21",
-            "repassadoEm": "2026-03-23",
-            "observacoes": null,
-            "processo": {
-              "id": "ee3206f2-6c0a-4bdc-8fb4-e551e9c7db3b",
-              "titulo": "Cláudio Bortolini × Instituto Nacional do Seguro Social",
-              "cnj": "5030011-85.2023.4.04.7205"
-            },
-            "cliente": "Cláudio Bortolini"
-          },
-          {
-            "id": "85d7412c-5546-4e26-ae8c-1bd3901a503a",
-            "descricao": "Depósito do valor da condenação",
-            "valor": "29634.00",
-            "valorRecebido": "29634.00",
-            "expedidoEm": "2026-08-30",
-            "sacadoEm": "2026-09-03",
-            "repassadoEm": "2026-09-05",
-            "observacoes": null,
-            "processo": {
-              "id": "8de4e74c-8dad-456c-812b-84b286ae2928",
-              "titulo": "Juliano Maas × Auto Peças Boa Safra Ltda.",
-              "cnj": "5027557-74.2024.8.24.0038"
-            },
-            "cliente": "Juliano Maas"
-          },
-          {
-            "id": "0b972147-582b-4496-b380-fddc6764350c",
+            "id": "ed5d7a85-22e1-41cb-bf64-d613f4773246",
             "descricao": "Depósito da condenação",
             "valor": "8322.00",
             "valorRecebido": "8322.00",
@@ -380,30 +220,62 @@
             "repassadoEm": "2026-04-29",
             "observacoes": null,
             "processo": {
-              "id": "2fa6bdcc-f61f-4103-9c32-e6d8738d8fe1",
+              "id": "edcff784-4168-4270-b652-dd95ee4592bf",
               "titulo": "Larissa Reinert × Mercado Virtual Brasil Ltda.",
               "cnj": "5036064-17.2024.8.24.0008"
             },
             "cliente": "Larissa Reinert"
           },
           {
-            "id": "d029fd5c-636f-4b47-adf2-1f5914507043",
-            "descricao": "Acordo homologado · 1ª parcela",
-            "valor": "48399.00",
-            "valorRecebido": "48399.00",
-            "expedidoEm": "2026-06-12",
-            "sacadoEm": "2026-06-16",
-            "repassadoEm": "2026-06-18",
+            "id": "afdda2c8-8b9b-420f-83d1-c529a1ecaade",
+            "descricao": "RPV · atrasados do benefício",
+            "valor": "36960.00",
+            "valorRecebido": "36960.00",
+            "expedidoEm": "2026-03-17",
+            "sacadoEm": "2026-03-21",
+            "repassadoEm": "2026-03-23",
             "observacoes": null,
             "processo": {
-              "id": "2e697d3a-41bc-49e8-9518-127eb1339164",
-              "titulo": "Bianca Kretzer × Materiais de Construção Portal do Sul Ltda.",
-              "cnj": "0001124-29.2025.5.12.0019"
+              "id": "8d05292d-3817-451f-aa79-b6c9120b0a90",
+              "titulo": "Cláudio Bortolini × Instituto Nacional do Seguro Social",
+              "cnj": "5030011-85.2023.4.04.7205"
             },
-            "cliente": "Bianca Kretzer"
+            "cliente": "Cláudio Bortolini"
           },
           {
-            "id": "5c33bea2-37af-487d-8e5f-e86927e190e3",
+            "id": "c86fd39c-58c8-4b44-8cd5-ec880a9c18b2",
+            "descricao": "Crédito trabalhista liberado",
+            "valor": "37268.00",
+            "valorRecebido": "37268.00",
+            "expedidoEm": "2026-03-27",
+            "sacadoEm": "2026-03-31",
+            "repassadoEm": "2026-04-02",
+            "observacoes": null,
+            "processo": {
+              "id": "37a85ece-82e5-4d82-ae49-f2d9bb433b3c",
+              "titulo": "Valéria Barbosa Moretti × Distribuidora de Alimentos Pioneira Ltda.",
+              "cnj": "0002611-79.2025.5.12.0004"
+            },
+            "cliente": "Valéria Barbosa Moretti"
+          },
+          {
+            "id": "4d60d81a-1b73-4654-a7d8-7b563c035fc7",
+            "descricao": "Depósito do valor da condenação",
+            "valor": "16260.00",
+            "valorRecebido": "16260.00",
+            "expedidoEm": "2026-07-10",
+            "sacadoEm": "2026-07-14",
+            "repassadoEm": "2026-07-16",
+            "observacoes": null,
+            "processo": {
+              "id": "93ef64c6-9b7c-4b7c-93b7-123b74bbd8d6",
+              "titulo": "Adriana Dutra × Restaurante Serra Dourada Ltda.",
+              "cnj": "5017265-36.2024.8.24.0036"
+            },
+            "cliente": "Adriana Dutra"
+          },
+          {
+            "id": "af367b3e-1b9a-4225-98fb-9187ea186614",
             "descricao": "RPV · atrasados do benefício",
             "valor": "15494.00",
             "valorRecebido": "15494.00",
@@ -412,11 +284,139 @@
             "repassadoEm": "2026-08-25",
             "observacoes": null,
             "processo": {
-              "id": "2b25eddb-0dc1-4441-bdb4-d81c56bb5516",
+              "id": "c09cfc6a-1bcd-465e-bec7-8ac74c1b73ed",
               "titulo": "Solange Teixeira Lehmann × Instituto Nacional do Seguro Social",
               "cnj": "5034723-62.2025.4.04.7201"
             },
             "cliente": "Solange Teixeira Lehmann"
+          },
+          {
+            "id": "57923be4-5248-492a-b9ae-7f04c43b52e6",
+            "descricao": "Valor bloqueado via Sisbajud",
+            "valor": "21945.00",
+            "valorRecebido": "21945.00",
+            "expedidoEm": "2026-02-05",
+            "sacadoEm": "2026-02-09",
+            "repassadoEm": "2026-02-11",
+            "observacoes": null,
+            "processo": {
+              "id": "0199ff00-982c-4b17-9619-b3ba2bb692ee",
+              "titulo": "Maurício Bernardi Farias × Clínica Médica Águas Claras Ltda.",
+              "cnj": "5023040-91.2025.8.24.0005"
+            },
+            "cliente": "Maurício Bernardi Farias"
+          },
+          {
+            "id": "c530829b-2ae0-4e39-8ba6-4e5b36ec6108",
+            "descricao": "Acordo homologado · 1ª parcela",
+            "valor": "48399.00",
+            "valorRecebido": "48399.00",
+            "expedidoEm": "2026-06-12",
+            "sacadoEm": "2026-06-16",
+            "repassadoEm": "2026-06-18",
+            "observacoes": null,
+            "processo": {
+              "id": "2b51d097-2607-4945-99dd-9bf1b9f340c3",
+              "titulo": "Bianca Kretzer × Materiais de Construção Portal do Sul Ltda.",
+              "cnj": "0001124-29.2025.5.12.0019"
+            },
+            "cliente": "Bianca Kretzer"
+          },
+          {
+            "id": "73e626bd-3521-40f3-bbc7-67c37e6cd483",
+            "descricao": "Crédito trabalhista liberado",
+            "valor": "25326.00",
+            "valorRecebido": "25326.00",
+            "expedidoEm": "2025-12-21",
+            "sacadoEm": "2025-12-25",
+            "repassadoEm": "2025-12-27",
+            "observacoes": null,
+            "processo": {
+              "id": "66a0f8bf-c74d-4c0c-a834-31c36ec92c2b",
+              "titulo": "Ricardo Schneider × Metalúrgica Portal do Sul Ltda.",
+              "cnj": "0001154-77.2023.5.12.0005"
+            },
+            "cliente": "Ricardo Schneider"
+          },
+          {
+            "id": "934bbfbd-821e-46d2-b5ae-9cf62e53b4f4",
+            "descricao": "Acordo homologado · 1ª parcela",
+            "valor": "17052.00",
+            "valorRecebido": "17052.00",
+            "expedidoEm": "2026-08-29",
+            "sacadoEm": "2026-09-02",
+            "repassadoEm": "2026-09-04",
+            "observacoes": null,
+            "processo": {
+              "id": "ea5966c4-b251-4241-9fd3-196a36743375",
+              "titulo": "Diego Stein Nunes × Distribuidora de Alimentos Nova Aliança Ltda.",
+              "cnj": "0001863-81.2024.5.12.0004"
+            },
+            "cliente": "Diego Stein Nunes"
+          },
+          {
+            "id": "27c54164-6d3c-4ed6-bbfe-aebfd834b810",
+            "descricao": "Depósito da condenação",
+            "valor": "10050.00",
+            "valorRecebido": "10050.00",
+            "expedidoEm": "2025-11-21",
+            "sacadoEm": "2025-11-25",
+            "repassadoEm": "2025-11-27",
+            "observacoes": null,
+            "processo": {
+              "id": "4ac24063-8a0a-447c-80b6-abf4a6fbb4b4",
+              "titulo": "Amanda Nunes × Energia Litoral Distribuidora S.A.",
+              "cnj": "5027090-32.2023.8.24.0038"
+            },
+            "cliente": "Amanda Nunes"
+          },
+          {
+            "id": "0bcc5b60-1380-4974-afd6-11786d0dcf27",
+            "descricao": "RPV · atrasados do benefício",
+            "valor": "54180.00",
+            "valorRecebido": "54180.00",
+            "expedidoEm": "2026-01-03",
+            "sacadoEm": "2026-01-07",
+            "repassadoEm": "2026-01-09",
+            "observacoes": null,
+            "processo": {
+              "id": "ff5582a7-0db9-4c0b-8711-37a869f9501f",
+              "titulo": "Amanda Nunes × Instituto Nacional do Seguro Social",
+              "cnj": "5036746-49.2023.4.04.7201"
+            },
+            "cliente": "Amanda Nunes"
+          },
+          {
+            "id": "28ce5d03-99ea-4edf-9741-33bef9fc7bea",
+            "descricao": "Depósito do valor da condenação",
+            "valor": "29634.00",
+            "valorRecebido": "29634.00",
+            "expedidoEm": "2026-08-30",
+            "sacadoEm": "2026-09-03",
+            "repassadoEm": "2026-09-05",
+            "observacoes": null,
+            "processo": {
+              "id": "6f97af0a-eae5-4db9-8016-f4e3b73d8b86",
+              "titulo": "Juliano Maas × Auto Peças Boa Safra Ltda.",
+              "cnj": "5027557-74.2024.8.24.0038"
+            },
+            "cliente": "Juliano Maas"
+          },
+          {
+            "id": "b80f720a-ad4f-4b62-8db6-1241478a4dfb",
+            "descricao": "Depósito do valor da condenação",
+            "valor": "18720.00",
+            "valorRecebido": "18720.00",
+            "expedidoEm": "2025-11-29",
+            "sacadoEm": "2025-12-03",
+            "repassadoEm": "2025-12-05",
+            "observacoes": null,
+            "processo": {
+              "id": "2fa4ad6b-ff19-4f86-8b89-4dbcd357c6f6",
+              "titulo": "Gisele Bittencourt × Imobiliária Ipê Amarelo Ltda.",
+              "cnj": "5023239-82.2023.8.24.0038"
+            },
+            "cliente": "Gisele Bittencourt"
           }
         ]
       }

@@ -14,7 +14,8 @@ import { hora } from "@/lib/formato";
 import { DestinoDoLink, Markdown } from "@/lib/markdown";
 import { conversaQuery, conversasQuery, juntarEvento, perguntar, type AlvaraNaIa, type ConversaAberta, type ConversaNaLista, type Evento, type MensagemDaConversa, type Modo, type Parte } from "@/lib/perguntar";
 import { cn } from "@/lib/util";
-import { Cartao, CartoesRecolhidos, cartoesDaResposta, erroDaParte, Passos, type OndeEsta } from "./cartoes-ia";
+import { Cartao, CartoesCompactos, cartoesDaResposta, erroDaParte, Passos, type OndeEsta } from "./cartoes-ia";
+import { AvisoDoLimite, usoDaIaQuery } from "./limite-da-ia";
 import { MarcaIa } from "./ui";
 
 /* ------------------------------------------------------------------ */
@@ -166,7 +167,8 @@ export function useEnviar() {
         if (respostaId || !p.conversaId) return buscarAteGravar(qc, chave, respostaId);
         // Parou antes do "inicio", numa conversa que já existe: sem os ids, a cópia não acha o que o servidor gravou. Fica só o gravado.
         setTimeout(() => void qc.invalidateQueries({ queryKey: conversaQuery(chave).queryKey }).then(() => envios.get(chave)?.controlador === controlador && esquecerEnvio(chave)), 600);
-      });
+      })
+      .finally(() => void qc.invalidateQueries({ queryKey: usoDaIaQuery.queryKey }));
   };
 }
 
@@ -264,8 +266,9 @@ function Resposta({ partes, texto, em, escrevendo = false, onde }: { partes: Par
           <span />
         </div>
       )}
-      {cartoes.length > 0 && (
-        <CartoesRecolhidos.Provider value={escrevendo}>
+      {/* Os cartões vêm depois do texto, quando a resposta termina; enquanto ela chega, os passos dizem o que a IA consulta. */}
+      {cartoes.length > 0 && !escrevendo && (
+        <CartoesCompactos.Provider value>
           <div className="dc-chat__cartoes">
             {cartoes.map((f) => (
               <Limite key={f.id} falha={<CartaoComDefeito />}>
@@ -273,7 +276,7 @@ function Resposta({ partes, texto, em, escrevendo = false, onde }: { partes: Par
               </Limite>
             ))}
           </div>
-        </CartoesRecolhidos.Provider>
+        </CartoesCompactos.Provider>
       )}
       {!escrevendo && texto.trim() && (
         <div className="dc-chat__pe">
@@ -583,6 +586,7 @@ export function Compositor({
   const placeholder = modo === "jurisprudencia" ? (curto ? "Que tese você procura?" : "Que tese ou decisão você procura?") : curto ? "Pergunte sobre o escritório" : "Pergunte sobre prazos, processos, clientes ou o que precisar";
   return (
     <div className="dc-compositor">
+      <AvisoDoLimite />
       <form
         className="dc-compositor__caixa"
         onSubmit={(e) => {

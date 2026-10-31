@@ -52,10 +52,10 @@ import {
   type PublicacaoNaIa,
   type UrgenciaNaIa,
 } from "@decreta/ia";
-import { and, asc, desc, eq, exists, gte, inArray, isNotNull, isNull, like, lt, lte, ne, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gte, inArray, isNotNull, isNull, like, lt, lte, ne, notInArray, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { semAcentoNoBanco } from "../rotas/base.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
-import { carregarContexto } from "./contexto.ts";
+import { carregarContexto, semIa } from "./contexto.ts";
 import { quandoDoPrazo } from "./hoje.ts";
 import { pessoasDoEscritorio, type Pessoa } from "./pessoas.ts";
 import { contagemNaTela } from "./prazos.ts";
@@ -66,6 +66,21 @@ const LIMITE = 20;
 const TETO_DO_TEXTO = 60_000;
 /** Os autos no Perguntar: menos que nas outras telas (cada pergunta paga a leitura). O que não coube vai listado com o id, para ler à parte. */
 const TETO_DOS_AUTOS = 40_000;
+/**
+ * Os casos de cliente que recusou a IA (Recomendação CFOAB 001/2024, item
+ * 4.3.2) ficam fora do Perguntar: as buscas não os trazem e as fichas recusam.
+ * Sem processo, ou processo sem cliente, entra.
+ */
+const SEM_IA = "O cliente não autorizou o uso de IA: os casos dele ficam fora do Perguntar. Abra-os direto no Decreta.";
+interface ForaDaIa {
+  clientes: string[];
+  processos: string[];
+}
+/** A linha fica se não for de um dos ids (sem processo, ou sem cliente, fica). Sem ninguém fora, não filtra nada. */
+const fora = (col: AnyColumn, ids: string[]) => (ids.length ? or(isNull(col), notInArray(col, ids)) : undefined);
+const processoComIa = (f: ForaDaIa, processoId: AnyColumn) => fora(processoId, f.processos);
+const clienteComIa = (f: ForaDaIa, clienteId: AnyColumn) => fora(clienteId, f.clientes);
+
 const COMO_LER = "Para ler um documento ou uma publicação desta lista, use lerDocumento ou lerPublicacao com o id.";
 const n = sql<number>`count(*)::int`;
 const semAcento = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
@@ -115,6 +130,14 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
   const pessoas = () => (pessoasP ??= tx((t) => pessoasDoEscritorio(e.db, t, e.organizationId)));
   let calP: Promise<Calendario> | null = null;
   const calendario = () => (calP ??= tx(async (t) => calendarioDoEscritorio(t, await tribunalPadrao(t, e.organizationId))));
+  // Quem recusou a IA, lido uma vez: quase sempre ninguém, e as buscas ficam sem filtro.
+  let foraP: Promise<ForaDaIa> | null = null;
+  const foraDaIa = () =>
+    (foraP ??= tx(async (t) => {
+      const cs = (await t.select({ id: clientes.id }).from(clientes).where(eq(clientes.semIa, true))).map((c) => c.id);
+      const ps = cs.length ? (await t.select({ id: processos.id }).from(processos).where(inArray(processos.clienteId, cs))).map((p) => p.id) : [];
+      return { clientes: cs, processos: ps };
+    }));
 
   const pessoa = (mapa: Map<string, Pessoa>, id: string | null | undefined): PessoaNaIa | null => {
     if (!id) return null;
@@ -364,8 +387,9 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
     },
 
     async prazos(f) {
+      const sem = await foraDaIa();
       const situacao = f.situacao ?? "aberto";
-      const onde: (SQL | undefined)[] = [eq(prazos.situacao, situacao), await porResponsavel(prazos.responsavelId, f.responsavel)];
+      const onde: (SQL | undefined)[] = [eq(prazos.situacao, situacao), processoComIa(sem, prazos.processoId), await porResponsavel(prazos.responsavelId, f.responsavel)];
       if (f.aConfirmar) onde.push(isNull(prazos.confirmadoEm));
       // Cumpridos "desta semana" são os marcados cumpridos nela, não os que venceriam nela.
       if (situacao === "cumprido") {
@@ -397,12 +421,13 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
     },
 
     async processos(f) {
+      const sem = await foraDaIa();
       const ps = palavras(f.busca);
       // Com o número do processo, não há por que esconder o arquivado.
       const situacao = f.situacao ?? (ps.some((p) => p.replace(/\D/g, "").length >= 7) ? "todos" : "ativos");
       const naSituacao = (s: string) =>
         s === "ativos" ? inArray(processos.situacao, ["ativo", "suspenso"]) : s === "arquivados" ? inArray(processos.situacao, ["arquivado", "encerrado"]) : undefined;
-      const onde: (SQL | undefined)[] = [await porResponsavel(processos.responsavelId, f.responsavel)];
+      const onde: (SQL | undefined)[] = [processoComIa(sem, processos.id), await porResponsavel(processos.responsavelId, f.responsavel)];
       if (f.clienteId) onde.push(eq(processos.clienteId, f.clienteId));
       const movidoEm = sql`coalesce(${processos.ultimaMovimentacaoEm}, ${processos.createdAt})`;
       if (f.paradoHaDias) onde.push(sql`${movidoEm} < ${instanteLocal(somarDias(hoje(), -f.paradoHaDias), "00:00", e.timezone).toISOString()}`);
@@ -459,6 +484,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
           .leftJoin(clientes, eq(clientes.id, processos.clienteId))
           .where(eq(processos.id, id));
         if (!p) return null;
+        if (await semIa(t, { processoId: id })) throw new PedidoInvalido(SEM_IA);
         const curto = { id: p.id, titulo: p.titulo, cnj: p.cnj };
         const [[base], przs, auds, ctx] = await Promise.all([
           processosNaIa(t, [p]),
@@ -480,8 +506,9 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
     },
 
     async publicacoes(f) {
+      const sem = await foraDaIa();
       const situacao = f.situacao ?? "nao_tratadas";
-      const onde: (SQL | undefined)[] = [];
+      const onde: (SQL | undefined)[] = [processoComIa(sem, publicacoes.processoId)];
       if (situacao === "nao_tratadas") onde.push(inArray(publicacoes.situacao, ["nova", "pendente"]));
       else if (situacao !== "todas") onde.push(eq(publicacoes.situacao, situacao));
       if (f.de) onde.push(gte(publicacoes.disponibilizadaEm, f.de));
@@ -516,12 +543,14 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
       return tx(async (t) => {
         const [l] = await t.select({ pub: publicacoes, processo: processoCurto }).from(publicacoes).leftJoin(processos, eq(processos.id, publicacoes.processoId)).where(eq(publicacoes.id, id));
         if (!l) return null;
+        if (await semIa(t, { processoId: l.pub.processoId })) throw new PedidoInvalido(SEM_IA);
         const resumo = await resumosDas(t, [id]);
         return publicacaoNaIa(l.pub, l.processo, resumo.get(id) ?? null, cortado(l.pub.texto, "teor"));
       });
     },
 
     async audiencias(f) {
+      const sem = await foraDaIa();
       const dia = hoje();
       // Só o último dia, e ele já passou ("até ontem"): os 30 dias antes dele.
       const de = f.de ?? (f.ate && f.ate < dia ? somarDias(f.ate, -30) : dia);
@@ -531,6 +560,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
         gte(audiencias.em, instanteLocal(de, "00:00", e.timezone)),
         lt(audiencias.em, instanteLocal(somarDias(ate, 1), "00:00", e.timezone)),
         f.incluirCanceladas ? undefined : ne(audiencias.situacao, "cancelada"),
+        processoComIa(sem, audiencias.processoId),
         await porResponsavel(audiencias.responsavelId, f.responsavel),
       ];
       if (f.processoId) onde.push(eq(audiencias.processoId, f.processoId));
@@ -551,6 +581,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
     },
 
     async agenda(f) {
+      const sem = await foraDaIa();
       if (f.ate < f.de) throw new PedidoInvalido("O último dia vem antes do primeiro.");
       const teto = somarDias(f.de, 31);
       const ate = f.ate > teto ? teto : f.ate;
@@ -564,20 +595,20 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
             .select({ t: tarefas, processo: processoCurto })
             .from(tarefas)
             .leftJoin(processos, eq(processos.id, tarefas.processoId))
-            .where(and(onde, dono(tarefas.responsavelId)))
+            .where(and(onde, processoComIa(sem, tarefas.processoId), clienteComIa(sem, tarefas.clienteId), dono(tarefas.responsavelId)))
             .orderBy(asc(tarefas.dia), asc(tarefas.createdAt));
         const [auds, przs, tars, atrasadas] = await Promise.all([
           t
             .select({ a: audiencias, processo: processoCurto })
             .from(audiencias)
             .innerJoin(processos, eq(processos.id, audiencias.processoId))
-            .where(and(ne(audiencias.situacao, "cancelada"), gte(audiencias.em, instanteLocal(f.de, "00:00", e.timezone)), lt(audiencias.em, instanteLocal(somarDias(ate, 1), "00:00", e.timezone)), dono(audiencias.responsavelId)))
+            .where(and(ne(audiencias.situacao, "cancelada"), gte(audiencias.em, instanteLocal(f.de, "00:00", e.timezone)), lt(audiencias.em, instanteLocal(somarDias(ate, 1), "00:00", e.timezone)), processoComIa(sem, audiencias.processoId), dono(audiencias.responsavelId)))
             .orderBy(asc(audiencias.em)),
           t
             .select({ p: prazos, processo: processoCurto })
             .from(prazos)
             .innerJoin(processos, eq(processos.id, prazos.processoId))
-            .where(and(eq(prazos.situacao, "aberto"), gte(prazos.fim, f.de), lte(prazos.fim, ate), dono(prazos.responsavelId)))
+            .where(and(eq(prazos.situacao, "aberto"), gte(prazos.fim, f.de), lte(prazos.fim, ate), processoComIa(sem, prazos.processoId), dono(prazos.responsavelId)))
             .orderBy(asc(prazos.fim)),
           tarefasDe(and(gte(tarefas.dia, f.de), lte(tarefas.dia, ate))),
           // Como na tela Hoje: a tarefa atrasada e não concluída aparece hoje.
@@ -612,6 +643,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
         }
       }
       if (!onde.length) throw new PedidoInvalido("Diga um nome, CPF/CNPJ ou telefone para buscar.");
+      onde.push(eq(clientes.semIa, false));
       return tx(async (t) => {
         const qtd = sql<number>`(select count(*)::int from "processos" where "processos"."cliente_id" = "clientes"."id")`;
         const [linhas, [total]] = await Promise.all([
@@ -631,6 +663,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
       return tx(async (t) => {
         const [c] = await t.select().from(clientes).where(eq(clientes.id, id));
         if (!c) return null;
+        if (c.semIa) throw new PedidoInvalido(SEM_IA);
         const [linhas, ats] = await Promise.all([
           t
             .select(colunasDoProcesso)
@@ -650,7 +683,8 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
     },
 
     async documentos(f) {
-      const onde: (SQL | undefined)[] = [];
+      const sem = await foraDaIa();
+      const onde: (SQL | undefined)[] = [processoComIa(sem, documentos.processoId), clienteComIa(sem, documentos.clienteId)];
       if (f.processoId) onde.push(eq(documentos.processoId, f.processoId));
       if (f.clienteId) onde.push(eq(documentos.clienteId, f.clienteId));
       const ps = palavras(f.busca);
@@ -707,6 +741,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
           .leftJoin(clientes, eq(clientes.id, documentos.clienteId))
           .where(eq(documentos.id, id));
         if (!d) return null;
+        if (await semIa(t, d.d)) throw new PedidoInvalido(SEM_IA);
         return {
           id: d.d.id,
           nome: d.d.nome,
@@ -723,8 +758,9 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
     },
 
     async alvaras(f) {
+      const sem = await foraDaIa();
       const etapa = f.etapa ?? "pendentes";
-      const onde: (SQL | undefined)[] = [];
+      const onde: (SQL | undefined)[] = [processoComIa(sem, alvaras.processoId)];
       if (etapa === "pendentes") onde.push(inArray(alvaras.etapa, ["novo", "aguardando_saque", "sacado"]));
       else if (etapa !== "todos") onde.push(eq(alvaras.etapa, etapa));
       if (f.processoId) onde.push(eq(alvaras.processoId, f.processoId));
@@ -750,7 +786,8 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
 
     async negocios(f) {
       const etapa = f.etapa ?? "triagem";
-      const onde = etapa === "todos" ? undefined : eq(negocios.etapa, etapa);
+      const sem = await foraDaIa();
+      const onde = and(etapa === "todos" ? undefined : eq(negocios.etapa, etapa), clienteComIa(sem, negocios.clienteId));
       const mapa = await pessoas();
       return tx(async (t) => {
         const [linhas, [total]] = await Promise.all([
@@ -784,6 +821,7 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
 
     async contarPrazo(p) {
       if (!p.publicadoEm && !p.disponibilizadoEm) throw new PedidoInvalido("Falta a data da publicação (ou de quando saiu no DJEN).");
+      if (p.processoId && (await foraDaIa()).processos.includes(p.processoId)) throw new PedidoInvalido(SEM_IA);
       return tx(async (t) => {
         const processo = await processoExiste(t, p.processoId);
         let tribunal: string | null = null;
@@ -806,6 +844,8 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
       const mapa = await pessoas();
       const responsavel = p.responsavel ? await quem(p.responsavel) : e.userId;
       if (responsavel === undefined) throw new PedidoInvalido("A tarefa é de uma pessoa só: diga quem.");
+      const sem = await foraDaIa();
+      if ((p.processoId && sem.processos.includes(p.processoId)) || (p.clienteId && sem.clientes.includes(p.clienteId))) throw new PedidoInvalido(SEM_IA);
       return tx(async (t) => {
         const processo = await processoExiste(t, p.processoId);
         let cliente: { id: string; nome: string } | null = null;

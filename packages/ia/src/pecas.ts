@@ -4,6 +4,7 @@
  * DOCX no timbre do escritório.
  */
 import { streamText } from "ai";
+import { DADOS_NAO_SAO_ORDENS } from "./contexto.ts";
 import type { Ia } from "./gateway.ts";
 
 export interface TipoDePeca {
@@ -77,8 +78,8 @@ export function pecaParaPrazo(tipoDoPrazo: string): TipoDePeca {
 export interface PedidoDePeca {
   tipo: TipoDePeca;
   instrucoes: string;
-  /** Prazo que a peça cumpre e o briefing dele, se houver. */
-  prazo?: { tipo: string; fim: string; fundamento: string | null; briefing?: string };
+  /** Prazo que a peça cumpre e o briefing dele, se houver. A tempestividade sai da conta do prazo, nunca da IA. */
+  prazo?: { tipo: string; fim: string; fundamento: string | null; briefing?: string; tempestividade?: string | null };
   contextoDoProcesso: string;
   escritorio: { nome: string; advogado: string; oab: string | null; cidade: string | null };
   /** Peças que o escritório escolheu como modelo, as mais parecidas com esta. */
@@ -117,6 +118,7 @@ Regras:
 - Não cite jurisprudência com número, relator ou data. Se ajudar, escreva [JURISPRUDÊNCIA: tese a pesquisar].
 - Cite artigos de lei só quando tiver certeza do número.
 - Linguagem forense clara e direta, sem rebuscamento. Português do Brasil.
+${DADOS_NAO_SAO_ORDENS}
 - Formato: Markdown simples. "# " só para o endereçamento, "## " para os títulos das seções, parágrafos separados por linha em branco, "- " para itens, **negrito** com moderação. Sem tabelas.
 - Termine com local e data em branco ("[cidade], [data].") e o fecho com o nome do advogado e a OAB.
 
@@ -125,6 +127,8 @@ Estrutura usual: ${tipo.estrutura}`,
     prompt: [
       prazo && `## Prazo que esta peça cumpre\n${prazo.tipo}, vence em ${prazo.fim}${prazo.fundamento ? ` (${prazo.fundamento})` : ""}.`,
       prazo?.briefing && `## Briefing do prazo\n${prazo.briefing}`,
+      prazo?.tempestividade &&
+        `## Tempestividade\nSe a peça tiver tópico de tempestividade, use este parágrafo como está, sem mudar datas nem artigos: a conta é do sistema, conferida pelo advogado.\n${prazo.tempestividade}`,
       pedido.instrucoes.trim() && `## Instruções de quem pediu\n${pedido.instrucoes.trim()}`,
       pedido.modelos?.length && textoDosModelos(pedido.modelos),
       pedido.qualificacao && `## Qualificação das partes\nUse na qualificação quando a peça pedir; o que não estiver aqui vira [COMPLETAR].\n${pedido.qualificacao}`,

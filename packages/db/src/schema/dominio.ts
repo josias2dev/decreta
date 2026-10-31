@@ -96,6 +96,8 @@ export const escritorios = pgTable(
     capturaDjen: boolean("captura_djen").notNull().default(true),
     /** Atualização dos andamentos pelo DataJud. */
     capturaDatajud: boolean("captura_datajud").notNull().default(true),
+    /** Até quando o DataJud tem dados de cada tribunal da carteira ("TJSC" → instante), pela última conferência. */
+    datajudAte: jsonb("datajud_ate").$type<Record<string, string>>().notNull().default({}),
     updatedAt: updatedAt(),
   },
   () => [tenantPolicy("escritorios")],
@@ -163,6 +165,11 @@ export const clientes = pgTable(
     email: text("email"),
     endereco: text("endereco"),
     observacoes: text("observacoes"),
+    /** O cliente recusou o uso de IA (Recomendação CFOAB 001/2024, item 4.3.2): nada dos casos dele vai a um modelo. */
+    semIa: boolean("sem_ia").notNull().default(false),
+    /** O termo de uso de IA assinado (item 4.3.1 da mesma recomendação): o arquivo na pasta do cliente e quando foi registrado. */
+    termoIaDocumentoId: uuid("termo_ia_documento_id").references((): AnyPgColumn => documentos.id, { onDelete: "set null" }),
+    termoIaEm: timestamp("termo_ia_em", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -206,6 +213,8 @@ export const processos = pgTable(
     distribuidoEm: date("distribuido_em", { mode: "string" }),
     ultimaMovimentacaoEm: timestamp("ultima_movimentacao_em", { withTimezone: true }),
     datajudEm: timestamp("datajud_em", { withTimezone: true }),
+    /** Quando o tribunal mandou este processo ao DataJud pela última vez: o DataJud chega com dias ou semanas de atraso. */
+    datajudAtualizadoEm: timestamp("datajud_atualizado_em", { withTimezone: true }),
     segredo: boolean("segredo").notNull().default(false),
     observacoes: text("observacoes"),
     createdAt: createdAt(),
@@ -313,6 +322,13 @@ export const publicacoes = pgTable(
     destinatarios: jsonb("destinatarios").$type<Destinatario[]>().notNull().default([]),
     advogados: jsonb("advogados").$type<AdvogadoIntimado[]>().notNull().default([]),
     link: text("link"),
+    /** Hash da comunicação no DJEN: é por ele que sai a certidão de publicação. */
+    hash: text("hash"),
+    /** A certidão do DJEN já baixada (chave no armazenamento): a prova da data fica com o escritório. */
+    certidao: text("certidao"),
+    /** O tribunal cancelou a comunicação depois de disponibilizar (aparece numa versão nova do caderno). */
+    canceladaEm: timestamp("cancelada_em", { withTimezone: true }),
+    motivoCancelamento: text("motivo_cancelamento"),
     situacao: situacaoPublicacao("situacao").notNull().default("nova"),
     tratadaPor: pessoa("tratada_por"),
     tratadaEm: timestamp("tratada_em", { withTimezone: true }),
@@ -352,10 +368,14 @@ export const prazos = pgTable(
     dias: integer("dias").notNull(),
     contagem: contagem("contagem").notNull().default("uteis"),
     publicadoEm: date("publicado_em", { mode: "string" }).notNull(),
+    /** Dupla intimação: o dia em que o sistema do tribunal intimou também. A conta vale pelo marco que vence primeiro (Tema 1.180 do STJ, sem tese). */
+    intimadoNoSistemaEm: date("intimado_no_sistema_em", { mode: "string" }),
     inicio: date("inicio", { mode: "string" }).notNull(),
     fim: date("fim", { mode: "string" }).notNull(),
     /** O que ficou fora da conta, para mostrar e auditar. */
     desconsiderados: jsonb("desconsiderados").$type<DiaDesconsiderado[]>().notNull().default([]),
+    /** A pessoa digitou a data final (suspensão que o sistema não conhece): vale a dela, não a da conta. */
+    fimDigitado: boolean("fim_digitado").notNull().default(false),
     situacao: situacaoPrazo("situacao").notNull().default("aberto"),
     origem: origemPrazo("origem").notNull().default("manual"),
     responsavelId: pessoa("responsavel_id"),
@@ -470,6 +490,12 @@ export const origemDocumento = pgEnum("origem_documento", ["upload", "peca", "ca
 /** Leitura pela IA de foto ou PDF escaneado. Vazio: o texto saiu direto do arquivo, ou o arquivo não tem texto para ler. */
 export const leituraDocumento = pgEnum("leitura_documento", ["pendente", "pronta", "falhou"]);
 
+/** Texto escondido ou frase dirigida a uma IA achados no arquivo (`varrerDocumento` de @decreta/documentos). */
+export interface AlertaDoDocumento {
+  tipo: "texto_oculto" | "fonte_branca" | "fonte_minuscula" | "texto_invisivel" | "codigo_de_campo" | "metadados" | "comando_para_ia";
+  trecho: string;
+}
+
 export const documentos = pgTable(
   "documentos",
   {
@@ -487,6 +513,8 @@ export const documentos = pgTable(
     chave: text("chave").notNull(),
     /** Texto extraído (PDF, DOCX), para a IA e a busca. */
     texto: text("texto"),
+    /** Comandos escondidos para IA: a tela avisa, e a IA lê o documento como dado, nunca como instrução. */
+    alertas: jsonb("alertas").$type<AlertaDoDocumento[]>().notNull().default([]),
     leitura: leituraDocumento("leitura"),
     origem: origemDocumento("origem").notNull().default("upload"),
     evento: integer("evento"),
@@ -525,10 +553,33 @@ export const pecas = pgTable(
     revisadaEm: timestamp("revisada_em", { withTimezone: true }),
     /** Modelos do escritório que a IA seguiu na última geração. */
     modelos: jsonb("modelos").$type<string[]>().notNull().default([]),
+    /** O texto como a IA entregou na última geração; nulo na peça escrita à mão. */
+    textoGerado: text("texto_gerado"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [index("pecas_processo_idx").on(t.organizationId, t.processoId), tenantPolicy("pecas")],
+).enableRLS();
+
+/**
+ * Cada "marcar como revisada" (Recomendação CFOAB 001/2024, item 3.7): a versão
+ * da IA e a final daquele momento, quem e quando. Não se apaga quando o texto
+ * muda depois.
+ */
+export const revisoesDePeca = pgTable(
+  "revisoes_de_peca",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    pecaId: uuid("peca_id")
+      .notNull()
+      .references(() => pecas.id, { onDelete: "cascade" }),
+    textoGerado: text("texto_gerado"),
+    textoFinal: text("texto_final").notNull(),
+    revisadaPor: pessoa("revisada_por"),
+    revisadaEm: timestamp("revisada_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("revisoes_de_peca_peca_idx").on(t.organizationId, t.pecaId), tenantPolicy("revisoes_de_peca")],
 ).enableRLS();
 
 /**
@@ -806,6 +857,37 @@ export const capturas = pgTable(
     erro: text("erro"),
   },
   (t) => [index("capturas_fonte_idx").on(t.organizationId, t.fonte, t.iniciadaEm), tenantPolicy("capturas")],
+).enableRLS();
+
+export const situacaoCaderno = pgEnum("situacao_caderno", ["lido", "ausente", "erro"]);
+
+/**
+ * O caderno diário do DJEN de cada tribunal, lido para este escritório: o
+ * caderno é baixado uma vez para todos, mas cada escritório guarda só o que
+ * casou com ele. É daqui que sai a saúde da captura.
+ */
+export const cadernosDjen = pgTable(
+  "cadernos_djen",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    tribunal: text("tribunal").notNull(),
+    dia: date("dia", { mode: "string" }).notNull(),
+    /** "ausente": o tribunal não publicou caderno nesse dia (ou ainda não saiu). */
+    situacao: situacaoCaderno("situacao").notNull(),
+    versao: integer("versao"),
+    /** Comunicações no caderno inteiro do tribunal. */
+    total: integer("total").notNull().default(0),
+    /** As do escritório (pela OAB da equipe ou pelo número de processo da carteira). */
+    casadas: integer("casadas").notNull().default(0),
+    novas: integer("novas").notNull().default(0),
+    canceladas: integer("canceladas").notNull().default(0),
+    erro: text("erro"),
+    /** O último envio do tribunal ao DJEN quando este caderno foi conferido (/comunicacao/tribunal). */
+    ultimoEnvio: date("ultimo_envio", { mode: "string" }),
+    lidoEm: timestamp("lido_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("cadernos_djen_uq").on(t.organizationId, t.tribunal, t.dia), tenantPolicy("cadernos_djen")],
 ).enableRLS();
 
 /** Resumo da manhã já enviado: um por pessoa por dia, mesmo se a rotina rodar de novo. */

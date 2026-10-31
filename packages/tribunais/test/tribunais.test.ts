@@ -1,16 +1,21 @@
 import { describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { enderecoEmTexto } from "@decreta/core";
+import JSZip from "jszip";
 import {
   buscarCep,
   buscarCnpj,
   buscarDjenDoProcesso,
   buscarNoDataJud,
   buscarNoDjen,
+  certidaoDoDjen,
   comarcaDoOrgao,
+  dataJudAtualizadoAte,
   ErroDaReceita,
   ErroDjen,
   ErroDoCep,
   instante,
+  lerCaderno,
   lerComunicacao,
   nomeDoMunicipio,
   nomeDoSistema,
@@ -18,6 +23,8 @@ import {
   orgaoSemComarca,
   partesDoDjen,
   textoLimpo,
+  ultimosEnviosAoDjen,
+  type CanceladaNoDjen,
   type ComunicacaoDjen,
 } from "../src/index.ts";
 import datajud from "./fixtures/datajud.json";
@@ -94,6 +101,113 @@ describe("DJEN", () => {
   });
 });
 
+describe("caderno do DJEN", () => {
+  const S3 = "https://djen-prd.prd.s3.cnj.jus.br/cadernos/2026/10/28/TJSC-D-2026-10-28_v2.zip?assinado=1";
+  const [primeira, segunda] = djen.items;
+
+  async function cadernoFalso(arquivos: Record<string, unknown>, hash?: string) {
+    const zip = new JSZip();
+    for (const [nome, conteudo] of Object.entries(arquivos)) zip.file(nome, JSON.stringify(conteudo));
+    const bytes = await zip.generateAsync({ type: "uint8array" });
+    const meta = { sigla_tribunal: "TJSC", meio: "D", status: "Processado", versao: 2, data: "2026-10-28", total_comunicacoes: 3, hash: hash ?? createHash("sha256").update(bytes).digest("hex"), url: S3 };
+    const urls: string[] = [];
+    const fetchFalso = (async (url: string | URL) => {
+      urls.push(String(url));
+      if (String(url) === S3) return new Response(bytes);
+      if (String(url) === "https://comunicaapi.pje.jus.br/api/v1/caderno/TJSC/2026-10-28/D") return resposta(meta);
+      return resposta({ erro: "não achou" }, 404);
+    }) as unknown as typeof fetch;
+    return { fetchFalso, urls };
+  }
+
+  test("baixa o caderno do dia, confere o hash e entrega arquivo por arquivo; as canceladas vêm à parte", async () => {
+    const cancelada = { ...primeira, id: 999, ativo: false, motivo_cancelamento: "Publicada em duplicidade" };
+    const { fetchFalso } = await cadernoFalso({ "TJSC-D-2026-10-28_1.json": { count: 2, items: [primeira, cancelada] }, "TJSC-D-2026-10-28_2.json": { count: 1, items: [segunda] } });
+    const lotes: ComunicacaoDjen[][] = [];
+    const canceladas: CanceladaNoDjen[] = [];
+    const caderno = await lerCaderno("TJSC", "2026-10-28", async (lote, c) => void (lotes.push(lote), canceladas.push(...c)), { fetch: fetchFalso });
+    expect(caderno).toEqual({ tribunal: "TJSC", dia: "2026-10-28", versao: 2, total: 3, hash: expect.any(String) });
+    expect(lotes).toHaveLength(2);
+    expect(lotes.flat().map((c) => c.idExterno).sort()).toEqual([String(primeira!.id), String(segunda!.id)].sort());
+    expect(lotes.flat().find((c) => c.idExterno === String(primeira!.id))).toMatchObject({ cnj: "5004321-25.2026.8.24.0038", hash: "a1b2c3" });
+    expect(canceladas).toEqual([{ idExterno: "999", motivo: "Publicada em duplicidade" }]);
+  });
+
+  test("versão já lida não baixa de novo; só a versão nova (o tribunal cancelou ou corrigiu) é relida", async () => {
+    const { fetchFalso, urls } = await cadernoFalso({ "a.json": { count: 1, items: [primeira] } });
+    const lotes: ComunicacaoDjen[][] = [];
+    const caderno = await lerCaderno("TJSC", "2026-10-28", async (lote) => void lotes.push(lote), { fetch: fetchFalso, versaoLida: 2 });
+    expect(caderno).toMatchObject({ versao: 2, total: 3 });
+    expect(lotes).toHaveLength(0);
+    expect(urls.some((u) => u === S3)).toBe(false);
+    await lerCaderno("TJSC", "2026-10-28", async (lote) => void lotes.push(lote), { fetch: fetchFalso, versaoLida: 1 });
+    expect(lotes).toHaveLength(1);
+  });
+
+  test("dia sem caderno (fim de semana, feriado, ainda não saiu): null", async () => {
+    const { fetchFalso } = await cadernoFalso({});
+    expect(await lerCaderno("TJSC", "2026-11-01", async () => {}, { fetch: fetchFalso })).toBeNull();
+  });
+
+  test("arquivo que não bate com o hash anunciado não entra", async () => {
+    const { fetchFalso } = await cadernoFalso({ "a.json": { count: 1, items: [primeira] } }, "0".repeat(64));
+    const lotes: ComunicacaoDjen[][] = [];
+    await expect(lerCaderno("TJSC", "2026-10-28", async (lote) => void lotes.push(lote), { fetch: fetchFalso })).rejects.toBeInstanceOf(ErroDjen);
+    expect(lotes).toHaveLength(0);
+  });
+});
+
+describe("certidão do DJEN", () => {
+  const pdf = new TextEncoder().encode("%PDF-1.4 certidão de publicação");
+  const fetchFalso = (async (url: string | URL) => {
+    if (String(url) === "https://comunicaapi.pje.jus.br/api/v1/comunicacao/a1b2c3/certidao") return new Response(pdf, { headers: { "content-type": "application/pdf" } });
+    if (String(url) === "https://comunicaapi.pje.jus.br/api/v1/comunicacao/html/certidao") return new Response("<html>manutenção</html>", { headers: { "content-type": "text/html" } });
+    return resposta({ erro: "não achou" }, 404);
+  }) as unknown as typeof fetch;
+
+  test("baixa o PDF da certidão pelo hash da comunicação", async () => {
+    expect(await certidaoDoDjen("a1b2c3", { fetch: fetchFalso })).toEqual(pdf);
+  });
+
+  test("comunicação que o DJEN não conhece: null; resposta que não é PDF: erro", async () => {
+    expect(await certidaoDoDjen("zzz", { fetch: fetchFalso })).toBeNull();
+    await expect(certidaoDoDjen("html", { fetch: fetchFalso })).rejects.toBeInstanceOf(ErroDjen);
+  });
+});
+
+describe("último envio de cada tribunal ao DJEN", () => {
+  // O formato que o DJEN devolve em /comunicacao/tribunal: os tribunais por UF, com o TRF4 repetido em cada estado da região.
+  const lista = [
+    { uf: "", nomeEstado: "Nacional", instituicoes: [{ sigla: "STJ", nome: "Superior Tribunal de Justiça", dataUltimoEnvio: "29/10/2026" }, { sigla: "CNJ", nome: "Conselho Nacional de Justiça", dataUltimoEnvio: "08/07/2020" }] },
+    { uf: "RS", nomeEstado: "Rio Grande do Sul", instituicoes: [{ sigla: "TRF4", nome: "Tribunal Regional Federal da 4ª Região", dataUltimoEnvio: "29/10/2026" }] },
+    {
+      uf: "SC",
+      nomeEstado: "Santa Catarina",
+      instituicoes: [
+        { sigla: "TJSC", nome: "Tribunal de Justiça do Estado de Santa Catarina", dataUltimoEnvio: "30/10/2026", active: true },
+        { sigla: "TRF4", nome: "Tribunal Regional Federal da 4ª Região", dataUltimoEnvio: "29/10/2026" },
+        { sigla: "TRT12", nome: "Tribunal Regional do Trabalho da 12ª Região" },
+      ],
+    },
+  ];
+  const pedidos: string[] = [];
+  const fetchFalso = (async (url: string | URL) => {
+    pedidos.push(String(url));
+    return resposta(lista);
+  }) as unknown as typeof fetch;
+
+  test("a data do último envio de cada tribunal, no formato do Decreta; sem data, fica de fora", async () => {
+    const envios = await ultimosEnviosAoDjen({ fetch: fetchFalso });
+    expect(pedidos).toEqual(["https://comunicaapi.pje.jus.br/api/v1/comunicacao/tribunal"]);
+    expect(Object.fromEntries(envios)).toEqual({ STJ: "2026-10-29", CNJ: "2020-07-08", TRF4: "2026-10-29", TJSC: "2026-10-30" });
+  });
+
+  test("resposta fora do formato ou DJEN fora do ar: erro", async () => {
+    await expect(ultimosEnviosAoDjen({ fetch: (async () => resposta({ erro: "x" })) as unknown as typeof fetch })).rejects.toBeInstanceOf(ErroDjen);
+    await expect(ultimosEnviosAoDjen({ fetch: (async () => resposta({}, 503)) as unknown as typeof fetch })).rejects.toBeInstanceOf(ErroDjen);
+  });
+});
+
 describe("DataJud", () => {
   test("lê classe, órgão e movimentos em ordem, com chave estável", async () => {
     let pedido: { url: string; auth: string | null; body: unknown } | null = null;
@@ -114,9 +228,33 @@ describe("DataJud", () => {
     expect(p!.movimentos[0]).toMatchObject({ codigo: 26, descricao: "Sorteio", chave: "datajud:26:2026-02-10T09:30:00.000Z" });
   });
 
+  test("movimento com data impossível fica de fora, e vem o dia em que o tribunal mandou o processo", async () => {
+    const fonte = datajud.hits.hits[0]!._source;
+    const comLixo = { hits: { hits: [{ _source: { ...fonte, movimentos: [...fonte.movimentos, { codigo: 11, nome: "Conclusão", dataHora: "2999-06-12T10:00:00.000Z" }] } }] } };
+    const p = await buscarNoDataJud("5004321-25.2026.8.24.0038", { apiKey: "k", fetch: (async () => resposta(comLixo)) as unknown as typeof fetch });
+    expect(p!.movimentos.map((m) => m.titulo)).toEqual(["Distribuição", "Juntada de laudo pericial", "Petição"]);
+    expect(p!.atualizadoEm).toBe("2026-10-28T14:12:03.000Z");
+  });
+
   test("processo que o tribunal ainda não enviou", async () => {
     const p = await buscarNoDataJud("5004321-25.2026.8.24.0038", { apiKey: "k", fetch: (async () => resposta({ hits: { hits: [] } })) as unknown as typeof fetch });
     expect(p).toBeNull();
+  });
+
+  test("até quando o índice do tribunal tem dados: o maior @timestamp", async () => {
+    let pedido: { url: string; body: unknown } | null = null;
+    // O que o DataJud devolveu para o TJSC em 31/10/2026: duas semanas de atraso.
+    const ate = await dataJudAtualizadoAte("5004321-25.2026.8.24.0038", {
+      apiKey: "k",
+      fetch: (async (url: string, init: RequestInit) => {
+        pedido = { url, body: JSON.parse(String(init.body)) };
+        return resposta({ hits: { hits: [{ _index: "api_publica_tjsc", _source: { "@timestamp": "2026-10-16T21:20:30.894000Z" }, sort: [1792185630894] }] } });
+      }) as unknown as typeof fetch,
+    });
+    expect(pedido!).toMatchObject({ url: "https://api-publica.datajud.cnj.jus.br/api_publica_tjsc/_search", body: { size: 1, sort: [{ "@timestamp": { order: "desc" } }] } });
+    expect(ate).toBe("2026-10-16T21:20:30.894Z");
+    expect(await dataJudAtualizadoAte("5004321-25.2026.8.24.0038", { apiKey: "k", fetch: (async () => resposta({ hits: { hits: [] } })) as unknown as typeof fetch })).toBeNull();
+    await expect(dataJudAtualizadoAte("5004321-25.2026.8.24.0038", { apiKey: "k", fetch: (async () => resposta({}, 502)) as unknown as typeof fetch })).rejects.toThrow();
   });
 
   test("datas compactas do DataJud", () => {

@@ -6,7 +6,7 @@
  * nova pedindo o que o número delas conta.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { abrir, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
+import { abrir, abrirCartao, acessoAoCartao, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
 import { abrirPortao, audienciasDaSemana, conversa, ia, ligarAosPoucos, noPortao, pessoa, prazosDaSemana, roteiro, uuid } from "./aos-poucos";
 import * as R from "./resultados";
 
@@ -20,7 +20,6 @@ function abrirResposta(page: Page, partes: unknown[], pergunta = "Como estamos?"
 /** Quanto a caixa da conversa rola para o lado (a página pode não rolar e a conversa sim). */
 const sobraNaConversa = (page: Page) => page.locator(".dc-chat__rolagem").evaluate((el) => el.scrollWidth - el.clientWidth);
 const altura = (page: Page, seletor: string, i = 0) => page.locator(seletor).nth(i).evaluate((el) => Math.round(el.getBoundingClientRect().height));
-const cartao = (page: Page, titulo: string) => page.locator(".dc-cartao-ia").filter({ has: page.getByRole("heading", { name: titulo, exact: true }) });
 
 const PANORAMA = {
   hoje: "2026-10-29",
@@ -38,24 +37,27 @@ const PANORAMA = {
 test.describe("larguras", () => {
   test("1440 px: a conversa fica com a largura (o painel ao lado só a partir de 1600) e cada prazo numa linha", async ({ page }) => {
     await abrir(page, `/perguntar/${ids.conversaSemana}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await expect(page.getByRole("complementary", { name: "Nesta conversa" })).toHaveCount(0);
     expect(await page.locator(".dc-chat__coluna").evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(800);
+    const folha = await abrirCartao(page, "Prazos");
+    await expect(folha.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
     expect(await altura(page, ".dc-linha-prazo")).toBeLessThan(60);
+    await page.keyboard.press("Escape");
 
     await page.setViewportSize({ width: 1600, height: 900 });
     await expect(page.getByRole("complementary", { name: "Nesta conversa" })).toBeVisible();
-    expect(await altura(page, ".dc-linha-prazo")).toBeLessThan(60);
   });
 
-  test("cartão médio (1100 px, com o histórico): o prazo continua numa linha, com o botão só no ícone", async ({ page }) => {
+  test("1100 px, com o histórico: a conversa estreita, e na folha do cartão o prazo continua numa linha", async ({ page }) => {
     await page.setViewportSize({ width: 1100, height: 800 });
     await abrir(page, `/perguntar/${ids.conversaSemana}`, comIa());
-    const botao = page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" });
-    await expect(botao).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     expect(await page.locator(".dc-chat__coluna").evaluate((el) => el.getBoundingClientRect().width)).toBeLessThan(620);
+    const folha = await abrirCartao(page, "Prazos");
+    await expect(folha.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
     expect(await altura(page, ".dc-linha-prazo")).toBeLessThan(60);
-    await expect(botao.getByText("Cumprido")).toBeHidden();
+    expect(await sobraNaLateral(page)).toBe(0);
   });
 
   test.describe("no celular", () => {
@@ -71,14 +73,15 @@ test.describe("larguras", () => {
       expect(await sobraNaLateral(page)).toBe(0);
     });
 
-    test("prazo no cartão estreito: o nome em cima e o selo embaixo, numa linha mais baixa", async ({ page }) => {
+    test("prazo na folha do celular: o nome em cima e o selo embaixo, numa linha mais baixa", async ({ page }) => {
       await abrir(page, `/perguntar/${ids.conversaSemana}`, comIa());
-      const linha = page.locator(".dc-linha-prazo").first();
+      const folha = await abrirCartao(page, "Prazos");
+      const linha = folha.locator(".dc-linha-prazo").first();
       await expect(linha).toBeVisible();
       const [nome, selo] = await Promise.all([linha.locator(".dc-cartao-ia__titulo").boundingBox(), linha.locator(".dc-selo").boundingBox()]);
       expect(selo!.y).toBeGreaterThan(nome!.y);
       expect(await altura(page, ".dc-linha-prazo")).toBeLessThan(92);
-      expect(await sobraNaConversa(page)).toBe(0);
+      expect(await sobraNaLateral(page)).toBe(0);
     });
 
     test("tabela larga: rola dentro da caixa, sem quebrar palavra no meio, e o CNJ numa linha", async ({ page }) => {
@@ -114,13 +117,14 @@ test.describe("larguras", () => {
       const lista = R.clientes(5);
       const empresa = lista.itens.find((c: { nome: string }) => /Ltda/.test(c.nome)) ?? lista.itens[0];
       await abrirResposta(page, [R.ferramenta("c1", "buscarClientes", lista, { busca: "a" })]);
-      const zap = page.getByRole("link", { name: `WhatsApp de ${empresa.nome}` });
+      const folha = await abrirCartao(page, "Clientes");
+      const zap = folha.getByRole("link", { name: `WhatsApp de ${empresa.nome}` });
       await expect(zap).toBeVisible();
       expect(await zap.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(40);
-      const nome = page.locator(".dc-cartao-ia__linha--quebra .dc-cartao-ia__titulo").filter({ hasText: empresa.nome });
+      const nome = folha.locator(".dc-cartao-ia__linha--quebra .dc-cartao-ia__titulo").filter({ hasText: empresa.nome });
       expect(await nome.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(28);
-      await expect(page.locator(".dc-cartao-ia__linha--quebra").filter({ hasText: empresa.nome }).locator(".dc-cartao-ia__sub")).toContainText("(4");
-      expect(await sobraNaConversa(page)).toBe(0);
+      await expect(folha.locator(".dc-cartao-ia__linha--quebra").filter({ hasText: empresa.nome }).locator(".dc-cartao-ia__sub")).toContainText("(4");
+      expect(await sobraNaLateral(page)).toBe(0);
     });
 
     test("campo vazio numa linha, com o texto de exemplo curto: não pula ao digitar", async ({ page }) => {
@@ -146,8 +150,8 @@ test.describe("cartões", () => {
     agenda.cortadoEm = "2026-11-05";
     const total = agenda.dias.reduce((n, d) => n + d.itens.length, 0);
     await abrirResposta(page, [R.ferramenta("a1", "verAgenda", agenda, { de: "2026-10-29", ate: "2026-12-31" })], "O que tenho até o fim do ano?");
-    const c = cartao(page, "Agenda");
-    await expect(c.locator(".dc-cartao-ia__n")).toHaveText(`${total} itens em ${agenda.dias.length} dias`);
+    await expect(acessoAoCartao(page, "Agenda")).toContainText(`${total} itens em ${agenda.dias.length} dias`);
+    const c = await abrirCartao(page, "Agenda");
     await expect(c.locator(".dc-cartao-ia__linha")).toHaveCount(5);
     await expect(c.getByText("Atrasada")).toBeVisible();
     await expect(c.locator(".dc-cartao-ia__linha").filter({ hasText: "Devolver documentos" }).locator(".dc-selo")).toHaveText("Atrasada");
@@ -166,15 +170,15 @@ test.describe("cartões", () => {
     const agenda = R.agenda("2026-10-29") as { dias: { itens: any[] }[] };
     for (const i of agenda.dias[0]!.itens) delete i.situacao;
     await abrirResposta(page, [R.ferramenta("a1", "verAgenda", agenda, { de: "2026-10-29", ate: "2026-10-29" })]);
-    const c = cartao(page, "Agenda");
-    await expect(c.locator(".dc-cartao-ia__n")).toHaveText(`${agenda.dias[0]!.itens.length} itens`);
+    await expect(acessoAoCartao(page, "Agenda")).toContainText(`${agenda.dias[0]!.itens.length} itens`);
+    const c = await abrirCartao(page, "Agenda");
     await expect(c.locator(".dc-cartao-ia__marca")).toHaveCount(0);
     await expect(c.getByText("A consulta parou")).toHaveCount(0);
   });
 
   test("Prazos: Mostrar mais de 10 em 10, e o link leva o filtro da consulta à tela de Prazos", async ({ page }) => {
     await abrirResposta(page, [R.ferramenta("p1", "buscarPrazos", R.prazos(20), { ate: "2026-11-05", responsavel: "eu" })]);
-    const c = cartao(page, "Prazos");
+    const c = await abrirCartao(page, "Prazos");
     await expect(c.locator(".dc-linha-prazo")).toHaveCount(5);
     await c.getByRole("button", { name: "Mostrar mais 10" }).click();
     await expect(c.locator(".dc-linha-prazo")).toHaveCount(15);
@@ -186,16 +190,19 @@ test.describe("cartões", () => {
 
   test("Publicações e Documentos: a data primeiro e o trecho numa linha só", async ({ page }) => {
     await abrirResposta(page, [R.ferramenta("u1", "buscarPublicacoes", R.publicacoes(5)), R.ferramenta("d1", "buscarDocumentos", R.documentos(5), { busca: "laudo" })]);
-    const pub = cartao(page, "Publicações");
+    const pub = await abrirCartao(page, "Publicações");
     await expect(pub.locator(".dc-cartao-ia__sub").first()).toHaveText(/^28\/10 · Marina Duarte/);
-    for (const c of [pub, cartao(page, "Documentos")]) expect(await c.locator(".dc-cartao-ia__trecho").first().evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(22);
+    expect(await pub.locator(".dc-cartao-ia__trecho").first().evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(22);
+    await page.keyboard.press("Escape");
+    const docs = await abrirCartao(page, "Documentos");
+    expect(await docs.locator(".dc-cartao-ia__trecho").first().evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(22);
   });
 
   test("Audiências: o dia da semana curto antes do processo; a cancelada ganha a marca", async ({ page }) => {
     const saida = structuredClone(audienciasDaSemana.saida);
     saida.itens[1].situacao = "cancelada";
     await abrirResposta(page, [{ ...audienciasDaSemana, saida }]);
-    const c = cartao(page, "Audiências");
+    const c = await abrirCartao(page, "Audiências");
     await expect(c.locator(".dc-cartao-ia__sub").first()).toHaveText("qui. · Carlos Henrique Prado × Construtora Vale Norte");
     await expect(c.locator(".dc-cartao-ia__linha").nth(1).locator(".dc-cartao-ia__marca")).toHaveText("cancelada");
     await expect(c.locator(".dc-cartao-ia__linha").first().locator(".dc-cartao-ia__marca")).toHaveCount(0);
@@ -203,7 +210,8 @@ test.describe("cartões", () => {
 
   test("ficha do processo: o número de prazos em aberto, Mostrar mais e a última movimentação", async ({ page }) => {
     await abrirResposta(page, [R.ferramenta("l1", "lerProcesso", R.fichaDoProcesso(6), { processoId: uuid(9) })]);
-    const c = cartao(page, "Processo");
+    await expect(acessoAoCartao(page, "Processo")).not.toBeEmpty();
+    const c = await abrirCartao(page, "Processo");
     await expect(c.getByRole("heading", { name: "Prazos em aberto · 6" })).toBeVisible();
     await expect(c.locator(".dc-linha-prazo")).toHaveCount(3);
     await c.getByRole("button", { name: "Mostrar mais 3" }).click();
@@ -218,7 +226,7 @@ test.describe("cartões", () => {
     lista.itens[1].situacao = "arquivado";
     delete lista.itens[2].ultimaMovimentacao;
     await abrirResposta(page, [R.ferramenta("b1", "buscarProcessos", lista, { ordem: "parados" })]);
-    const linhas = cartao(page, "Processos").locator(".dc-cartao-ia__linha");
+    const linhas = (await abrirCartao(page, "Processos")).locator(".dc-cartao-ia__linha");
     await expect(linhas.nth(0).locator(".dc-cartao-ia__sub")).toContainText("Movimentou ontem · ");
     await expect(linhas.nth(1).locator(".dc-cartao-ia__sub")).toContainText("Movimentou há 1 ano · ");
     await expect(linhas.nth(1).locator(".dc-cartao-ia__marca")).toHaveText("arquivado");
@@ -229,10 +237,11 @@ test.describe("cartões", () => {
     const lista = R.prazos(2);
     lista.itens[0] = { ...lista.itens[0]!, situacao: "cumprido", fim: "2026-11-09", quando: "9 nov", cumpridoEm: "2026-10-29" };
     await abrirResposta(page, [R.ferramenta("p1", "buscarPrazos", lista, { situacao: "cumprido" })]);
-    const linha = page.locator(".dc-linha-prazo").first();
+    const folha = await abrirCartao(page, "Prazos");
+    const linha = folha.locator(".dc-linha-prazo").first();
     await expect(linha.locator(".dc-selo")).toHaveText("Cumprido 29/10");
     await expect(linha.locator(".dc-cartao-ia__marca")).toHaveText("vencia 09/11");
-    await expect(cartao(page, "Prazos").getByRole("link", { name: "Prazos" })).toHaveAttribute("href", "/prazos?quando=cumpridos");
+    await expect(folha.getByRole("link", { name: "Prazos" })).toHaveAttribute("href", "/prazos?quando=cumpridos");
   });
 
   test("contagem: a explicação recolhida em Como contei, com o calendário à vista; a antiga, sem calendário, abre", async ({ page }) => {
@@ -242,7 +251,8 @@ test.describe("cartões", () => {
     const antiga = [{ ...partes[0], saida: semCalendario }, partes[1]];
     const saida = { ...semCalendario, calendario: "TJSC, sem feriados municipais" };
     await abrirResposta(page, [{ ...antiga[0], saida }, antiga[1]], "Publicado hoje, 15 dias úteis vence quando?");
-    const c = cartao(page, "Contagem do prazo");
+    await expect(acessoAoCartao(page, "Contagem do prazo")).toContainText(/dias úteis · vence em \d\d\/\d\d/);
+    const c = await abrirCartao(page, "Contagem do prazo");
     await expect(c.getByText("Como contei")).toBeVisible();
     await expect(c.getByText("TJSC, sem feriados municipais")).toBeVisible();
     await expect(c.getByText(saida.explicacao)).toBeHidden();
@@ -250,17 +260,19 @@ test.describe("cartões", () => {
     await expect(c.getByText(saida.explicacao)).toBeVisible();
 
     await abrirResposta(page, antiga, "Publicado hoje, 15 dias úteis vence quando?");
-    await expect(cartao(page, "Contagem do prazo").getByText("Como contei")).toBeVisible();
-    await expect(cartao(page, "Contagem do prazo").locator(".dc-contagem__calendario")).toHaveCount(0);
+    const antigo = await abrirCartao(page, "Contagem do prazo");
+    await expect(antigo.getByText("Como contei")).toBeVisible();
+    await expect(antigo.locator(".dc-contagem__calendario")).toHaveCount(0);
 
     // O vencimento adiado (caía num feriado): a caixa do Vence diz de onde veio, já que a explicação fica recolhida.
     await abrirResposta(page, [{ ...antiga[0], saida: { ...saida, fim: "2026-11-03", prorrogadoDe: "2026-11-02" } }]);
-    await expect(cartao(page, "Contagem do prazo").locator(".dc-contagem__passo--fim")).toContainText("adiado de 02/11");
+    await expect((await abrirCartao(page, "Contagem do prazo")).locator(".dc-contagem__passo--fim")).toContainText("adiado de 02/11");
   });
 
   test("O escritório agora: cada número é o da tela que o link abre, e as tarefas atrasadas aparecem", async ({ page }) => {
     await abrirResposta(page, [R.ferramenta("n1", "panorama", PANORAMA)]);
-    const c = cartao(page, "O escritório agora");
+    await expect(acessoAoCartao(page, "O escritório agora")).toContainText("1 prazo vencido · 4 prazos até hoje · 7 publicações novas");
+    const c = await abrirCartao(page, "O escritório agora");
     const numero = (rotulo: string) => c.locator(".dc-contador").filter({ hasText: rotulo });
     await expect(numero("Vencidos").locator(".dc-contador__n")).toHaveText("1");
     await expect(numero("Vencidos")).toHaveAttribute("href", "/prazos?quando=vencidos");
@@ -284,13 +296,14 @@ test.describe("cartões", () => {
     const lida = { ...lista.itens[0], teor: "Ante o exposto, JULGO PROCEDENTE o pedido…" };
     await abrirResposta(page, [R.ferramenta("r1", "lerPublicacao", lida, { publicacaoId: lida.id })], "O que a intimação da Marina pede?");
     await expect(page.locator(".dc-passo")).toHaveText("Leu · Intimação");
-    const c = cartao(page, "Publicação lida");
+    await expect(acessoAoCartao(page, "Publicação lida")).toContainText("Intimação");
+    const c = await abrirCartao(page, "Publicação lida");
     await expect(c.locator(".dc-cartao-ia__linha")).toHaveCount(1);
     await expect(c.getByRole("link", { name: /Intimação/ })).toHaveAttribute("href", `/publicacoes/${lida.id}`);
 
     await abrirResposta(page, [R.ferramenta("u1", "buscarPublicacoes", lista), R.ferramenta("r1", "lerPublicacao", lida, { publicacaoId: lida.id })]);
-    await expect(cartao(page, "Publicações")).toBeVisible();
-    await expect(cartao(page, "Publicação lida")).toHaveCount(0);
+    await expect(acessoAoCartao(page, "Publicações")).toBeVisible();
+    await expect(acessoAoCartao(page, "Publicação lida")).toHaveCount(0);
   });
 });
 

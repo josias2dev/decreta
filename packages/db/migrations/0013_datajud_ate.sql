@@ -1,0 +1,1 @@
+ALTER TABLE "escritorios" ADD COLUMN "datajud_ate" jsonb DEFAULT '{}'::jsonb NOT NULL;

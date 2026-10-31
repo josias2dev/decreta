@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/665e02d4-f1bc-4f10-adf2-d6209d7e6d6f",
+  "path": "/prazos/13634313-8aac-45e4-9b2b-c7919b072588",
   "corpo": {
-    "id": "665e02d4-f1bc-4f10-adf2-d6209d7e6d6f",
+    "id": "13634313-8aac-45e4-9b2b-c7919b072588",
     "tipo": "Alegações finais",
     "fundamento": "art. 364, § 2º, CPC",
     "dias": 15,
@@ -21,14 +21,14 @@
     "origem": "ia",
     "confirmado": true,
     "confirmadoPor": {
-      "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+      "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
       "foto": "/demonstracao/beatriz.jpg"
     },
     "responsavel": {
-      "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+      "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
@@ -36,32 +36,68 @@
     },
     "observacoes": null,
     "motivoDescarte": null,
+    "conta": {
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
+      "disponibilizadaEm": "2026-10-06",
+      "publicadoEm": "2026-10-07",
+      "intimadoNoSistemaEm": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "inicio": "2026-10-08",
+      "fim": "2026-10-29",
+      "desconsiderados": [
+        {
+          "dia": "2026-10-12",
+          "nome": "Nossa Senhora Aparecida",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "explicacao": "Começa em 08/10, primeiro dia útil depois da publicação. Fora da conta: fins de semana, 12/10 (Nossa Senhora Aparecida).",
+      "fimDigitado": false,
+      "pelaConta": null,
+      "certidaoDe": null,
+      "tempestividade": "A intimação foi disponibilizada no Diário de Justiça Eletrônico Nacional (DJEN) em 06/10/2026 e considera-se publicada em 07/10/2026, primeiro dia útil seguinte (Lei 11.419/2006, art. 4º, § 3º). O prazo de 15 dias úteis (CPC, art. 219) começou a correr em 08/10/2026 (Lei 11.419/2006, art. 4º, § 4º) e termina em 29/10/2026, excluídos os sábados, os domingos e o dia 12/10/2026 (Nossa Senhora Aparecida). Apresentada até 29/10/2026, a presente peça é tempestiva.",
+      "confirmadoPor": {
+        "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
+        "nome": "Beatriz Souza",
+        "apelido": "Beatriz",
+        "iniciais": "BS",
+        "foto": "/demonstracao/beatriz.jpg"
+      },
+      "confirmadoEm": "2026-10-07T12:12:00.000Z"
+    },
+    "conferencia": null,
     "processo": {
-      "id": "84c99f2b-66fa-427a-a258-cfb8b5a77cd6",
+      "id": "23cb5bb0-f73e-461e-ad84-e453041e7bd7",
       "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
       "cnj": "5009876-57.2025.8.24.0038",
       "orgao": "4ª Vara Cível",
       "comarca": "Joinville",
       "tribunal": "TJSC",
-      "poloCliente": "ativo"
+      "poloCliente": "ativo",
+      "semIa": false
     },
     "publicacao": {
-      "id": "08ba8258-f7c2-4d26-a545-9b0310e32b08",
+      "id": "cfc4c23e-37be-456d-9012-9c9d0ba8d106",
       "fonte": "djen",
       "texto": "Encerrada a instrução, concedo às partes o prazo sucessivo de 15 (quinze) dias para apresentação de alegações finais por memoriais.",
       "disponibilizadaEm": "2026-10-06",
       "publicadaEm": "2026-10-07",
       "tipoComunicacao": "Intimação",
       "tipoDocumento": "Despacho",
-      "link": null
+      "link": null,
+      "certidao": false,
+      "cancelada": null
     },
     "briefing": null,
     "pecas": [
       {
-        "id": "236dbd08-337b-49b1-8767-5bdaeccfea2d",
+        "id": "5f531e21-9904-459d-aa25-128b438fdfe8",
         "titulo": "Alegações finais · Roberto Kühn",
         "situacao": "rascunho",
-        "atualizadaEm": "2026-10-31T17:18:17.197Z"
+        "atualizadaEm": "2026-10-31T22:58:12.845Z"
       }
     ],
     "historico": [

@@ -23,12 +23,12 @@
     "cadastrado": null,
     "partes": [
       {
-        "nome": "Débora Amaral",
+        "nome": "Douglas Werner",
         "polo": "ativo",
         "advogados": "Beatriz Souza (OAB/SC 41233)",
         "cliente": {
-          "id": "e1d7a412-3f3d-4fa1-afd9-5cb455a37458",
-          "nome": "Débora Amaral"
+          "id": "605d927d-6c14-4c24-810c-111896e5cbaa",
+          "nome": "Douglas Werner"
         }
       },
       {
@@ -40,8 +40,8 @@
     ],
     "poloCliente": "ativo",
     "cliente": {
-      "id": "e1d7a412-3f3d-4fa1-afd9-5cb455a37458",
-      "nome": "Débora Amaral"
+      "id": "605d927d-6c14-4c24-810c-111896e5cbaa",
+      "nome": "Douglas Werner"
     }
   }
 }

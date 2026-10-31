@@ -1,15 +1,17 @@
 import { formatarDia } from "@decreta/core";
-import { analises, documentos, escritorios, modelos, pecas, prazos, processos, withTenant } from "@decreta/db";
-import { gerarDocx, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
+import { analises, documentos, escritorios, modelos, pecas, prazos, processos, revisoesDePeca, withTenant } from "@decreta/db";
+import { MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { CATALOGO, GRUPOS_DE_PECA, gerarPeca, pecaParaPrazo, RODAPE_IA, tipoDePeca, type Briefing, type Ia } from "@decreta/ia";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { paraQualificar, qualificacaoDasPartes } from "../servicos/cadastros.ts";
-import { carregarContexto } from "../servicos/contexto.ts";
+import { contextoParaIa, semIa } from "../servicos/contexto.ts";
 import { modelosParaPeca } from "../servicos/modelos.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
+import { contaDoPrazo } from "../servicos/prazos.ts";
+import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
 import { comLimiteDaIa, corpo, falha, iaDaRota, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 function briefingEmTexto(b: Briefing): string {
@@ -46,7 +48,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const tipo = (tipoPedido && tipoDePeca(tipoPedido)) || (rascunho && tipoDePeca(rascunho.tipo)) || sugerido;
       const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: sobreOCaso(p, prazo?.tipo) });
       return c.json({
-        processo: { id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao },
+        processo: { id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, semIa: await semIa(tx, { processoId: p.id }) },
         prazo: prazo ? { id: prazo.id, tipo: prazo.tipo, fim: prazo.fim } : null,
         tipoSugerido: sugerido.id,
         leu: [...docs.map((d) => (d.evento != null ? `${d.nome} · evento ${d.evento}` : d.nome)), ...(briefing ? ["Briefing do prazo"] : [])],
@@ -65,6 +67,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const revisor = p.revisadaPor ? pessoas.get(p.revisadaPor) : undefined;
       const usados = p.modelos.length ? await tx.select({ id: modelos.id, titulo: modelos.titulo }).from(modelos).where(inArray(modelos.id, p.modelos)) : [];
+      const revisoes = await tx.select().from(revisoesDePeca).where(eq(revisoesDePeca.pecaId, p.id)).orderBy(desc(revisoesDePeca.revisadaEm));
       return c.json({
         id: p.id,
         processoId: p.processoId,
@@ -82,7 +85,33 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
             ? { por: revisor ? { id: revisor.id, nome: revisor.nome, apelido: revisor.apelido, iniciais: revisor.iniciais, oab: revisor.oab } : null, em: p.revisadaEm.toISOString() }
             : null,
         modelos: usados,
+        /** O registro de cada revisão, da mais nova à mais antiga, com quanto o texto se afastou da versão da IA. */
+        revisoes: revisoes.map((r) => {
+          const por = r.revisadaPor ? pessoas.get(r.revisadaPor) : undefined;
+          return {
+            id: r.id,
+            em: r.revisadaEm.toISOString(),
+            por: por ? { id: por.id, nome: por.nome, apelido: por.apelido, iniciais: por.iniciais, oab: por.oab } : null,
+            geradaPorIa: r.textoGerado !== null,
+            ...mudancaNaRevisao(r.textoGerado, r.textoFinal),
+          };
+        }),
+        semIa: await semIa(tx, { processoId: p.processoId }),
       });
+    });
+  });
+
+  /** As duas versões de uma revisão: a que a IA entregou e a que a pessoa revisou. */
+  app.get("/pecas/:id/revisoes/:revisao", async (c) => {
+    const pecaId = id(c);
+    const revisaoId = id(c, "revisao");
+    return tenant(c, deps, async (tx) => {
+      const [r] = await tx
+        .select({ id: revisoesDePeca.id, textoGerado: revisoesDePeca.textoGerado, textoFinal: revisoesDePeca.textoFinal })
+        .from(revisoesDePeca)
+        .where(and(eq(revisoesDePeca.id, revisaoId), eq(revisoesDePeca.pecaId, pecaId)));
+      if (!r) falha(404, "nao_encontrado");
+      return c.json(r);
     });
   });
 
@@ -107,7 +136,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [briefing] = prazo
         ? await tx.select({ conteudo: analises.conteudo }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.situacao, "pronto"))).orderBy(desc(analises.createdAt)).limit(1)
         : [];
-      const ctx = await carregarContexto(tx, p.id, { documentos: true });
+      const ctx = await contextoParaIa(tx, p.id, { documentos: true });
       const qualificar = await paraQualificar(tx, p.id);
       const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: [sobreOCaso(p, prazo?.tipo), b.instrucoes].join(" ") });
       const [esc] = await tx.select().from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
@@ -115,7 +144,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const advogadoId = prazo?.responsavelId ?? p.responsavelId ?? c.get("userId");
       const advogado = pessoas.get(advogadoId) ?? pessoas.get(c.get("userId"));
       const titulo = `${tipo.nome} · ${p.titulo.split(" × ")[0]}`;
-      const valores = { tipo: tipo.id, titulo, instrucoes: b.instrucoes, texto: "", situacao: "rascunho" as const, criadaPor: c.get("userId"), revisadaPor: null, revisadaEm: null, modelos: doBanco.map((m) => m.id) };
+      const valores = { tipo: tipo.id, titulo, instrucoes: b.instrucoes, texto: "", textoGerado: null, situacao: "rascunho" as const, criadaPor: c.get("userId"), revisadaPor: null, revisadaEm: null, modelos: doBanco.map((m) => m.id) };
       const pecaId = b.pecaId
         ? (await tx.update(pecas).set(valores).where(eq(pecas.id, b.pecaId)).returning({ id: pecas.id }))[0]?.id
         : (await tx.insert(pecas).values({ organizationId: c.get("orgId"), processoId: p.id, prazoId: prazo?.id ?? null, ...valores }).returning({ id: pecas.id }))[0]?.id;
@@ -125,7 +154,15 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         pedido: {
           tipo,
           instrucoes: b.instrucoes,
-          prazo: prazo ? { tipo: prazo.tipo, fim: formatarDia(prazo.fim), fundamento: prazo.fundamento, briefing: briefing ? briefingEmTexto(briefing.conteudo as unknown as Briefing) : undefined } : undefined,
+          prazo: prazo
+            ? {
+                tipo: prazo.tipo,
+                fim: formatarDia(prazo.fim),
+                fundamento: prazo.fundamento,
+                briefing: briefing ? briefingEmTexto(briefing.conteudo as unknown as Briefing) : undefined,
+                tempestividade: (await contaDoPrazo(tx, c.get("orgId"), prazo)).tempestividade,
+              }
+            : undefined,
           contextoDoProcesso: ctx?.texto ?? "",
           escritorio: { nome: esc?.timbre?.nome ?? c.get("orgNome"), advogado: advogado?.nome ?? c.get("userNome"), oab: advogado?.oab ?? null, cidade: p.comarca },
           modelos: doBanco.map((m) => ({ titulo: m.titulo, tese: m.tese, texto: m.texto })),
@@ -159,53 +196,46 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
 
   /**
    * Salva o texto, o título ou a situação. Marcar como revisada grava quem e
-   * quando; mudar o texto de uma peça revisada a devolve a rascunho, porque a
-   * revisão vale para o texto que a pessoa leu.
+   * quando, e guarda no registro a versão da IA e a revisada; mudar o texto de
+   * uma peça revisada a devolve a rascunho, porque a revisão vale para o texto
+   * que a pessoa leu.
    */
   app.put("/pecas/:id", async (c) => {
     const pecaId = id(c);
     const b = await corpo(c, z.object({ texto: z.string().max(400_000).optional(), titulo: z.string().trim().min(2).max(300).optional(), situacao: z.enum(["rascunho", "revisada"]).optional() }));
     const r = await tenant(c, deps, async (tx) => {
-      const [atual] = await tx.select({ texto: pecas.texto, situacao: pecas.situacao }).from(pecas).where(eq(pecas.id, pecaId));
+      const [atual] = await tx.select({ texto: pecas.texto, situacao: pecas.situacao, textoGerado: pecas.textoGerado }).from(pecas).where(eq(pecas.id, pecaId));
       if (!atual) return null;
       const valores: Partial<typeof pecas.$inferInsert> = { ...b };
       const textoMudou = b.texto !== undefined && b.texto !== atual.texto;
-      if (b.situacao === "revisada") Object.assign(valores, { revisadaPor: c.get("userId"), revisadaEm: new Date() });
-      else if (b.situacao === "rascunho" || (textoMudou && atual.situacao === "revisada")) Object.assign(valores, { situacao: "rascunho", revisadaPor: null, revisadaEm: null });
+      let revisao: Record<string, unknown> | null = null;
+      if (b.situacao === "revisada") {
+        const agora = new Date();
+        Object.assign(valores, { revisadaPor: c.get("userId"), revisadaEm: agora });
+        const textoFinal = b.texto ?? atual.texto;
+        const [linha] = await tx
+          .insert(revisoesDePeca)
+          .values({ organizationId: c.get("orgId"), pecaId, textoGerado: atual.textoGerado, textoFinal, revisadaPor: c.get("userId"), revisadaEm: agora })
+          .returning({ id: revisoesDePeca.id });
+        revisao = { revisaoId: linha!.id, geradaPorIa: atual.textoGerado !== null, ...mudancaNaRevisao(atual.textoGerado, textoFinal) };
+      } else if (b.situacao === "rascunho" || (textoMudou && atual.situacao === "revisada")) Object.assign(valores, { situacao: "rascunho", revisadaPor: null, revisadaEm: null });
       await tx.update(pecas).set(valores).where(eq(pecas.id, pecaId));
-      return { situacao: valores.situacao ?? atual.situacao, revisada: b.situacao === "revisada" };
+      return { situacao: valores.situacao ?? atual.situacao, revisao };
     });
     if (!r) falha(404, "nao_encontrado");
-    if (r.revisada) await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "peca.revisada", detalhes: { pecaId }, ip: ip(c) }, deps.log);
+    if (r.revisao) await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "peca.revisada", detalhes: { pecaId, ...r.revisao }, ip: ip(c) }, deps.log);
     return c.json({ ok: true, situacao: r.situacao });
   });
 
   /** O DOCX no timbre do escritório. */
   app.get("/pecas/:id/docx", async (c) => {
     const pecaId = id(c);
-    const { peca, timbre, logo } = await tenant(c, deps, async (tx) => {
+    const { peca, timbre } = await tenant(c, deps, async (tx) => {
       const [p] = await tx.select().from(pecas).where(eq(pecas.id, pecaId));
       if (!p) falha(404, "nao_encontrado");
-      const [esc] = await tx.select().from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
-      const t = esc?.timbre ?? { nome: c.get("orgNome") };
-      const [doc] = t.logoDocumentoId ? await tx.select({ chave: documentos.chave }).from(documentos).where(eq(documentos.id, t.logoDocumentoId)) : [];
-      return { peca: p, timbre: t, logo: doc?.chave ?? null };
+      return { peca: p, timbre: await timbreDoEscritorio(tx, c.get("orgId"), c.get("orgNome")) };
     });
-    const bytesDoLogo = logo ? await deps.arquivos.read(logo).catch(() => null) : null;
-    const docx = await gerarDocx({
-      titulo: peca.titulo,
-      texto: peca.texto,
-      timbre: {
-        nome: timbre.nome,
-        registro: timbre.registro,
-        endereco: timbre.endereco,
-        contato: timbre.contato,
-        fonte: timbre.fonte,
-        tamanho: timbre.tamanho,
-        cor: timbre.cor,
-        logo: bytesDoLogo ? { bytes: bytesDoLogo, ...tamanhoDoPng(bytesDoLogo) } : undefined,
-      },
-    });
+    const docx = await docxNoTimbre(deps.arquivos, timbre, { titulo: peca.titulo, texto: peca.texto });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "peca.baixada", detalhes: { pecaId }, ip: ip(c) }, deps.log);
     return new Response(docx, {
       headers: {
@@ -217,16 +247,27 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
   });
 }
 
+/** Parágrafos da peça, sem diferença de espaços. */
+const paragrafos = (texto: string) =>
+  texto
+    .split(/\n\s*\n/)
+    .map((p) => p.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+/**
+ * Quanto a versão revisada se afastou da versão da IA, em parágrafos: os da
+ * final que não estavam na da IA (novos ou reescritos). Sem versão da IA
+ * (peça à mão), todos contam como da pessoa.
+ */
+function mudancaNaRevisao(textoGerado: string | null, textoFinal: string): { paragrafos: number; mudaram: number } {
+  const final = paragrafos(textoFinal);
+  const daIa = new Set(textoGerado === null ? [] : paragrafos(textoGerado));
+  return { paragrafos: final.length, mudaram: final.filter((p) => !daIa.has(p)).length };
+}
+
 /** Do que é o caso, em palavras: o que a busca dos modelos compara. */
 function sobreOCaso(p: { assunto: string | null; classe: string | null; titulo: string }, tipoDoPrazo?: string): string {
   return [p.assunto, p.classe, tipoDoPrazo].filter(Boolean).join(" ");
-}
-
-/** Largura e altura de um PNG, do cabeçalho IHDR. */
-export function tamanhoDoPng(bytes: Uint8Array): { largura: number; altura: number } {
-  if (bytes.length < 24 || bytes[0] !== 0x89 || bytes[1] !== 0x50) return { largura: 3, altura: 1 };
-  const v = new DataView(bytes.buffer, bytes.byteOffset);
-  return { largura: v.getUint32(16) || 3, altura: v.getUint32(20) || 1 };
 }
 
 function transmitirPeca(c: C, deps: DepsDasRotas, ia: Ia, pecaId: string, pedido: Parameters<typeof gerarPeca>[1]) {
@@ -234,13 +275,22 @@ function transmitirPeca(c: C, deps: DepsDasRotas, ia: Ia, pecaId: string, pedido
   const r = gerarPeca(ia, pedido, c.req.raw.signal);
   const encoder = new TextEncoder();
   let texto = "";
+  /** Só o que veio da IA, sem o aviso de queda: a versão gerada do registro de revisão. */
+  let daIa = "";
   let gravadoEm = Date.now();
-  const gravar = () => withTenant(deps.db, orgId, (tx) => tx.update(pecas).set({ texto }).where(eq(pecas.id, pecaId))).catch(() => {});
+  const gravar = (fim = false) =>
+    withTenant(deps.db, orgId, (tx) =>
+      tx
+        .update(pecas)
+        .set(fim ? { texto, textoGerado: daIa || null } : { texto })
+        .where(eq(pecas.id, pecaId)),
+    ).catch(() => {});
   const corpoDaResposta = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
         for await (const pedaco of r.textStream) {
           texto += pedaco;
+          daIa += pedaco;
           controller.enqueue(encoder.encode(pedaco));
           // Grava de tempos em tempos: se a pessoa fechar a tela, o rascunho fica.
           if (Date.now() - gravadoEm > 4_000) {
@@ -254,7 +304,7 @@ function transmitirPeca(c: C, deps: DepsDasRotas, ia: Ia, pecaId: string, pedido
         texto += aviso;
         controller.enqueue(encoder.encode(aviso));
       } finally {
-        await gravar();
+        await gravar(true);
         controller.close();
       }
     },

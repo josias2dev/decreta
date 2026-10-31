@@ -5,6 +5,8 @@
 
 .dc { font-family: var(--font-sans); font-size: 14px; line-height: 21px; color: var(--tinta); -webkit-font-smoothing: antialiased; }
 .dc-num { font-variant-numeric: tabular-nums; }
+/* Número do processo não parte no meio do hífen ou dos pontos. */
+.dc-cnj { white-space: nowrap; }
 .dc-logo { display: block; height: 20px; width: auto; color: var(--tinta); }
 
 /* Botão */

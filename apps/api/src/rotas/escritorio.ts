@@ -1,6 +1,6 @@
 import { ehDia, feriadosForenses, feriadosNacionais, hojeEm, telefoneWhatsapp } from "@decreta/core";
 import { documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
-import { chaveDoDocumento } from "@decreta/documentos";
+import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { and, asc, eq, gte } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -8,6 +8,8 @@ import { listarRegistro, registrar } from "../auditoria.ts";
 import { enviarWhatsapp, resumoDaManha } from "../servicos/avisos.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
+import { textoDaPolitica, TITULO_DA_POLITICA } from "../servicos/politica-ia.ts";
+import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
 import { corpo, ehSocio, falha, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const timbre = z.object({
@@ -85,6 +87,24 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const bytes = chave ? await deps.arquivos.read(chave).catch(() => null) : null;
     if (!bytes) falha(404, "sem_logo", "O escritório ainda não tem logo.");
     return c.body(bytes as Uint8Array<ArrayBuffer>, 200, { "content-type": "image/png", "cache-control": "private, max-age=3600" });
+  });
+
+  /** O modelo de política interna de uso de IA (Recomendação CFOAB 001/2024, item 3.6), no timbre. O sócio que baixa responde por ela. */
+  app.get("/escritorio/politica-ia", async (c) => {
+    soSocios(c);
+    const { t, responsavel } = await tenant(c, deps, async (tx) => {
+      const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
+      return { t: await timbreDoEscritorio(tx, c.get("orgId"), c.get("orgNome")), responsavel: pessoas.get(c.get("userId")) };
+    });
+    const texto = textoDaPolitica({ escritorio: t.timbre.nome, responsavel: { nome: responsavel?.nome ?? c.get("userNome"), oab: responsavel?.oab ?? null }, seguranca: `${deps.telas}/seguranca` });
+    const docx = await docxNoTimbre(deps.arquivos, t, { titulo: TITULO_DA_POLITICA, texto });
+    return new Response(docx, {
+      headers: {
+        "content-type": MIME_DOCX,
+        "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(nomeDoArquivo(TITULO_DA_POLITICA))}`,
+        "cache-control": "no-store",
+      },
+    });
   });
 
   /** Logo do timbre: PNG, guardado como documento do escritório. */
@@ -166,7 +186,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         dias: [
           ...feriadosNacionais(ano).map((f) => ({ ...f, origem: "lei" })),
           ...feriadosForenses(ano, tribunal).map((f) => ({ ...f, origem: tribunal })),
-          ...proprios.filter((s) => s.dia <= `${ano}-12-31`).map((s) => ({ dia: s.dia, nome: s.motivo, tipo: s.tipo, origem: s.comarca ?? "escritório", id: s.id })),
+          ...proprios.filter((s) => s.dia <= `${ano}-12-31`).map((s) => ({ dia: s.dia, nome: s.motivo, tipo: s.tipo, origem: [s.tribunal, s.comarca].filter(Boolean).join(" · ") || "escritório", id: s.id })),
         ].sort((a, b) => a.dia.localeCompare(b.dia)),
         suspensaoDeFimDeAno: { de: `${ano}-12-20`, ate: `${ano + 1}-01-20` },
       });

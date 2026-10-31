@@ -5,20 +5,22 @@
 import { lerPublicacaoColada, TIPOS_DE_COMUNICACAO } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
+import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery } from "@/componentes/captura-do-djen";
+import { CampoIntimacaoNoSistema, ConferenciaDaSugestao, MotivosParaConferir, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
 import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
-import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, ContagemNaTela, LeituraDaSentenca, Pessoa, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
+import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { atualizarPrazos } from "./prazo";
 
@@ -48,25 +50,25 @@ const publicacaoQuery = (id: string) => ({
   },
 });
 
-/** A captura do DJEN roda às 06:40, 12:40 e 18:40, de segunda a sexta (apps/api/src/inngest.ts). */
+/** A captura do DJEN: os cadernos às 04:30 e a busca pela OAB às 12:40 e às 18:40, de segunda a sexta (apps/api/src/inngest.ts). */
 export function proximaBusca(agora = new Date()): string {
   const partes = Object.fromEntries(
     new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(agora).map((p) => [p.type, p.value]),
   );
   const dia = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(partes.weekday!);
   const minutos = Number(partes.hour) * 60 + Number(partes.minute);
-  const horarios = ["06:40", "12:40", "18:40"];
+  const horarios = ["04:30", "12:40", "18:40"];
   if (dia >= 1 && dia <= 5) {
     const h = horarios.find((x) => Number(x.slice(0, 2)) * 60 + Number(x.slice(3)) > minutos);
     if (h) return `às ${h}`;
   }
-  return dia === 0 || (dia >= 1 && dia <= 4) ? "amanhã às 06:40" : "segunda às 06:40";
+  return dia === 0 || (dia >= 1 && dia <= 4) ? "amanhã às 04:30" : "segunda às 04:30";
 }
 
 function SeloDaLista({ selo }: { selo: Selo }) {
   return (
     <span className={cn("dc-pub__selo", `dc-pub__selo--${selo.tipo}`)}>
-      {selo.tipo === "sem_teor" || selo.tipo === "erro" ? <CircleAlert /> : selo.tipo === "lendo" ? <LoaderCircle className="animate-spin" /> : <MarcaIa />}
+      {selo.tipo === "sem_teor" || selo.tipo === "erro" || selo.tipo === "sem_ia" ? <CircleAlert /> : selo.tipo === "lendo" ? <LoaderCircle className="animate-spin" /> : <MarcaIa />}
       {selo.texto}
     </span>
   );
@@ -119,6 +121,8 @@ export function PublicacoesPage() {
   const caixa = useQuery(caixaQuery(situacao));
   const buscar = useBuscarAgora();
   const [colar, setColar] = useState(false);
+  const [captura, setCaptura] = useState(false);
+  const saude = useQuery(saudeDaCapturaQuery);
 
   const c = caixa.data;
   const capturada = c?.ultimaCaptura;
@@ -131,10 +135,21 @@ export function PublicacoesPage() {
   const irPara = (s: SituacaoPublicacao) => void navigate({ search: { situacao: s === "nova" ? undefined : s } });
   const vazio = (
     <Vazio titulo={situacao === "nova" ? "Nenhuma publicação nova" : situacao === "pendente" ? "Nada pendente" : "Nada aqui ainda"}>
-      {situacao === "nova" ? `O Decreta busca no DJEN pelas OABs da equipe. Próxima busca ${proximaBusca()}.` : null}
+      {situacao === "nova" ? `O Decreta lê o DJEN de madrugada e busca pelas OABs da equipe. Próxima busca ${proximaBusca()}.` : null}
     </Vazio>
   );
   const falhou = capturada?.erro && <Faixa tipo="erro">A última busca no DJEN falhou: {capturada.erro}. Tento de novo na próxima.</Faixa>;
+  const avisoDaCaptura = (
+    <AvisoDaCaptura
+      alertas={saude.data?.alertas}
+      acao={
+        <button type="button" className="dc-link" onClick={() => setCaptura(true)}>
+          Ver a captura
+        </button>
+      }
+    />
+  );
+  const dialogoDaCaptura = <CapturaDoDjen aberto={captura} aoFechar={() => setCaptura(false)} />;
 
   if (celular) {
     return (
@@ -149,11 +164,15 @@ export function PublicacoesPage() {
             <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Colar publicação" onClick={() => setColar(true)}>
               <Plus />
             </button>
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Captura do DJEN" onClick={() => setCaptura(true)}>
+              <Activity />
+            </button>
           </>
         }
         fixo={<Abas abas={abas} ativa={situacao} aoMudar={irPara} />}
       >
         {falhou}
+        {avisoDaCaptura}
         <section className="dc-painel">
           {!c ? (
             <div className="p-4">
@@ -170,6 +189,7 @@ export function PublicacoesPage() {
           )}
         </section>
         <ColarPublicacao aberto={colar} aoFechar={() => setColar(false)} />
+        {dialogoDaCaptura}
       </TelaCelular>
     );
   }
@@ -188,7 +208,14 @@ export function PublicacoesPage() {
     <Pagina cheia>
       <Cabecalho
         titulo="Publicações"
-        sub={sub}
+        sub={
+          <>
+            {sub} ·{" "}
+            <button type="button" className="dc-link" onClick={() => setCaptura(true)}>
+              Ver a captura
+            </button>
+          </>
+        }
         acoes={
           <>
             <Botao onClick={() => setColar(true)}>
@@ -201,6 +228,7 @@ export function PublicacoesPage() {
         }
       />
       {falhou}
+      {avisoDaCaptura}
       <div className="dc-caixa">
         <section className="dc-painel dc-caixa__lista">
           <Abas abas={abas} ativa={situacao} aoMudar={(s) => void navigate({ search: { situacao: s === "nova" ? undefined : s } })} />
@@ -227,6 +255,7 @@ export function PublicacoesPage() {
         )}
       </div>
       <ColarPublicacao aberto={colar} aoFechar={() => setColar(false)} />
+      {dialogoDaCaptura}
     </Pagina>
   );
 }
@@ -282,7 +311,8 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
   const [dialogo, setDialogo] = useState<"prazo" | "audiencia" | null>(null);
   const s = pub.sugestao;
   const c = s?.situacao === "pronto" ? s.conteudo : null;
-  const modo: Modo = pub.prazo?.confirmado || pub.audiencia ? "feito" : c?.audiencia ? "audiencia" : c?.geraPrazo && c.dias ? "prazo" : "sem_prazo";
+  // Publicação cancelada pelo tribunal não puxa a confirmação do prazo: a pessoa decide.
+  const modo: Modo = pub.prazo?.confirmado || pub.audiencia ? "feito" : pub.cancelada ? "sem_prazo" : c?.audiencia ? "audiencia" : c?.geraPrazo && c.dias ? "prazo" : "sem_prazo";
   const semProcesso = !pub.processo;
 
   const pronto = (texto: string) => {
@@ -361,24 +391,42 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
         <span className="dc-nota">{celular ? `Disponibilizada em ${diaCompleto(pub.disponibilizadaEm)}` : datas}</span>
       </div>
       <p className={cn("m-0 whitespace-pre-wrap", celular ? "dc-teor" : "text-[14px] leading-[24px]")}>{pub.texto || "Sem teor. Abra a publicação no sistema do tribunal."}</p>
-      {pub.link && (
-        <a href={pub.link} target="_blank" rel="noreferrer" className="dc-link">
-          Abrir no tribunal
-        </a>
+      {(pub.link || pub.certidao) && (
+        <div className="dc-linha-acoes">
+          {pub.link && (
+            <a href={pub.link} target="_blank" rel="noreferrer" className="dc-link">
+              Abrir no tribunal
+            </a>
+          )}
+          {pub.certidao && (
+            <a href={`${API_URL}/api/app/publicacoes/${pub.id}/certidao`} target="_blank" rel="noreferrer" className="dc-link">
+              Certidão do DJEN
+            </a>
+          )}
+        </div>
       )}
     </>
   );
 
+  const cancelada = pub.cancelada && <Cancelada cancelada={pub.cancelada} comPrazo={!!pub.prazo} />;
+
   const tituloIa = !c ? "Prazo sugerido" : c.audiencia ? "Audiência designada" : c.geraPrazo ? "Prazo sugerido" : "Leitura da IA";
+  // Cliente que recusou a IA: a rotina de fundo não lê, e a pessoa cria o prazo à mão.
+  const semIa = !!pub.processo?.semIa;
+  const iaAqui = !!eu.data?.ia && !semIa;
   const ia = (
     <BlocoIa
       titulo={tituloIa}
       analise={s}
-      aoRefazer={eu.data?.ia && s ? () => refazer.mutate() : undefined}
-      refazendo={refazer.isPending || (!s && !!eu.data?.ia)}
-      rodape={s ? "Gerado por IA. Confira nos autos." : "A IA está lendo o teor."}
+      aoRefazer={iaAqui && s ? () => refazer.mutate() : undefined}
+      refazendo={refazer.isPending || (!s && iaAqui)}
+      rodape={s ? "Gerado por IA. Confira nos autos." : iaAqui ? "A IA está lendo o teor." : undefined}
     >
-      {c ? <ConteudoDaSugestao c={c} responsavel={s!.responsavel} /> : !eu.data?.ia ? <p className="m-0 text-[14px]">A IA não está ligada. Confira o teor e crie o prazo à mão.</p> : null}
+      {c ? (
+        <ConteudoDaSugestao c={c} responsavel={s!.responsavel} />
+      ) : !iaAqui ? (
+        <p className="m-0 text-[14px]">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
+      ) : null}
     </BlocoIa>
   );
 
@@ -412,8 +460,13 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
   const acoes: Acao[] =
     modo === "prazo"
       ? [
-          { rotulo: "Confirmar prazo", icone: <Check />, fazer: () => confirmar.mutate(), ocupado: confirmar.isPending, desligado: semProcesso },
-          { rotulo: "Ajustar", icone: <Pencil />, fazer: () => setDialogo("prazo"), desligado: semProcesso },
+          // Confiança baixa: não confirma num clique; abre o ajuste com os motivos no topo.
+          ...(c?.conferencia?.confianca === "baixa"
+            ? [{ rotulo: "Conferir e confirmar", icone: <Pencil />, fazer: () => setDialogo("prazo"), desligado: semProcesso }]
+            : [
+                { rotulo: "Confirmar prazo", icone: <Check />, fazer: () => confirmar.mutate(), ocupado: confirmar.isPending, desligado: semProcesso },
+                { rotulo: "Ajustar", icone: <Pencil />, fazer: () => setDialogo("prazo"), desligado: semProcesso },
+              ]),
           { rotulo: "Não gera prazo", fazer: () => marcar.mutate("sem-prazo") },
           ...(pub.situacao === "nova" ? [{ rotulo: "Deixar pendente", fazer: () => marcar.mutate("pendente") }] : []),
         ]
@@ -470,6 +523,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
           )
         }
       >
+        {cancelada}
         <section className="dc-painel">
           <div className="dc-painel__corpo">{processo}</div>
         </section>
@@ -490,6 +544,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
 
   return (
     <section className="dc-painel">
+      {cancelada && <div className="dc-painel__secao">{cancelada}</div>}
       <div className="dc-painel__secao">{processo}</div>
       <div className="dc-painel__secao">{teor}</div>
       {ia}
@@ -539,18 +594,20 @@ function LeituraDaDecisao({ pub }: { pub: Publicacao }) {
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
   // As duas leituras saem juntas quando a publicação chega: enquanto não há nenhuma, a IA está lendo.
-  const lendo = ler.isPending || (!a && !!eu.data?.ia && !pub.sugestao);
+  const semIa = !!pub.processo?.semIa;
+  const iaAqui = !!eu.data?.ia && !semIa;
+  const lendo = ler.isPending || (!a && iaAqui && !pub.sugestao);
   const r = pub.resultado;
   return (
     <BlocoIa
       titulo={tipo === "acordao" ? "Leitura do acórdão" : "Leitura da sentença"}
       analise={a}
-      aoRefazer={eu.data?.ia ? () => ler.mutate() : undefined}
+      aoRefazer={iaAqui ? () => ler.mutate() : undefined}
       refazendo={lendo}
       rodape={a ? "Gerado por IA. Confira na decisão." : "A IA lê a decisão pedido a pedido."}
     >
       {l && <ConteudoDaSentenca l={l} />}
-      {!a && !eu.data?.ia && <p className="m-0 text-[14px]">A IA não está ligada. Leia a decisão e confirme o resultado à mão.</p>}
+      {!a && !iaAqui && <p className="m-0 text-[14px]">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Leia a decisão e confirme o resultado à mão.</p>}
       {r ? (
         <Faixa tipo="ok">
           <Check />
@@ -563,7 +620,7 @@ function LeituraDaDecisao({ pub }: { pub: Publicacao }) {
           </button>
         </Faixa>
       ) : (
-        (l || (!a && !eu.data?.ia)) && (
+        (l || (!a && !iaAqui)) && (
           <div className="dc-sentenca__confirmar">
             <span className="dc-nota">{pub.processo ? "Confirme para o resultado ficar no processo." : "Vincule a um processo para guardar o resultado."}</span>
             <div className="dc-linha-acoes">
@@ -754,7 +811,7 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
       <Par rotulo="Data final" valor={conta ? <span className="dc-num">{diaCompleto(conta.fim)}</span> : "—"} nota={conta ? diaDaSemana(conta.fim) : "Vincule a um processo para contar"} />
       <div className="dc-par dc-largo">
         <span className="dc-rotulo">Contagem</span>
-        <p>{conta?.explicacao ?? "Falta saber o tribunal e a comarca do processo."}</p>
+        <p>{conta ? [c.regra && `${c.regra}.`, conta.explicacao].filter(Boolean).join(" ") : "Falta saber o tribunal e a comarca do processo."}</p>
       </div>
       <div className="dc-par">
         <span className="dc-rotulo">Responsável</span>
@@ -762,6 +819,12 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
           <Responsavel pessoa={responsavel ?? null} />
         </span>
       </div>
+      {c.conferencia && (
+        <div className="dc-par dc-inteira" style={{ gridColumn: "1 / -1" }}>
+          <span className="dc-rotulo">Segunda conferência</span>
+          <ConferenciaDaSugestao conferencia={c.conferencia} />
+        </div>
+      )}
     </div>
   );
 }
@@ -775,6 +838,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
     dias: String(sugestao?.dias ?? 15),
     contagem: (sugestao?.contagem ?? "uteis") as Contagem,
     responsavelId: pub.sugestao?.responsavel?.id ?? pub.processo?.responsavel?.id ?? "",
+    intimadoNoSistemaEm: "",
     sabeData: false,
     fimManual: sugestao?.contagemCalculada?.fim ?? pub.publicadaEm,
   });
@@ -785,15 +849,16 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
     if (aberto) setF(inicial());
   }
   const dias = Number(f.dias);
+  const intimadoNoSistemaEm = /^\d{4}-\d{2}-\d{2}$/.test(f.intimadoNoSistemaEm) ? f.intimadoNoSistemaEm : null;
   const conta = useQuery({
-    queryKey: ["calcular", pub.processo?.id, pub.publicadaEm, dias, f.contagem],
-    queryFn: () => api<ContagemNaTela>("/prazos/calcular", { json: { processoId: pub.processo?.id ?? null, publicadoEm: pub.publicadaEm, dias, contagem: f.contagem } }),
+    queryKey: ["calcular", pub.processo?.id, pub.publicadaEm, intimadoNoSistemaEm, dias, f.contagem],
+    queryFn: () => api<PreviaDaConta>("/prazos/calcular", { json: { processoId: pub.processo?.id ?? null, publicadoEm: pub.publicadaEm, intimadoNoSistemaEm, dias, contagem: f.contagem } }),
     enabled: aberto && dias >= 1,
   });
   const salvar = useMutation({
     mutationFn: () =>
       api<{ prazoId: string; fim: string }>(`/publicacoes/${pub.id}/confirmar`, {
-        json: { tipo: f.tipo, fundamento: f.fundamento || null, dias, contagem: f.contagem, responsavelId: f.responsavelId || null, fimManual: f.sabeData ? f.fimManual : null },
+        json: { tipo: f.tipo, fundamento: f.fundamento || null, dias, contagem: f.contagem, responsavelId: f.responsavelId || null, intimadoNoSistemaEm, fimManual: f.sabeData ? f.fimManual : null },
       }),
     onSuccess: (r) => {
       aoFechar();
@@ -819,6 +884,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
       }
     >
       <div className="dc-form">
+        <MotivosParaConferir conferencia={sugestao?.conferencia} />
         <Campo rotulo="O que fazer" htmlFor="cf-tipo">
           <input id="cf-tipo" value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value })} placeholder="Manifestação sobre laudo pericial" />
         </Campo>
@@ -846,6 +912,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
             </select>
           </Campo>
         </div>
+        <CampoIntimacaoNoSistema id="cf-sistema" valor={f.intimadoNoSistemaEm} aoMudar={(v) => setF({ ...f, intimadoNoSistemaEm: v })} />
         <label className="dc-opcao">
           <input type="checkbox" className="dc-checa" checked={f.sabeData} onChange={(e) => setF({ ...f, sabeData: e.target.checked })} />
           Sei a data final (suspensão que o Decreta não conhece)
@@ -855,13 +922,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
             <input id="cf-fim" type="date" value={f.fimManual} onChange={(e) => setF({ ...f, fimManual: e.target.value })} />
           </Campo>
         )}
-        {fim && (
-          <Faixa tipo="ia">
-            <span>
-              Vence em <strong className="dc-num">{diaCompleto(fim)}</strong>, {diaDaSemana(fim)}.{!f.sabeData && conta.data ? ` ${conta.data.explicacao}` : ""}
-            </span>
-          </Faixa>
-        )}
+        {fim && <PreviaNoDialogo fim={fim} previa={conta.data} sabeData={f.sabeData} />}
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
       </div>
     </Dialogo>

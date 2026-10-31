@@ -19,6 +19,7 @@ import { useCelular } from "@/lib/celular";
 import { diaCompleto, diaCurto, diaDoInstante, numero, tamanho } from "@/lib/formato";
 import type { Documento } from "@/lib/tipos";
 import { cn } from "@/lib/util";
+import { FaixaDoAlerta } from "@/componentes/alerta-do-documento";
 import { enquantoLe, Enviar, LeituraDaIa } from "./processo";
 
 const ORIGEM = { upload: "Enviado", peca: "Peça", captura: "Dos autos" } as const;
@@ -98,6 +99,7 @@ export function DocumentosPage() {
                 </span>
                 <LeituraDaIa d={aberto} reler />
               </div>
+              <FaixaDoAlerta alertas={aberto.alertas} />
               <VerDocumento d={aberto} naPagina className="dc-doc__ver" />
             </>
           ) : (
@@ -290,6 +292,7 @@ function DocumentoAberto({ d, aoFechar, aoApagar }: { d: Documento; aoFechar: ()
         </span>
         <LeituraDaIa d={d} reler />
       </div>
+      <FaixaDoAlerta alertas={d.alertas} />
       <VerDocumento d={d} className="dc-doc__ver" />
     </section>
   );

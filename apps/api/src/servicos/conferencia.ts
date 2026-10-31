@@ -3,11 +3,12 @@
  * a parte (procuração, comprovante de residência, documento com foto...) e diz
  * item por item o que está certo, o que pede atenção e o que falta.
  */
-import { formatarDia, hojeEm } from "@decreta/core";
+import { diaDoInstante, formatarDia, hojeEm } from "@decreta/core";
 import { clientes, documentos, negocios, partes, processos, type Database, type Tx } from "@decreta/db";
-import { conferirPasta, impressao, type Ia, type PedidoDeConferencia } from "@decreta/ia";
+import { conferirPasta, impressao, type Conferencia, type Ia, type PedidoDeConferencia } from "@decreta/ia";
 import { and, asc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { analisar, ultimaAnalise, naTela, type AnaliseNaTela } from "./analises.ts";
+import { ClienteSemIa, semIa } from "./contexto.ts";
 import { IaDesligada } from "./prazos.ts";
 
 export type DonoDaPasta = { negocioId: string } | { clienteId: string };
@@ -68,8 +69,29 @@ async function prepararPedido(tx: Tx, dono: DonoDaPasta, assuntoPedido: string |
     documentos: docs.map((d) => ({ nome: d.nome, texto: d.texto ?? "" })),
     processos: await processosDaPessoa(tx, nome!, clienteId),
   };
-  return { pedido, docs };
+  // O termo de uso de IA é do cliente: quem ainda está na triagem não tem.
+  const [doTermo] = cl?.termoIaDocumentoId ? await tx.select({ nome: documentos.nome }).from(documentos).where(eq(documentos.id, cl.termoIaDocumentoId)) : [];
+  const termo: TermoNaPasta | null = cl ? { assinado: doTermo && cl.termoIaEm ? { em: cl.termoIaEm, nome: doTermo.nome } : null } : null;
+  return { pedido, docs, clienteId, termo };
 }
+
+interface TermoNaPasta {
+  assinado: { em: Date; nome: string } | null;
+}
+
+/**
+ * O item do termo de uso de IA (Recomendação CFOAB 001/2024, item 4.3.1) sai do
+ * cadastro, não da IA: ela não tem como saber se a assinatura foi registrada.
+ */
+function itemDoTermo(t: TermoNaPasta, timezone: string) {
+  return t.assinado
+    ? { item: "termo_ia" as const, situacao: "certo" as const, detalhe: `Assinado e registrado em ${formatarDia(diaDoInstante(t.assinado.em, timezone))}.`, documento: t.assinado.nome }
+    : { item: "termo_ia" as const, situacao: "falta" as const, detalhe: "O cliente ainda não assinou o termo de uso de IA (Recomendação CFOAB 001/2024, item 4.3.1). Baixe o termo na ficha do cliente e registre o assinado.", documento: null };
+}
+
+/** A conferência com o item do termo como o cadastro diz agora: registrar ou apagar o termo aparece na hora, sem outra chamada à IA. */
+type ConferenciaComTermo = Omit<Conferencia, "itens"> & { itens: (Conferencia["itens"][number] | ReturnType<typeof itemDoTermo>)[] };
+const comTermo = (c: ConferenciaComTermo, t: TermoNaPasta, timezone: string): ConferenciaComTermo => ({ ...c, itens: [...c.itens.filter((i) => i.item !== "termo_ia"), itemDoTermo(t, timezone)] });
 
 const alvoDe = (dono: DonoDaPasta) => ("negocioId" in dono ? { alvo: "negocio" as const, alvoId: dono.negocioId } : { alvo: "cliente" as const, alvoId: dono.clienteId });
 
@@ -77,7 +99,7 @@ export async function conferirPastaDe(deps: Deps, organizationId: string, dono: 
   const ia = deps.ia;
   if (!ia) throw new IaDesligada();
   const hoje = hojeEm(opcoes.timezone);
-  return analisar<PedidoDeConferencia>(deps.db, {
+  return analisar<{ pedido: PedidoDeConferencia; termo: TermoNaPasta | null }>(deps.db, {
     organizationId,
     ...alvoDe(dono),
     acao: "conferir-pasta",
@@ -86,24 +108,29 @@ export async function conferirPastaDe(deps: Deps, organizationId: string, dono: 
     preparar: async (tx) => {
       const r = await prepararPedido(tx, dono, opcoes.assunto ?? null, hoje);
       if (!r) return null;
+      if (await semIa(tx, { clienteId: r.clienteId })) throw new ClienteSemIa();
       const n = r.docs.length;
-      return { entrada: r.pedido, base: baseDaPasta(r.docs, r.pedido.pessoa), fonte: `${n === 1 ? "1 documento" : `${n} documentos`} · ${formatarDia(hoje)}` };
+      return { entrada: { pedido: r.pedido, termo: r.termo }, base: baseDaPasta(r), fonte: `${n === 1 ? "1 documento" : `${n} documentos`} · ${formatarDia(hoje)}` };
     },
-    executar: (pedido) => conferirPasta(ia, pedido),
+    executar: async ({ pedido, termo }) => {
+      const c = await conferirPasta(ia, pedido);
+      return termo ? comTermo(c, termo, opcoes.timezone) : c;
+    },
   });
 }
 
-function baseDaPasta(docs: { id: string; texto: string | null }[], pessoa: PedidoDeConferencia["pessoa"]) {
+/** O termo fica fora da impressão: o item dele é refeito pelo cadastro a cada leitura. */
+function baseDaPasta({ docs, pedido }: { docs: { id: string; texto: string | null }[]; pedido: PedidoDeConferencia }) {
   return impressao(
     docs.map((d) => [d.id, d.texto?.length ?? 0]),
-    pessoa,
+    pedido.pessoa,
   );
 }
 
 /** A impressão da pasta como está agora: a conferência gravada com ela não aparece como desatualizada. */
 export async function baseDaPastaAgora(tx: Tx, dono: DonoDaPasta, timezone: string): Promise<{ base: string; documentos: number } | null> {
   const r = await prepararPedido(tx, dono, null, hojeEm(timezone));
-  return r ? { base: baseDaPasta(r.docs, r.pedido.pessoa), documentos: r.docs.length } : null;
+  return r ? { base: baseDaPasta(r), documentos: r.docs.length } : null;
 }
 
 /** A última conferência, marcada como desatualizada se a pasta mudou desde então. */
@@ -112,5 +139,6 @@ export async function ultimaConferencia(tx: Tx, dono: DonoDaPasta, timezone: str
   const a = await ultimaAnalise(tx, alvo, alvoId, "conferir-pasta");
   if (!a) return null;
   const r = await prepararPedido(tx, dono, null, hojeEm(timezone));
-  return naTela(a, r ? baseDaPasta(r.docs, r.pedido.pessoa) : undefined);
+  const tela = naTela(a, r ? baseDaPasta(r) : undefined);
+  return tela && r?.termo && tela.situacao === "pronto" ? { ...tela, conteudo: comTermo(tela.conteudo as ConferenciaComTermo, r.termo, timezone) } : tela;
 }

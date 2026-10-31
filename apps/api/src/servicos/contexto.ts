@@ -3,6 +3,7 @@ import { diaDoInstante, horaLocal } from "@decreta/core";
 import { clientes, documentos, movimentacoes, organization, partes, prazos, processos, publicacoes, type Tx } from "@decreta/db";
 import { fonteDosAutos, impressao, textoDoProcesso, type ContextoDoProcesso, type OpcoesDoTexto } from "@decreta/ia";
 import { and, asc, count, desc, eq, isNotNull } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 
 export interface ContextoCarregado {
   texto: string;
@@ -10,6 +11,34 @@ export interface ContextoCarregado {
   base: string;
   fonte: string;
   ultimoEvento: number | null;
+  /** O cliente do processo recusou a IA: o texto serve para comparar a base, nunca para ir a um modelo. */
+  semIa: boolean;
+}
+
+/** O cliente recusou o uso de IA (Recomendação CFOAB 001/2024, item 4.3.2): a ação para aqui, e a tela diz por quê. */
+export class ClienteSemIa extends HTTPException {
+  constructor() {
+    const detalhe = "O cliente não autorizou o uso de IA nos casos dele. Faça esta etapa sem a IA.";
+    super(403, { message: detalhe, res: Response.json({ erro: "cliente_sem_ia", detalhe }, { status: 403 }) });
+  }
+}
+
+/** O processo (ou o cliente) é de quem recusou a IA? Sem cliente, a IA vale. */
+export async function semIa(tx: Tx, dono: { processoId?: string | null; clienteId?: string | null }): Promise<boolean> {
+  if (dono.clienteId) {
+    const [c] = await tx.select({ semIa: clientes.semIa }).from(clientes).where(eq(clientes.id, dono.clienteId));
+    if (c?.semIa) return true;
+  }
+  if (!dono.processoId) return false;
+  const [p] = await tx.select({ semIa: clientes.semIa }).from(processos).innerJoin(clientes, eq(clientes.id, processos.clienteId)).where(eq(processos.id, dono.processoId));
+  return !!p?.semIa;
+}
+
+/** O contexto que vai a um modelo: recusa o processo de cliente sem IA. As telas que só comparam a base usam `carregarContexto`. */
+export async function contextoParaIa(tx: Tx, processoId: string, opcoes: Parameters<typeof carregarContexto>[2] = {}): Promise<ContextoCarregado | null> {
+  const ctx = await carregarContexto(tx, processoId, opcoes);
+  if (ctx?.semIa) throw new ClienteSemIa();
+  return ctx;
 }
 
 export async function carregarContexto(
@@ -18,7 +47,7 @@ export async function carregarContexto(
   opcoes: { documentos?: boolean; teto?: number } & OpcoesDoTexto = {},
 ): Promise<ContextoCarregado | null> {
   const [p] = await tx
-    .select({ processo: processos, cliente: clientes.nome, fuso: organization.timezone })
+    .select({ processo: processos, cliente: clientes.nome, semIa: clientes.semIa, fuso: organization.timezone })
     .from(processos)
     .leftJoin(clientes, eq(clientes.id, processos.clienteId))
     .leftJoin(organization, eq(organization.id, processos.organizationId))
@@ -34,7 +63,7 @@ export async function carregarContexto(
     tx.select().from(prazos).where(eq(prazos.processoId, processoId)),
     opcoes.documentos
       ? tx
-          .select({ id: documentos.id, nome: documentos.nome, evento: documentos.evento, texto: documentos.texto })
+          .select({ id: documentos.id, nome: documentos.nome, evento: documentos.evento, texto: documentos.texto, alertas: documentos.alertas })
           .from(documentos)
           .where(and(eq(documentos.processoId, processoId), isNotNull(documentos.texto)))
           .orderBy(desc(documentos.createdAt))
@@ -59,7 +88,7 @@ export async function carregarContexto(
     totalDeMovimentacoes: qtd?.n ?? movs.length,
     publicacoes: pubs.map((x) => ({ id: x.id, disponibilizadaEm: x.disponibilizadaEm, publicadaEm: x.publicadaEm, tipoComunicacao: x.tipoComunicacao, tipoDocumento: x.tipoDocumento, orgao: x.orgao, texto: x.texto })),
     prazos: prz.map((x) => ({ tipo: x.tipo, fim: x.fim, situacao: x.situacao })),
-    documentos: docs.map((d) => ({ id: d.id, nome: d.nome, evento: d.evento, texto: d.texto ?? "" })),
+    documentos: docs.map((d) => ({ id: d.id, nome: d.nome, evento: d.evento, texto: d.texto ?? "", alerta: d.alertas.length > 0 })),
   };
   const ultimoEvento = movs.reduce<number | null>((max, m) => (m.evento != null && (max == null || m.evento > max) ? m.evento : max), null);
   return {
@@ -71,5 +100,6 @@ export async function carregarContexto(
     ),
     fonte: fonteDosAutos(ctx.movimentacoes),
     ultimoEvento,
+    semIa: !!p.semIa,
   };
 }

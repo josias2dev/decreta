@@ -69,6 +69,8 @@ export const AVISOS = {
   site: "A IA do Decreta chegou ao limite de gasto de hoje. Amanhã, a partir da meia-noite, volta a funcionar. Os prazos das publicações novas continuam sendo lidos.",
   simultaneos: "Espere a resposta que está chegando terminar antes de pedir outra.",
   gateway: "A IA chegou ao limite de gasto de hoje. Amanhã, a partir da meia-noite, volta a funcionar.",
+  pertoDoTeto: "A IA de hoje está perto do limite. Quando chegar nele, volta amanhã, a partir da meia-noite.",
+  restam: (n: number) => (n === 1 ? "Resta 1 mensagem hoje no chat da IA." : `Restam ${n} mensagens hoje no chat da IA.`),
 };
 
 export interface QuemUsa {
@@ -152,6 +154,36 @@ export function motivoParaBarrar(limites: LimitesDaIa, uso: UsoDoDia, quem: { de
   if (limites.tetoPessoaUsd && uso.gastoPessoaUsd >= limites.tetoPessoaUsd) return AVISOS.pessoa;
   if (limites.tetoSiteUsd && uso.gastoSiteUsd >= limites.tetoSiteUsd) return AVISOS.site;
   return null;
+}
+
+/** A partir de quanto do teto do dia a tela avisa. */
+const AVISO_NO_GASTO = 0.8;
+
+export interface QuantoResta {
+  /** As mensagens do chat que ainda dá para mandar hoje; nulo sem limite. */
+  mensagens: { restam: number; limite: number } | null;
+  /** Quanto do teto do dia já foi (0 a 1): o mais apertado entre o da pessoa, o do site e o da demonstração; nulo sem teto. */
+  gasto: number | null;
+  /** O que a tela diz antes de barrar (falta pouco) ou depois (o mesmo motivo da recusa). */
+  aviso: string | null;
+}
+
+/** O que a pessoa ainda tem de IA hoje, para a tela mostrar antes de o limite chegar. */
+export function quantoResta(limites: LimitesDaIa, uso: UsoDoDia, quem: { demonstracao: boolean }): QuantoResta {
+  const porDia = quem.demonstracao ? limites.demonstracao.mensagensPorDia : limites.mensagensPorDia;
+  const mensagens = porDia ? { restam: Math.max(0, porDia - uso.mensagensHoje), limite: porDia } : null;
+  const fracoes = [
+    limites.tetoPessoaUsd ? uso.gastoPessoaUsd / limites.tetoPessoaUsd : null,
+    limites.tetoSiteUsd ? uso.gastoSiteUsd / limites.tetoSiteUsd : null,
+    quem.demonstracao && limites.demonstracao.tetoUsd ? uso.gastoEscritorioUsd / limites.demonstracao.tetoUsd : null,
+  ].filter((f): f is number => f !== null);
+  const gasto = fracoes.length ? Math.min(1, Math.max(...fracoes)) : null;
+  // O limite do minuto passa sozinho: não vira aviso.
+  const barrado = motivoParaBarrar({ ...limites, mensagensPorMinuto: 0 }, uso, { ...quem, mensagem: true });
+  const aviso =
+    barrado ??
+    (mensagens && mensagens.restam <= Math.max(5, Math.ceil(mensagens.limite * 0.1)) ? AVISOS.restam(mensagens.restam) : gasto !== null && gasto >= AVISO_NO_GASTO ? AVISOS.pertoDoTeto : null);
+  return { mensagens, gasto, aviso };
 }
 
 /** O teto que vale para o que alguém pediu e roda no fundo (a leitura de um arquivo enviado): o do site e o da demonstração. */

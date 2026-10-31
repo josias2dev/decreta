@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, FolderPlus, MessageSquarePlus, UserPlus } from "lucide-react";
 import { useState } from "react";
+import { AvisoDaCaptura } from "@/componentes/captura-do-djen";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
 import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, MarcaIa, Painel, Responsavel, Selo, Vazio } from "@/componentes/ui";
@@ -87,6 +88,7 @@ export function HojePage() {
         ) : (
           <>
             <Numeros painel={p} celular />
+            <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
             {p.contadores.publicacoesNovas > 0 && (
               <Link to="/publicacoes" className="dc-cartao" style={{ flexDirection: "row", alignItems: "center", gap: 12, background: "var(--acento-suave)", borderColor: "var(--acento-borda)", boxShadow: "none" }}>
                 <MarcaIa />
@@ -130,6 +132,7 @@ export function HojePage() {
       ) : (
         <>
           <Numeros painel={p} />
+          <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
           <div className="dc-colunas">
             <Painel titulo="Do dia" acao={chips} corpo={false}>
               {itens.length ? (
@@ -303,14 +306,18 @@ function CartaoDoDia({ item: i }: { item: ItemDoDia }) {
       {i.tipo === "audiencia" ? <Selo urgencia="audiencia">{i.titulo.includes("por vídeo") ? "Por vídeo" : "Presencial"}</Selo> : seloDoItem(i, true)}
       {i.detalhe && <span className="dc-item__meta">{i.detalhe}</span>}
       <span className="dc-item__pe">
-        <Avatar pessoa={i.responsavel} /> {i.responsavel?.apelido ?? "Sem responsável"}
-        {i.cnj && (
-          <>
-            {" · "}
-            <span className="dc-num">{i.cnj}</span>
-          </>
-        )}
-        {i.aConfirmar && <span style={{ color: "var(--acento)" }}> · a confirmar</span>}
+        <Avatar pessoa={i.responsavel} />
+        {/* Um texto só, que quebra como frase, e não em colunas. */}
+        <span className="min-w-0">
+          {i.responsavel?.apelido ?? "Sem responsável"}
+          {i.cnj && (
+            <>
+              {" · "}
+              <Cnj cnj={i.cnj} />
+            </>
+          )}
+          {i.aConfirmar && <span style={{ color: "var(--acento)" }}> · a confirmar</span>}
+        </span>
       </span>
     </>
   );

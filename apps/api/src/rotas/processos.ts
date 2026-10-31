@@ -1,5 +1,5 @@
 import { cnpjValido, cpfValido, formatarCnj, formatarDocumento, hojeEm, lerCnj, limparCnpj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
-import { alvaras, audiencias, clientes, documentos, movimentacoes, partes, pecas, prazos, processos, resultados, type Tx } from "@decreta/db";
+import { alvaras, audiencias, clientes, documentos, escritorios, movimentacoes, partes, pecas, prazos, processos, resultados, type Tx } from "@decreta/db";
 import { buscarDjenDoProcesso, partesDoDjen } from "@decreta/tribunais";
 import { and, asc, desc, eq, gt, inArray, isNotNull, like, or, sql, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
@@ -199,7 +199,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const processoId = id(c);
     const hoje = hojeEm(c.get("timezone"));
     return tenant(c, deps, async (tx) => {
-      const [linha] = await tx.select({ p: processos, cliente: { id: clientes.id, nome: clientes.nome } }).from(processos).leftJoin(clientes, eq(clientes.id, processos.clienteId)).where(eq(processos.id, processoId));
+      const [linha] = await tx.select({ p: processos, cliente: { id: clientes.id, nome: clientes.nome, semIa: clientes.semIa } }).from(processos).leftJoin(clientes, eq(clientes.id, processos.clienteId)).where(eq(processos.id, processoId));
       if (!linha) falha(404, "nao_encontrado");
       const { p } = linha;
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
@@ -207,7 +207,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const contexto = await carregarContexto(tx, p.id);
       const resumo = await ultimaAnalise(tx, "processo", p.id, "resumo-autos");
       const n = sql<number>`count(*)::int`;
-      const [pts, [nMov], [nPrazos], [nDocs], ultimas, proximoPrazo, auds, alvs, novidades, decisoes] = await Promise.all([
+      const [pts, [nMov], [nPrazos], [nDocs], ultimas, proximoPrazo, auds, alvs, novidades, decisoes, [escritorio]] = await Promise.all([
         tx.select().from(partes).where(eq(partes.processoId, p.id)).orderBy(asc(partes.ordem)),
         tx.select({ n }).from(movimentacoes).where(eq(movimentacoes.processoId, p.id)),
         tx.select({ n }).from(prazos).where(eq(prazos.processoId, p.id)),
@@ -216,9 +216,11 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         tx.select().from(prazos).where(and(eq(prazos.processoId, p.id), eq(prazos.situacao, "aberto"))).orderBy(asc(prazos.fim)).limit(1),
         tx.select().from(audiencias).where(eq(audiencias.processoId, p.id)).orderBy(desc(audiencias.em)).limit(10),
         tx.select().from(alvaras).where(eq(alvaras.processoId, p.id)).orderBy(desc(alvaras.createdAt)),
-        resumo ? tx.select({ titulo: movimentacoes.titulo, evento: movimentacoes.evento }).from(movimentacoes).where(and(eq(movimentacoes.processoId, p.id), gt(movimentacoes.createdAt, resumo.createdAt))).orderBy(desc(movimentacoes.em)) : Promise.resolve([]),
+        resumo ? tx.select({ titulo: movimentacoes.titulo, evento: movimentacoes.evento, fonte: movimentacoes.fonte }).from(movimentacoes).where(and(eq(movimentacoes.processoId, p.id), gt(movimentacoes.createdAt, resumo.createdAt))).orderBy(desc(movimentacoes.em)) : Promise.resolve([]),
         tx.select().from(resultados).where(eq(resultados.processoId, p.id)).orderBy(desc(resultados.decididoEm)),
+        tx.select({ datajudAte: escritorios.datajudAte }).from(escritorios).where(eq(escritorios.organizationId, c.get("orgId"))),
       ]);
+      const tribunalDoNumero = p.cnj ? tribunalDoCnj(p.cnj) : null;
       const docsDosEventos = await docsPorEvento(tx, p.id, ultimas.map((m) => m.evento).filter((e): e is number => e != null));
       const pp = proximoPrazo[0];
       const pu = pp ? urgenciaDoPrazo(pp, hoje, cal) : null;
@@ -241,13 +243,17 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         segredo: p.segredo,
         observacoes: p.observacoes,
         datajudEm: p.datajudEm?.toISOString() ?? null,
+        datajudAtualizadoEm: p.datajudAtualizadoEm?.toISOString() ?? null,
+        /** Até quando o DataJud tem dados do tribunal deste processo. */
+        datajudAte: (tribunalDoNumero && escritorio?.datajudAte[tribunalDoNumero]) ?? null,
         cliente: linha.cliente?.id ? linha.cliente : null,
         responsavel: resumir(pessoas, p.responsavelId),
         link: linkDoTribunal(p.tribunal, p.sistema),
         partes: pts.map((x) => ({ id: x.id, nome: x.nome, polo: x.polo, papel: x.papel, advogados: x.advogados, cliente: x.cliente, documento: x.documento ? formatarDocumento(x.documento) : null })),
         contadores: { movimentacoes: nMov?.n ?? 0, prazos: nPrazos?.n ?? 0, documentos: nDocs?.n ?? 0 },
         resumo: naTela(resumo, contexto?.base),
-        novidades: novidades.map((m) => (m.evento != null ? `${m.titulo.toLocaleLowerCase("pt-BR")}, evento ${m.evento}` : m.titulo.toLocaleLowerCase("pt-BR"))),
+        // A Portaria CNJ 374/2026 manda citar a fonte do que vem do DataJud.
+        novidades: novidades.map((m) => `${m.titulo.toLocaleLowerCase("pt-BR")}${m.evento != null ? `, evento ${m.evento}` : ""}${m.fonte === "datajud" ? " (CNJ/DataJud)" : ""}`),
         ultimasMovimentacoes: ultimas.map((m) => movimentacaoNaTela(m, docsDosEventos, resumo?.createdAt)),
         proximoPrazo: pp && pu ? { id: pp.id, tipo: pp.tipo, fim: pp.fim, dias: pp.dias, contagem: pp.contagem, urgencia: pu, quando: quandoDoPrazo(pu, pp.fim, hoje), confirmado: !!pp.confirmadoEm, responsavel: resumir(pessoas, pp.responsavelId) } : null,
         audiencias: auds.map((a) => ({ id: a.id, em: a.em.toISOString(), tipo: a.tipo, porVideo: a.porVideo, local: a.local, situacao: a.situacao, responsavel: resumir(pessoas, a.responsavelId) })),

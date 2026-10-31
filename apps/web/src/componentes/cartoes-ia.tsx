@@ -59,6 +59,7 @@ import type {
 import type { Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { useAviso } from "./avisos";
+import { Dialogo } from "./dialogo";
 import { IconeDoArquivo } from "./icone-arquivo";
 import { Avatar, Botao, Selo } from "./ui";
 
@@ -310,27 +311,64 @@ export function Cartao({ f, onde }: { f: Ferramenta; onde: OndeEsta }) {
   }
 }
 
-/** Enquanto a resposta chega, os cartões ficam só com o topo, para o texto que a IA escreve ficar à vista. */
-export const CartoesRecolhidos = createContext(false);
+/**
+ * Na conversa, o cartão é uma linha de acesso (ícone, título e resumo) e o
+ * conteúdo abre numa folha, para o texto da resposta não sumir embaixo de
+ * listas. A tarefa proposta fica inteira: ela pede uma decisão.
+ */
+export const CartoesCompactos = createContext(false);
 
-function Moldura({ icone: Icone, titulo, n, acao, children, className }: { icone: LucideIcon; titulo: string; n?: string; acao?: ReactNode; children: ReactNode; className?: string }) {
-  const recolhidos = useContext(CartoesRecolhidos);
-  const [abriu, setAbriu] = useState(false);
-  const recolhido = recolhidos && !abriu;
+function Moldura({
+  icone: Icone,
+  titulo,
+  n,
+  resumo,
+  acao,
+  children,
+  className,
+  inteiro,
+}: {
+  icone: LucideIcon;
+  titulo: string;
+  n?: string;
+  /** A linha de baixo do acesso, quando o número não basta (o nome do processo, a data do vencimento). */
+  resumo?: string;
+  acao?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  inteiro?: boolean;
+}) {
+  const compacto = useContext(CartoesCompactos) && !inteiro;
+  const [aberto, setAberto] = useState(false);
+  if (compacto) {
+    const linha = resumo ?? n;
+    return (
+      <>
+        <button type="button" className="dc-cartao-ia dc-acesso-ia" onClick={() => setAberto(true)} aria-haspopup="dialog">
+          <Icone aria-hidden />
+          <span className="dc-acesso-ia__texto">
+            <strong>{titulo}</strong>
+            {linha && <span>{linha}</span>}
+          </span>
+          <ChevronRight aria-hidden className="dc-acesso-ia__seta" />
+        </button>
+        <Dialogo aberto={aberto} aoFechar={() => setAberto(false)} titulo={titulo} descricao={linha} className="dc-dialogo--cartao" acoes={acao}>
+          <CartoesCompactos.Provider value={false}>
+            <section className={cn("dc-cartao-ia dc-cartao-ia--na-folha", className)}>{children}</section>
+          </CartoesCompactos.Provider>
+        </Dialogo>
+      </>
+    );
+  }
   return (
-    <section className={cn("dc-cartao-ia", recolhido && "is-recolhido", className)}>
+    <section className={cn("dc-cartao-ia", className)}>
       <header className="dc-cartao-ia__topo">
         <Icone aria-hidden />
         <h3>{titulo}</h3>
         {n && <span className="dc-cartao-ia__n">{n}</span>}
         {acao && <span className="dc-cartao-ia__acao">{acao}</span>}
-        {recolhido && (
-          <button type="button" className="dc-cartao-ia__abrir" onClick={() => setAbriu(true)} aria-label={`Abrir o cartão: ${titulo}`} title="Abrir">
-            <ChevronDown aria-hidden />
-          </button>
-        )}
       </header>
-      {!recolhido && children}
+      {children}
     </section>
   );
 }
@@ -527,7 +565,7 @@ function CartaoProcesso({ ficha }: { ficha: FichaDoProcesso }) {
   if (!p) return null;
   const proxima = ficha.audiencias.find((a) => a.situacao === "marcada");
   return (
-    <Moldura icone={FolderOpen} titulo="Processo" acao={<IrPara to={`/processos/${p.id}`}>Abrir</IrPara>} className="dc-cartao-ia--ficha">
+    <Moldura icone={FolderOpen} titulo="Processo" resumo={p.titulo} acao={<IrPara to={`/processos/${p.id}`}>Abrir</IrPara>} className="dc-cartao-ia--ficha">
       <div className="dc-cartao-ia__ficha">
         <Link to="/processos/$id" params={{ id: p.id }} className="dc-cartao-ia__nome">
           {p.titulo}
@@ -590,7 +628,12 @@ const SITUACAO_DA_PUBLICACAO: Record<PublicacaoNaIa["situacao"], string> = { nov
 /** `lida`: a publicação que a IA abriu inteira (lerPublicacao), num cartão de um item só. */
 function CartaoPublicacoes({ lista, titulo = "Publicações", lida }: { lista: Lista<PublicacaoNaIa>; titulo?: string; lida?: boolean }) {
   return (
-    <Moldura icone={Inbox} titulo={titulo} n={lida ? undefined : nDeTotal(lista, "publicação", "publicações")} acao={<IrPara to="/publicacoes">Publicações</IrPara>}>
+    <Moldura
+      icone={Inbox}
+      titulo={titulo}
+      n={lida ? undefined : nDeTotal(lista, "publicação", "publicações")}
+      resumo={lida ? [lista.itens[0]?.tipo, lista.itens[0]?.processo?.titulo].filter(Boolean).join(" · ") : undefined}
+      acao={<IrPara to="/publicacoes">Publicações</IrPara>}>
       {/* Cada publicação tem três linhas: as três primeiras já ocupam o que cinco prazos ocupam. */}
       <Mais itens={lista.itens} primeiros={3}>
         {(p) => (
@@ -792,7 +835,7 @@ function CartaoCliente({ ficha }: { ficha: FichaDoCliente }) {
   if (!c) return null;
   const ultimo = ficha.atendimentos[0];
   return (
-    <Moldura icone={Users} titulo="Cliente" acao={<IrPara to={`/clientes/${c.id}`}>Abrir ficha</IrPara>} className="dc-cartao-ia--ficha">
+    <Moldura icone={Users} titulo="Cliente" resumo={c.nome} acao={<IrPara to={`/clientes/${c.id}`}>Abrir ficha</IrPara>} className="dc-cartao-ia--ficha">
       <div className="dc-cartao-ia__ficha">
         <Link to="/clientes/$id" params={{ id: c.id }} className="dc-cartao-ia__nome">
           {c.nome}
@@ -825,7 +868,7 @@ function CartaoCliente({ ficha }: { ficha: FichaDoCliente }) {
 
 function CartaoDocumentos({ lista, titulo = "Documentos" }: { lista: Lista<DocumentoNaIa>; titulo?: string }) {
   return (
-    <Moldura icone={FileText} titulo={titulo} n={lista.total > 1 ? nDeTotal(lista, "documento", "documentos") : undefined}>
+    <Moldura icone={FileText} titulo={titulo} n={lista.total > 1 ? nDeTotal(lista, "documento", "documentos") : undefined} resumo={lista.total === 1 ? lista.itens[0]?.nome : undefined}>
       <Mais itens={lista.itens}>
         {(d) => (
           <a key={d.id} href={`${API_URL}/api/app/documentos/${d.id}/arquivo`} target="_blank" rel="noopener" className="dc-cartao-ia__linha dc-cartao-ia__linha--link dc-cartao-ia__linha--alta">
@@ -912,7 +955,11 @@ function CartaoPanorama({ p }: { p: Panorama }) {
   ];
   const t = p.tarefas;
   return (
-    <Moldura icone={Gauge} titulo="O escritório agora" acao={<IrPara to="/hoje">Hoje</IrPara>}>
+    <Moldura
+      icone={Gauge}
+      titulo="O escritório agora"
+      resumo={[p.prazos.vencidos ? plural(p.prazos.vencidos, "prazo vencido", "prazos vencidos") : null, plural(p.prazos.vencidos + p.prazos.hoje, "prazo até hoje", "prazos até hoje"), plural(p.publicacoes.novas, "publicação nova", "publicações novas")].filter(Boolean).join(" · ")}
+      acao={<IrPara to="/hoje">Hoje</IrPara>}>
       <div className="dc-numeros dc-cartao-ia__numeros">
         {/* Pelo roteador: o link comum recarregava o app (e, na prévia, saía dela). */}
         {numeros.map((x) => (
@@ -952,7 +999,7 @@ function CartaoPanorama({ p }: { p: Panorama }) {
 
 function CartaoContagem({ c }: { c: ContagemNaIa }) {
   return (
-    <Moldura icone={Hourglass} titulo="Contagem do prazo" n={prazoEmDias(c.dias, c.contagem)}>
+    <Moldura icone={Hourglass} titulo="Contagem do prazo" n={prazoEmDias(c.dias, c.contagem)} resumo={`${prazoEmDias(c.dias, c.contagem)} · vence em ${diaCurto(c.fim)}`}>
       <div className="dc-contagem">
         <div className="dc-contagem__passo">
           <span className="dc-rotulo">Publicação</span>
@@ -1024,7 +1071,7 @@ function CartaoTarefa({ t, f, onde }: { t: TarefaProposta; f: Ferramenta; onde: 
   });
   if (descartada) return null;
   return (
-    <Moldura icone={ListTodo} titulo={criada ? "Tarefa criada" : "Tarefa para criar"} className={cn("dc-cartao-ia--tarefa", criada && "is-feita")}>
+    <Moldura icone={ListTodo} titulo={criada ? "Tarefa criada" : "Tarefa para criar"} inteiro className={cn("dc-cartao-ia--tarefa", criada && "is-feita")}>
       <div className="dc-cartao-ia__ficha">
         <span className="dc-cartao-ia__nome">{t.titulo}</span>
         <span className="dc-cartao-ia__sub">

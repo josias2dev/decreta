@@ -1,7 +1,7 @@
 {
-  "path": "/clientes/29014f81-74e7-4932-bf5b-4ed2e5cae129",
+  "path": "/clientes/02aff590-aae5-4a7f-926b-2f5e4dff0c5f",
   "corpo": {
-    "id": "29014f81-74e7-4932-bf5b-4ed2e5cae129",
+    "id": "02aff590-aae5-4a7f-926b-2f5e4dff0c5f",
     "nome": "Marina Duarte",
     "tipo": "pf",
     "documento": "318.204.567-90",
@@ -10,16 +10,18 @@
     "email": "marina.duarte@exemplo.com.br",
     "endereco": "Rua Itajaí, 455, apto 302 · América · Joinville/SC",
     "observacoes": null,
+    "semIa": false,
+    "termoIa": null,
     "criadoEm": "2025-09-24T12:00:00.000Z",
     "processos": [
       {
-        "id": "774eb046-e848-485c-b732-e9e35604cab2",
+        "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "orgao": "2ª Vara Cível",
         "situacao": "ativo",
         "responsavel": {
-          "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+          "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -29,32 +31,32 @@
     ],
     "atendimentos": [
       {
-        "id": "5df9134c-1553-4a25-a290-0bb4d531cf9b",
+        "id": "ae66817b-c35a-4f2a-84f6-c5b242d7ac40",
         "em": "2026-10-20T18:30:00.000Z",
         "canal": "whatsapp",
         "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
         "autor": {
-          "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+          "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "processoId": "774eb046-e848-485c-b732-e9e35604cab2"
+        "processoId": "2b53f968-ebf8-4973-9f3d-4098f9840d4e"
       },
       {
-        "id": "f9b651a1-7f85-42c0-8a8f-5797f9e12b9d",
+        "id": "56799059-33d0-4ab6-81f0-9d0bf2b01103",
         "em": "2026-08-30T18:30:00.000Z",
         "canal": "presencial",
         "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
         "autor": {
-          "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+          "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "processoId": "774eb046-e848-485c-b732-e9e35604cab2"
+        "processoId": "2b53f968-ebf8-4973-9f3d-4098f9840d4e"
       }
     ],
     "documentos": [],

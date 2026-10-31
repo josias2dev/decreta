@@ -30,9 +30,9 @@ import { z } from "zod";
 import { analisar } from "../servicos/analises.ts";
 import { dadosDoEscritorio, prazosDeAgora } from "../servicos/assistente.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
-import { carregarContexto } from "../servicos/contexto.ts";
+import { ClienteSemIa, contextoParaIa, semIa } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { AVISOS } from "../servicos/uso-ia.ts";
+import { AVISOS, quantoResta, SEM_LIMITES, usoDoDia } from "../servicos/uso-ia.ts";
 import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 /** O nome de cada ação da IA como a equipe reconhece. */
@@ -130,7 +130,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         const [p] = await tx.select().from(prazos).where(eq(prazos.id, prazoId));
         if (!p) return null;
         const [pub] = p.publicacaoId ? await tx.select().from(publicacoes).where(eq(publicacoes.id, p.publicacaoId)) : [];
-        const ctx = await carregarContexto(tx, p.processoId, { documentos: true });
+        const ctx = await contextoParaIa(tx, p.processoId, { documentos: true });
         const fonte = pub ? `DJEN · ${pub.disponibilizadaEm.split("-").reverse().join("/")}${ctx?.ultimoEvento ? ` · autos até o evento ${ctx.ultimoEvento}` : ""}` : (ctx?.fonte ?? "Dados do processo");
         return { entrada: { prazo: { tipo: p.tipo, fim: p.fim, fundamento: p.fundamento }, publicacao: pub?.texto ?? null, contextoDoProcesso: ctx?.texto ?? "" }, base: ctx?.base ?? "", fonte };
       },
@@ -150,7 +150,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       userId: c.get("userId"),
       log: deps.log,
       preparar: async (tx) => {
-        const ctx = await carregarContexto(tx, processoId, { documentos: true });
+        const ctx = await contextoParaIa(tx, processoId, { documentos: true });
         if (!ctx) return null;
         const hoje = formatarDia(hojeEm(c.get("timezone")));
         return { entrada: ctx.texto, base: ctx.base, fonte: ctx.ultimoEvento ? `Autos até o evento ${ctx.ultimoEvento} · ${hoje}` : `${ctx.fonte} · ${hoje}` };
@@ -174,7 +174,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       preparar: async (tx) => {
         const [au] = await tx.select().from(audiencias).where(eq(audiencias.id, audienciaId));
         if (!au) return null;
-        const ctx = await carregarContexto(tx, au.processoId, { documentos: true });
+        const ctx = await contextoParaIa(tx, au.processoId, { documentos: true });
         // Com o ano e o local: sem eles, a IA pede para confirmar o que o sistema já sabe.
         const dia = diaDoInstante(au.em, tz);
         const quando = `${diaPorExtenso(dia)} de ${dia.slice(0, 4)}, às ${horaLocal(au.em, tz)}`;
@@ -197,6 +197,12 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       });
     }
     return c.json(a);
+  });
+
+  /** Quanto a pessoa ainda tem de IA hoje: as mensagens do chat, o teto do dia e o aviso de que falta pouco. */
+  app.get("/ia/uso", async (c) => {
+    const uso = await usoDoDia(db, { organizationId: c.get("orgId"), userId: c.get("userId") });
+    return c.json(quantoResta(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao") }));
   });
 
   /* ---------------- Retorno sobre a IA ---------------- */
@@ -280,7 +286,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const processoId = id(c);
     const { texto } = await corpo(c, z.object({ texto: z.string().trim().min(1).max(4000) }));
     const preparado = await tenant(c, deps, async (tx) => {
-      const ctx = await carregarContexto(tx, processoId, { documentos: true });
+      const ctx = await contextoParaIa(tx, processoId, { documentos: true });
       if (!ctx) return null;
       const anteriores = await tx.select().from(mensagensIa).where(eq(mensagensIa.processoId, processoId)).orderBy(desc(mensagensIa.createdAt)).limit(20);
       await tx.insert(mensagensIa).values({ organizationId: c.get("orgId"), processoId, userId: c.get("userId"), papel: "pessoa", texto });
@@ -449,6 +455,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         [conversa] = await tx.insert(conversas).values({ organizationId: orgId, userId, titulo: tituloProvisorio(b.texto), modo: b.modo, processoId: p?.id ?? null }).returning();
       }
       const k = conversa!;
+      // Aberta num processo de cliente que recusou a IA: nada fica gravado (a transação volta).
+      if (await semIa(tx, { processoId: k.processoId })) throw new ClienteSemIa();
       let pergunta: { id: string; texto: string };
       if (b.refazer) {
         const [q] = await tx
@@ -641,7 +649,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
 
   app.post("/ia/atendimento", comIa, async (c) => {
     const ia = iaDaRota(c);
-    const { transcricao } = await corpo(c, z.object({ transcricao: z.string().trim().min(1).max(200_000) }));
+    const { transcricao, clienteId } = await corpo(c, z.object({ transcricao: z.string().trim().min(1).max(200_000), clienteId: z.string().uuid().nullable().optional() }));
+    if (clienteId && (await tenant(c, deps, (tx) => semIa(tx, { clienteId })))) throw new ClienteSemIa();
     try {
       return c.json({ situacao: "pronto", conteudo: await resumirAtendimento(ia, transcricao) });
     } catch (err) {

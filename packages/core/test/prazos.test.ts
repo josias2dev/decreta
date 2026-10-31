@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   calendarioPara,
+  contarComDoisMarcos,
   contarPrazo,
   dataDaPublicacao,
   diasUteisEntre,
@@ -9,6 +10,7 @@ import {
   feriadosNacionais,
   inicioDoPrazo,
   pascoa,
+  textoDaTempestividade,
   urgenciaDoPrazo,
 } from "../src/index.ts";
 
@@ -130,6 +132,82 @@ describe("contagem em dias corridos", () => {
     // 30, 31, 01, 02, 03: vence em 03/11.
     expect(r.fim).toBe("2026-11-03");
     expect(r.desconsiderados).toEqual([]);
+  });
+});
+
+describe("dupla intimação (Tema 1.180 do STJ, sem tese)", () => {
+  test("intimação pelo sistema antes da publicação no DJEN: vale a conta que vence primeiro", () => {
+    // Pelo sistema em 27/10: começa 28/10; 15 dias úteis, sem 02/11, vencem em 18/11. Pelo DJEN (29/10), em 23/11.
+    const c = contarComDoisMarcos({ publicacao: "2026-10-29", intimacaoNoSistema: "2026-10-27", dias: 15, contagem: "uteis", calendario: tjsc });
+    expect(c.pelo).toBe("sistema");
+    expect(c.conta.inicio).toBe("2026-10-28");
+    expect(c.conta.fim).toBe("2026-11-18");
+    expect(c.outra?.fim).toBe("2026-11-23");
+  });
+
+  test("intimação pelo sistema depois da publicação: vale o DJEN", () => {
+    const c = contarComDoisMarcos({ publicacao: "2026-10-29", intimacaoNoSistema: "2026-11-03", dias: 15, contagem: "uteis", calendario: tjsc });
+    expect(c.pelo).toBe("publicacao");
+    expect(c.conta.fim).toBe("2026-11-23");
+    expect(c.outra?.inicio).toBe("2026-11-04");
+  });
+
+  test("sem intimação pelo sistema, só a publicação", () => {
+    const c = contarComDoisMarcos({ publicacao: "2026-10-29", intimacaoNoSistema: null, dias: 15, contagem: "uteis", calendario: tjsc });
+    expect(c.pelo).toBe("publicacao");
+    expect(c.conta.fim).toBe("2026-11-23");
+    expect(c.outra).toBeNull();
+  });
+});
+
+describe("tópico de tempestividade da peça", () => {
+  test("o caso do design, com a disponibilização no DJEN", () => {
+    const r = contarPrazo({ publicacao: "2026-10-29", dias: 15, contagem: "uteis", calendario: tjsc });
+    expect(textoDaTempestividade(r, { rito: "cpc", disponibilizacao: "2026-10-28" })).toBe(
+      "A intimação foi disponibilizada no Diário de Justiça Eletrônico Nacional (DJEN) em 28/10/2026 e considera-se publicada em 29/10/2026, primeiro dia útil seguinte (Lei 11.419/2006, art. 4º, § 3º). " +
+        "O prazo de 15 dias úteis (CPC, art. 219) começou a correr em 30/10/2026 (Lei 11.419/2006, art. 4º, § 4º) e termina em 23/11/2026, excluídos os sábados, os domingos e os dias 02/11/2026 (Finados) e 20/11/2026 (Consciência Negra). " +
+        "Apresentada até 23/11/2026, a presente peça é tempestiva.",
+    );
+  });
+
+  test("com a certidão do DJEN, o tópico cita a certidão como prova da data", () => {
+    const r = contarPrazo({ publicacao: "2026-10-29", dias: 15, contagem: "uteis", calendario: tjsc });
+    expect(textoDaTempestividade(r, { rito: "cpc", disponibilizacao: "2026-10-28", certidao: true })).toStartWith(
+      "A intimação foi disponibilizada no Diário de Justiça Eletrônico Nacional (DJEN) em 28/10/2026, conforme a certidão de publicação emitida pelo próprio DJEN (anexa), e considera-se publicada em 29/10/2026, primeiro dia útil seguinte (Lei 11.419/2006, art. 4º, § 3º). ",
+    );
+    // Sem a data de disponibilização não há o que a certidão provar no texto.
+    expect(textoDaTempestividade(r, { rito: "cpc", disponibilizacao: null, certidao: true })).toStartWith("A intimação foi publicada em 29/10/2026. ");
+  });
+
+  test("vencimento prorrogado e dias seguidos agrupados", () => {
+    const r = contarPrazo({ publicacao: "2026-02-11", dias: 3, contagem: "uteis", calendario: tjsc });
+    expect(textoDaTempestividade(r, { rito: "cpc", disponibilizacao: null })).toBe(
+      "A intimação foi publicada em 11/02/2026. " +
+        "O prazo de 3 dias úteis (CPC, art. 219) começou a correr em 12/02/2026 (Lei 11.419/2006, art. 4º, § 4º) e termina em 19/02/2026, excluídos os sábados, os domingos e os dias de 16/02/2026 a 17/02/2026 (Carnaval). " +
+        "O último dia cairia em 18/02/2026, sem expediente forense completo, e passou para 19/02/2026 (CPC, art. 224, § 1º). " +
+        "Apresentada até 19/02/2026, a presente peça é tempestiva.",
+    );
+  });
+
+  test("a suspensão de fim de ano vira um intervalo, sem parênteses dentro de parênteses", () => {
+    const r = contarPrazo({ publicacao: "2026-12-15", dias: 5, contagem: "uteis", calendario: tjsc });
+    const t = textoDaTempestividade(r, { rito: "cpc", disponibilizacao: null });
+    expect(t).toContain("25/12/2026 (Natal)");
+    expect(t).toContain("de 07/01/2027 a 20/01/2027 (Suspensão dos prazos de fim de ano, CPC, art. 220)");
+  });
+
+  test("prazo de um dia fica no singular", () => {
+    const util = contarPrazo({ publicacao: "2026-10-29", dias: 1, contagem: "uteis", calendario: tjsc });
+    expect(textoDaTempestividade(util, { rito: "cpc", disponibilizacao: null })).toContain("O prazo de 1 dia útil (CPC, art. 219) começou a correr em 30/10/2026");
+    const corrido = contarPrazo({ publicacao: "2026-10-29", dias: 1, contagem: "corridos", calendario: tjsc });
+    expect(textoDaTempestividade(corrido, { rito: "cpc", disponibilizacao: null })).toContain("O prazo de 1 dia corrido começou a correr em 30/10/2026");
+  });
+
+  test("CLT em dias úteis; dias corridos sem nada excluído", () => {
+    const clt = contarPrazo({ publicacao: "2026-10-29", dias: 8, contagem: "uteis", calendario: trt12 });
+    expect(textoDaTempestividade(clt, { rito: "clt", disponibilizacao: null })).toContain("O prazo de 8 dias úteis (CLT, art. 775) começou a correr em 30/10/2026");
+    const corridos = contarPrazo({ publicacao: "2026-10-29", dias: 5, contagem: "corridos", calendario: tjsc });
+    expect(textoDaTempestividade(corridos, { rito: "cpc", disponibilizacao: null })).toContain("O prazo de 5 dias corridos começou a correr em 30/10/2026 (Lei 11.419/2006, art. 4º, § 4º) e termina em 03/11/2026. ");
   });
 });
 

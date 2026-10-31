@@ -13,7 +13,8 @@
  * - Começo e vencimento não caem em dia de expediente reduzido (art. 224, § 1º).
  */
 import type { Calendario, Feriado } from "./calendario.ts";
-import { fimDeSemana, somarDias, type Dia } from "./datas.ts";
+import { regraDaContagem, type Rito } from "./conferencia.ts";
+import { diferencaEmDias, fimDeSemana, formatarDia, somarDias, type Dia } from "./datas.ts";
 
 export type Contagem = "uteis" | "corridos";
 
@@ -110,6 +111,27 @@ export function contarPrazo({ publicacao, dias, contagem, calendario: cal }: Ped
   return { publicacao, inicio, fim, dias, contagem, desconsiderados: unicos(desconsiderados), prorrogadoDe };
 }
 
+export interface ContaComDoisMarcos {
+  /** A conta que vale: a que vence primeiro. */
+  conta: ResultadoDaContagem;
+  pelo: "publicacao" | "sistema";
+  /** A conta pelo outro marco, para mostrar ao lado. `null` sem intimação pelo sistema. */
+  outra: ResultadoDaContagem | null;
+}
+
+/**
+ * Dupla intimação: publicação no DJEN e intimação pelo sistema do tribunal.
+ * Pela Res. CNJ 455/2022 (art. 11, § 3º) vale o DJEN, mas o STJ ainda não
+ * fixou a tese do Tema 1.180: até lá, conta pelos dois marcos e vale o que
+ * vence primeiro. No empate, o DJEN.
+ */
+export function contarComDoisMarcos({ intimacaoNoSistema, ...pedido }: PedidoDeContagem & { intimacaoNoSistema: Dia | null }): ContaComDoisMarcos {
+  const djen = contarPrazo(pedido);
+  if (!intimacaoNoSistema) return { conta: djen, pelo: "publicacao", outra: null };
+  const sistema = contarPrazo({ ...pedido, publicacao: intimacaoNoSistema });
+  return sistema.fim < djen.fim ? { conta: sistema, pelo: "sistema", outra: djen } : { conta: djen, pelo: "publicacao", outra: sistema };
+}
+
 function unicos(lista: Feriado[]): Feriado[] {
   const vistos = new Set<string>();
   return lista.filter((f) => (vistos.has(f.dia) ? false : (vistos.add(f.dia), true)));
@@ -150,6 +172,47 @@ export function explicarContagem(r: ResultadoDaContagem): string {
   }
   if (r.prorrogadoDe) partes.push(`O vencimento caía em ${dm(r.prorrogadoDe)}, sem expediente completo, e passou para ${dm(r.fim)}.`);
   return partes.join(" ");
+}
+
+/**
+ * O tópico de tempestividade da peça, montado pela conta do motor (nunca pela
+ * IA): disponibilização, publicação, início, dias excluídos e vencimento.
+ */
+export function textoDaTempestividade(r: ResultadoDaContagem, o: { rito: Rito; disponibilizacao: Dia | null; certidao?: boolean }): string {
+  // A certidão de publicação do DJEN prova a data; a pessoa anexa a que o Decreta guardou.
+  const prova = o.certidao ? ", conforme a certidão de publicação emitida pelo próprio DJEN (anexa)," : "";
+  const partes = [
+    o.disponibilizacao
+      ? `A intimação foi disponibilizada no Diário de Justiça Eletrônico Nacional (DJEN) em ${formatarDia(o.disponibilizacao)}${prova} e considera-se publicada em ${formatarDia(r.publicacao)}, primeiro dia útil seguinte (Lei 11.419/2006, art. 4º, § 3º).`
+      : `A intimação foi publicada em ${formatarDia(r.publicacao)}.`,
+  ];
+  // "Dias úteis (CPC, art. 219)" vira "15 dias úteis (...)", e no prazo de um dia, "1 dia útil (...)".
+  const regra = regraDaContagem(o.rito, r.contagem)
+    .replace(/^Dias/, r.dias === 1 ? "dia" : "dias")
+    .replace(/^dia úteis/, "dia útil")
+    .replace(/^dia corridos/, "dia corrido");
+  // O dia do vencimento prorrogado (e os que vêm depois dele) entram na frase da prorrogação.
+  const fora = juntarIntervalos(r.desconsiderados.filter((f) => !r.prorrogadoDe || f.dia < r.prorrogadoDe));
+  const dias = fora.dias === 1 ? `o dia ${fora.texto}` : `os dias ${fora.texto}`;
+  const excluidos = r.contagem === "uteis" ? (fora.dias ? `, excluídos os sábados, os domingos e ${dias}` : ", excluídos os sábados e os domingos") : fora.dias ? `, excluídos ${dias}` : "";
+  partes.push(`O prazo de ${r.dias} ${regra} começou a correr em ${formatarDia(r.inicio)} (Lei 11.419/2006, art. 4º, § 4º) e termina em ${formatarDia(r.fim)}${excluidos}.`);
+  if (r.prorrogadoDe) partes.push(`O último dia cairia em ${formatarDia(r.prorrogadoDe)}, sem expediente forense completo, e passou para ${formatarDia(r.fim)} (CPC, art. 224, § 1º).`);
+  partes.push(`Apresentada até ${formatarDia(r.fim)}, a presente peça é tempestiva.`);
+  return partes.join(" ");
+}
+
+/** Dias seguidos com o mesmo motivo viram "de 16/02/2026 a 17/02/2026 (Carnaval)"; o fim de semana no meio não separa. */
+function juntarIntervalos(lista: Feriado[]): { texto: string; dias: number } {
+  const blocos: { de: Dia; ate: Dia; nome: string }[] = [];
+  for (const f of [...lista].sort((a, b) => a.dia.localeCompare(b.dia))) {
+    const ultimo = blocos.at(-1);
+    if (ultimo && ultimo.nome === f.nome && diferencaEmDias(ultimo.ate, f.dia) <= 3) ultimo.ate = f.dia;
+    else blocos.push({ de: f.dia, ate: f.dia, nome: f.nome });
+  }
+  // "Suspensão (CPC, art. 220)" vira "Suspensão, CPC, art. 220" para não abrir parênteses dentro de parênteses.
+  const nome = (n: string) => n.replace(/\s*\(([^)]*)\)\s*$/, ", $1");
+  const itens = blocos.map((b) => (b.de === b.ate ? `${formatarDia(b.de)} (${nome(b.nome)})` : `de ${formatarDia(b.de)} a ${formatarDia(b.ate)} (${nome(b.nome)})`));
+  return { texto: juntar(itens), dias: lista.length };
 }
 
 function juntar(itens: string[]): string {

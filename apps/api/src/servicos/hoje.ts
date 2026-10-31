@@ -7,6 +7,7 @@ import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, nomeDaAudi
 import { alvaras, analises, audiencias, negocios, prazos, processos, publicacoes, tarefas, type Database, type Tx } from "@decreta/db";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
+import { saudeDaCaptura } from "./captura.ts";
 import { pessoasDoEscritorio, resumir, type PessoaResumida } from "./pessoas.ts";
 import { tituloDaPublicacao } from "./publicacoes.ts";
 
@@ -39,6 +40,8 @@ export interface PainelDoDia {
   itens: ItemDoDia[];
   publicacoes: PublicacaoDoDia[];
   porResponsavel: { pessoa: PessoaResumida | null; hoje: number; semana: number }[];
+  /** Caderno do DJEN que faltou ou falhou (ver saudeDaCaptura). */
+  alertasDaCaptura: string[];
 }
 
 /** "prazo sugerido 23/11", "não gera prazo", "falta o teor". */
@@ -190,5 +193,6 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s)}` };
     }),
     porResponsavel,
+    alertasDaCaptura: (await saudeDaCaptura(tx, hoje)).alertas,
   };
 }

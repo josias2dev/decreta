@@ -1,9 +1,9 @@
 {
-  "path": "/documentos?processo=774eb046-e848-485c-b732-e9e35604cab2",
+  "path": "/documentos?processo=2b53f968-ebf8-4973-9f3d-4098f9840d4e",
   "corpo": {
     "itens": [
       {
-        "id": "5b0aac9e-6f9e-4927-b22c-7f826fa46238",
+        "id": "c46fdfa0-c0b7-4d41-a17f-34be7e4d5ee5",
         "nome": "Petição da ré · pedido de esclarecimentos.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11870,
@@ -13,9 +13,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-10-28T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
@@ -23,7 +24,7 @@
         "enviadoPor": null
       },
       {
-        "id": "fa4200a6-094a-414f-ac2c-447b1f538ac7",
+        "id": "e97d6f29-aae7-4a9c-86e0-19478971e77c",
         "nome": "Laudo pericial.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11963,
@@ -33,9 +34,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-10-21T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
@@ -43,7 +45,7 @@
         "enviadoPor": null
       },
       {
-        "id": "659a3856-285c-4df9-9cfd-6eca0ff1df5b",
+        "id": "9ff27e90-569b-435f-bd26-c685fdd3443d",
         "nome": "Quesitos da autora.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11824,
@@ -53,9 +55,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-09-02T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
@@ -63,7 +66,7 @@
         "enviadoPor": null
       },
       {
-        "id": "1378af78-e295-45da-9c8b-c64dd1c5c1a3",
+        "id": "c1e408c6-25f8-4904-9cb1-18f70100aad8",
         "nome": "Decisão de saneamento.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11827,
@@ -73,9 +76,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-08-12T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
@@ -83,7 +87,7 @@
         "enviadoPor": null
       },
       {
-        "id": "5e319653-5435-403f-a47e-9245940ad699",
+        "id": "129e934f-cc3e-4ee5-8526-7d800060e3d0",
         "nome": "Réplica.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11828,
@@ -93,9 +97,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-06-30T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
@@ -103,7 +108,7 @@
         "enviadoPor": null
       },
       {
-        "id": "3d0d6588-ac84-49d0-a34e-a2ce603a572c",
+        "id": "3c4605fc-af39-4c80-9fb8-45ecd844fcec",
         "nome": "Contestação.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11805,
@@ -113,9 +118,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-06-05T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
@@ -123,7 +129,7 @@
         "enviadoPor": null
       },
       {
-        "id": "0ded9342-33be-49ce-aa6c-07d8ae2bf41e",
+        "id": "a9dd3257-391e-4696-a9ae-5259873e6f92",
         "nome": "Ata da audiência de conciliação.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11812,
@@ -133,9 +139,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-05-14T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
@@ -143,7 +150,7 @@
         "enviadoPor": null
       },
       {
-        "id": "8c69242b-ae11-411d-a4f3-669f5efbe1a6",
+        "id": "2e7f8052-30c2-459b-9673-0f2b4d25814c",
         "nome": "Recibo do pagamento administrativo.jpg",
         "mime": "image/jpeg",
         "tamanho": 75890,
@@ -153,15 +160,16 @@
         "lido": true,
         "semTexto": false,
         "leitura": "pronta",
+        "alertas": [],
         "em": "2026-03-13T14:15:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
         "negocio": null,
         "enviadoPor": {
-          "id": "MmPo8gdzggtYhVNElLQ6ekHmploj8gAV",
+          "id": "dmRnPBCEfzWkTEF8W3o67dtI6BWp8Eto",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF",
@@ -169,7 +177,7 @@
         }
       },
       {
-        "id": "bdc0dfad-31cb-4276-a492-0f83a2b925a0",
+        "id": "891f91c8-f1a7-4285-ac0d-4c264651deb7",
         "nome": "Procuração e declaração de hipossuficiência.pdf",
         "mime": "application/pdf",
         "tamanho": 44781,
@@ -179,15 +187,16 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-03-13T13:40:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,
         "negocio": null,
         "enviadoPor": {
-          "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+          "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -195,7 +204,7 @@
         }
       },
       {
-        "id": "f20c83da-0f1b-4998-8cb0-3044adaf4bd1",
+        "id": "7bedfdcf-e40f-4191-baf4-46a0cfbf9598",
         "nome": "Petição inicial.docx",
         "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "tamanho": 11877,
@@ -205,9 +214,10 @@
         "lido": true,
         "semTexto": false,
         "leitura": null,
+        "alertas": [],
         "em": "2026-03-12T21:00:00.000Z",
         "processo": {
-          "id": "774eb046-e848-485c-b732-e9e35604cab2",
+          "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         },
         "cliente": null,

@@ -326,7 +326,7 @@ export function Faixa({ tipo, children }: { tipo: "aviso" | "erro" | "ok" | "ia"
 
 /** Número CNJ ou "Extrajudicial". */
 export function Cnj({ cnj, className }: { cnj: string | null | undefined; className?: string }) {
-  return <span className={cn("dc-num", className)}>{cnj ?? "Extrajudicial"}</span>;
+  return <span className={cn("dc-num dc-cnj", className)}>{cnj ?? "Extrajudicial"}</span>;
 }
 
 export function LinkProcesso({ id, children, className }: { id: string; children: ReactNode; className?: string }) {

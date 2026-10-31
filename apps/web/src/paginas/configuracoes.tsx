@@ -1,13 +1,13 @@
-/** Configurações do escritório: timbre das peças, avisos e captura, calendário forense e o registro. */
+/** Configurações do escritório: timbre das peças, avisos e captura, calendário forense, a IA (política e retorno) e o registro. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Plus, Send, Trash2, Upload } from "lucide-react";
+import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Abas, Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
@@ -42,7 +42,7 @@ export function ConfiguracoesPage() {
         { id: "escritorio", rotulo: "Timbre" },
         { id: "avisos", rotulo: "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
-        ...(socio ? [{ id: "ia" as const, rotulo: celular ? "IA" : "Retorno sobre a IA" }, { id: "registro" as const, rotulo: "Registro" }] : []),
+        ...(socio ? [{ id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }] : []),
       ]}
     />
   );
@@ -56,7 +56,10 @@ export function ConfiguracoesPage() {
   ) : aba === "calendario" ? (
     <AbaCalendario e={e} socio={socio} celular={celular} />
   ) : aba === "ia" ? (
-    <AbaRetorno celular={celular} />
+    <div className="dc-pilha">
+      <PoliticaDeIa />
+      <AbaRetorno celular={celular} />
+    </div>
   ) : (
     <AbaRegistro />
   );
@@ -220,7 +223,7 @@ function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
             aoMudar={(manha) => salvar.mutate({ avisos: { manha, hora: horaDoAviso } })}
             desligado={!socio}
           />
-          <Campo rotulo="Horário" htmlFor="av-hora" ajuda="De segunda a sexta. Sai depois da busca das 06:40 no DJEN.">
+          <Campo rotulo="Horário" htmlFor="av-hora" ajuda="De segunda a sexta. Sai depois da leitura do DJEN, que roda às 04:30.">
             <input id="av-hora" type="time" value={horaDoAviso} min="06:45" max="10:45" step={900} onChange={(ev) => setHora(ev.target.value)} onBlur={() => horaDoAviso !== e.avisos.hora && salvar.mutate({ avisos: { manha: e.avisos.manha, hora: horaDoAviso } })} disabled={!socio} />
           </Campo>
           <p className="dc-nota m-0">WhatsApp do Decreta: {estado(e.whatsappLigado, "ligado", "ainda não ligado neste servidor")}</p>
@@ -232,7 +235,7 @@ function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
       <Painel titulo="Captura automática">
         <div className="dc-form">
           {e.demonstracao && <Faixa tipo="aviso">Na demonstração a busca fica desligada: as OABs e os números de processo são inventados.</Faixa>}
-          <Interruptor rotulo="Publicações do DJEN" ajuda="Busca pelas OABs da equipe às 06:40, 12:40 e 18:40, de segunda a sexta." ligado={e.capturaDjen} aoMudar={(v) => salvar.mutate({ capturaDjen: v })} desligado={!socio || e.demonstracao} />
+          <Interruptor rotulo="Publicações do DJEN" ajuda="Lê o caderno de cada tribunal às 04:30 e busca pelas OABs da equipe às 12:40 e às 18:40, de segunda a sexta." ligado={e.capturaDjen} aoMudar={(v) => salvar.mutate({ capturaDjen: v })} desligado={!socio || e.demonstracao} />
           <Interruptor
             rotulo="Movimentações do DataJud"
             ajuda="Atualiza as movimentações dos processos ativos toda madrugada, às 05:00."
@@ -347,10 +350,10 @@ function AbaCalendario({ e, socio, celular }: { e: Escritorio; socio: boolean; c
 function NovaSuspensao({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => void }) {
   const qc = useQueryClient();
   const avisar = useAviso();
-  const vazio = { dia: "", ate: "", motivo: "", tipo: "local" as keyof typeof TIPO_DE_SUSPENSAO, comarca: "" };
+  const vazio = { dia: "", ate: "", motivo: "", tipo: "local" as keyof typeof TIPO_DE_SUSPENSAO, tribunal: "", comarca: "" };
   const [f, setF] = useState(vazio);
   const criar = useMutation({
-    mutationFn: () => api<{ dias: number }>("/suspensoes", { json: { dia: f.dia, ate: f.ate || undefined, motivo: f.motivo, tipo: f.tipo, comarca: f.comarca || null } }),
+    mutationFn: () => api<{ dias: number }>("/suspensoes", { json: { dia: f.dia, ate: f.ate || undefined, motivo: f.motivo, tipo: f.tipo, tribunal: f.tribunal.trim().toUpperCase() || null, comarca: f.comarca.trim() || null } }),
     onSuccess: (r) => {
       for (const k of ["escritorio", "feriados", "calcular"]) void qc.invalidateQueries({ queryKey: [k] });
       avisar(r.dias === 1 ? "Dia marcado." : `${r.dias} dias marcados.`);
@@ -387,15 +390,18 @@ function NovaSuspensao({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => 
         <Campo rotulo="Motivo" htmlFor="ns-motivo">
           <input id="ns-motivo" value={f.motivo} onChange={(e) => setF({ ...f, motivo: e.target.value })} placeholder="Aniversário de Joinville" />
         </Campo>
+        <Campo rotulo="Tipo" htmlFor="ns-tipo">
+          <select id="ns-tipo" value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value as keyof typeof TIPO_DE_SUSPENSAO })}>
+            {Object.entries(TIPO_DE_SUSPENSAO).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </Campo>
         <div className="dc-grade-2">
-          <Campo rotulo="Tipo" htmlFor="ns-tipo">
-            <select id="ns-tipo" value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value as keyof typeof TIPO_DE_SUSPENSAO })}>
-              {Object.entries(TIPO_DE_SUSPENSAO).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
+          <Campo rotulo="Tribunal (opcional)" htmlFor="ns-tribunal" ajuda="Vazio vale para todos">
+            <input id="ns-tribunal" value={f.tribunal} onChange={(e) => setF({ ...f, tribunal: e.target.value })} placeholder="TJSC" />
           </Campo>
           <Campo rotulo="Comarca (opcional)" htmlFor="ns-comarca" ajuda="Vazio vale para todas">
             <input id="ns-comarca" value={f.comarca} onChange={(e) => setF({ ...f, comarca: e.target.value })} placeholder="Joinville" />
@@ -420,6 +426,20 @@ function Abrir({ onde, celular }: { onde: RetornosDaIa["errados"][number]["onde"
   if (onde.tipo === "cliente") return <Link to="/clientes/$id" params={{ id: onde.id }} className="dc-link flex-none">{rotulo}</Link>;
   if (onde.tipo === "negocio") return <Link to="/negocios" className="dc-link flex-none">{rotulo}</Link>;
   return null;
+}
+
+/** O modelo de política interna de uso de IA (Recomendação CFOAB 001/2024, item 3.6), para os sócios adotarem. */
+function PoliticaDeIa() {
+  return (
+    <Painel titulo="Política interna de uso de IA">
+      <div className="dc-uso-ia">
+        <p>A recomendação da OAB pede que o escritório defina por escrito como a equipe usa IA: as ferramentas autorizadas, a revisão humana, o sigilo e o que fazer num incidente. O modelo sai no timbre, com o que o Decreta já faz e os trechos a completar marcados.</p>
+        <a className="dc-btn dc-btn--secundaria dc-btn--sm" href={`${API_URL}/api/app/escritorio/politica-ia`}>
+          <Download /> Baixar o modelo
+        </a>
+      </div>
+    </Painel>
+  );
 }
 
 /** Para os sócios: quanto a equipe achou útil cada leitura da IA, e o que disse que estava errado. */

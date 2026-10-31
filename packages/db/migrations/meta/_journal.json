@@ -36,6 +36,69 @@
       "when": 1793393525437,
       "tag": "0004_uso_ia",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793473153396,
+      "tag": "0005_datajud_atualizado",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793474108236,
+      "tag": "0006_caderno_djen",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793476382051,
+      "tag": "0007_prazo_auditavel",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793477631640,
+      "tag": "0008_alertas_do_documento",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793478492548,
+      "tag": "0009_cliente_sem_ia",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793479969470,
+      "tag": "0010_termo_ia",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793480706892,
+      "tag": "0011_revisoes_de_peca",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793486123629,
+      "tag": "0012_envio_do_tribunal",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793486642895,
+      "tag": "0013_datajud_ate",
+      "breakpoints": true
     }
   ]
 }

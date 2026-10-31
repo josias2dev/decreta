@@ -9,7 +9,7 @@ import { apagarDemonstracao, criarDemonstracao, documentoValido } from "../src/d
 import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { createRotas } from "../src/rotas/index.ts";
-import { atualizarDoDataJud, capturarDjen } from "../src/servicos/captura.ts";
+import { atualizarDoDataJud, capturarDjen, conferirDataJudDoEscritorio } from "../src/servicos/captura.ts";
 import { cnpjValido, cpfValido, dvCnj } from "@decreta/core";
 
 /** Um prazo da lista. */
@@ -60,6 +60,7 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     expect(await capturarDjen(captura, orgId, { de: "2026-10-28", ate: "2026-10-29" })).toEqual({ encontradas: 0, novas: [] });
     const { itens } = await call("/processos");
     expect(await atualizarDoDataJud(captura, orgId, itens[0].id)).toBe(0);
+    await conferirDataJudDoEscritorio(captura, orgId);
     expect(chamadas).toBe(0);
     expect(await call("/escritorio")).toMatchObject({ demonstracao: true, capturaDjen: false, capturaDatajud: false });
     const ligar = await app.request("/api/app/escritorio", { method: "PUT", headers: { cookie, origin: env.WEB_ORIGIN, "content-type": "application/json" }, body: JSON.stringify({ capturaDjen: true }) });
@@ -128,7 +129,8 @@ describe.skipIf(!hasTestDatabase)("escritório de demonstração", () => {
     const processo = await call(`/processos/${marina.processoId}`);
     expect(processo.cnj).toBe("5004321-25.2026.8.24.0038");
     expect(processo.resumo).toMatchObject({ situacao: "pronto", desatualizada: true });
-    expect(processo.novidades).toEqual(["petição da ré, evento 89"]);
+    // A Portaria CNJ 374/2026 manda citar a fonte do que vem do DataJud.
+    expect(processo.novidades).toEqual(["petição da ré, evento 89 (CNJ/DataJud)"]);
     const docs = await call(`/documentos?processo=${marina.processoId}`);
     expect(docs.itens.length).toBeGreaterThanOrEqual(8);
   });

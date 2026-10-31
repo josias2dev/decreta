@@ -32,13 +32,13 @@ export function InicioPage() {
     if (eu.data) router.history.replace("/hoje");
   }, [eu.data, router]);
 
-  // O fundo em ASCII, nos canvas que vêm no HTML da landing: o do topo com a IA lendo, o da chamada final sem.
+  // O fundo em ASCII, nos canvas que vêm no HTML da landing: o do topo e o da chamada final.
   useEffect(() => {
     const r = raiz.current;
     if (!r) return;
     const desligar = [...r.querySelectorAll<HTMLCanvasElement>("canvas.lp-ascii")].map((tela) =>
       tela.closest(".lp-hero")
-        ? ligarFundoAscii(tela, { miolo: r.querySelector(".lp-hero__texto"), ia: true, evitar: [...r.querySelectorAll(".lp-vitrine__img")] })
+        ? ligarFundoAscii(tela, { miolo: r.querySelector(".lp-hero__texto") })
         : ligarFundoAscii(tela, { miolo: tela.parentElement?.querySelector(".lp-fim__centro") }),
     );
     return () => desligar.forEach((f) => f());

@@ -83,7 +83,7 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
         situacao: a.situacao,
         checklist: a.checklist.map((i) => ({ ...i, texto: itemDoChecklist(i.texto) })),
         responsavel: resumir(pessoas, a.responsavelId),
-        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca },
+        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, semIa: ctx?.semIa ?? false },
         preparacao: preparacaoNaTela(naTela(await ultimaAnalise(tx, "audiencia", a.id, "preparar-audiencia"), ctx?.base)),
       });
     });

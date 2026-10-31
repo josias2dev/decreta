@@ -7,7 +7,7 @@ import { publicacoes, type Database } from "@decreta/db";
 import { ehDecisaoFinal, impressao, lerSentenca, type Ia } from "@decreta/ia";
 import { eq } from "drizzle-orm";
 import { analisar, type AnaliseNaTela } from "./analises.ts";
-import { carregarContexto } from "./contexto.ts";
+import { contextoParaIa } from "./contexto.ts";
 import { IaDesligada } from "./prazos.ts";
 
 interface Deps {
@@ -44,7 +44,7 @@ export async function lerSentencaDaPublicacao(deps: Deps, organizationId: string
     preparar: async (tx) => {
       const [pub] = await tx.select().from(publicacoes).where(eq(publicacoes.id, publicacaoId));
       if (!pub || (!opcoes.forcar && !ehDecisaoFinal(pub))) return null;
-      const contexto = pub.processoId ? (await carregarContexto(tx, pub.processoId))?.texto : undefined;
+      const contexto = pub.processoId ? (await contextoParaIa(tx, pub.processoId))?.texto : undefined;
       const d = pub.disponibilizadaEm.split("-");
       return { entrada: { pub, contexto }, base: impressao(pub.texto), fonte: `${pub.fonte === "djen" ? "DJEN" : "Publicação"} · ${d[2]}/${d[1]}/${d[0]}` };
     },

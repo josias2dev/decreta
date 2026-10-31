@@ -1,7 +1,7 @@
 {
-  "path": "/processos/5e1f9688-89f0-4e6e-8709-214425a7e064",
+  "path": "/processos/90439574-2f0d-46e2-923c-595b65935729",
   "corpo": {
-    "id": "5e1f9688-89f0-4e6e-8709-214425a7e064",
+    "id": "90439574-2f0d-46e2-923c-595b65935729",
     "titulo": "Eduardo Lima × Saúde Litoral Planos",
     "cnj": "5003390-24.2026.8.24.0005",
     "tipo": "judicial",
@@ -19,9 +19,12 @@
     "segredo": false,
     "observacoes": null,
     "datajudEm": "2026-10-29T08:12:00.000Z",
+    "datajudAtualizadoEm": "2026-10-14T11:00:00.000Z",
+    "datajudAte": "2026-10-16T21:20:00.000Z",
     "cliente": {
-      "id": "fc864a4e-f260-4b21-a7d9-89ba86c1cf7b",
-      "nome": "Eduardo Lima"
+      "id": "a2ea6d62-ca37-4d89-a336-c067880392c8",
+      "nome": "Eduardo Lima",
+      "semIa": false
     },
     "responsavel": null,
     "link": {
@@ -30,7 +33,7 @@
     },
     "partes": [
       {
-        "id": "31eca262-8f54-44be-8d36-804a67721588",
+        "id": "e52e2d57-fd72-460a-88bd-14836f4e6910",
         "nome": "Eduardo Lima",
         "polo": "ativo",
         "papel": "Autor",
@@ -39,7 +42,7 @@
         "documento": "145.786.320-08"
       },
       {
-        "id": "f5549f6e-e416-4573-9a21-a01028190b06",
+        "id": "96fafb50-6023-4b46-8335-f2c02bb28150",
         "nome": "Saúde Litoral Planos de Saúde S.A.",
         "polo": "passivo",
         "papel": "Ré",
@@ -57,7 +60,7 @@
     "novidades": [],
     "ultimasMovimentacoes": [
       {
-        "id": "2f1722d2-8f37-40a9-88d6-c71e19cb358a",
+        "id": "71f6a434-16ac-4d2f-b65c-f85da4e45e3a",
         "em": "2026-10-28T17:05:00.000Z",
         "evento": 10,
         "titulo": "Despacho",
@@ -68,7 +71,7 @@
         "documento": null
       },
       {
-        "id": "eecb2c83-7a77-497e-9478-70638bdc8147",
+        "id": "291eefef-d45a-4ab3-8594-30fac6575056",
         "em": "2026-10-20T17:05:00.000Z",
         "evento": 8,
         "titulo": "Despacho",
@@ -79,7 +82,7 @@
         "documento": null
       },
       {
-        "id": "f33d725f-b8ea-4cb0-8191-b998257252bf",
+        "id": "e52bee06-e28f-440f-afb9-56130aab6573",
         "em": "2026-10-04T20:20:00.000Z",
         "evento": 5,
         "titulo": "Agravo de instrumento",
@@ -90,7 +93,7 @@
         "documento": null
       },
       {
-        "id": "83ffb845-17bd-4b05-88dd-8b055f2f3f57",
+        "id": "5adc4f58-5edb-4430-ab3a-dedb52842117",
         "em": "2026-10-01T17:05:00.000Z",
         "evento": 3,
         "titulo": "Decisão",
@@ -101,7 +104,7 @@
         "documento": null
       },
       {
-        "id": "3e5ca882-dfc5-4853-a06b-61e7638354e7",
+        "id": "6662721e-fe47-4e73-a6fb-55a515ea639e",
         "em": "2026-09-29T20:20:00.000Z",
         "evento": 1,
         "titulo": "Distribuição",
@@ -110,14 +113,14 @@
         "fonte": "datajud",
         "nova": false,
         "documento": {
-          "id": "60ebed0c-6d7c-4651-98d3-dcca1a6f8a0b",
+          "id": "a5353515-d124-4cf5-a417-442707dacfac",
           "nome": "Petição inicial.docx",
           "paginas": 12
         }
       }
     ],
     "proximoPrazo": {
-      "id": "212ebafd-f0db-4435-ad11-e013022aad63",
+      "id": "3807c2f3-e637-4b84-96f6-21cf7d8ac52c",
       "tipo": "Juntar procuração atualizada",
       "fim": "2026-10-29",
       "dias": 5,
@@ -131,12 +134,12 @@
     "alvaras": [],
     "resultados": [
       {
-        "id": "f92e8cd8-a813-48a7-a2f5-c9ecc9611831",
+        "id": "c378670e-4ff2-4dd9-9b58-dd71d9c669d1",
         "tipo": "sentenca",
         "resultado": "parcialmente_procedente",
         "decididoEm": "2026-10-29",
         "resumo": "Cirurgia e reembolso; sem danos morais.",
-        "publicacaoId": "b55ff7c0-1004-457e-a245-150302ddd085"
+        "publicacaoId": "34cd39b9-9ff0-4f34-84fe-81299414bd81"
       }
     ]
   }

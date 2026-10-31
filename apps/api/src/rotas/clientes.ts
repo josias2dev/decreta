@@ -1,5 +1,6 @@
 import { cnpjValido, cpfValido, formatarDocumento, formatarTelefone, limparDocumento, telefoneWhatsapp } from "@decreta/core";
 import { atendimentos, clientes, documentos, processos } from "@decreta/db";
+import { MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { and, desc, eq, ilike, like, ne, or, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -7,6 +8,8 @@ import { registrar } from "../auditoria.ts";
 import { conferirPastaDe, ultimaConferencia } from "../servicos/conferencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { IaDesligada } from "../servicos/prazos.ts";
+import { textoDoTermo, TITULO_DO_TERMO } from "../servicos/termo-ia.ts";
+import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
 import { comLimiteDaIa, corpo, ehSocio, falha, id, ip, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 const CANAL: Record<string, string> = { presencial: "presencial", telefone: "telefone", whatsapp: "WhatsApp", video: "vídeo", email: "e-mail" };
@@ -21,6 +24,8 @@ const dadosDoCliente = z.object({
   email: z.string().email().max(200).nullable().optional().or(z.literal("").transform(() => null)),
   endereco: z.string().max(500).nullable().optional(),
   observacoes: z.string().max(5000).nullable().optional(),
+  /** O cliente recusou o uso de IA nos casos dele. */
+  semIa: z.boolean().optional(),
 });
 
 function documentoLimpo(tipo: "pf" | "pj", documento: string | null | undefined): string | null {
@@ -106,6 +111,7 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
           .orderBy(desc(documentos.createdAt)),
       ]);
       const conferencia = await ultimaConferencia(tx, { clienteId }, c.get("timezone"));
+      const termo = cl.termoIaDocumentoId ? docs.find((d) => d.id === cl.termoIaDocumentoId) : undefined;
       const linhaDoTempo = [
         ...ats.map((a) => ({ em: a.em.toISOString(), titulo: `Atendimento · ${CANAL[a.canal] ?? a.canal}`, detalhe: a.resumo.slice(0, 200), tipo: "atendimento" as const })),
         ...ps.map((p) => ({ em: p.createdAt.toISOString(), titulo: "Processo cadastrado", detalhe: p.titulo, tipo: "processo" as const })),
@@ -121,6 +127,9 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         email: cl.email,
         endereco: cl.endereco,
         observacoes: cl.observacoes,
+        semIa: cl.semIa,
+        /** O termo de uso de IA assinado, na pasta do cliente. */
+        termoIa: termo && cl.termoIaEm ? { em: cl.termoIaEm.toISOString(), documento: { id: termo.id, nome: termo.nome } } : null,
         criadoEm: cl.createdAt.toISOString(),
         processos: ps.map((p) => ({ id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, situacao: p.situacao, responsavel: resumir(pessoas, p.responsavelId) })),
         atendimentos: ats.map((a) => ({ id: a.id, em: a.em.toISOString(), canal: a.canal, resumo: a.resumo, autor: resumir(pessoas, a.autorId), processoId: a.processoId })),
@@ -128,6 +137,26 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         conferencia,
         linhaDoTempo,
       });
+    });
+  });
+
+  /** O termo de uso de IA para o cliente assinar, no timbre (Recomendação CFOAB 001/2024). Quem baixa assina como advogado responsável. */
+  app.get("/clientes/:id/termo-ia", async (c) => {
+    const clienteId = id(c);
+    const { cl, timbre, advogado } = await tenant(c, deps, async (tx) => {
+      const [cl] = await tx.select().from(clientes).where(eq(clientes.id, clienteId));
+      if (!cl) falha(404, "nao_encontrado");
+      const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
+      return { cl, timbre: await timbreDoEscritorio(tx, c.get("orgId"), c.get("orgNome")), advogado: pessoas.get(c.get("userId")) };
+    });
+    const texto = textoDoTermo({ escritorio: timbre.timbre.nome, cliente: { nome: cl.nome, tipo: cl.tipo, documento: cl.documento }, advogado: { nome: advogado?.nome ?? c.get("userNome"), oab: advogado?.oab ?? null }, seguranca: `${deps.telas}/seguranca` });
+    const docx = await docxNoTimbre(deps.arquivos, timbre, { titulo: TITULO_DO_TERMO, texto });
+    return new Response(docx, {
+      headers: {
+        "content-type": MIME_DOCX,
+        "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(nomeDoArquivo(`${TITULO_DO_TERMO} · ${cl.nome}`))}`,
+        "cache-control": "no-store",
+      },
     });
   });
 
@@ -149,8 +178,8 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.put("/clientes/:id", async (c) => {
     const clienteId = id(c);
     const b = await corpo(c, dadosDoCliente.partial());
-    await tenant(c, deps, async (tx) => {
-      const [cl] = await tx.select({ tipo: clientes.tipo }).from(clientes).where(eq(clientes.id, clienteId));
+    const mudouSemIa = await tenant(c, deps, async (tx) => {
+      const [cl] = await tx.select({ tipo: clientes.tipo, semIa: clientes.semIa }).from(clientes).where(eq(clientes.id, clienteId));
       if (!cl) falha(404, "nao_encontrado");
       const valores: Partial<typeof clientes.$inferInsert> = Object.fromEntries(Object.entries(b).filter(([, v]) => v !== undefined));
       if (b.documento !== undefined) {
@@ -159,7 +188,10 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
           falha(409, "cliente_existe", "Outro cliente já tem este documento.");
       }
       await tx.update(clientes).set(valores).where(eq(clientes.id, clienteId));
+      return b.semIa !== undefined && b.semIa !== cl.semIa;
     });
+    // Quem marcou (ou desmarcou) a recusa da IA, e quando: o consentimento fica auditável.
+    if (mudouSemIa) await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "cliente.sem_ia", detalhes: { clienteId, semIa: b.semIa }, ip: ip(c) }, deps.log);
     return c.json({ ok: true });
   });
 

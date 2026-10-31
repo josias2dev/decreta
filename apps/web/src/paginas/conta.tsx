@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
+import { UsoDaIaHoje } from "@/componentes/limite-da-ia";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
@@ -46,6 +47,7 @@ export function ContaPage() {
         )}
       </div>
       <div className="dc-pilha">
+        <UsoDaIaHoje />
         {!demonstracao && <DuasEtapas ligada={!!(sessao.data?.user as { twoFactorEnabled?: boolean } | undefined)?.twoFactorEnabled} />}
         <Painel titulo="Sair">
           <p className="dc-nota mb-3 mt-0">A sessão dura 30 dias neste aparelho. Saia se o aparelho não for seu.</p>

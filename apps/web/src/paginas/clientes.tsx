@@ -12,6 +12,7 @@ import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
 import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
+import { UsoDeIa } from "@/componentes/uso-de-ia";
 import { Botao, Cabecalho, CampoDeBusca, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, Painel, Responsavel, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
@@ -255,7 +256,8 @@ export function ClientePage() {
           [c.tipo === "pj" ? "CNPJ" : "CPF", c.documento ? <span className="dc-num">{formatarDocumento(c.documento)}</span> : "—"],
           ["Telefone", c.telefone ? <span className="dc-num">{telefone(c.telefone)}</span> : "—"],
           ["WhatsApp", zap ? <a className="dc-link dc-num" href={zap} target="_blank" rel="noreferrer">{telefone(c.whatsapp ?? c.telefone)}</a> : "—"],
-          ["E-mail", c.email ? <a className="dc-link" href={`mailto:${c.email}`}>{c.email}</a> : "—"],
+          // Quebra antes da arroba, e não no meio do domínio.
+          ["E-mail", c.email ? <a className="dc-link" href={`mailto:${c.email}`}>{c.email.split("@")[0]}<wbr />@{c.email.split("@").slice(1).join("@")}</a> : "—"],
           ["Endereço", c.endereco ?? "—"],
           ["Cliente desde", diaCompleto(diaDoInstante(c.criadoEm))],
           ...(c.observacoes ? ([["Observações", c.observacoes]] as [string, string][]) : []),
@@ -287,10 +289,11 @@ export function ClientePage() {
     </Painel>
   );
 
-  const conferencia = (
+  // A conferência é só IA: no cliente que recusou, fica só a antiga, se houver.
+  const conferencia = (!c.semIa || c.conferencia) && (
     <ConferenciaDaPasta
       analise={c.conferencia}
-      aoConferir={eu.data?.ia ? () => conferir.mutate() : undefined}
+      aoConferir={eu.data?.ia && !c.semIa ? () => conferir.mutate() : undefined}
       conferindo={conferir.isPending}
       semDocumentos={!c.documentos.some((d) => d.lido)}
     />
@@ -310,7 +313,7 @@ export function ClientePage() {
 
   const dialogos = (
     <>
-      <NovoAtendimento aberto={dialogo === "atendimento"} aoFechar={() => setDialogo(null)} cliente={{ id: c.id, nome: c.nome }} />
+      <NovoAtendimento aberto={dialogo === "atendimento"} aoFechar={() => setDialogo(null)} cliente={{ id: c.id, nome: c.nome, semIa: c.semIa }} />
       <NovoProcesso aberto={dialogo === "processo"} aoFechar={() => setDialogo(null)} cliente={{ id: c.id, nome: c.nome }} />
       <EditarCliente c={c} aberto={dialogo === "editar"} aoFechar={() => setDialogo(null)} />
       <ApagarCliente c={c} aberto={dialogo === "apagar"} aoFechar={() => setDialogo(null)} />
@@ -351,6 +354,7 @@ export function ClientePage() {
         {dados}
         {documentos}
         {conferencia}
+        <UsoDeIa c={c} />
         {tempo}
         {apagar}
         {dialogos}
@@ -394,6 +398,7 @@ export function ClientePage() {
           {dados}
           {documentos}
           {conferencia}
+          <UsoDeIa c={c} />
           {tempo}
           {apagar}
         </div>

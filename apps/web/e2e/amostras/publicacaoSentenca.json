@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/b55ff7c0-1004-457e-a245-150302ddd085",
+  "path": "/publicacoes/34cd39b9-9ff0-4f34-84fe-81299414bd81",
   "corpo": {
-    "id": "b55ff7c0-1004-457e-a245-150302ddd085",
+    "id": "34cd39b9-9ff0-4f34-84fe-81299414bd81",
     "situacao": "nova",
     "fonte": "manual",
     "disponibilizadaEm": "2026-10-28",
@@ -13,24 +13,28 @@
     "cnj": null,
     "texto": "Vistos. Eduardo Lima ajuizou ação contra Unimed Litoral pedindo a cobertura da cirurgia negada, o reembolso de R$ 18.400,00 e danos morais. A ré alegou exclusão contratual. Ante o exposto, JULGO PARCIALMENTE PROCEDENTES os pedidos para condenar a ré a custear a cirurgia e a reembolsar R$ 18.400,00, com correção pelo INPC desde o desembolso e juros de 1% ao mês desde a citação. Rejeito o pedido de danos morais. Custas e honorários de 10% do valor da condenação pela ré. Publique-se. Intimem-se.",
     "link": null,
+    "certidao": false,
+    "cancelada": null,
     "destinatarios": [],
     "advogados": [],
     "processo": {
-      "id": "5e1f9688-89f0-4e6e-8709-214425a7e064",
+      "id": "90439574-2f0d-46e2-923c-595b65935729",
       "titulo": "Eduardo Lima × Saúde Litoral Planos",
       "cnj": "5003390-24.2026.8.24.0005",
       "classe": "Procedimento comum cível",
       "orgao": "1ª Vara Cível",
       "comarca": "Balneário Camboriú",
-      "responsavel": null
+      "responsavel": null,
+      "semIa": false
     },
     "sugestao": {
-      "id": "d0c114f7-0946-40b1-91da-2029971f63d1",
+      "id": "61e28068-f026-4112-9aa4-1fc35d1fcdd3",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
         "dias": 15,
         "tipo": "Apelação",
+        "regra": "Dias úteis (CPC, art. 219)",
         "recusa": null,
         "resumo": "Sentença parcialmente procedente: cirurgia e reembolso, sem danos morais.",
         "assunto": "sentença",
@@ -38,6 +42,12 @@
         "audiencia": null,
         "geraPrazo": true,
         "fundamento": "art. 1.003, § 5º, CPC",
+        "conferencia": {
+          "motivos": [
+            "Bate com a lei: 15 dias (CPC, art. 1.003, § 5º)."
+          ],
+          "confianca": "alta"
+        },
         "responsavelId": null,
         "contagemCalculada": {
           "fim": "2026-11-23",
@@ -62,13 +72,13 @@
         }
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-10-31T17:18:26.928Z",
+      "em": "2026-10-31T22:58:21.596Z",
       "desatualizada": false,
       "erro": null,
       "responsavel": null
     },
     "prazo": {
-      "id": "4a613cb2-123b-4825-9dc4-0f4e1c035b73",
+      "id": "c86ed4f2-548b-4100-b792-0af12c138445",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Apelação"
@@ -76,7 +86,7 @@
     "audiencia": null,
     "decisao": true,
     "sentenca": {
-      "id": "df595d72-c9b9-491d-b11a-fe9514d4310c",
+      "id": "05bab487-4322-4108-aa16-0a13f4ca37f3",
       "acao": "ler-sentenca",
       "situacao": "pronto",
       "conteudo": {
@@ -118,7 +128,7 @@
         "honorarios": "Ré paga custas e 10% do valor da condenação."
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-10-31T17:18:26.957Z",
+      "em": "2026-10-31T22:58:21.628Z",
       "desatualizada": false,
       "erro": null
     },

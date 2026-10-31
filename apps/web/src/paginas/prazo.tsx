@@ -4,26 +4,22 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ExternalLink, FileText, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { Cancelada } from "@/componentes/captura-do-djen";
+import { CampoIntimacaoNoSistema, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { Avatar, BlocoIa, Botao, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { POLO_DO_CLIENTE, diaCompleto, diaCurto, diaDaSemana, diaDoInstante, diaMes, hora, juntar, ondeTramita, prazoEmDias } from "@/lib/formato";
-import type { Briefing, Contagem, ContagemNaTela, Prazo } from "@/lib/tipos";
+import { POLO_DO_CLIENTE, diaCompleto, diaCurto, diaDaSemana, diaDoInstante, diaMes, hora, ondeTramita, prazoEmDias } from "@/lib/formato";
+import type { Briefing, Contagem, Prazo, PreviaDaConta } from "@/lib/tipos";
 
 /** Tudo que mostra prazo muda junto: a lista, o Hoje, os números do menu e a caixa de publicações. */
 export function atualizarPrazos(qc: QueryClient) {
   for (const k of ["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda"]) void qc.invalidateQueries({ queryKey: [k] });
 }
-
-const foraDaConta = (p: Pick<Prazo, "contagem" | "desconsiderados">) => {
-  const dias = p.desconsiderados.map((d) => diaCurto(d.dia));
-  if (p.contagem === "uteis") return dias.length ? `Fins de semana, ${juntar(dias)}` : "Fins de semana";
-  return dias.length ? juntar(dias) : "Nada";
-};
 
 const FONTE = { djen: "DJEN", datajud: "DataJud", manual: "Publicação digitada" } as const;
 
@@ -64,6 +60,10 @@ export function PrazoPage() {
   }
 
   const aberto = p.situacao === "aberto";
+  // Confiança baixa: não confirma num clique; a pessoa abre o ajuste e confere os números.
+  const conferir = p.conferencia?.confianca === "baixa";
+  const confirmar = conferir ? () => setDialogo("ajustar") : () => acao.mutate("confirmar");
+  const rotuloConfirmar = conferir ? "Conferir e confirmar" : "Confirmar prazo";
   const peca = p.pecas[0];
   const irParaPeca = () => void navigate(peca ? { to: "/pecas", search: { id: peca.id } } : { to: "/pecas", search: { prazo: p.id } });
   const rotuloPeca = peca ? "Abrir a peça deste prazo" : "Gerar peça para este prazo";
@@ -93,11 +93,12 @@ export function PrazoPage() {
 
   const onde = ondeTramita(p.processo);
   const b = p.briefing;
-  const briefing = (b || eu.data?.ia) && (
+  const ia = !!eu.data?.ia && !p.processo.semIa;
+  const briefing = (b || ia) && (
     <BlocoIa
       titulo="Briefing do prazo"
       analise={b}
-      aoRefazer={eu.data?.ia ? () => refazer.mutate() : undefined}
+      aoRefazer={ia ? () => refazer.mutate() : undefined}
       refazendo={refazer.isPending}
       avisoDesatualizada="Chegou novidade nos autos depois deste briefing."
     >
@@ -111,15 +112,12 @@ export function PrazoPage() {
         ["Tipo", p.tipo],
         ["Prazo", prazoEmDias(p.dias, p.contagem)],
         ["Base legal", p.fundamento ?? "—"],
-        ["Publicação", diaCompleto(p.publicadoEm)],
-        ["Início", diaCompleto(p.inicio)],
         [
           "Data final",
           <span key="fim">
             <strong className="dc-num">{diaCompleto(p.fim)}</strong> <span className="text-[var(--tinta-2)]">{diaDaSemana(p.fim)}</span>
           </span>,
         ],
-        ["Fora da conta", <span title={p.desconsiderados.map((d) => `${diaCurto(d.dia)}: ${d.nome}`).join("\n") || undefined}>{foraDaConta(p)}</span>],
         ["Responsável", <Responsavel pessoa={p.responsavel} />],
         ["Origem", p.origem === "ia" ? `${p.publicacao ? FONTE[p.publicacao.fonte] : "Publicação"} · sugerido pela IA` : p.publicacao ? `${FONTE[p.publicacao.fonte]} · criado à mão` : "Criado à mão"],
         ...(p.observacoes ? ([["Observações", p.observacoes]] as [string, string][]) : []),
@@ -127,6 +125,8 @@ export function PrazoPage() {
       ]}
     />
   );
+
+  const conta = <PainelDaConta conta={p.conta} contagem={p.contagem} conferencia={p.conferencia} aoAjustar={aberto ? () => setDialogo("ajustar") : undefined} />;
 
   const hojeDia = eu.data?.hoje;
   const historico = p.historico.length > 0 && (
@@ -186,8 +186,8 @@ export function PrazoPage() {
       </>
     ) : (
       <>
-        <Botao variante="primaria" bloco onClick={() => acao.mutate("confirmar")} ocupado={acao.isPending && acao.variables === "confirmar"}>
-          <Check /> Confirmar prazo
+        <Botao variante="primaria" bloco onClick={confirmar} ocupado={acao.isPending && acao.variables === "confirmar"}>
+          <Check /> {rotuloConfirmar}
         </Botao>
         <div className="dc-rodape__par">
           <Botao bloco onClick={() => setDialogo("ajustar")}>
@@ -210,7 +210,8 @@ export function PrazoPage() {
                 <Link to="/processos/$id" params={{ id: p.processo.id }} className="text-inherit no-underline">
                   <strong>{p.processo.titulo}</strong>
                 </Link>
-                {[onde, p.processo.cnj ?? "Extrajudicial"].filter(Boolean).join(" · ")}
+                {onde && `${onde} · `}
+                <Cnj cnj={p.processo.cnj} />
               </>
             }
           />
@@ -223,6 +224,7 @@ export function PrazoPage() {
         <Painel titulo="Prazo" acao={aberto && p.confirmado ? <Botao variante="fantasma" pequeno onClick={() => setDialogo("ajustar")}>Ajustar</Botao> : undefined}>
           {dados}
         </Painel>
+        {conta}
         {p.publicacao && <Teor publicacao={p.publicacao} />}
         {pecas}
         {historico}
@@ -274,8 +276,8 @@ export function PrazoPage() {
                   Descartar
                 </Botao>
                 <Botao onClick={() => setDialogo("ajustar")}>Ajustar</Botao>
-                <Botao variante="primaria" onClick={() => acao.mutate("confirmar")} ocupado={acao.isPending && acao.variables === "confirmar"}>
-                  <Check /> Confirmar prazo
+                <Botao variante="primaria" onClick={confirmar} ocupado={acao.isPending && acao.variables === "confirmar"}>
+                  <Check /> {rotuloConfirmar}
                 </Botao>
               </>
             )
@@ -291,6 +293,7 @@ export function PrazoPage() {
           <Painel titulo="Prazo" acao={aberto && p.confirmado ? <Botao variante="fantasma" pequeno onClick={() => setDialogo("ajustar")}>Ajustar</Botao> : undefined}>
             {dados}
           </Painel>
+          {conta}
           {pecas}
           {historico}
         </div>
@@ -327,6 +330,7 @@ function Teor({ publicacao }: { publicacao: NonNullable<Prazo["publicacao"]> }) 
   const titulo = publicacao.tipoComunicacao?.toLocaleLowerCase("pt-BR").startsWith("intima") ? "Teor da intimação" : "Teor da publicação";
   return (
     <Painel titulo={titulo} acao={<span className="dc-nota">Publicada em {diaCompleto(publicacao.publicadaEm)}</span>}>
+      {publicacao.cancelada && <Cancelada cancelada={publicacao.cancelada} comPrazo />}
       <p className="m-0 whitespace-pre-wrap text-[14px] leading-[24px]">{longo && !inteiro ? `${publicacao.texto.slice(0, 1200).trimEnd()}…` : publicacao.texto}</p>
       <div className="dc-linha-acoes">
         {longo && (
@@ -340,6 +344,11 @@ function Teor({ publicacao }: { publicacao: NonNullable<Prazo["publicacao"]> }) 
         {publicacao.link && (
           <a href={publicacao.link} target="_blank" rel="noreferrer" className="dc-link inline-flex items-center gap-1">
             Abrir no tribunal <ExternalLink className="size-3.5" />
+          </a>
+        )}
+        {publicacao.certidao && (
+          <a href={`${API_URL}/api/app/publicacoes/${publicacao.id}/certidao`} target="_blank" rel="noreferrer" className="dc-link inline-flex items-center gap-1">
+            Certidão do DJEN <ExternalLink className="size-3.5" />
           </a>
         )}
       </div>
@@ -357,6 +366,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
     dias: String(prazo.dias),
     contagem: prazo.contagem,
     publicadoEm: prazo.publicadoEm,
+    intimadoNoSistemaEm: prazo.conta.intimadoNoSistemaEm ?? "",
     responsavelId: prazo.responsavel?.id ?? "",
     observacoes: prazo.observacoes ?? "",
     sabeData: false,
@@ -370,9 +380,10 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
     if (aberto) setF(inicial());
   }
   const dias = Number(f.dias);
+  const intimadoNoSistemaEm = /^\d{4}-\d{2}-\d{2}$/.test(f.intimadoNoSistemaEm) ? f.intimadoNoSistemaEm : null;
   const conta = useQuery({
-    queryKey: ["calcular", prazo.processo.id, f.publicadoEm, dias, f.contagem],
-    queryFn: () => api<ContagemNaTela>("/prazos/calcular", { json: { processoId: prazo.processo.id, publicadoEm: f.publicadoEm, dias, contagem: f.contagem } }),
+    queryKey: ["calcular", prazo.processo.id, f.publicadoEm, intimadoNoSistemaEm, dias, f.contagem],
+    queryFn: () => api<PreviaDaConta>("/prazos/calcular", { json: { processoId: prazo.processo.id, publicadoEm: f.publicadoEm, intimadoNoSistemaEm, dias, contagem: f.contagem } }),
     enabled: aberto && /^\d{4}-\d{2}-\d{2}$/.test(f.publicadoEm) && dias >= 1,
   });
   const salvar = useMutation({
@@ -385,6 +396,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
           dias,
           contagem: f.contagem,
           publicadoEm: f.publicadoEm,
+          intimadoNoSistemaEm,
           responsavelId: f.responsavelId || null,
           observacoes: f.observacoes || null,
           fimManual: f.sabeData ? f.fimManual : null,
@@ -415,6 +427,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
       }
     >
       <div className="dc-form">
+        {!prazo.confirmado && <MotivosParaConferir conferencia={prazo.conferencia} />}
         <Campo rotulo="O que fazer" htmlFor="aj-tipo">
           <input id="aj-tipo" value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value })} />
         </Campo>
@@ -435,6 +448,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
             <input id="aj-fund" value={f.fundamento} onChange={(e) => setF({ ...f, fundamento: e.target.value })} placeholder="art. 477, § 1º, CPC" />
           </Campo>
         </div>
+        <CampoIntimacaoNoSistema id="aj-sistema" valor={f.intimadoNoSistemaEm} aoMudar={(v) => setF({ ...f, intimadoNoSistemaEm: v })} />
         <Campo rotulo="Responsável" htmlFor="aj-resp">
           <select id="aj-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
             <option value="">Sem responsável</option>
@@ -457,13 +471,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
         <Campo rotulo="Observações" htmlFor="aj-obs">
           <textarea id="aj-obs" rows={2} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
         </Campo>
-        {fim && (
-          <Faixa tipo="ia">
-            <span>
-              Vence em <strong className="dc-num">{diaCompleto(fim)}</strong>, {diaDaSemana(fim)}.{!f.sabeData && conta.data ? ` ${conta.data.explicacao}` : ""}
-            </span>
-          </Faixa>
-        )}
+        {fim && <PreviaNoDialogo fim={fim} previa={conta.data} sabeData={f.sabeData} />}
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
       </div>
     </Dialogo>

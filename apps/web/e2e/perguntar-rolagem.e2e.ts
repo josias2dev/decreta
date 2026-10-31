@@ -4,7 +4,7 @@
  * de acompanhar quando a pessoa sobe, e o botão de ir para o fim leva de volta.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { abrir, amostras, ApiFalsa, euComIa, ids } from "./apoio";
+import { abrir, acessoAoCartao, amostras, ApiFalsa, euComIa, ids } from "./apoio";
 import { abrirPortao, aosPoucos, audienciasDaSemana, conversa, ligarAosPoucos, noPortao, prazosDaSemana, roteiro, uuid, type Passo } from "./aos-poucos";
 
 const comIa = () => new ApiFalsa().responder("/eu", euComIa);
@@ -96,10 +96,10 @@ for (const tela of telas) {
   test.describe(tela.nome, () => {
     test.use({ viewport: tela.viewport, isMobile: !!tela.isMobile, hasTouch: !!tela.hasTouch });
 
-    test("da segunda pergunta em diante, o texto que a IA escreve fica à vista, e no fim os cartões abrem embaixo dele", async ({ page }) => {
+    test("da segunda pergunta em diante, o texto que a IA escreve fica à vista, e no fim os cartões vêm embaixo dele", async ({ page }) => {
       await ligarAosPoucos(page);
       await abrir(page, `/perguntar/${SEMANA}`, comIa());
-      await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+      await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
       await roteiro(page, [inicio(), ...consulta("f-prazos", prazosDaSemana), ...consulta("f-audiencias", audienciasDaSemana), ...aosPoucos(TEXTO_LONGO, 10, 15), { portao: "antes-do-fim" }, { e: { t: "fim", mensagem: { id: uuid(202) } } }]);
       await gravar(page);
       await perguntarAgora(page);
@@ -109,13 +109,13 @@ for (const tela of telas) {
       // O fim do texto nunca fica escondido (no máximo uma linha, no quadro em que ela chega) nem sobe para fora da tela.
       expect(Math.max(...quadros.map((q) => q.escAbaixo))).toBeLessThanOrEqual(26);
       expect(Math.min(...quadros.map((q) => q.escVisivel))).toBeGreaterThanOrEqual(24);
-      // Os cartões ficam só com o topo enquanto a IA escreve.
-      expect(Math.max(...quadros.flatMap((q) => q.cartoes))).toBeLessThanOrEqual(60);
+      // Enquanto a IA escreve, nenhum cartão: eles vêm depois do texto.
+      expect(quadros.flatMap((q) => q.cartoes)).toEqual([]);
 
       await abrirPortao(page, "antes-do-fim");
       await expect(page.getByRole("button", { name: "Enviar" })).toBeVisible();
       const ultima = page.locator(".dc-chat__resposta").last();
-      await expect(ultima.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeAttached();
+      await expect(ultima.locator(".dc-chat__cartoes").getByRole("button", { name: /^Prazos/ })).toBeAttached();
       // No fim, o fim do texto continua à vista, com o começo dos cartões embaixo.
       await expect(ultima.locator(".dc-md p").last()).toBeInViewport();
       const cartoes = await ultima.locator(".dc-chat__cartoes").boundingBox();
@@ -129,7 +129,7 @@ test.describe("no computador", () => {
   test("subir com a roda enquanto a resposta chega: a tela para de puxar, e o botão leva de volta ao fim", async ({ page }) => {
     await ligarAosPoucos(page);
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await roteiro(page, [inicio(), ...aosPoucos(`${TEXTO_LONGO}\n\n${TEXTO_LONGO}`, 8, 25), { portao: "fim" }, { e: { t: "fim", mensagem: { id: uuid(202) } } }]);
     await perguntarAgora(page);
     await page.waitForFunction(() => (document.querySelector(".is-escrevendo")?.textContent?.length ?? 0) > 200);
@@ -157,7 +157,7 @@ test.describe("no computador", () => {
   test("PageUp fora do campo também para de acompanhar", async ({ page }) => {
     await ligarAosPoucos(page);
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await roteiro(page, [inicio(), ...aosPoucos(`${TEXTO_LONGO}\n\n${TEXTO_LONGO}`, 8, 25), { portao: "fim" }, { e: { t: "fim", mensagem: { id: uuid(202) } } }]);
     await perguntarAgora(page);
     await page.waitForFunction(() => (document.querySelector(".is-escrevendo")?.textContent?.length ?? 0) > 200);
@@ -171,10 +171,10 @@ test.describe("no computador", () => {
   test("a tecla logo depois de a tela descer: a rolagem que a própria tela fez não volta a puxar", async ({ page }) => {
     await ligarAosPoucos(page);
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await roteiro(page, [inicio(), ...aosPoucos(`${TEXTO_LONGO}\n\n${TEXTO_LONGO}`, 8, 25), { portao: "fim" }, { e: { t: "fim", mensagem: { id: uuid(202) } } }]);
     await perguntarAgora(page);
-    await page.waitForFunction(() => (document.querySelector(".is-escrevendo")?.textContent?.length ?? 0) > 200);
+    await page.waitForFunction(() => (document.querySelector(".is-escrevendo")?.textContent?.length ?? 0) > 1400);
     // A tela acabou de descer com o texto novo e o evento de rolar ainda não chegou: aí a pessoa aperta PageUp, e a tela sobe no quadro seguinte.
     await page.evaluate(
       () =>
@@ -195,15 +195,16 @@ test.describe("no computador", () => {
     await abrirPortao(page, "fim");
   });
 
-  test("o cartão que chega fica à vista, e descer um pouco não desliga o acompanhamento", async ({ page }) => {
+  test("enquanto a IA consulta, o cartão não vem antes do texto, e descer um pouco não desliga o acompanhamento", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await ligarAosPoucos(page);
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await roteiro(page, [inicio(), ...aosPoucos("Vou olhar os prazos e as audiências.\n\n", 8, 20), ...consulta("f-prazos", prazosDaSemana), ...consulta("f-audiencias", audienciasDaSemana), { portao: "cartoes" }, ...aosPoucos(TEXTO_LONGO, 10, 20), { portao: "fim" }, { e: { t: "fim", mensagem: { id: uuid(202) } } }]);
     await perguntarAgora(page);
     await noPortao(page, "cartoes");
-    await expect(page.locator(".dc-chat__resposta").last().locator(".dc-cartao-ia").last()).toBeInViewport({ ratio: 1 });
+    await expect(page.locator(".dc-chat__resposta").last().locator(".dc-passo").last()).toBeInViewport();
+    await expect(page.locator(".dc-chat__resposta").last().locator(".dc-cartao-ia")).toHaveCount(0);
     await rodar(page, 60);
     await abrirPortao(page, "cartoes");
     await page.waitForTimeout(1200);
@@ -217,7 +218,7 @@ test.describe("no computador", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await ligarAosPoucos(page);
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await rodar(page, -5000);
     await expect.poll(async () => (await medir(page)).scrollTop).toBe(0);
     await roteiro(page, [inicio(), ...aosPoucos(TEXTO_LONGO.slice(0, 400), 8, 20), { portao: "fim" }, { e: { t: "fim", mensagem: { id: uuid(202) } } }]);
@@ -234,7 +235,9 @@ test.describe("no computador", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     const semana = amostras.conversaSemana!.corpo.mensagens;
     const id = uuid(300);
-    await abrir(page, `/perguntar/${id}`, comIa().responder(`/ia/conversas/${id}`, conversa(id, "Semana ao contrário", [semana[2], semana[3], semana[0], semana[1]])));
+    // A última resposta comprida: a dos prazos, com o texto longo no fim.
+    const comprida = { ...semana[1], partes: [...semana[1].partes, { tipo: "texto", texto: TEXTO_LONGO }] };
+    await abrir(page, `/perguntar/${id}`, comIa().responder(`/ia/conversas/${id}`, conversa(id, "Semana ao contrário", [semana[2], semana[3], semana[0], comprida])));
     const ultimaPergunta = page.locator(".dc-chat__pergunta").last();
     await expect(ultimaPergunta).toBeInViewport();
     const caixa = (await page.locator(".dc-chat__rolagem").boundingBox())!;
@@ -275,7 +278,7 @@ test.describe("no computador", () => {
 
   test("o campo crescendo não esconde o fim da conversa", async ({ page }) => {
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await expect.poll(async () => (await medir(page)).doFim).toBeLessThanOrEqual(1);
     const antes = await medir(page);
     await page.getByRole("textbox", { name: "Pergunta" }).fill(Array.from({ length: 9 }, (_, i) => `linha ${i + 1}`).join("\n"));
@@ -285,7 +288,7 @@ test.describe("no computador", () => {
 
   test("escrevendo letra a letra, com Shift+Enter, o fim da conversa continua à vista", async ({ page }) => {
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeVisible();
+    await expect(acessoAoCartao(page, "Prazos")).toBeVisible();
     await expect.poll(async () => (await medir(page)).doFim).toBeLessThanOrEqual(1);
     const antes = await medir(page);
     const campo = page.getByRole("textbox", { name: "Pergunta" });
@@ -307,7 +310,7 @@ test.describe("no celular", () => {
   test("arrastar o dedo para ler o começo enquanto a resposta chega: a tela para de puxar", async ({ page }) => {
     await ligarAosPoucos(page);
     await abrir(page, `/perguntar/${SEMANA}`, comIa());
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toBeAttached();
+    await expect(acessoAoCartao(page, "Prazos")).toBeAttached();
     await roteiro(page, [inicio(), ...aosPoucos(`${TEXTO_LONGO}\n\n${TEXTO_LONGO}`, 8, 25), { portao: "fim" }, { e: { t: "fim", mensagem: { id: uuid(202) } } }]);
     await perguntarAgora(page);
     await page.waitForFunction(() => (document.querySelector(".is-escrevendo")?.textContent?.length ?? 0) > 200);

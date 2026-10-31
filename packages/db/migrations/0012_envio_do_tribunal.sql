@@ -1,0 +1,1 @@
+ALTER TABLE "cadernos_djen" ADD COLUMN "ultimo_envio" date;

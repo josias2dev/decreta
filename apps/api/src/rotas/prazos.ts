@@ -9,7 +9,7 @@ import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.t
 import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { contagemNaTela, contarParaProcesso } from "../servicos/prazos.ts";
+import { conferir, contaDoPrazo, contagemNaTela, contarParaProcesso, historicoDasSugestoes } from "../servicos/prazos.ts";
 import { corpo, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const QUANDO = ["hoje", "semana", "vencidos", "abertos", "cumpridos"] as const;
@@ -25,6 +25,8 @@ const novoPrazo = z.object({
   dias: z.number().int().min(1).max(3650),
   contagem: z.enum(["uteis", "corridos"]),
   publicadoEm: dia,
+  /** Dupla intimação: o dia em que o sistema do tribunal intimou também. */
+  intimadoNoSistemaEm: dia.nullable().optional(),
   responsavelId: responsavel.optional(),
   /** A pessoa sabe a data final (suspensão que o sistema não conhece): vale a dela. */
   fimManual: dia.nullable().optional(),
@@ -155,9 +157,12 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
 
   /** Prévia da contagem enquanto a pessoa preenche ou ajusta. */
   app.post("/prazos/calcular", async (c) => {
-    const b = await corpo(c, z.object({ processoId: z.string().uuid().nullable().optional(), publicadoEm: dia, dias: z.number().int().min(1).max(3650), contagem: z.enum(["uteis", "corridos"]) }));
-    const r = await tenant(c, deps, (tx) => contarParaProcesso(tx, c.get("orgId"), b.processoId ?? null, { publicacao: b.publicadoEm, dias: b.dias, contagem: b.contagem }));
-    return c.json(contagemNaTela(r));
+    const b = await corpo(
+      c,
+      z.object({ processoId: z.string().uuid().nullable().optional(), publicadoEm: dia, intimadoNoSistemaEm: dia.nullable().optional(), dias: z.number().int().min(1).max(3650), contagem: z.enum(["uteis", "corridos"]) }),
+    );
+    const r = await tenant(c, deps, (tx) => contarParaProcesso(tx, c.get("orgId"), b.processoId ?? null, { publicacao: b.publicadoEm, intimacaoNoSistema: b.intimadoNoSistemaEm, dias: b.dias, contagem: b.contagem }));
+    return c.json({ ...contagemNaTela(r), pelo: r.pelo, outra: r.outra && { inicio: r.outra.inicio, fim: r.outra.fim } });
   });
 
   app.get("/prazos/:id", async (c) => {
@@ -169,6 +174,10 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const { prazo, processo } = linha;
       const cal = await calendarioDoEscritorio(tx, processo.tribunal ?? (await tribunalPadrao(tx, c.get("orgId"))), processo.comarca);
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
+      const { rito, documento, ...conta } = await contaDoPrazo(tx, c.get("orgId"), prazo);
+      // A segunda conferência vale enquanto a sugestão da IA espera alguém confirmar.
+      const conferencia =
+        prazo.origem === "ia" && !prazo.confirmadoEm && prazo.situacao === "aberto" ? conferir({ tipo: prazo.tipo, dias: prazo.dias, contagem: prazo.contagem, rito, documento }, await historicoDasSugestoes(tx)) : null;
       const [pub] = prazo.publicacaoId ? await tx.select().from(publicacoes).where(eq(publicacoes.id, prazo.publicacaoId)) : [];
       const contexto = await carregarContexto(tx, processo.id);
       const briefing = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "briefing-prazo"), contexto?.base);
@@ -202,8 +211,10 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         responsavel: resumir(pessoas, prazo.responsavelId),
         observacoes: prazo.observacoes,
         motivoDescarte: prazo.motivoDescarte,
-        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, tribunal: processo.tribunal, poloCliente: processo.poloCliente },
-        publicacao: pub ? { id: pub.id, fonte: pub.fonte, texto: pub.texto, disponibilizadaEm: pub.disponibilizadaEm, publicadaEm: pub.publicadaEm, tipoComunicacao: pub.tipoComunicacao, tipoDocumento: pub.tipoDocumento, link: pub.link } : null,
+        conta: { ...conta, confirmadoPor: resumir(pessoas, prazo.confirmadoPor), confirmadoEm: prazo.confirmadoEm?.toISOString() ?? null },
+        conferencia,
+        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, tribunal: processo.tribunal, poloCliente: processo.poloCliente, semIa: contexto?.semIa ?? false },
+        publicacao: pub ? { id: pub.id, fonte: pub.fonte, texto: pub.texto, disponibilizadaEm: pub.disponibilizadaEm, publicadaEm: pub.publicadaEm, tipoComunicacao: pub.tipoComunicacao, tipoDocumento: pub.tipoDocumento, link: pub.link, certidao: !!(pub.certidao || pub.hash), cancelada: pub.canceladaEm ? { em: pub.canceladaEm.toISOString(), motivo: pub.motivoCancelamento } : null } : null,
         briefing,
         pecas: pecasDoPrazo.map((p) => ({ ...p, atualizadaEm: p.atualizadaEm.toISOString() })),
         historico,
@@ -216,7 +227,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const novo = await tenant(c, deps, async (tx) => {
       const [p] = await tx.select({ id: processos.id, responsavelId: processos.responsavelId }).from(processos).where(eq(processos.id, b.processoId));
       if (!p) falha(404, "processo_nao_encontrado");
-      const r = await contarParaProcesso(tx, c.get("orgId"), b.processoId, { publicacao: b.publicadoEm, dias: b.dias, contagem: b.contagem });
+      const r = await contarParaProcesso(tx, c.get("orgId"), b.processoId, { publicacao: b.publicadoEm, intimacaoNoSistema: b.intimadoNoSistemaEm, dias: b.dias, contagem: b.contagem });
       const [linha] = await tx
         .insert(prazos)
         .values({
@@ -227,8 +238,10 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
           dias: b.dias,
           contagem: b.contagem,
           publicadoEm: b.publicadoEm,
+          intimadoNoSistemaEm: b.intimadoNoSistemaEm ?? null,
           inicio: r.inicio,
           fim: b.fimManual ?? r.fim,
+          fimDigitado: !!b.fimManual,
           desconsiderados: b.fimManual ? [] : r.desconsiderados,
           responsavelId: b.responsavelId === undefined ? p.responsavelId : b.responsavelId,
           origem: "manual",
@@ -253,7 +266,8 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const dias = b.dias ?? p.dias;
       const contagem = b.contagem ?? p.contagem;
       const publicadoEm = b.publicadoEm ?? p.publicadoEm;
-      const r = await contarParaProcesso(tx, c.get("orgId"), p.processoId, { publicacao: publicadoEm, dias, contagem });
+      const intimadoNoSistemaEm = b.intimadoNoSistemaEm === undefined ? p.intimadoNoSistemaEm : b.intimadoNoSistemaEm;
+      const r = await contarParaProcesso(tx, c.get("orgId"), p.processoId, { publicacao: publicadoEm, intimacaoNoSistema: intimadoNoSistemaEm, dias, contagem });
       await tx
         .update(prazos)
         .set({
@@ -262,8 +276,10 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
           dias,
           contagem,
           publicadoEm,
+          intimadoNoSistemaEm,
           inicio: r.inicio,
           fim: b.fimManual ?? r.fim,
+          fimDigitado: !!b.fimManual,
           desconsiderados: b.fimManual ? [] : r.desconsiderados,
           responsavelId: b.responsavelId === undefined ? p.responsavelId : b.responsavelId,
           observacoes: b.fimManual ? [b.observacoes ?? p.observacoes, `Data final digitada à mão (a conta dava ${formatarDia(r.fim)}).`].filter(Boolean).join(" ") : b.observacoes === undefined ? p.observacoes : b.observacoes,

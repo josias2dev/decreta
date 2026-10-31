@@ -135,3 +135,15 @@ export async function abrir(page: Page, caminho: string, api = new ApiFalsa()) {
 export function sobraNaLateral(page: Page) {
   return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 }
+
+/** No Perguntar, o cartão da IA é uma linha de acesso na conversa ("Prazos · 6 prazos"). */
+export function acessoAoCartao(page: Page, titulo: string) {
+  const nome = titulo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return page.locator(".dc-chat__cartoes").getByRole("button", { name: new RegExp(`^${nome}(\\s|$)`) });
+}
+
+/** Abre o cartão pela linha de acesso e devolve a folha com o conteúdo. */
+export async function abrirCartao(page: Page, titulo: string, qual = 0) {
+  await acessoAoCartao(page, titulo).nth(qual).click();
+  return page.getByRole("dialog", { name: titulo });
+}

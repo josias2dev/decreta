@@ -1,8 +1,9 @@
-import { chaveDoDocumento, lerDocumento, MIMES_COM_TEXTO } from "@decreta/documentos";
+import { chaveDoDocumento, lerDocumento, MIMES_COM_TEXTO, varrerDocumento } from "@decreta/documentos";
 import { clientes, documentos, negocios, processos, type Tx } from "@decreta/db";
 import { and, desc, eq, like, type SQL, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { registrar } from "../auditoria.ts";
+import { ClienteSemIa, semIa } from "../servicos/contexto.ts";
 import { precisaDeLeitura } from "../servicos/leitura.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { comLimiteDaIa, falha, id, ip, motivoDaIa, palavrasDaBusca, semAcentoNoBanco, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
@@ -67,16 +68,25 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const processoId = (form!.get("processoId") as string | null) || null;
     const clienteId = (form!.get("clienteId") as string | null) || null;
     const negocioId = (form!.get("negocioId") as string | null) || null;
+    // O termo de uso de IA assinado pelo cliente: vai para a pasta dele e fica marcado na ficha.
+    const termoIa = form!.get("termoIa") === "1";
+    if (termoIa && !clienteId) falha(400, "sem_cliente", "O termo assinado vai para a pasta de um cliente.");
     const eventoBruto = form!.get("evento");
     const evento = typeof eventoBruto === "string" && /^\d+$/.test(eventoBruto) ? Number(eventoBruto) : null;
     const bytes = new Uint8Array(await arquivo.arrayBuffer());
     // PDF quebrado ou protegido não impede de guardar: fica sem texto e a tela avisa.
     const lido = await lerDocumento(bytes, mime).catch(() => ({ texto: null, paginas: null }));
+    // Comando escondido para IA (fonte branca, texto oculto, instrução nas propriedades): guarda e avisa.
+    const alertas = await varrerDocumento(bytes, mime).catch((err) => {
+      deps.log("varredura do documento falhou", { nome: arquivo.name, mime, error: err instanceof Error ? err.message : String(err) });
+      return [];
+    });
     const docId = crypto.randomUUID();
     const chave = chaveDoDocumento(c.get("orgId"), docId);
     // Foto e PDF escaneado: a IA transcreve em segundo plano. Passou do limite da IA de hoje,
-    // o arquivo fica guardado sem a leitura, e a pessoa pede de novo depois.
-    const precisa = !!deps.ia && precisaDeLeitura(mime, lido.texto);
+    // o arquivo fica guardado sem a leitura, e a pessoa pede de novo depois. Cliente que recusou a IA: só guarda.
+    const recusou = (processoId || clienteId) && deps.ia ? await tenant(c, deps, (tx) => semIa(tx, { processoId, clienteId })) : false;
+    const precisa = !!deps.ia && !recusou && precisaDeLeitura(mime, lido.texto);
     const barrada = precisa ? await motivoDaIa(c, deps) : null;
     const lendo = precisa && !barrada;
     await tenant(c, deps, async (tx) => {
@@ -96,14 +106,20 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         paginas: lido.paginas,
         chave,
         texto: lido.texto,
+        alertas,
         leitura: lendo ? "pendente" : barrada ? "falhou" : null,
         evento,
         enviadoPor: c.get("userId"),
       });
+      if (termoIa) await tx.update(clientes).set({ termoIaDocumentoId: docId, termoIaEm: new Date() }).where(eq(clientes.id, clienteId!));
     });
     if (lendo) await deps.enfileirar({ nome: "documento.ler", organizationId: c.get("orgId"), documentoId: docId });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "documento.enviado", detalhes: { documentoId: docId, nome: arquivo.name }, ip: ip(c) }, deps.log);
-    return c.json({ id: docId, lido: !!lido.texto, lendo, paginas: lido.paginas, ...(barrada ? { limite: barrada } : {}) }, 201);
+    if (termoIa) await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "cliente.termo_ia", detalhes: { clienteId, documentoId: docId }, ip: ip(c) }, deps.log);
+    if (alertas.length) {
+      await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "documento.alerta", detalhes: { documentoId: docId, tipos: alertas.map((a) => a.tipo) }, ip: ip(c) }, deps.log);
+    }
+    return c.json({ id: docId, lido: !!lido.texto, lendo, paginas: lido.paginas, alertas, ...(barrada ? { limite: barrada } : {}) }, 201);
   });
 
   /** Pede de novo a leitura pela IA (a anterior falhou, ou a IA foi ligada depois do envio). */
@@ -111,8 +127,9 @@ export function rotasDosDocumentos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const docId = id(c);
     if (!deps.ia) falha(503, "ia_desligada", "A IA ainda não foi ligada neste servidor.");
     await tenant(c, deps, async (tx) => {
-      const [d] = await tx.select({ mime: documentos.mime, texto: documentos.texto, leitura: documentos.leitura }).from(documentos).where(eq(documentos.id, docId));
+      const [d] = await tx.select({ mime: documentos.mime, texto: documentos.texto, leitura: documentos.leitura, processoId: documentos.processoId, clienteId: documentos.clienteId }).from(documentos).where(eq(documentos.id, docId));
       if (!d) falha(404, "nao_encontrado");
+      if (await semIa(tx, d)) throw new ClienteSemIa();
       if (!precisaDeLeitura(d.mime, d.leitura === "pronta" ? null : d.texto)) falha(422, "nao_precisa", "Este arquivo já tem texto ou não é foto nem PDF.");
       await tx.update(documentos).set({ leitura: "pendente", ...(d.leitura === "pronta" ? { texto: null } : {}) }).where(eq(documentos.id, docId));
     });
@@ -173,6 +190,8 @@ function naLista({ d, processo, cliente, negocio }: ComDeQuem, pessoas: Awaited<
     semTexto: (MIMES_COM_TEXTO.has(d.mime) || d.mime.startsWith("image/")) && !d.texto,
     /** Leitura pela IA (foto, PDF escaneado): pendente, pronta, falhou; vazio quando não precisou. */
     leitura: d.leitura,
+    /** Texto escondido ou frase dirigida a uma IA: a tela avisa. */
+    alertas: d.alertas,
     em: d.createdAt.toISOString(),
     processo: d.processoId ? { id: d.processoId, titulo: processo } : null,
     cliente: d.clienteId ? { id: d.clienteId, nome: cliente } : null,

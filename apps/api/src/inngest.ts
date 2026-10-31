@@ -1,7 +1,9 @@
 /**
  * Rotinas de fundo no Inngest.
  *
- *   06:40, 12:40, 18:40 (dias úteis) ── capturar-djen ──► publicação nova ──► sugerir-prazo
+ *   04:30 (dias úteis) ── capturar-cadernos-djen (todos os escritórios) ──► publicação nova ──► sugerir-prazo
+ *   publicação nova ── guardar-certidao (a prova da data, do DJEN, guardada com o escritório)
+ *   12:40, 18:40 (dias úteis) ── capturar-djen (por OAB, reforço do mesmo dia) ──► publicação nova
  *   05:00 (todo dia) ── atualizar-datajud ──► processo.datajud (no ritmo que o DataJud aguenta)
  *   06:00 às 10:45, de 15 em 15 min ── resumo-da-manha (cada escritório na hora dele)
  *   publicação nova que é sentença ou acórdão ── ler-sentenca
@@ -20,10 +22,11 @@ import { eventType, Inngest, staticSchema } from "inngest";
 import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
-import { atualizarDoDataJud, capturarDjen, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
+import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
+import { ClienteSemIa } from "./servicos/contexto.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "./servicos/sentencas.ts";
 import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
@@ -77,8 +80,18 @@ export function createFunctions(deps: DepsDasRotinas) {
   const { db, log } = deps;
   const reporter = deps.reporter ?? silentReporter;
 
+  // O caderno do dia sai a partir das 03:00: uma leitura por tribunal serve a todos os escritórios.
+  const capturarCadernosFn = inngest.createFunction(
+    { id: "capturar-cadernos-djen", triggers: [{ cron: "TZ=America/Sao_Paulo 30 4 * * 1-5" }], retries: 2, onFailure: async ({ error }) => reporter.error(error, { funcao: "capturar-cadernos-djen" }) },
+    async ({ step }) => {
+      const r = await step.run("cadernos", () => capturarCadernos(deps.captura, diasDoCaderno(hojeEm("America/Sao_Paulo"))));
+      if (r.novas.length) await step.sendEvent("sugerir", r.novas.map((n) => publicacaoNova.create(n)));
+      return { cadernos: r.cadernos, novas: r.novas.length };
+    },
+  );
+
   const agendarCaptura = inngest.createFunction(
-    { id: "agendar-captura-djen", triggers: [{ cron: "TZ=America/Sao_Paulo 40 6,12,18 * * 1-5" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "agendar-captura-djen" }) },
+    { id: "agendar-captura-djen", triggers: [{ cron: "TZ=America/Sao_Paulo 40 12,18 * * 1-5" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "agendar-captura-djen" }) },
     async ({ step }) => {
       const orgs = await step.run("escritorios", () => escritoriosAtivos(db));
       if (orgs.length) await step.sendEvent("capturar", orgs.map((o) => capturaPedida.create({ organizationId: o.id })));
@@ -121,10 +134,27 @@ export function createFunctions(deps: DepsDasRotinas) {
           const a = await sugerirPrazoDaPublicacao({ ...deps, ia: iaDo(event.data.organizationId, "fundo") }, event.data.organizationId, event.data.publicacaoId);
           return a?.situacao ?? "sem-publicacao";
         } catch (err) {
-          // Sem IA configurada a publicação fica na caixa para a pessoa decidir; não é falha da rotina.
+          // Sem IA configurada, ou cliente que recusou a IA, a publicação fica na caixa para a pessoa decidir; não é falha da rotina.
           if (err instanceof IaDesligada) return "ia-desligada";
+          if (err instanceof ClienteSemIa) return "cliente-sem-ia";
           throw err;
         }
+      }),
+  );
+
+  // A certidão é a prova da data da publicação: guardada já, e não só quando alguém abrir.
+  const guardarCertidao = inngest.createFunction(
+    {
+      id: "guardar-certidao",
+      triggers: [publicacaoNova],
+      concurrency: { limit: 2, key: "event.data.organizationId" },
+      retries: 4,
+      onFailure: async ({ event, error }) => reporter.error(error, { funcao: "guardar-certidao", ...(event.data.event.data as Org) }),
+    },
+    async ({ event, step }) =>
+      step.run("guardar", async () => {
+        const bytes = await certidaoDaPublicacao({ db, arquivos: deps.arquivos, fetch: deps.captura.fetch }, event.data.organizationId, event.data.publicacaoId);
+        return bytes ? "guardada" : "sem-certidao";
       }),
   );
 
@@ -144,6 +174,7 @@ export function createFunctions(deps: DepsDasRotinas) {
           return a?.situacao ?? "nao-e-decisao";
         } catch (err) {
           if (err instanceof IaDesligada) return "ia-desligada";
+          if (err instanceof ClienteSemIa) return "cliente-sem-ia";
           throw err;
         }
       }),
@@ -188,6 +219,8 @@ export function createFunctions(deps: DepsDasRotinas) {
         return e?.ligado ?? true;
       });
       if (!ligado) return { processos: 0 };
+      // Até quando o DataJud tem dados de cada tribunal: a ficha do processo diz de quando são os andamentos.
+      await step.run("ate-quando", () => conferirDataJudDoEscritorio(deps.captura, orgId));
       const ids = await step.run("processos", () => processosParaAtualizar(db, orgId));
       if (ids.length) await step.sendEvent("atualizar", ids.map((processoId) => processoDataJud.create({ organizationId: orgId, processoId })));
       return { processos: ids.length };
@@ -254,5 +287,5 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [agendarCaptura, capturar, sugerir, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn];
+  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn];
 }

@@ -52,6 +52,8 @@ export interface PainelDoDia {
   itens: ItemDoDia[];
   publicacoes: { id: string; titulo: string; detalhe: string }[];
   porResponsavel: { pessoa: Pessoa | null; hoje: number; semana: number }[];
+  /** Caderno do DJEN que faltou ou falhou. */
+  alertasDaCaptura: string[];
 }
 
 export type SituacaoNaLista = "a_confirmar" | "confirmado" | "peca_em_revisao" | "cumprido" | "descartado";
@@ -63,6 +65,8 @@ export interface ProcessoResumido {
   orgao: string | null;
   comarca?: string | null;
   tribunal?: string | null;
+  /** O cliente recusou o uso de IA (vem nas fichas: prazo, peça, audiência, publicação). */
+  semIa?: boolean;
 }
 
 export interface PrazoNaLista {
@@ -124,10 +128,56 @@ export interface Prazo {
   observacoes: string | null;
   motivoDescarte: string | null;
   processo: ProcessoResumido & { poloCliente: "ativo" | "passivo" | "terceiro" };
-  publicacao: { id: string; fonte: "djen" | "datajud" | "manual"; texto: string; disponibilizadaEm: string; publicadaEm: string; tipoComunicacao: string | null; tipoDocumento: string | null; link: string | null } | null;
+  publicacao: ({ id: string; fonte: "djen" | "datajud" | "manual"; texto: string; disponibilizadaEm: string; publicadaEm: string; tipoComunicacao: string | null; tipoDocumento: string | null; link: string | null } & DoDjen) | null;
   briefing: Analise<Briefing> | null;
   pecas: { id: string; titulo: string; situacao: "rascunho" | "revisada"; atualizadaEm: string }[];
   historico: { em: string; titulo: string; detalhe: string | null }[];
+  conta: ContaDoPrazo;
+  /** A segunda conferência, enquanto a sugestão da IA espera alguém confirmar. */
+  conferencia: SegundaConferencia | null;
+}
+
+export type Confianca = "alta" | "media" | "baixa";
+
+/** A segunda conferência da sugestão de prazo da IA: a confiança e os motivos. */
+export interface SegundaConferencia {
+  confianca: Confianca;
+  motivos: string[];
+}
+
+/** A conta inteira do prazo, para auditar: marcos, regra, calendário, quem confirmou e a tempestividade da peça. */
+export interface ContaDoPrazo {
+  /** "Dias úteis (CPC, art. 219)". */
+  regra: string;
+  /** "TJSC, com os feriados cadastrados para a comarca de Joinville". */
+  calendario: string;
+  disponibilizadaEm: string | null;
+  publicadoEm: string;
+  /** Dupla intimação: o dia em que o sistema do tribunal intimou também. */
+  intimadoNoSistemaEm: string | null;
+  /** De que marco saiu a conta que vale: o que vence primeiro. */
+  pelo: "publicacao" | "sistema";
+  outra: { inicio: string; fim: string } | null;
+  inicio: string;
+  fim: string;
+  desconsiderados: DiaDesconsiderado[];
+  prorrogadoDe: string | null;
+  explicacao: string;
+  fimDigitado: boolean;
+  /** A conta de hoje dá outra data: a digitada à mão, ou o calendário mudou depois da confirmação. */
+  pelaConta: string | null;
+  /** O tópico de tempestividade da peça. Nulo quando a data foi digitada ou a conta mudou. */
+  tempestividade: string | null;
+  /** A publicação cuja certidão do DJEN o tópico cita como anexa. */
+  certidaoDe: string | null;
+  confirmadoPor: Pessoa | null;
+  confirmadoEm: string | null;
+}
+
+/** A prévia da conta nos diálogos: com a intimação pelo sistema, vale o que vence primeiro. */
+export interface PreviaDaConta extends ContagemNaTela {
+  pelo: "publicacao" | "sistema";
+  outra: { inicio: string; fim: string } | null;
 }
 
 export interface ContagemNaTela {
@@ -152,14 +202,32 @@ export interface Sugestao {
   assunto: string;
   recusa: string | null;
   contagemCalculada: ContagemNaTela | null;
+  /** "Dias úteis (CPC, art. 219)". Some nas leituras antigas. */
+  regra?: string | null;
+  conferencia?: SegundaConferencia | null;
   responsavelId: string | null;
 }
 
 export type SituacaoPublicacao = "nova" | "pendente" | "lida" | "vinculada";
 
 export interface Selo {
-  tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro";
+  tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro" | "sem_ia";
   texto: string;
+}
+
+export interface TribunalNaCaptura {
+  tribunal: string;
+  ultimo: { dia: string; situacao: "lido" | "ausente" | "erro"; erro: string | null; em: string };
+  lido: { dia: string; versao: number | null; total: number; casadas: number; canceladas: number; em: string } | null;
+  /** O último envio do tribunal ao DJEN, pela lista do próprio DJEN. */
+  envio: string | null;
+}
+
+/** Como anda a leitura dos cadernos do DJEN. */
+export interface SaudeDaCaptura {
+  tribunais: TribunalNaCaptura[];
+  alertas: string[];
+  semProcesso: number;
 }
 
 export interface CaixaDePublicacoes {
@@ -168,7 +236,15 @@ export interface CaixaDePublicacoes {
   itens: { id: string; titulo: string; disponibilizadaEm: string; partes: string; processoId: string | null; selo: Selo }[];
 }
 
-export interface Publicacao {
+/** A certidão e o cancelamento, que vêm do DJEN. */
+export interface DoDjen {
+  /** Dá para abrir a certidão de publicação do DJEN. */
+  certidao: boolean;
+  /** O tribunal cancelou a comunicação depois de disponibilizar. */
+  cancelada: { em: string; motivo: string | null } | null;
+}
+
+export interface Publicacao extends DoDjen {
   id: string;
   situacao: SituacaoPublicacao;
   fonte: "djen" | "datajud" | "manual";
@@ -358,7 +434,11 @@ export interface Processo {
   segredo: boolean;
   observacoes: string | null;
   datajudEm: string | null;
-  cliente: { id: string; nome: string } | null;
+  /** Quando o tribunal mandou o processo ao DataJud pela última vez. */
+  datajudAtualizadoEm: string | null;
+  /** Até quando o DataJud tem dados do tribunal deste processo (o maior @timestamp do índice). */
+  datajudAte: string | null;
+  cliente: { id: string; nome: string; semIa: boolean } | null;
   responsavel: Pessoa | null;
   link: { rotulo: string; url: string } | null;
   partes: Parte[];
@@ -392,6 +472,8 @@ export interface Documento {
   semTexto: boolean;
   /** Foto ou PDF escaneado que a IA transcreve; nulo quando não precisou. */
   leitura: Leitura;
+  /** Texto escondido ou frase dirigida a uma IA, achados no envio. */
+  alertas: AlertaDoDocumento[];
   em: string;
   processo: { id: string; titulo: string } | null;
   cliente: { id: string; nome: string } | null;
@@ -402,7 +484,13 @@ export interface Documento {
 
 export type Leitura = "pendente" | "pronta" | "falhou" | null;
 
-export type ItemDaConferencia = "procuracao" | "comprovante_residencia" | "documento_identidade" | "cpf" | "hipossuficiencia" | "contrato_honorarios" | "litispendencia";
+export interface AlertaDoDocumento {
+  tipo: "texto_oculto" | "fonte_branca" | "fonte_minuscula" | "texto_invisivel" | "codigo_de_campo" | "metadados" | "comando_para_ia";
+  trecho: string;
+}
+
+/** O termo de uso de IA vem do cadastro do cliente, não da IA. */
+export type ItemDaConferencia = "procuracao" | "comprovante_residencia" | "documento_identidade" | "cpf" | "hipossuficiencia" | "contrato_honorarios" | "litispendencia" | "termo_ia";
 
 export interface Conferencia {
   itens: { item: ItemDaConferencia; situacao: "certo" | "atencao" | "falta"; detalhe: string; documento: string | null }[];
@@ -464,6 +552,10 @@ export interface Cliente {
   email: string | null;
   endereco: string | null;
   observacoes: string | null;
+  /** O cliente recusou o uso de IA: nada dos casos dele vai a um modelo. */
+  semIa: boolean;
+  /** O termo de uso de IA assinado, na pasta do cliente. */
+  termoIa: { em: string; documento: { id: string; nome: string } } | null;
   criadoEm: string;
   processos: { id: string; titulo: string; cnj: string | null; orgao: string | null; situacao: string; responsavel: Pessoa | null }[];
   atendimentos: { id: string; em: string; canal: Canal; resumo: string; autor: Pessoa | null; processoId: string | null }[];
@@ -635,6 +727,29 @@ export interface Peca {
   /** Quem revisou, com a OAB, e quando. */
   revisao: { por: (Pessoa & { oab: string | null }) | null; em: string } | null;
   modelos: { id: string; titulo: string }[];
+  /** Cada vez que alguém marcou como revisada, da mais nova à mais antiga. */
+  revisoes: RevisaoDaPeca[];
+  semIa: boolean;
+}
+
+/** Quanto a pessoa ainda tem de IA hoje (o dia vira à meia-noite de Brasília). */
+export interface UsoDaIa {
+  /** Nulo sem limite de mensagens. */
+  mensagens: { restam: number; limite: number } | null;
+  /** Quanto do teto do dia já foi, de 0 a 1; nulo sem teto. */
+  gasto: number | null;
+  /** Perto do limite, ou por que a IA barrou. */
+  aviso: string | null;
+}
+
+export interface RevisaoDaPeca {
+  id: string;
+  em: string;
+  por: (Pessoa & { oab: string | null }) | null;
+  geradaPorIa: boolean;
+  /** Parágrafos da versão revisada e quantos não estavam na versão da IA. */
+  paragrafos: number;
+  mudaram: number;
 }
 
 export interface ModeloNaLista {

@@ -7,12 +7,28 @@
  * lido, para a demonstração funcionar mesmo sem o gateway. O volume (uns cem
  * clientes e processos a mais) sai de ./demonstracao/volume.ts.
  */
-import { calendarioPara, contarPrazo, dataDaPublicacao, dvCnj, ehDiaUtil, formatarDiaCurto, instanteLocal, somarDias, type Calendario, type Contagem, type Dia } from "@decreta/core";
+import {
+  calendarioPara,
+  conferirSugestao,
+  contarPrazo,
+  dataDaPublicacao,
+  dvCnj,
+  ehDiaUtil,
+  formatarDiaCurto,
+  instanteLocal,
+  regraDaContagem,
+  ritoDoProcesso,
+  somarDias,
+  type Calendario,
+  type Contagem,
+  type Dia,
+} from "@decreta/core";
 import {
   alvaras,
   analises,
   atendimentos,
   audiencias,
+  cadernosDjen,
   capturas,
   clientes,
   documentos,
@@ -208,7 +224,9 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
       arquivos.push({ chave, bytes, mime: "image/png" });
       await tx.insert(documentos).values({ id: logoDocumentoId, organizationId, nome: "Logo do escritório.png", mime: "image/png", tamanho: bytes.length, chave, origem: "upload", enviadoPor: ids.beatriz, createdAt: em(somarDias(hoje, -400)) });
     }
-    await tx.insert(escritorios).values({ organizationId, tribunal: "TJSC", timbre: { ...ESCRITORIO.timbre, logoDocumentoId }, avisos: { manha: false, hora: "07:30" }, capturaDjen: false, capturaDatajud: false });
+    // Até quando o DataJud teria dados de cada tribunal (inventado: a demonstração nunca consulta o DataJud).
+    const datajudAte = { TJSC: em(somarDias(hoje, -13), "18:20").toISOString(), TRT12: em(somarDias(hoje, -4), "02:10").toISOString(), TRF4: em(somarDias(hoje, -9), "23:40").toISOString() };
+    await tx.insert(escritorios).values({ organizationId, tribunal: "TJSC", timbre: { ...ESCRITORIO.timbre, logoDocumentoId }, avisos: { manha: false, hora: "07:30" }, capturaDjen: false, capturaDatajud: false, datajudAte });
     await tx.insert(equipe).values(
       (Object.keys(EQUIPE) as Quem[]).map((q) => ({
         organizationId,
@@ -258,6 +276,8 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           responsavelId: pessoa(p.responsavel),
           distribuidoEm: somarDias(hoje, -p.distribuidoHa),
           datajudEm: p.numero ? em(hoje, "05:12") : null,
+          // O TJSC chega ao DataJud com uns 15 dias de atraso (medido em 31/10/2026).
+          datajudAtualizadoEm: p.numero ? em(somarDias(hoje, -15), "08:00") : null,
           createdAt: em(somarDias(hoje, -p.distribuidoHa)),
         })
         .returning({ id: processos.id });
@@ -401,7 +421,15 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
         return null;
       }
       const contagemCalculada = s.geraPrazo && s.dias ? contagemNaTela(contarPrazo({ publicacao: pub.publicadaEm, dias: s.dias, contagem: s.contagem, calendario: cal })) : null;
-      const conteudo: SugestaoNaTela = { ...s, recusa: null, contagemCalculada, responsavelId: responsavel };
+      const rito = ritoDoProcesso({ tribunal: pub.tribunal, classe: pub.classe, orgao: pub.orgao });
+      const conteudo: SugestaoNaTela = {
+        ...s,
+        recusa: null,
+        contagemCalculada,
+        regra: contagemCalculada ? regraDaContagem(rito, s.contagem) : null,
+        conferencia: contagemCalculada && s.dias ? conferirSugestao({ tipo: s.tipo, dias: s.dias, contagem: s.contagem, rito, documento: pub.tipoDocumento }) : null,
+        responsavelId: responsavel,
+      };
       await tx.insert(analises).values({ organizationId, alvo: "publicacao", alvoId: pub.id, acao: "sugerir-prazo", situacao: "pronto", conteudo: conteudo as unknown as Record<string, unknown>, fonte: `DJEN · ${pub.disponibilizadaEm.split("-").reverse().join("/")}`, base: impressao(pub.texto), createdAt: quando });
       return conteudo;
     };
@@ -465,7 +493,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
         })
         .returning({ id: prazos.id });
       if (z.peca) {
-        await tx.insert(pecas).values({ organizationId, processoId: processoId[z.processo]!, prazoId: linha!.id, tipo: z.peca.tipo, titulo: z.peca.titulo, instrucoes: null, texto: z.peca.texto, situacao: "rascunho", criadaPor: responsavel, createdAt: em(util(-1), "15:10") });
+        await tx.insert(pecas).values({ organizationId, processoId: processoId[z.processo]!, prazoId: linha!.id, tipo: z.peca.tipo, titulo: z.peca.titulo, instrucoes: null, texto: z.peca.texto, textoGerado: z.peca.texto, situacao: "rascunho", criadaPor: responsavel, createdAt: em(util(-1), "15:10") });
       }
     }
 
@@ -551,9 +579,16 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
       await tx.insert(mensagensIa).values({ organizationId, processoId: processoId.marina!, userId: ids[m.quem], papel: m.papel, texto: m.texto, createdAt: new Date(em(util(-1), "16:02").getTime() + i * 9000) });
     }
 
-    // Captura de hoje cedo no DJEN
+    // Captura de hoje de madrugada, pelos cadernos do DJEN (números inventados)
     const novas = PUBLICACOES.filter((p) => p.situacao === "nova").length;
-    await tx.insert(capturas).values({ organizationId, fonte: "djen", iniciadaEm: em(hoje, "06:40"), terminadaEm: em(hoje, "06:40"), encontradas: novas + 2, novas });
+    await tx.insert(capturas).values({ organizationId, fonte: "djen", iniciadaEm: em(hoje, "04:30"), terminadaEm: em(hoje, "04:31"), encontradas: novas + 2, novas });
+    const CADERNOS: [string, number, number][] = [["TJSC", 27041, novas], ["TRT12", 9008, 1], ["TRF4", 6312, 0], ["STJ", 11420, 0], ["TST", 4115, 0], ["STF", 1987, 0]];
+    for (const dia of [util(-1), hoje]) {
+      await tx.insert(cadernosDjen).values(
+        // O STF não está na lista de envios do DJEN.
+        CADERNOS.map(([tribunal, total, casadas]) => ({ organizationId, tribunal, dia, situacao: "lido" as const, versao: 1, total: dia === hoje ? total : total - 1200, casadas, novas: casadas, ultimoEnvio: tribunal === "STF" ? null : dia, lidoEm: em(dia, "04:31") })),
+      );
+    }
 
     return { sugestoes, marinaId: processoId.marina! };
   });

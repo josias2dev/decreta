@@ -1,7 +1,7 @@
 {
-  "path": "/clientes/29014f81-74e7-4932-bf5b-4ed2e5cae129?conferido",
+  "path": "/clientes/02aff590-aae5-4a7f-926b-2f5e4dff0c5f?conferido",
   "corpo": {
-    "id": "29014f81-74e7-4932-bf5b-4ed2e5cae129",
+    "id": "02aff590-aae5-4a7f-926b-2f5e4dff0c5f",
     "nome": "Marina Duarte",
     "tipo": "pf",
     "documento": "318.204.567-90",
@@ -10,16 +10,18 @@
     "email": "marina.duarte@exemplo.com.br",
     "endereco": "Rua Itajaí, 455, apto 302 · América · Joinville/SC",
     "observacoes": null,
+    "semIa": false,
+    "termoIa": null,
     "criadoEm": "2025-09-24T12:00:00.000Z",
     "processos": [
       {
-        "id": "774eb046-e848-485c-b732-e9e35604cab2",
+        "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "orgao": "2ª Vara Cível",
         "situacao": "ativo",
         "responsavel": {
-          "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+          "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -29,48 +31,48 @@
     ],
     "atendimentos": [
       {
-        "id": "5df9134c-1553-4a25-a290-0bb4d531cf9b",
+        "id": "ae66817b-c35a-4f2a-84f6-c5b242d7ac40",
         "em": "2026-10-20T18:30:00.000Z",
         "canal": "whatsapp",
         "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
         "autor": {
-          "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+          "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "processoId": "774eb046-e848-485c-b732-e9e35604cab2"
+        "processoId": "2b53f968-ebf8-4973-9f3d-4098f9840d4e"
       },
       {
-        "id": "f9b651a1-7f85-42c0-8a8f-5797f9e12b9d",
+        "id": "56799059-33d0-4ab6-81f0-9d0bf2b01103",
         "em": "2026-08-30T18:30:00.000Z",
         "canal": "presencial",
         "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
         "autor": {
-          "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+          "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "processoId": "774eb046-e848-485c-b732-e9e35604cab2"
+        "processoId": "2b53f968-ebf8-4973-9f3d-4098f9840d4e"
       }
     ],
     "documentos": [
       {
-        "id": "303b96e4-e30c-498c-8f3f-163522a4994e",
+        "id": "d9a92fd3-5f0a-4d35-9c1e-6aa1d7448c87",
         "nome": "rg-marina.txt",
         "mime": "text/plain",
         "tamanho": 82,
-        "em": "2026-10-31T17:18:27.228Z",
+        "em": "2026-10-31T22:58:21.865Z",
         "processoId": null,
         "leitura": null,
         "lido": true
       }
     ],
     "conferencia": {
-      "id": "019934b4-b61b-455f-95df-ec8adcaa0073",
+      "id": "46ea6c8a-2300-43cb-981e-7705e77a6a18",
       "acao": "conferir-pasta",
       "situacao": "pronto",
       "conteudo": {
@@ -116,6 +118,12 @@
             "detalhe": "Já há a ação contra a Seguradora Alfa. Confira se o caso novo não é o mesmo pedido.",
             "situacao": "atencao",
             "documento": null
+          },
+          {
+            "item": "termo_ia",
+            "situacao": "falta",
+            "detalhe": "O cliente ainda não assinou o termo de uso de IA (Recomendação CFOAB 001/2024, item 4.3.1). Baixe o termo na ficha do cliente e registre o assinado.",
+            "documento": null
           }
         ],
         "outros": [
@@ -125,13 +133,13 @@
         "resumo": "Para um caso novo, faltam a procuração, o comprovante de residência e o contrato de honorários."
       },
       "fonte": "1 documento · 29/10/2026",
-      "em": "2026-10-31T17:18:27.243Z",
+      "em": "2026-10-31T22:58:21.884Z",
       "desatualizada": false,
       "erro": null
     },
     "linhaDoTempo": [
       {
-        "em": "2026-10-31T17:18:27.228Z",
+        "em": "2026-10-31T22:58:21.865Z",
         "titulo": "Documento anexado",
         "detalhe": "rg-marina.txt",
         "tipo": "documento"

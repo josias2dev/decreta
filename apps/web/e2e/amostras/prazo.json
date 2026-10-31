@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/9f9aa348-26d1-4ecf-a57b-4b35301a4e95",
+  "path": "/prazos/f489e2ee-dbe4-46f6-a13d-6376ab1ff327",
   "corpo": {
-    "id": "9f9aa348-26d1-4ecf-a57b-4b35301a4e95",
+    "id": "f489e2ee-dbe4-46f6-a13d-6376ab1ff327",
     "tipo": "Manifestação sobre laudo pericial",
     "fundamento": "art. 477, § 1º, CPC",
     "dias": 15,
@@ -27,7 +27,7 @@
     "confirmado": false,
     "confirmadoPor": null,
     "responsavel": {
-      "id": "RdJtiHFJ7dYhrgYIPI2DLh1MqpsM9HeV",
+      "id": "HsSuQ8j6vLhgOdwOCgiGPkQEw8Efvcr0",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
@@ -35,27 +35,67 @@
     },
     "observacoes": null,
     "motivoDescarte": null,
+    "conta": {
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
+      "disponibilizadaEm": "2026-10-28",
+      "publicadoEm": "2026-10-29",
+      "intimadoNoSistemaEm": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "inicio": "2026-10-30",
+      "fim": "2026-11-23",
+      "desconsiderados": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        },
+        {
+          "dia": "2026-11-20",
+          "nome": "Consciência Negra",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "explicacao": "Começa em 30/10, primeiro dia útil depois da publicação. Fora da conta: fins de semana, 02/11 (Finados) e 20/11 (Consciência Negra).",
+      "fimDigitado": false,
+      "pelaConta": null,
+      "certidaoDe": null,
+      "tempestividade": "A intimação foi disponibilizada no Diário de Justiça Eletrônico Nacional (DJEN) em 28/10/2026 e considera-se publicada em 29/10/2026, primeiro dia útil seguinte (Lei 11.419/2006, art. 4º, § 3º). O prazo de 15 dias úteis (CPC, art. 219) começou a correr em 30/10/2026 (Lei 11.419/2006, art. 4º, § 4º) e termina em 23/11/2026, excluídos os sábados, os domingos e os dias 02/11/2026 (Finados) e 20/11/2026 (Consciência Negra). Apresentada até 23/11/2026, a presente peça é tempestiva.",
+      "confirmadoPor": null,
+      "confirmadoEm": null
+    },
+    "conferencia": {
+      "confianca": "alta",
+      "motivos": [
+        "Bate com a lei: 15 dias (CPC, art. 477, § 1º)."
+      ]
+    },
     "processo": {
-      "id": "774eb046-e848-485c-b732-e9e35604cab2",
+      "id": "2b53f968-ebf8-4973-9f3d-4098f9840d4e",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "orgao": "2ª Vara Cível",
       "comarca": "Joinville",
       "tribunal": "TJSC",
-      "poloCliente": "ativo"
+      "poloCliente": "ativo",
+      "semIa": false
     },
     "publicacao": {
-      "id": "79ced6e2-06a2-4956-8353-2a9e14c3bbec",
+      "id": "42a15a26-f3a4-4638-9423-e58e7bd86c07",
       "fonte": "djen",
       "texto": "Intimem-se as partes para, querendo, manifestarem-se sobre o laudo pericial juntado no evento 87, no prazo comum de 15 (quinze) dias. Após, voltem conclusos para sentença.",
       "disponibilizadaEm": "2026-10-28",
       "publicadaEm": "2026-10-29",
       "tipoComunicacao": "Intimação",
       "tipoDocumento": "Despacho",
-      "link": null
+      "link": null,
+      "certidao": false,
+      "cancelada": null
     },
     "briefing": {
-      "id": "4c40fdc9-d69f-47d6-8db1-78022c4630cc",
+      "id": "33230005-ac87-4826-8e0a-223abaf98b1f",
       "acao": "briefing-prazo",
       "situacao": "pronto",
       "conteudo": {

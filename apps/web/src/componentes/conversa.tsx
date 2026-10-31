@@ -1,10 +1,12 @@
 /** Conversa com a IA (chat do processo e Perguntar): mensagens, a resposta chegando aos poucos e o campo. */
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { mensagemDoErro } from "@/lib/api";
 import type { MensagemIa } from "@/lib/tipos";
 import { Markdown } from "@/lib/markdown";
 import { cn } from "@/lib/util";
+import { AvisoDoLimite, usoDaIaQuery } from "./limite-da-ia";
 import { MarcaIa } from "./ui";
 
 export function Conversa({
@@ -31,6 +33,7 @@ export function Conversa({
   const [resposta, setResposta] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const fim = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
   const ocupado = pergunta !== null;
 
   useEffect(() => {
@@ -52,6 +55,7 @@ export function Conversa({
     } finally {
       setPergunta(null);
       setResposta(null);
+      void qc.invalidateQueries({ queryKey: usoDaIaQuery.queryKey });
     }
   }
   const aoEnviar = (e: FormEvent) => {
@@ -87,6 +91,7 @@ export function Conversa({
             ))}
           </div>
         )}
+        <AvisoDoLimite />
         <form className="dc-perguntar-campo" onSubmit={aoEnviar}>
           <textarea rows={1} value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={tecla} placeholder={placeholder} aria-label={placeholder} />
           <button type="submit" className="dc-btn dc-btn--ia dc-btn--sm" aria-label="Enviar" disabled={!texto.trim() || ocupado}>

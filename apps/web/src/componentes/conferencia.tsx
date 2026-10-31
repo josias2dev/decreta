@@ -15,6 +15,7 @@ export const ITEM_DA_CONFERENCIA: Record<ItemDaConferencia, string> = {
   hipossuficiencia: "Declaração de hipossuficiência",
   contrato_honorarios: "Contrato de honorários",
   litispendencia: "Litispendência",
+  termo_ia: "Termo de uso de IA",
 };
 const SITUACAO = { certo: "Certo", atencao: "Atenção", falta: "Falta" } as const;
 const ICONE = { certo: Check, atencao: CircleAlert, falta: CircleDashed } as const;

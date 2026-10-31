@@ -8,6 +8,8 @@ import { useAviso } from "@/componentes/avisos";
 import { DaReceita, documentoDigitado, useEmpresa, usePreencher } from "@/componentes/campos-cliente";
 import { Conversa } from "@/componentes/conversa";
 import { Dialogo } from "@/componentes/dialogo";
+import { SeloDoAlerta } from "@/componentes/alerta-do-documento";
+import { SEM_IA, SeloSemIa } from "@/componentes/uso-de-ia";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -16,7 +18,7 @@ import { Abas, Avatar, BlocoIa, Botao, Campo, Carregando, Chip, Cnj, Dados, Faix
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { diaCompleto, diaCurto, diaDoInstante, diaMes, dinheiro, hora, numero, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, tamanho, TIPO_DA_DECISAO } from "@/lib/formato";
+import { diaCompleto, diaCurto, diaDoInstante, diaMes, diasDesde, dinheiro, hora, numero, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, tamanho, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { Conversa as ConversaDaApi, Documento, ListaDePrazos, Movimentacao, Movimentacoes, Parte, Processo, ResumoDosAutos } from "@/lib/tipos";
 import { Situacao } from "./prazos";
 
@@ -99,6 +101,11 @@ export function ProcessoPage() {
           <h1 className="dc-h1">{p.titulo}</h1>
           <Cnj cnj={p.cnj} className="text-[14px] font-medium text-[var(--tinta-2)]" />
           <span className="text-[14px] leading-[20px] text-[var(--tinta-2)]">{[p.classe, onde, p.tribunal].filter(Boolean).join(" · ")}</span>
+          {p.cliente?.semIa && (
+            <span className="mt-1">
+              <SeloSemIa />
+            </span>
+          )}
           <span className="dc-pessoa mt-1 text-[14px] text-[var(--tinta-2)]">
             <Avatar pessoa={p.responsavel} /> {p.responsavel?.apelido ?? "Sem responsável"}
             {p.valorCausa && <> · Valor da causa {dinheiro(p.valorCausa)}</>}
@@ -124,6 +131,12 @@ export function ProcessoPage() {
               <Cnj cnj={p.cnj} />
               {[p.classe, onde].filter(Boolean).map((x) => ` · ${x}`)}
               {p.situacao !== "ativo" && ` · ${SITUACAO[p.situacao]}`}
+              {p.cliente?.semIa && (
+                <>
+                  {" · "}
+                  <SeloSemIa />
+                </>
+              )}
             </>
           }
           acoes={
@@ -133,9 +146,11 @@ export function ProcessoPage() {
                   <ExternalLink /> {p.link.rotulo}
                 </a>
               )}
-              <Botao variante="ia" onClick={() => irPara("chat")}>
-                <MessageSquare /> Perguntar sobre o processo
-              </Botao>
+              {!p.cliente?.semIa && (
+                <Botao variante="ia" onClick={() => irPara("chat")}>
+                  <MessageSquare /> Perguntar sobre o processo
+                </Botao>
+              )}
             </>
           }
         />
@@ -175,11 +190,13 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
 
   const r = p.resumo;
   const n = p.novidades.length;
-  const resumo = (r || eu.data?.ia) && (
+  // Cliente que recusou a IA: o resumo antigo, se houver, fica; gerar de novo, não.
+  const ia = !!eu.data?.ia && !p.cliente?.semIa;
+  const resumo = (r || ia) && (
     <BlocoIa
       titulo="Resumo dos autos"
       analise={r}
-      aoRefazer={eu.data?.ia ? () => refazer.mutate() : undefined}
+      aoRefazer={ia ? () => refazer.mutate() : undefined}
       refazendo={refazer.isPending}
       avisoDesatualizada={n ? `${n === 1 ? "1 movimentação nova" : `${n} movimentações novas`} desde este resumo: ${p.novidades.slice(0, 3).join("; ")}.` : undefined}
     >
@@ -447,6 +464,27 @@ function ListaDeMovimentacoes({ itens, celular }: { itens: Movimentacao[]; celul
   );
 }
 
+/** A partir de quantos dias sem remessa do tribunal a tela avisa que o DataJud está atrasado. */
+const DATAJUD_ATRASADO_DIAS = 7;
+
+/** A Portaria CNJ 374/2026 manda citar o CNJ e o DataJud como fonte; e o DataJud atrasa semanas. */
+function FonteDosAndamentos({ p }: { p: Processo }) {
+  if (!p.cnj) return null;
+  const enviado = p.datajudAtualizadoEm;
+  // O índice do tribunal diz o atraso do DataJud; sem ele, o dia em que o tribunal mandou este processo.
+  const referencia = p.datajudAte ?? enviado;
+  const atrasado = referencia != null && diasDesde(referencia) > DATAJUD_ATRASADO_DIAS;
+  return (
+    <p className="dc-nota">
+      Fonte dos andamentos: CNJ/DataJud e publicações do DJEN.
+      {p.datajudAte && ` Dados do ${p.tribunal ?? "tribunal"} no DataJud atualizados até ${diaCurto(diaDoInstante(p.datajudAte))}.`}
+      {enviado && ` O tribunal mandou este processo ao DataJud em ${diaCompleto(diaDoInstante(enviado))}.`}
+      {p.datajudEm && ` Última consulta em ${diaCurto(diaDoInstante(p.datajudEm))} às ${hora(p.datajudEm)}.`}
+      {atrasado && " O DataJud costuma atrasar; os prazos contam só pelas publicações do DJEN."}
+    </p>
+  );
+}
+
 type Filtro = "todas" | "juizo" | "partes" | "documento";
 
 function AbaMovimentacoes({ p, celular }: { p: Processo; celular: boolean }) {
@@ -510,13 +548,20 @@ function AbaMovimentacoes({ p, celular }: { p: Processo; celular: boolean }) {
       )}
     </Painel>
   );
-  if (!celular) return painel;
+  if (!celular)
+    return (
+      <>
+        {painel}
+        <FonteDosAndamentos p={p} />
+      </>
+    );
   // No celular os filtros ganham a largura toda, acima da lista.
   return (
     <>
       {filtros}
       {painel}
       {botaoDatajud && <div className="flex justify-center">{botaoDatajud}</div>}
+      <FonteDosAndamentos p={p} />
     </>
   );
 }
@@ -694,11 +739,24 @@ export function Enviar({ processoId, clienteId, negocioId, aoEnviar }: { process
 export const enquantoLe = (q: { state: { data?: { itens?: { leitura: Documento["leitura"] }[]; documentos?: { leitura: Documento["leitura"] }[] } } }) =>
   (q.state.data?.itens ?? q.state.data?.documentos ?? []).some((d) => d.leitura === "pendente") ? 5000 : false;
 
+type DocumentoLido = Pick<Documento, "id" | "lido" | "leitura"> & { semTexto?: boolean; mime?: string; alertas?: Documento["alertas"] };
+
 /**
  * Como a IA está com o arquivo: lido na hora (PDF com texto, DOCX), transcrito
  * (foto, PDF escaneado), lendo ou sem leitura. Com `reler`, oferece ler de novo.
+ * Texto escondido ou frase dirigida a uma IA aparece antes, num selo vermelho.
  */
-export function LeituraDaIa({ d, reler }: { d: Pick<Documento, "id" | "lido" | "leitura"> & { semTexto?: boolean; mime?: string }; reler?: boolean }) {
+export function LeituraDaIa({ d, reler }: { d: DocumentoLido; reler?: boolean }) {
+  if (!d.alertas?.length) return <EstadoDaLeitura d={d} reler={reler} />;
+  return (
+    <span className="dc-leitura-com-alerta">
+      <SeloDoAlerta alertas={d.alertas} />
+      <EstadoDaLeitura d={d} reler={reler} />
+    </span>
+  );
+}
+
+function EstadoDaLeitura({ d, reler }: { d: DocumentoLido; reler?: boolean }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
@@ -838,6 +896,8 @@ function AbaChat({ p, celular }: { p: Processo; celular: boolean }) {
   };
   const corpo = !chat.data ? (
     <Carregando linhas={3} />
+  ) : p.cliente?.semIa ? (
+    <Vazio titulo="Cliente sem IA">{SEM_IA}</Vazio>
   ) : !eu.data?.ia ? (
     <Vazio titulo="A IA ainda não está ligada">Quando estiver ligada, dá para perguntar sobre este processo e a IA responde com base nos autos. Quem cuida do sistema do escritório liga.</Vazio>
   ) : (

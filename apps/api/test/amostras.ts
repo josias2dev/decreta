@@ -49,6 +49,7 @@ try {
   const guardar = async (nome: string, path: string) => (amostras[nome] = { path, corpo: await get(path) });
   await guardar("eu", "/eu");
   await guardar("hoje", "/hoje");
+  await guardar("usoDaIa", "/ia/uso");
   const prazos = await get("/prazos?quando=abertos");
   amostras["prazos"] = { path: "/prazos?quando=abertos", corpo: prazos };
   const marina = prazos.itens.find((i: Item) => i.tipo === "Manifestação sobre laudo pericial" && i.processo.titulo.startsWith("Marina"));
@@ -57,6 +58,7 @@ try {
   await guardar("prazoComPeca", `/prazos/${alegacoes.id}`);
   const pubs = await get("/publicacoes");
   amostras["publicacoes"] = { path: "/publicacoes", corpo: pubs };
+  await guardar("saudeDaCaptura", "/publicacoes/saude");
   await guardar("publicacao", `/publicacoes/${pubs.itens[0].id}`);
   const pubMarina = pubs.itens.find((i: { partes: string }) => i.partes.startsWith("Marina"));
   await guardar("publicacaoMarina", `/publicacoes/${pubMarina.id}`);
@@ -209,6 +211,9 @@ try {
   });
   await guardar("modelos", "/modelos");
   await guardar("modelo", `/modelos/${colado.id}`);
+  // A advogada completa o que a IA deixou em aberto e marca como revisada.
+  const rascunho = (await get(`/pecas/${pecaId}`)).texto as string;
+  await mandar("PUT", `/pecas/${pecaId}`, { texto: rascunho.replace(" [COMPLETAR: valor atualizado dos lucros cessantes]", " Os lucros cessantes somam R$ 18.400,00, atualizados até outubro de 2026.") });
   await mandar("PUT", `/pecas/${pecaId}`, { situacao: "revisada" });
   amostras["pecaRevisada"] = { path: `/pecas/${pecaId}?revisada`, corpo: await get(`/pecas/${pecaId}`) };
 

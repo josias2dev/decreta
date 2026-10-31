@@ -27,6 +27,7 @@
       },
       "devDependencies": {
         "@types/qrcode": "1.5.5",
+        "jszip": "3.10.2",
       },
     },
     "apps/web": {
@@ -82,6 +83,7 @@
       "dependencies": {
         "@decreta/core": "workspace:*",
         "docx": "9.11.0",
+        "jszip": "3.10.2",
         "mammoth": "1.13.0",
         "unpdf": "1.8.1",
       },
@@ -101,6 +103,7 @@
       "name": "@decreta/tribunais",
       "dependencies": {
         "@decreta/core": "workspace:*",
+        "jszip": "3.10.2",
         "zod": "4.6.7",
       },
     },

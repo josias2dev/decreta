@@ -3,7 +3,7 @@
  * meio, a ligação caindo, consultas que não acharam e cartões com defeito.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { abrir, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
+import { abrir, abrirCartao, acessoAoCartao, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio";
 import { abrirPortao, aosPoucos, conversa, ia, ligarAosPoucos, noPortao, pedidos, pessoa, prazosDaSemana, roteiro, uuid } from "./aos-poucos";
 
 const comIa = () => new ApiFalsa().responder("/eu", euComIa);
@@ -262,24 +262,30 @@ test.describe("parar e cair no meio", () => {
 });
 
 test.describe("enquanto o texto chega", () => {
-  test("cumprido enquanto o texto chega continua cumprido quando a resposta termina", async ({ page }) => {
+  test("enquanto o texto chega, o cartão espera; no fim vem embaixo do texto, e o cumprido marcado na folha continua ao abrir de novo", async ({ page }) => {
     await ligarAosPoucos(page);
     const api = await abrir(page, "/perguntar", comIa().responder(`/ia/conversas/${CONVERSA}`, conversa(CONVERSA, "Prazos", [pessoa(PERGUNTA, "Quais prazos vencem esta semana?")])));
     const ferramenta = { ...prazosDaSemana, id: "f1" };
     await roteiro(page, [{ e: inicio() }, { e: { t: "ferramenta", id: "f1", nome: "buscarPrazos", entrada: prazosDaSemana.entrada } }, { e: { t: "resultado", id: "f1", nome: "buscarPrazos", saida: prazosDaSemana.saida } }, ...aosPoucos(TEXTO.slice(0, 80)), { portao: "antes-do-fim" }, { e: { t: "fim", mensagem: { id: RESPOSTA } } }]);
     await perguntarAgora(page);
     await noPortao(page, "antes-do-fim");
-    // Enquanto a IA escreve, o cartão fica só com o topo; dá para abrir.
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Abrir o cartão: Prazos" }).click();
-    await page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" }).click();
-    await expect(page.getByRole("button", { name: "Desfazer: Contestação trabalhista" })).toBeVisible();
+    // Enquanto a IA escreve, só os passos dizem o que ela consultou: o cartão não vem antes do texto.
+    await expect(page.locator(".dc-chat__resposta").last().getByText("Prazos", { exact: false }).first()).toBeVisible();
+    await expect(page.locator(".dc-chat__cartoes")).toHaveCount(0);
     // A resposta gravada traz a foto de quando a IA consultou (o prazo ainda aberto).
     api.responder(`/ia/conversas/${CONVERSA}`, conversa(CONVERSA, "Prazos", [pessoa(PERGUNTA, "Quais prazos vencem esta semana?"), ia(RESPOSTA, [ferramenta, { tipo: "texto", texto: TEXTO.slice(0, 80) }])]));
     await abrirPortao(page, "antes-do-fim");
     await expect(page.locator(".dc-chat__resposta .dc-chat__pe .dc-chat__hora")).toHaveCount(1);
-    await expect(page.getByRole("button", { name: "Desfazer: Contestação trabalhista" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toHaveCount(0);
+    const acesso = acessoAoCartao(page, "Prazos");
+    const texto = page.locator(".dc-chat__resposta").last().locator(".dc-md");
+    expect((await texto.boundingBox())!.y).toBeLessThan((await acesso.boundingBox())!.y);
+    const folha = await abrirCartao(page, "Prazos");
+    await folha.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" }).click();
+    await expect(folha.getByRole("button", { name: "Desfazer: Contestação trabalhista" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    const deNovo = await abrirCartao(page, "Prazos");
+    await expect(deNovo.getByRole("button", { name: "Desfazer: Contestação trabalhista" })).toBeVisible();
+    await expect(deNovo.getByRole("button", { name: "Marcar cumprido: Contestação trabalhista" })).toHaveCount(0);
   });
 
   test("link, negrito e tabela pela metade não aparecem crus", async ({ page }) => {
@@ -341,7 +347,9 @@ test.describe("o que a IA não achou, e cartão com defeito", () => {
     await expect(passos.getByText("Lendo o documento: não achei documento com esse id")).toBeVisible();
     await expect(passos.getByText("Abrindo a ficha do cliente: não achei este cliente")).toBeVisible();
     await expect(passos.getByText("Lendo os autos: não achei este processo")).toBeVisible();
+    // Só a consulta que deu certo vira cartão; a saída que a tela não esperava aparece como defeito ao abrir, sem derrubar a conversa.
     await expect(page.locator(".dc-cartao-ia")).toHaveCount(1);
+    await acessoAoCartao(page, "Prazos").click();
     await expect(page.getByRole("heading", { name: "Não deu para mostrar esta consulta" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Menu principal" })).toBeVisible();
     await expect(page.getByRole("complementary", { name: "Nesta conversa" })).toHaveCount(0);

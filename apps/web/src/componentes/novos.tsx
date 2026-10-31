@@ -394,7 +394,7 @@ const CANAIS: { id: Canal; rotulo: string }[] = [
   { id: "email", rotulo: "E-mail" },
 ];
 
-export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { aberto: boolean; aoFechar: () => void; cliente?: { id: string; nome: string } | null; processoId?: string | null }) {
+export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { aberto: boolean; aoFechar: () => void; cliente?: { id: string; nome: string; semIa?: boolean } | null; processoId?: string | null }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
@@ -415,7 +415,7 @@ export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { abe
   const organizar = async () => {
     setOrganizando(true);
     try {
-      const r = await api<{ situacao: "pronto" | "recusa"; conteudo: { resumo: string; pedidos: string[]; documentosPendentes: string[]; proximosPassos: string[]; recusa?: string } }>("/ia/atendimento", { json: { transcricao: resumo } });
+      const r = await api<{ situacao: "pronto" | "recusa"; conteudo: { resumo: string; pedidos: string[]; documentosPendentes: string[]; proximosPassos: string[]; recusa?: string } }>("/ia/atendimento", { json: { transcricao: resumo, clienteId: cli?.id ?? null } });
       const c = r.conteudo;
       if (r.situacao === "recusa") {
         avisar(c.recusa ?? "A IA não conseguiu organizar este texto.", { erro: true });
@@ -457,9 +457,9 @@ export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { abe
           ))}
         </div>
         <Campo rotulo="O que foi conversado" htmlFor="at-resumo">
-          <textarea id="at-resumo" rows={6} value={resumo} onChange={(e) => setResumo(e.target.value)} placeholder="Anote do jeito que vier. A IA organiza em resumo, pedidos e próximos passos." />
+          <textarea id="at-resumo" rows={6} value={resumo} onChange={(e) => setResumo(e.target.value)} placeholder={eu.data?.ia && !cliente?.semIa ? "Anote do jeito que vier. A IA organiza em resumo, pedidos e próximos passos." : "Anote do jeito que vier."} />
         </Campo>
-        {eu.data?.ia && (
+        {eu.data?.ia && !cliente?.semIa && (
           <div>
             <Botao variante="ia" pequeno onClick={organizar} ocupado={organizando} disabled={resumo.trim().length < 20}>
               Organizar com IA

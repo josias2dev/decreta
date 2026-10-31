@@ -1,0 +1,1 @@
+ALTER TABLE "processos" ADD COLUMN "datajud_atualizado_em" timestamp with time zone;

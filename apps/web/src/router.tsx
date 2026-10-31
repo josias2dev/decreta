@@ -24,6 +24,7 @@ import { PrazosPage } from "./paginas/prazos";
 import { ProcessoPage, type AbaDoProcesso, ABAS_DO_PROCESSO } from "./paginas/processo";
 import { ProcessosPage } from "./paginas/processos";
 import { PublicacaoPage, PublicacoesPage } from "./paginas/publicacoes";
+import { SegurancaPage } from "./paginas/seguranca";
 
 const QUANDO: readonly Quando[] = ["hoje", "semana", "vencidos", "abertos", "cumpridos"];
 const SITUACOES: readonly SituacaoPublicacao[] = ["nova", "pendente", "lida", "vinculada"];
@@ -51,6 +52,8 @@ const redefinirRoute = createRoute({
 
 // decreta.site: a landing para quem chega de fora; quem tem sessão segue para /hoje.
 const inicioRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: InicioPage });
+// Segurança e LGPD, aberta: o termo de uso de IA e a política interna apontam para cá.
+const segurancaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/seguranca", component: SegurancaPage });
 
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
@@ -140,6 +143,7 @@ const maisRoute = createRoute({ getParentRoute: () => appRoute, path: "/mais", c
 
 const routeTree = rootRoute.addChildren([
   inicioRoute,
+  segurancaRoute,
   entrarRoute,
   conviteRoute,
   redefinirRoute,

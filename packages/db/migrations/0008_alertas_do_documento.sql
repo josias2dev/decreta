@@ -1,0 +1,1 @@
+ALTER TABLE "documentos" ADD COLUMN "alertas" jsonb DEFAULT '[]'::jsonb NOT NULL;

@@ -32,7 +32,8 @@ export function resumoDaManha(painel: PainelDoDia, pessoa: { id: string; apelido
   const hoje = meus.filter((i) => i.urgencia === "hoje");
   const auds = meus.filter((i) => i.tipo === "audiencia");
   const tarefas = meus.filter((i) => i.tipo === "tarefa");
-  if (!vencidos.length && !hoje.length && !auds.length && !tarefas.length && !semDono.length && !painel.contadores.publicacoesNovas) return null;
+  const alertas = painel.alertasDaCaptura;
+  if (!vencidos.length && !hoje.length && !auds.length && !tarefas.length && !semDono.length && !painel.contadores.publicacoesNovas && !alertas.length) return null;
 
   const base = telas.replace(/\/$/, "");
   const link = (i: { tipo: string; id: string; processoId: string | null }) => (i.tipo === "prazo" ? `${base}/prazos/${i.id}` : i.processoId ? `${base}/processos/${i.processoId}` : `${base}/hoje`);
@@ -48,6 +49,7 @@ export function resumoDaManha(painel: PainelDoDia, pessoa: { id: string; apelido
     const n = painel.contadores.publicacoesNovas;
     partes.push(`${n === 1 ? "1 publicação nova" : `${n} publicações novas`} para revisar: ${base}/publicacoes`);
   }
+  if (alertas.length) partes.push(`*Captura do DJEN*\n${alertas.map((a) => `• ${a}`).join("\n")}`);
   return partes.join("\n\n");
 }
 

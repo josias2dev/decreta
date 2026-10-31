@@ -1,0 +1,1 @@
+ALTER TABLE "clientes" ADD COLUMN "sem_ia" boolean DEFAULT false NOT NULL;

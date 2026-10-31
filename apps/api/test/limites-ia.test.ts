@@ -190,6 +190,41 @@ describe.skipIf(!hasTestDatabase)("limites da IA", () => {
     zerar();
   });
 
+  test("quanto resta: a tela vê as mensagens do dia e avisa quando falta pouco, antes de barrar", async () => {
+    relogio("2026-11-06T10:00:00-03:00");
+    const uso = async (cookie: string) => (await (await call("/ia/uso", {}, cookie)).json()) as { mensagens: { restam: number; limite: number } | null; gasto: number | null; aviso: string | null };
+    expect(await uso(ana)).toEqual({ mensagens: null, gasto: null, aviso: null });
+    limites.mensagensPorDia = 8;
+    expect(await uso(ana)).toEqual({ mensagens: { restam: 8, limite: 8 }, gasto: null, aviso: null });
+    for (let i = 0; i < 2; i++) await perguntar(ana);
+    expect(await uso(ana)).toMatchObject({ mensagens: { restam: 6 }, aviso: null });
+    await perguntar(ana);
+    expect(await uso(ana)).toMatchObject({ mensagens: { restam: 5 }, aviso: "Restam 5 mensagens hoje no chat da IA." });
+    for (let i = 0; i < 4; i++) await perguntar(ana);
+    expect(await uso(ana)).toMatchObject({ mensagens: { restam: 1 }, aviso: "Resta 1 mensagem hoje no chat da IA." });
+    await perguntar(ana);
+    // Acabou: o aviso é o mesmo da recusa.
+    expect(await uso(ana)).toEqual({ mensagens: { restam: 0, limite: 8 }, gasto: null, aviso: AVISOS.mensagensDoDia(8) });
+    expect((await uso(rafael)).mensagens).toBeNull();
+    zerar();
+  });
+
+  test("quanto resta: o gasto do dia aparece e avisa perto do teto", async () => {
+    relogio("2026-11-07T10:00:00-03:00");
+    const uso = async (cookie: string) => (await (await call("/ia/uso", {}, cookie)).json()) as { mensagens: { restam: number; limite: number } | null; gasto: number | null; aviso: string | null };
+    // Cada pergunta numa conversa nova: a resposta e o título.
+    limites.tetoPessoaUsd = 10 * POR_CHAMADA;
+    for (let i = 0; i < 3; i++) await perguntar(ana);
+    const antes = await uso(ana);
+    expect(antes.gasto).toBeCloseTo(0.6, 6);
+    expect(antes.aviso).toBeNull();
+    await perguntar(ana);
+    const perto = await uso(ana);
+    expect(perto.gasto).toBeCloseTo(0.8, 6);
+    expect(perto.aviso).toBe(AVISOS.pertoDoTeto);
+    zerar();
+  });
+
   test("quando o teto do gateway barra, o chat diz isso em vez de um erro qualquer", async () => {
     relogio("2026-11-04T10:00:00-03:00");
     const modelo = ia.modelo;
