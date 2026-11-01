@@ -1,1 +1,0 @@
-ALTER TABLE "escritorios" ADD COLUMN "jeito" jsonb DEFAULT '{}'::jsonb NOT NULL;

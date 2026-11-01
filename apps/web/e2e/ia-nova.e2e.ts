@@ -79,7 +79,7 @@ test("5.7: o sócio descreve o jeito da contestação, e o geral continua guarda
   const geral = { estilo: "Frases curtas, sem latim.", teses: "", evitar: "" };
   const api = new ApiFalsa().responder("/escritorio", { ...amostras.escritorio!.corpo, jeito: { geral } });
   await abrir(page, "/configuracoes", api);
-  await page.getByRole("tab", { name: "Peças" }).click();
+  await page.getByRole("tab", { name: "Jeito das peças" }).click();
   await expect(page.getByLabel("Estilo")).toHaveValue(geral.estilo);
   await page.getByLabel("Peça", { exact: true }).selectOption("contestacao");
   await expect(page.getByLabel("Estilo")).toHaveValue("");

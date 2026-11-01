@@ -759,6 +759,20 @@ export interface Peca {
   verificacao: (VerificacaoDaPeca & { atual: boolean }) | null;
 }
 
+/** Radar de precedentes: o precedente do BNP que mudou e pode afetar um processo. */
+export interface AvisoDoRadar {
+  id: string;
+  chave: string;
+  /** "IRDR 37 do TJSC" */
+  rotulo: string;
+  situacao: string;
+  texto: string | null;
+  url: string;
+  motivo: string;
+  criadoEm: string;
+  processo: { id: string; titulo: string };
+}
+
 export type SeloDaCitacao = "verificada" | "com_ressalva" | "nao_verificada";
 
 export interface CitacaoVerificada {

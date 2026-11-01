@@ -5,9 +5,9 @@
  * nem RLS. Nada de cliente ou de escritório entra aqui; o que cada escritório
  * conferiu fica na peça (`pecas.verificacao`).
  */
-import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-/** Um tema ou precedente, pela chave da citação: "tema:STJ:952", "sumula:STJ:297", "sumula_vinculante:STF:13". */
+/** Um tema ou precedente, pela chave da citação: "tema:STJ:952", "sumula:STJ:297", "sumula_vinculante:STF:13", "irdr:TJSC:37". */
 export const acervoDocumentos = pgTable("acervo_documentos", {
   chave: text("chave").primaryKey(),
   /** "stj_dados_abertos" ou "cnj_bnp". */
@@ -17,6 +17,8 @@ export const acervoDocumentos = pgTable("acervo_documentos", {
   cancelado: boolean("cancelado").notNull().default(false),
   /** A tese ou o enunciado. */
   texto: text("texto"),
+  /** A questão submetida a julgamento (BNP): o que o radar cruza com o assunto dos processos. */
+  questao: text("questao"),
   url: text("url").notNull(),
   /** sha256 da situação e do texto: prova o que o Decreta mostrou. */
   hash: text("hash").notNull(),
@@ -44,3 +46,30 @@ export const acervoNormas = pgTable("acervo_normas", {
   atualizadoNaFonte: text("atualizado_na_fonte"),
   capturadoEm: timestamp("capturado_em", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * As espécies do BNP já carregadas ("STF/RG", "TJSC/IRDR"). A primeira carga de
+ * uma espécie é a base do radar: só o que aparece ou muda depois vira novidade.
+ */
+export const acervoSincronizacoes = pgTable("acervo_sincronizacoes", {
+  especie: text("especie").primaryKey(),
+  primeiraEm: timestamp("primeira_em", { withTimezone: true }).notNull().defaultNow(),
+  ultimaEm: timestamp("ultima_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * O que mudou no BNP desde a última sincronização: precedente novo ou situação
+ * nova ("Admitido", "Acórdão Publicado", "Cancelado"). É daqui que o radar parte.
+ */
+export const acervoNovidades = pgTable(
+  "acervo_novidades",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    chave: text("chave").notNull(),
+    /** Vazia quando o precedente é novo no acervo. */
+    situacaoAntes: text("situacao_antes"),
+    situacao: text("situacao").notNull(),
+    em: timestamp("em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("acervo_novidades_em_idx").on(t.em)],
+);

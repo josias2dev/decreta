@@ -74,6 +74,7 @@ try {
   await guardar("movimentacoes", `/processos/${processoId}/movimentacoes`);
   await guardar("pecasDoProcesso", `/processos/${processoId}/pecas`);
   await guardar("documentos", `/documentos?processo=${processoId}`);
+  await guardar("radar", `/radar?processo=${processoId}`);
   await guardar("chat", `/ia/chat/${processoId}`);
   const clientes = await get("/clientes");
   amostras["clientes"] = { path: "/clientes", corpo: clientes };

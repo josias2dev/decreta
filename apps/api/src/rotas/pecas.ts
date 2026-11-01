@@ -7,6 +7,7 @@ import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { hashDoTexto, resumoDaVerificacao, verificarCitacoes } from "../servicos/acervo.ts";
 import { paraQualificar, qualificacaoDasPartes } from "../servicos/cadastros.ts";
+import { calculosParaPeca } from "../servicos/calculos.ts";
 import { semIa } from "../servicos/contexto.ts";
 import { modelosParaPeca } from "../servicos/modelos.ts";
 import { montarPedidoDePeca, sobreOCaso } from "../servicos/pecas.ts";
@@ -44,11 +45,12 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [rascunho] = await tx.select().from(pecas).where(prazo ? eq(pecas.prazoId, prazo.id) : eq(pecas.processoId, processoId)).orderBy(desc(pecas.updatedAt)).limit(1);
       const tipo = (tipoPedido && tipoDePeca(tipoPedido)) || (rascunho && tipoDePeca(rascunho.tipo)) || sugerido;
       const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: sobreOCaso(p, prazo?.tipo) });
+      const contas = await calculosParaPeca(tx, p.id, tipo.id);
       return c.json({
         processo: { id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, semIa: await semIa(tx, { processoId: p.id }) },
         prazo: prazo ? { id: prazo.id, tipo: prazo.tipo, fim: prazo.fim } : null,
         tipoSugerido: sugerido.id,
-        leu: [...docs.map((d) => (d.evento != null ? `${d.nome} · evento ${d.evento}` : d.nome)), ...(briefing ? ["Briefing do prazo"] : []), ...(contraria ? [`Pontos a rebater (${contraria.fonte})`] : [])],
+        leu: [...docs.map((d) => (d.evento != null ? `${d.nome} · evento ${d.evento}` : d.nome)), ...(briefing ? ["Briefing do prazo"] : []), ...(contraria ? [`Pontos a rebater (${contraria.fonte})`] : []), ...contas.map((k) => `Memória de cálculo · ${k.titulo}`)],
         /** Os modelos do escritório que a IA vai seguir para o tipo escolhido. */
         modelos: doBanco.map((m) => ({ id: m.id, titulo: m.titulo })),
         ultima: rascunho ? { id: rascunho.id, titulo: rascunho.titulo, tipo: rascunho.tipo, instrucoes: rascunho.instrucoes, texto: rascunho.texto, situacao: rascunho.situacao, atualizadaEm: rascunho.updatedAt.toISOString() } : null,

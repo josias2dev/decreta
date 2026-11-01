@@ -21,6 +21,8 @@ export interface PrecedenteDoBnp {
   cancelado: boolean;
   /** A tese ou o enunciado, sem HTML. */
   texto: string | null;
+  /** A questão submetida a julgamento, sem HTML. */
+  questao: string | null;
   /** AAAA-MM-DD */
   atualizadoEm: string | null;
   /** A página do precedente no Pangea. */
@@ -64,9 +66,9 @@ const semHtml = (t: string) =>
     .replace(/\s*\n\s*/g, "\n")
     .trim();
 
-/** Na súmula vinculante, o enunciado vem em "questao" e a tese vem "não informado". */
+/** Na súmula vinculante, o enunciado vem em "questao" e a tese vem "não informado"; no IRDR sem tese, "-". */
 function textoDoPrecedente(tese?: string, questao?: string): string | null {
-  const t = tese && !/^n[ãa]o informado$/i.test(semHtml(tese)) ? semHtml(tese) : questao ? semHtml(questao) : "";
+  const t = tese && !/^(n[ãa]o informado|-)$/i.test(semHtml(tese)) ? semHtml(tese) : questao ? semHtml(questao) : "";
   return t || null;
 }
 
@@ -84,6 +86,7 @@ function precedente(bruto: unknown): PrecedenteDoBnp {
     situacao,
     cancelado: alertaSituacao === "cancelado" || /^cancelad/i.test(situacao),
     texto: textoDoPrecedente(tese, questao),
+    questao: questao ? semHtml(questao) || null : null,
     atualizadoEm: dia(ultimaAtualizacao),
     url: `${BNP_URL}/pesquisa?orgao=${orgao.toLowerCase()}&tipo=${encodeURIComponent(tipo)}&nr=${nr}`,
   };

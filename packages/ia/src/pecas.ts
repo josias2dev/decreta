@@ -88,6 +88,8 @@ export interface PedidoDePeca {
   qualificacao?: string | null;
   /** Como o escritório faz esta peça: estilo, teses e o que evitar. */
   jeito?: JeitoDaPeca | null;
+  /** Cálculos do processo que a peça usa (a memória da atualização, o quadro da revisional), feitos pelo sistema. */
+  calculos?: { titulo: string; memoria: string }[];
 }
 
 /** Como o escritório faz uma peça, nas palavras dele. */
@@ -165,6 +167,8 @@ Estrutura usual: ${tipo.estrutura}`,
       pedido.instrucoes.trim() && `## Instruções de quem pediu\n${pedido.instrucoes.trim()}`,
       pedido.jeito && textoDoJeito(pedido.jeito),
       pedido.modelos?.length && textoDosModelos(pedido.modelos),
+      pedido.calculos?.length &&
+        `## Cálculos do processo\nFeitos pelo sistema com os índices oficiais e conferidos pelo advogado. Use os valores, as datas e os critérios como estão, sem refazer a conta nem arredondar de outro jeito; o quadro e o tópico podem entrar na peça.\n\n${pedido.calculos.map((k) => k.memoria).join("\n\n")}`,
       pedido.qualificacao && `## Qualificação das partes\nUse na qualificação quando a peça pedir; o que não estiver aqui vira [COMPLETAR].\n${pedido.qualificacao}`,
       `## Quem assina\n${escritorio.advogado}${escritorio.oab ? `, ${escritorio.oab}` : ""}, ${escritorio.nome}${escritorio.cidade ? `, ${escritorio.cidade}` : ""}.`,
       pedido.contextoDoProcesso,

@@ -1,3 +1,4 @@
+export * from "./calculos.ts";
 export * from "./calendario.ts";
 export * from "./citacoes.ts";
 export * from "./cliente.ts";
@@ -6,8 +7,11 @@ export * from "./conferencia.ts";
 export * from "./datas.ts";
 export * from "./documentos.ts";
 export * from "./peca.ts";
+export * from "./pjecalc.ts";
 export * from "./prazos.ts";
+export * from "./previdenciario.ts";
 export * from "./publicacao.ts";
 export * from "./fontes.ts";
 export * from "./auditoria.ts";
 export * from "./automacao.ts";
+export * from "./revisional.ts";

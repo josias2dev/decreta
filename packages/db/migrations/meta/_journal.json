@@ -117,22 +117,29 @@
     {
       "idx": 16,
       "version": "7",
-      "when": 1793495573191,
-      "tag": "0016_jeito_do_escritorio",
+      "when": 1793494946311,
+      "tag": "0016_calculos",
       "breakpoints": true
     },
     {
       "idx": 17,
       "version": "7",
-      "when": 1793495833087,
-      "tag": "0017_automacao",
+      "when": 1793497327505,
+      "tag": "0017_radar_precedentes",
       "breakpoints": true
     },
     {
       "idx": 18,
       "version": "7",
-      "when": 1793496097115,
-      "tag": "0018_tokens_mcp",
+      "when": 1793497944596,
+      "tag": "0018_sincronizacoes_do_acervo",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793498970685,
+      "tag": "0019_jeito_automacao_e_mcp",
       "breakpoints": true
     }
   ]

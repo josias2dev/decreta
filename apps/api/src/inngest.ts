@@ -19,13 +19,14 @@ import { avisosEnviados, escritorios, organization, withTenant, type Database } 
 import type { Armazenamento } from "@decreta/documentos";
 import type { Ia } from "@decreta/ia";
 import { and, eq, ne } from "drizzle-orm";
-import { eventType, Inngest, staticSchema } from "inngest";
+import { eventType, Inngest, NonRetriableError, staticSchema } from "inngest";
 import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
 import { sincronizarTemasDoStj } from "./servicos/acervo.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
+import { cruzarRadar, sincronizarPrecedentesDoBnp } from "./servicos/radar.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
 import { ClienteSemIa } from "./servicos/contexto.ts";
@@ -330,5 +331,25 @@ export function createFunctions(deps: DepsDasRotinas) {
       }),
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn];
+  // O BNP é atualizado duas vezes por mês: no dia 2 e no 17, de madrugada, o acervo é sincronizado
+  // e o radar liga o que mudou aos processos dos escritórios. Uma espécie que o BNP não devolveu
+  // não segura o radar: ele cruza o que chegou, e o erro vai para o Sentry.
+  const radarFn = inngest.createFunction(
+    { id: "acervo-radar-de-precedentes", triggers: [{ cron: "TZ=America/Sao_Paulo 30 4 2,17 * *" }], retries: 2, onFailure: async ({ error }) => reporter.error(error, { funcao: "acervo-radar-de-precedentes" }) },
+    async ({ step }) => {
+      const desde = await step.run("inicio", () => new Date().toISOString());
+      const bnp = await step.run("bnp", async () => {
+        try {
+          return { ...(await sincronizarPrecedentesDoBnp({ db, fetch: deps.captura.fetch, log })), erro: null };
+        } catch (e) {
+          return { precedentes: 0, novidades: 0, erro: e instanceof Error ? e.message : String(e) };
+        }
+      });
+      const radar = await step.run("radar", () => cruzarRadar({ db, log }, new Date(desde)));
+      if (bnp.erro) throw new NonRetriableError(bnp.erro);
+      return { ...bnp, ...radar };
+    },
+  );
+
+  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn];
 }

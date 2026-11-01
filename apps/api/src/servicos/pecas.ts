@@ -3,6 +3,7 @@ import { formatarDia } from "@decreta/core";
 import { analises, escritorios, prazos, processos, type Database, type Tx } from "@decreta/db";
 import { jeitoParaPeca, pontosEmTexto, type Briefing, type LeituraDaPecaContraria, type PedidoDePeca, type TipoDePeca } from "@decreta/ia";
 import { and, desc, eq } from "drizzle-orm";
+import { calculosParaPeca } from "./calculos.ts";
 import { contextoParaIa } from "./contexto.ts";
 import { modelosParaPeca } from "./modelos.ts";
 import { pessoasDoEscritorio } from "./pessoas.ts";
@@ -80,6 +81,7 @@ export async function montarPedidoDePeca(
       escritorio: { nome: esc?.timbre?.nome ?? a.nomeDoEscritorio, advogado: advogado?.nome ?? a.quem?.nome ?? "[COMPLETAR: advogado]", oab: advogado?.oab ?? null, cidade: p.comarca },
       modelos: doBanco.map((m) => ({ titulo: m.titulo, tese: m.tese, texto: m.texto })),
       jeito: jeitoParaPeca(esc?.jeito ?? {}, tipo.id),
+      calculos: await calculosParaPeca(tx, p.id, tipo.id),
     },
   };
 }

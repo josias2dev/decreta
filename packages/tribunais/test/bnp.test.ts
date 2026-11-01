@@ -43,6 +43,7 @@ describe("precedentes no BNP (Pangea, CNJ)", () => {
       situacao: "Vigente",
       cancelado: false,
       texto: "O Código de Defesa do Consumidor é aplicável às instituições financeiras.",
+      questao: null,
       atualizadoEm: "2025-04-01",
       url: "https://pangeabnp.pdpj.jus.br/pesquisa?orgao=stj&tipo=SUM&nr=297",
     });
@@ -68,6 +69,13 @@ describe("precedentes no BNP (Pangea, CNJ)", () => {
       { pagina: 2, ordenacao: "Crono-Asc", tamanhoPagina: 2 },
     ]);
     expect(pausas).toEqual([1000]);
+  });
+
+  test("a questão submetida a julgamento vem à parte, sem HTML: é o que o radar cruza com a carteira", async () => {
+    const IRDR_37 = { id: "tjsc-irdr-37", nr: 37, orgao: "TJSC", tipo: "IRDR", situacao: "Admitido", tese: "-", questao: "<p>Definir a possibilidade de utilização da <b>CNIB</b> como instrumento de busca de patrimônio.</p>", ultimaAtualizacao: "14/09/2026" };
+    const { f } = fetchFalso([pagina([IRDR_37], 1)]);
+    const [p] = await listarNoBnp({ orgao: "TJSC", tipo: "IRDR" }, { fetch: f });
+    expect(p).toMatchObject({ situacao: "Admitido", questao: "Definir a possibilidade de utilização da CNIB como instrumento de busca de patrimônio.", url: "https://pangeabnp.pdpj.jus.br/pesquisa?orgao=tjsc&tipo=IRDR&nr=37" });
   });
 
   test("BNP fora do ar ou fora do formato: erro, para a sincronização manter a última versão", async () => {
