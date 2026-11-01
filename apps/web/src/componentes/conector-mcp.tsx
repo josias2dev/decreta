@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Botao, Campo, Faixa, Painel } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
-import { diaCurto, diaDoInstante } from "@/lib/formato";
+import { diaCompleto, diaCurto, diaDoInstante } from "@/lib/formato";
 
 type TokenMcp = { id: string; nome: string; criadoEm: string; usadoEm: string | null; expiraEm: string };
 
@@ -55,7 +55,7 @@ export function ConectorMcp() {
                 <span className="dc-celula min-w-0 flex-1">
                   <span className="dc-celula__1">{t.nome}</span>
                   <span className="dc-celula__2">
-                    Criado em {diaCurto(diaDoInstante(t.criadoEm))} · {t.usadoEm ? `usado em ${diaCurto(diaDoInstante(t.usadoEm))}` : "ainda não usado"} · vale até {diaCurto(diaDoInstante(t.expiraEm))}
+                    Criado em {diaCurto(diaDoInstante(t.criadoEm))} · {t.usadoEm ? `usado em ${diaCurto(diaDoInstante(t.usadoEm))}` : "ainda não usado"} · vale até {diaCompleto(diaDoInstante(t.expiraEm))}
                   </span>
                 </span>
                 <Botao variante="fantasma" pequeno onClick={() => revogar.mutate(t.id)} ocupado={revogar.isPending && revogar.variables === t.id}>
