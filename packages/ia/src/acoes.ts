@@ -168,6 +168,49 @@ Cada ponto a favor ou contra cita a fonte nos autos ("laudo do evento 87", "peti
 }
 
 /* ------------------------------------------------------------------ */
+/* "O que isso significa para você": mensagem ao cliente                */
+/* ------------------------------------------------------------------ */
+
+export const mensagemAoClienteSchema = z.object({
+  texto: z.string().describe("A mensagem ao cliente, pronta para o advogado revisar: de 3 a 6 frases curtas, sem cabeçalho nem assinatura."),
+  recusa,
+});
+export type MensagemAoCliente = z.infer<typeof mensagemAoClienteSchema>;
+
+/**
+ * Rascunho da mensagem ao cliente sobre a decisão que abriu um prazo. Vai à IA
+ * só o que foi decidido e o que o escritório vai fazer: os pontos a favor e
+ * contra ficam de fora, para a mensagem não virar parecer sobre as chances.
+ * O texto nunca sai sozinho: o advogado revisa e aprova antes do envio.
+ */
+export async function mensagemAoCliente(ia: Ia, entrada: { cliente: string; prazo: string; briefing: Briefing }, signal?: AbortSignal): Promise<MensagemAoCliente> {
+  if (!entrada.briefing.decidiu.trim()) throw new IaRecusou("O briefing não diz o que foi decidido. Gere o briefing do prazo de novo antes de escrever ao cliente.");
+  const prompt = [
+    `## Cliente\n${entrada.cliente}`,
+    `\n## Prazo aberto pela decisão\n${entrada.prazo}`,
+    `\n## O que o juízo decidiu\n${entrada.briefing.decidiu.trim()}`,
+    `\n## O que o escritório vai fazer\n${entrada.briefing.fazer.map((f) => `- ${f}`).join("\n") || "Nada informado."}`,
+  ].join("\n");
+  return exigir(
+    await gerarObjeto(
+      ia,
+      "mensagem-cliente",
+      mensagemAoClienteSchema,
+      `Escreva a mensagem que o advogado vai mandar ao cliente pelo WhatsApp explicando o que esta decisão significa para ele.
+- Comece com "Olá, " e o primeiro nome do cliente.
+- Linguagem simples, de quem não é da área: troque termo técnico por palavra do dia a dia ("laudo do perito" em vez de "laudo pericial", "o juiz" em vez de "o juízo").
+- Diga o que aconteceu e qual é o próximo passo do escritório. Se o cliente precisar fazer algo, diga o quê.
+- Não dê parecer: nada de chances de ganhar ou perder, valores, prazos de quando o caso acaba ou promessas.
+- Não peça dinheiro, Pix nem dados bancários.
+- Não cite número de evento, artigo de lei nem data interna de protocolo.
+- Não escreva cabeçalho, despedida nem assinatura: o escritório acrescenta.`,
+      prompt,
+      signal,
+    ),
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Resumo dos autos                                                    */
 /* ------------------------------------------------------------------ */
 

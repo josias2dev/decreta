@@ -46,6 +46,7 @@ export const METODOS = [
   "ler-pdf",
   "titulo-conversa",
   "ler-peca-contraria",
+  "mensagem-cliente",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -66,6 +67,7 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "ler-pdf": "pdf",
   "titulo-conversa": "juridico",
   "ler-peca-contraria": "juridico",
+  "mensagem-cliente": "juridico",
 };
 
 /**
@@ -139,6 +141,7 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
   "ler-pdf": "low",
   "titulo-conversa": "low",
   "ler-peca-contraria": "high",
+  "mensagem-cliente": "medium",
 };
 
 /**

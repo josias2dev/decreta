@@ -8,6 +8,7 @@ import { Cancelada } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
+import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { PecaContraria } from "@/componentes/peca-contraria";
@@ -113,6 +114,10 @@ export function PrazoPage() {
   );
 
   const contraria = <PecaContraria prazoId={p.id} processoId={p.processo.id} analise={p.pecaContraria ?? null} comIa={ia && p.situacao === "aberto"} />;
+  // "O que isso significa para você": a IA escreve a partir do briefing pronto; o advogado aprova antes de sair.
+  const paraOCliente = b?.situacao === "pronto" && (
+    <MensagensAoCliente filtro={{ prazo: p.id }} gerar={ia ? { rotulo: "Escrever ao cliente o que isso significa", caminho: `/prazos/${p.id}/mensagem-cliente` } : undefined} titulo="Para o cliente" />
+  );
 
   const dados = (
     <Dados
@@ -231,6 +236,7 @@ export function PrazoPage() {
         </div>
         {briefing}
         {contraria}
+        {paraOCliente}
         <Painel titulo="Prazo" acao={aberto && p.confirmado ? <Botao variante="fantasma" pequeno onClick={() => setDialogo("ajustar")}>Ajustar</Botao> : undefined}>
           {dados}
         </Painel>
@@ -298,6 +304,7 @@ export function PrazoPage() {
         <div className="dc-pilha">
           {briefing}
           {contraria}
+          {paraOCliente}
           {p.publicacao && <Teor publicacao={p.publicacao} />}
         </div>
         <div className="dc-pilha">
