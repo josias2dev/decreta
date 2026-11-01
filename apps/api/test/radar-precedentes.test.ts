@@ -16,8 +16,6 @@ import { criarEscritorio } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { cruzarRadar, sincronizarPrecedentesDoBnp } from "../src/servicos/radar.ts";
 
-const AGORA = new Date("2026-10-31T12:00:00-03:00");
-
 type Bruto = Record<string, unknown>;
 const IRDR_37 = { id: "tjsc-irdr-37", nr: 37, orgao: "TJSC", tipo: "IRDR", situacao: "Admitido", tese: "-", questao: "<p>Definir a possibilidade de utilização da Central Nacional de Indisponibilidade de Bens (CNIB) como instrumento de busca de patrimônio.</p>", ultimaAtualizacao: "10/01/2025" };
 const IRR_12 = { id: "tst-irr-12", nr: 12, orgao: "TST", tipo: "IRR", situacao: "Afetado", tese: "-", questao: "Saber se as horas extras habituais integram a base de cálculo do adicional noturno.", ultimaAtualizacao: "20/10/2026" };
@@ -90,9 +88,10 @@ describe.skipIf(!hasTestDatabase)("radar de precedentes", () => {
     await t?.drop();
   });
 
-  test("a primeira carga guarda tudo e só anota como novidade o que mudou nos últimos 30 dias", async () => {
-    const f = bnp({ "TJSC/IRDR": [IRDR_37], "TST/IRR": [IRR_12], "STJ/SUM": [SUMULA_297] });
-    expect(await sincronizarPrecedentesDoBnp({ db: t.db, fetch: f.fetch, dormir: sem, agora: AGORA })).toEqual({ precedentes: 3, novidades: 1 });
+  test("a primeira carga de cada espécie é a base: guarda tudo e nada vira novidade", async () => {
+    // A data de atualização do BNP não diz quando o precedente mudou: o BNP inteiro aparece como recente.
+    const f = bnp({ "TJSC/IRDR": [IRDR_37], "STJ/SUM": [{ ...SUMULA_297, ultimaAtualizacao: "30/10/2026" }] });
+    expect(await sincronizarPrecedentesDoBnp({ db: t.db, fetch: f.fetch, dormir: sem })).toEqual({ precedentes: 2, novidades: 0 });
     // Todas as espécies que o plano pede, de cada órgão.
     expect(f.pedidos.toSorted()).toEqual(
       ["STF/RG", "STF/SV", "STF/SUM", "STJ/SUM", "STJ/IAC", "STJ/SIRDR", "TST/IRR", "TST/IAC", "TJSC/IRDR", "TJSC/IAC", "TRT12/IRDR", "TRT12/IAC", "TRF04/IRDR", "TRF04/IAC"].toSorted(),
@@ -100,15 +99,18 @@ describe.skipIf(!hasTestDatabase)("radar de precedentes", () => {
     const guardados = await t.owner`select chave, situacao, questao, texto from acervo_documentos order by chave`;
     expect(guardados.map((d) => [d.chave, d.situacao])).toEqual([
       ["irdr:TJSC:37", "Admitido"],
-      ["irr:TST:12", "Afetado"],
       ["sumula:STJ:297", "Vigente"],
     ]);
     expect(guardados[0]!.questao).toBe("Definir a possibilidade de utilização da Central Nacional de Indisponibilidade de Bens (CNIB) como instrumento de busca de patrimônio.");
-    const novidades = await t.owner`select chave, situacao_antes, situacao from acervo_novidades`;
-    expect(novidades.map((n) => [n.chave, n.situacao_antes, n.situacao])).toEqual([["irr:TST:12", null, "Afetado"]]);
+    expect(await t.owner`select * from acervo_novidades`).toEqual([]);
+    expect(await cruzarRadar({ db: t.db }, new Date(0))).toEqual({ avisos: 0 });
   });
 
-  test("o radar liga a novidade ao processo do mesmo alcance cujo assunto está na questão julgada", async () => {
+  test("precedente que aparece numa espécie já carregada é novidade, e o radar o liga ao processo do mesmo alcance cujo assunto está na questão julgada", async () => {
+    const f = bnp({ "TJSC/IRDR": [IRDR_37], "TST/IRR": [IRR_12], "STJ/SUM": [SUMULA_297] });
+    expect(await sincronizarPrecedentesDoBnp({ db: t.db, fetch: f.fetch, dormir: sem })).toEqual({ precedentes: 3, novidades: 1 });
+    const novidades = await t.owner`select chave, situacao_antes, situacao from acervo_novidades`;
+    expect(novidades.map((n) => [n.chave, n.situacao_antes, n.situacao])).toEqual([["irr:TST:12", null, "Afetado"]]);
     expect(await cruzarRadar({ db: t.db }, new Date(0))).toEqual({ avisos: 1 });
     const { itens } = await json(call(`/radar?processo=${processo.horas}`));
     expect(itens).toEqual([
@@ -126,7 +128,7 @@ describe.skipIf(!hasTestDatabase)("radar de precedentes", () => {
   test("a situação que muda vira novidade e alcança só o tribunal do precedente, ativo ou suspenso", async () => {
     const desde = new Date();
     const f = bnp({ "TJSC/IRDR": [{ ...IRDR_37, situacao: "Acórdão Publicado", tese: "<p>É possível usar a CNIB.</p>", ultimaAtualizacao: "28/10/2026" }], "TST/IRR": [IRR_12], "STJ/SUM": [SUMULA_297] });
-    expect(await sincronizarPrecedentesDoBnp({ db: t.db, fetch: f.fetch, dormir: sem, agora: AGORA })).toEqual({ precedentes: 3, novidades: 1 });
+    expect(await sincronizarPrecedentesDoBnp({ db: t.db, fetch: f.fetch, dormir: sem })).toEqual({ precedentes: 3, novidades: 1 });
     expect(await cruzarRadar({ db: t.db }, desde)).toEqual({ avisos: 2 });
     const { itens } = await json(call("/radar"));
     expect(itens.map((i: any) => [i.processo.id, i.chave, i.situacao]).toSorted()).toEqual(

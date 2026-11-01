@@ -48,6 +48,16 @@ export const acervoNormas = pgTable("acervo_normas", {
 });
 
 /**
+ * As espécies do BNP já carregadas ("STF/RG", "TJSC/IRDR"). A primeira carga de
+ * uma espécie é a base do radar: só o que aparece ou muda depois vira novidade.
+ */
+export const acervoSincronizacoes = pgTable("acervo_sincronizacoes", {
+  especie: text("especie").primaryKey(),
+  primeiraEm: timestamp("primeira_em", { withTimezone: true }).notNull().defaultNow(),
+  ultimaEm: timestamp("ultima_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * O que mudou no BNP desde a última sincronização: precedente novo ou situação
  * nova ("Admitido", "Acórdão Publicado", "Cancelado"). É daqui que o radar parte.
  */

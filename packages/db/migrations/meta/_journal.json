@@ -127,6 +127,13 @@
       "when": 1793497327505,
       "tag": "0017_radar_precedentes",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793497944596,
+      "tag": "0018_sincronizacoes_do_acervo",
+      "breakpoints": true
     }
   ]
 }

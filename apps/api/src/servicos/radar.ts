@@ -8,7 +8,7 @@
  * É um "confira", não um parecer: o advogado lê o precedente e descarta o que
  * não serve. O BNP é consulta pública (Res. CNJ 444/2022), um pedido por segundo.
  */
-import { acervoDocumentos, acervoNovidades, organization, processos, radarPrecedentes, withTenant, type Database } from "@decreta/db";
+import { acervoDocumentos, acervoNovidades, acervoSincronizacoes, organization, processos, radarPrecedentes, withTenant, type Database } from "@decreta/db";
 import { listarNoBnp, type PrecedenteDoBnp } from "@decreta/tribunais";
 import { and, eq, gte, inArray, isNotNull, like, not, or, sql } from "drizzle-orm";
 import { guardarPrecedente } from "./acervo.ts";
@@ -20,7 +20,6 @@ export interface DepsDoRadar {
   fetch?: typeof fetch;
   log?: Log;
   dormir?: (ms: number) => Promise<void>;
-  agora?: Date;
 }
 
 /** O que o plano pede do BNP. Os repetitivos do STJ vêm pelo Temas.csv, toda semana. */
@@ -31,8 +30,6 @@ const ESPECIES = [
   ...["TJSC", "TRT12", "TRF04"].flatMap((orgao) => ["IRDR", "IAC"].map((tipo) => ({ orgao, tipo }))),
 ];
 
-/** Precedente novo no acervo só é novidade se mudou no BNP nos últimos 30 dias: a primeira carga não vira enxurrada. */
-const JANELA_DE_NOVO_DIAS = 30;
 const PAUSA_MS = 1000;
 
 /** A chave da citação: a mesma que o "Verificar peça" usa ("sumula:STJ:297", "tema:STF:69", "irdr:TJSC:37"). */
@@ -56,16 +53,17 @@ export function rotuloDoPrecedente(chave: string): string {
   return `${tipo.toUpperCase()} ${numero} do ${orgao}`;
 }
 
-const diaMenos = (d: Date, dias: number) => new Date(d.getTime() - dias * 86_400_000).toISOString().slice(0, 10);
-
 /**
- * Sincroniza as espécies do BNP no acervo e anota as novidades. Uma espécie que
+ * Sincroniza as espécies do BNP no acervo e anota as novidades: o precedente que
+ * aparece numa espécie já carregada e a situação que muda. A primeira carga de
+ * cada espécie é a base, sem novidade — a data de atualização do BNP não serve
+ * para isso, porque o BNP inteiro aparece como atualizado há pouco. Uma espécie que
  * falha não apaga nada: o acervo fica com a última versão dela, as outras
  * seguem, e o erro sobe no fim para a rotina tentar de novo.
  */
 export async function sincronizarPrecedentesDoBnp(deps: DepsDoRadar): Promise<{ precedentes: number; novidades: number }> {
   const dormir = deps.dormir ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
-  const recente = diaMenos(deps.agora ?? new Date(), JANELA_DE_NOVO_DIAS);
+  const carregadas = new Set((await deps.db.select({ especie: acervoSincronizacoes.especie }).from(acervoSincronizacoes)).map((s) => s.especie));
   const falhas: string[] = [];
   let precedentes = 0;
   let novidades = 0;
@@ -79,18 +77,21 @@ export async function sincronizarPrecedentesDoBnp(deps: DepsDoRadar): Promise<{ 
       falhas.push(`${especie.orgao}/${especie.tipo}`);
       continue;
     }
-    if (!lista.length) continue;
+    const nome = `${especie.orgao}/${especie.tipo}`;
+    const base = !carregadas.has(nome);
     const chaves = lista.map(chaveDoPrecedente);
-    const antes = new Map((await deps.db.select({ chave: acervoDocumentos.chave, situacao: acervoDocumentos.situacao }).from(acervoDocumentos).where(inArray(acervoDocumentos.chave, chaves))).map((d) => [d.chave, d.situacao]));
+    const guardados = chaves.length ? await deps.db.select({ chave: acervoDocumentos.chave, situacao: acervoDocumentos.situacao }).from(acervoDocumentos).where(inArray(acervoDocumentos.chave, chaves)) : [];
+    const antes = new Map(guardados.map((d) => [d.chave, d.situacao]));
     const novas: (typeof acervoNovidades.$inferInsert)[] = [];
     for (const [j, p] of lista.entries()) {
       const chave = chaves[j]!;
       const situacaoAntes = antes.get(chave);
-      const mudou = situacaoAntes !== undefined ? situacaoAntes !== p.situacao : (p.atualizadoEm ?? "") >= recente;
+      const mudou = situacaoAntes !== undefined ? situacaoAntes !== p.situacao : !base;
       if (mudou && p.situacao) novas.push({ chave, situacaoAntes: situacaoAntes ?? null, situacao: p.situacao });
       await guardarPrecedente(deps.db, chave, p);
     }
     if (novas.length) await deps.db.insert(acervoNovidades).values(novas);
+    await deps.db.insert(acervoSincronizacoes).values({ especie: nome }).onConflictDoUpdate({ target: acervoSincronizacoes.especie, set: { ultimaEm: sql`now()` } });
     precedentes += lista.length;
     novidades += novas.length;
   }
