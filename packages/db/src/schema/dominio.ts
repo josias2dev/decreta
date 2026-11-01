@@ -531,6 +531,25 @@ export const documentos = pgTable(
 
 export const situacaoPeca = pgEnum("situacao_peca", ["rascunho", "revisada"]);
 
+/** Selo de cada citação da peça, conferida no acervo. */
+export type SeloDaCitacao = "verificada" | "com_ressalva" | "nao_verificada";
+
+export interface VerificacaoDaPeca {
+  em: string;
+  /** sha256 do texto conferido: mudou o texto, a verificação deixa de valer. */
+  hashDoTexto: string;
+  resumo: { verificadas: number; comRessalva: number; naoVerificadas: number };
+  citacoes: {
+    chave: string;
+    trecho: string;
+    inicio: number;
+    selo: SeloDaCitacao;
+    motivo: string;
+    texto: string | null;
+    fonte: { nome: string; url: string; capturadoEm: string } | null;
+  }[];
+}
+
 export const pecas = pgTable(
   "pecas",
   {
@@ -555,6 +574,8 @@ export const pecas = pgTable(
     modelos: jsonb("modelos").$type<string[]>().notNull().default([]),
     /** O texto como a IA entregou na última geração; nulo na peça escrita à mão. */
     textoGerado: text("texto_gerado"),
+    /** A última verificação das citações ("Verificar peça"), com o hash do texto que foi conferido. */
+    verificacao: jsonb("verificacao").$type<VerificacaoDaPeca>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

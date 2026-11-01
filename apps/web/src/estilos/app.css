@@ -426,6 +426,22 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-revisoes__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; font: 400 13px/19px var(--font-sans); color: var(--tinta-2); }
 .dc-revisoes__texto strong { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
 .dc-celular .dc-revisoes__texto { font-size: 14px; line-height: 20px; }
+/* Verificar peça: o selo de cada citação. Verde só para a conferida; âmbar para a ressalva; cinza para o que está fora do acervo. */
+.dc-citacoes { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4) var(--space-4); }
+.dc-citacoes__nota { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--tinta-2); }
+.dc-citacoes__lista { margin: 0; padding: 0; list-style: none; }
+.dc-citacoes__item { display: grid; grid-template-columns: 16px minmax(0, 1fr); align-items: start; gap: var(--space-3); padding: 10px 0; }
+.dc-citacoes__item + .dc-citacoes__item { border-top: 1px solid var(--borda); }
+.dc-citacoes__item > svg { width: 16px; height: 16px; margin-top: 2px; color: var(--tinta-2); }
+.dc-citacoes__item--verificada > svg, .dc-citacoes__item--verificada .dc-citacoes__selo { color: var(--cumprido); }
+.dc-citacoes__item--com_ressalva > svg, .dc-citacoes__item--com_ressalva .dc-citacoes__selo { color: var(--hoje); }
+.dc-citacoes__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; font: 400 13px/19px var(--font-sans); color: var(--tinta-2); overflow-wrap: anywhere; }
+.dc-citacoes__texto strong { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-citacoes__selo { font: 600 11px/16px var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--tinta-2); }
+.dc-citacoes__texto a { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; color: var(--acento); text-decoration: none; }
+.dc-citacoes__texto a:hover { text-decoration: underline; }
+.dc-citacoes__texto a svg { width: 12px; height: 12px; }
+.dc-celular .dc-citacoes__texto, .dc-celular .dc-citacoes__nota { font-size: 14px; line-height: 20px; }
 .dc-dialogo--versoes { width: min(760px, calc(100vw - 32px)); }
 .dc-dialogo--versoes > .dc-segmentos { align-self: flex-start; }
 .dc-versao { border-radius: var(--radius-md); }
