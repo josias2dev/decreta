@@ -6,5 +6,8 @@ export * from "./conferencia.ts";
 export * from "./datas.ts";
 export * from "./documentos.ts";
 export * from "./peca.ts";
+export * from "./pjecalc.ts";
 export * from "./prazos.ts";
+export * from "./previdenciario.ts";
 export * from "./publicacao.ts";
+export * from "./revisional.ts";

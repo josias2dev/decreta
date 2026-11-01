@@ -210,7 +210,8 @@ export function indicesNecessarios(pedido: PedidoDeAtualizacao): { indices: Arra
   return { indices, de, ate };
 }
 
-const reais = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/** "R$ 1.025,05" */
+export const reais = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const diaBr = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}/${dia.slice(0, 4)}`;
 
 function regimeEmTexto(regime: Regime): string {
@@ -254,7 +255,7 @@ function periodo(meses: Mes[]): string {
   return meses.length === 1 ? mesEmTexto(meses[0]!) : `${mesEmTexto(meses[0]!)} a ${mesEmTexto(meses.at(-1)!)}`;
 }
 
-export const numeroBr = (v: number, casas = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: Math.max(casas, 6) });
+export const numeroBr = (v: number, casas = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
 
 /** Soma de percentuais sem o resíduo do ponto flutuante (0,1 + 0,2 = 0,3). */
 const somaExata = (valores: number[]) => Math.round(valores.reduce((s, v) => s + v, 0) * 1e8) / 1e8;
