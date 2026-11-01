@@ -4,5 +4,8 @@ export * from "./datajud.ts";
 export * from "./djen.ts";
 export * from "./ibge.ts";
 export * from "./normas.ts";
+export * from "./olinda.ts";
 export * from "./receita.ts";
+export * from "./sgs.ts";
+export * from "./sidra.ts";
 export * from "./stj.ts";
