@@ -9,6 +9,7 @@ import { registrar } from "./auditoria.ts";
 import { ehContaDaDemonstracao } from "./demonstracao/slug.ts";
 import { PAPEL, type Mailer } from "./email.ts";
 import type { Env } from "./env.ts";
+import { AVISO_DOS_CONVITES, CONVITES_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
 
 /** O que a conta da demonstração não muda, para ninguém trancar os outros do lado de fora. */
 const FIXOS_NA_DEMONSTRACAO = new Set(["/change-password", "/change-email", "/two-factor/enable", "/delete-user"]);
@@ -60,6 +61,14 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
           if (s && ehContaDaDemonstracao(s.user.email)) {
             throw new APIError("FORBIDDEN", { code: "DEMONSTRACAO", message: "Na demonstração a senha, o e-mail e a verificação em duas etapas não mudam: todo mundo entra com a mesma conta." });
           }
+          return;
+        }
+        if (ctx.path === "/organization/invite-member") {
+          const s = await getSessionFromCtx(ctx);
+          const orgId = (ctx.body as { organizationId?: string } | undefined)?.organizationId ?? (s?.session as { activeOrganizationId?: string | null } | undefined)?.activeOrganizationId;
+          if (!orgId) return;
+          const [org] = await db.select({ emAvaliacao: schema.organization.emAvaliacao }).from(schema.organization).where(eq(schema.organization.id, orgId));
+          if (org?.emAvaliacao && !CONVITES_EM_AVALIACAO.permitir(orgId)) throw new APIError("TOO_MANY_REQUESTS", { code: "TETO_EM_AVALIACAO", message: AVISO_DOS_CONVITES });
           return;
         }
         if (ctx.path !== "/sign-up/email") return;

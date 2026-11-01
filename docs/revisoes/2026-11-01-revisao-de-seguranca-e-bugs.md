@@ -96,7 +96,26 @@ Não houve achado **crítico**: a RLS cobre todas as tabelas de domínio, nenhum
 - `anexar` duas vezes cria segundo documento e troca o `documentoId` do relatório PJe-Calc; o radar corta em 100 avisos sem avisar; INSERTs com `processoId`/`clienteId`/`responsavelId` de fora não conferem o escritório (a RLS impede a leitura, mas apagar no outro escritório anula linhas deste).
 - A revisão das fontes externas (DJEN, DataJud, SGS/SIDRA/Olinda) travou antes de terminar; o que conferi à mão: todo `fetch` tem timeout, a busca no acervo é parametrizada, a demonstração não sai à rede. Fica por fazer uma leitura dedicada de `djen.ts`, `datajud.ts` e `captura.ts`.
 
+## 2.1. Cadastro aberto (publicado no mesmo dia)
+
+Corrigido na revisão, antes de publicar:
+
+- **Número e e-mail do Decreta como relé:** a conta nasce sem ninguém conferir quem é, e a OAB é só declarada. Sem teto, dava para mandar texto livre a qualquer telefone pelo WhatsApp do Decreta e convites a qualquer e-mail, com o nome do escritório escolhido por quem cadastrou. Agora o escritório do cadastro nasce **em avaliação** (`organization.em_avaliacao`): até 10 mensagens de WhatsApp e 5 convites por dia, e no máximo 60 e 30 somando todos os em avaliação. Ver `servicos/em-avaliacao.ts`.
+- **IA do site esgotada por contas novas:** duas contas gastavam o teto diário do site inteiro. Em avaliação, o escritório fica no mesmo teto da demonstração (US$ 0,50 por dia).
+- **Sessão forçada por outro site:** um formulário de fora podia criar a conta e abrir no navegador da vítima a sessão do atacante. `/api/cadastro` agora recusa formulário de outra origem e corpo acima de 16 KB, e a senha vai até 128 caracteres.
+
+Para liberar um escritório: `update organization set em_avaliacao = false where slug = '...'`.
+
+Em aberto:
+
+- **Médio — e-mail não confirmado:** dá para cadastrar com o e-mail de outra pessoa. Ela recupera a conta pela redefinição de senha, que derruba as sessões, mas a verificação em duas etapas ligada por quem cadastrou continua e a tranca do lado de fora. Confirmar o e-mail antes de abrir a conta resolve.
+- **Médio — leitura de publicações em segundo plano:** não passa pelos tetos do site. Uma conta nova que declare uma OAB com muitas publicações gasta IA até o teto do projeto no gateway, e aí a leitura para para todos os escritórios.
+- **Baixo — volume por conta nova:** não há teto de OABs consultadas no DJEN nem de espaço em documentos.
+- **Baixo — e-mail já cadastrado:** o 409 revela que o e-mail tem conta; só o limite de 10 pedidos por hora por endereço segura a enumeração.
+
 ## 3. Depende de você
+
+- **Cobrança e duração do acesso de contas novas:** hoje o cadastro não tem período de teste nem pagamento, e o escritório em avaliação fica assim até alguém liberar à mão.
 
 - **`BACKUP_KEY` vazia no `.env` do servidor:** o timer `decreta-backup` está desligado e o serviço falha ("expected string to have >=40 characters"). Criar uma chave com 40 caracteres ou mais, guardá-la fora do servidor, e ligar o timer (`sudo systemctl enable --now decreta-backup.timer`). Até lá, o backup é só o manual que faço antes de cada deploy (`/var/backups/decreta/`).
 - **Chave de deploy do GitHub:** não instalada (a instalação em `authorized_keys` foi barrada). O workflow `deploy.yml` segue sem uso.

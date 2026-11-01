@@ -16,8 +16,8 @@ export interface EscritorioNovo {
   slug: string;
   tribunal?: string;
   timezone?: string;
-  /** Pelo cadastro aberto: a configuração inicial das telas fica pendente (`onboarding_concluido_em` nulo). */
-  onboarding?: boolean;
+  /** Pelo cadastro aberto: o escritório nasce em avaliação e a configuração inicial das telas fica pendente (`onboarding_concluido_em` nulo). */
+  cadastroAberto?: boolean;
   dono: { email: string; nome: string; senha: string; apelido?: string; cargo?: string; oabNumero?: string; oabUf?: string; whatsapp?: string };
 }
 
@@ -61,11 +61,11 @@ export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNov
 
   const organizationId = crypto.randomUUID();
   await db.transaction(async (tx) => {
-    await tx.insert(organization).values({ id: organizationId, name: e.nome, slug: e.slug, timezone: e.timezone ?? "America/Sao_Paulo" });
+    await tx.insert(organization).values({ id: organizationId, name: e.nome, slug: e.slug, timezone: e.timezone ?? "America/Sao_Paulo", emAvaliacao: !!e.cadastroAberto });
     await tx.insert(member).values({ id: crypto.randomUUID(), organizationId, userId: pessoa.id, role: "owner" });
   });
   await withTenant(db, organizationId, async (tx) => {
-    await tx.insert(escritorios).values({ organizationId, tribunal: e.tribunal ?? "TJSC", ...(e.onboarding ? { onboardingConcluidoEm: null } : {}) });
+    await tx.insert(escritorios).values({ organizationId, tribunal: e.tribunal ?? "TJSC", ...(e.cadastroAberto ? { onboardingConcluidoEm: null } : {}) });
     await tx.insert(equipe).values({
       organizationId,
       userId: pessoa.id,

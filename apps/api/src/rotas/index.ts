@@ -40,10 +40,11 @@ export function createRotas(deps: DepsDasRotas) {
     // O escritório ativo fica gravado na sessão; confere que o vínculo ainda existe.
     const papel = await ehMembro(db, orgId, sessao.user.id);
     if (!papel) return c.json({ erro: "sem_escritorio" }, 403);
-    const [org] = await db.select({ nome: organization.name, slug: organization.slug, timezone: organization.timezone }).from(organization).where(eq(organization.id, orgId));
+    const [org] = await db.select({ nome: organization.name, slug: organization.slug, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao }).from(organization).where(eq(organization.id, orgId));
     c.set("orgId", orgId);
     c.set("orgNome", org?.nome ?? "");
     c.set("demonstracao", org?.slug === SLUG_DA_DEMONSTRACAO);
+    c.set("emAvaliacao", org?.emAvaliacao ?? false);
     c.set("timezone", org?.timezone ?? "America/Sao_Paulo");
     c.set("userId", sessao.user.id);
     c.set("userNome", sessao.user.name || sessao.user.email);

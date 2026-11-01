@@ -101,6 +101,8 @@ export const organization = pgTable("organization", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   metadata: text("metadata"),
   timezone: text("timezone").notNull().default("America/Sao_Paulo"),
+  /** Nasceu pelo cadastro aberto e ainda não foi liberado: tetos menores no que sai para terceiros e na IA (ver `servicos/em-avaliacao.ts`). */
+  emAvaliacao: boolean("em_avaliacao").notNull().default(false),
 });
 
 export const member = pgTable(

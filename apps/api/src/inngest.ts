@@ -25,6 +25,7 @@ import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
 import { sincronizarTemasDoStj } from "./servicos/acervo.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
+import { WHATSAPP_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
 import { cruzarRadar, sincronizarPrecedentesDoBnp } from "./servicos/radar.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
@@ -77,7 +78,7 @@ export interface DepsDasRotinas {
 
 /** Os escritórios das rotinas. A demonstração fica de fora: nada dela sai para o DJEN, o DataJud ou o WhatsApp. */
 async function escritoriosAtivos(db: Database) {
-  return db.select({ id: organization.id, timezone: organization.timezone }).from(organization).where(ne(organization.slug, SLUG_DA_DEMONSTRACAO));
+  return db.select({ id: organization.id, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao }).from(organization).where(ne(organization.slug, SLUG_DA_DEMONSTRACAO));
 }
 
 export function createFunctions(deps: DepsDasRotinas) {
@@ -280,6 +281,7 @@ export function createFunctions(deps: DepsDasRotinas) {
             for (const p of pessoas.values()) {
               if (!p.whatsapp || !p.avisoManha || ja.has(p.id)) continue;
               const texto = resumoDaManha(painel, p, deps.telas);
+              if (texto && org.emAvaliacao && !WHATSAPP_EM_AVALIACAO.permitir(org.id)) continue;
               let ok = true;
               let erro: string | null = null;
               if (texto) {

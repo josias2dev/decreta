@@ -19,6 +19,8 @@ export type Vars = {
   orgNome: string;
   /** Escritório de demonstração: sem DJEN nem DataJud. */
   demonstracao: boolean;
+  /** Nasceu pelo cadastro aberto e ainda não foi liberado (ver `servicos/em-avaliacao.ts`). */
+  emAvaliacao: boolean;
   timezone: string;
   userId: string;
   userNome: string;
@@ -81,7 +83,7 @@ export function falha(status: 400 | 403 | 404 | 409 | 410 | 422 | 429 | 503, err
 /** Por que a IA não pode atender esta pessoa agora (ver `motivoParaBarrar`), ou `null`. */
 export async function motivoDaIa(c: C, deps: DepsDasRotas, mensagem = false): Promise<string | null> {
   const uso = await usoDoDia(deps.db, { organizationId: c.get("orgId"), userId: c.get("userId") });
-  return motivoParaBarrar(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), mensagem });
+  return motivoParaBarrar(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), emAvaliacao: c.get("emAvaliacao"), mensagem });
 }
 
 /**

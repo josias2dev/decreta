@@ -13,6 +13,7 @@ import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { ultimaAnalise } from "../servicos/analises.ts";
 import { enviarWhatsapp } from "../servicos/avisos.ts";
+import { AVISO_DO_WHATSAPP, WHATSAPP_EM_AVALIACAO } from "../servicos/em-avaliacao.ts";
 import { ultimaConferencia } from "../servicos/conferencia.ts";
 import { semIa, ClienteSemIa } from "../servicos/contexto.ts";
 import { hashDoSegredo, VALIDADE_DO_LINK_DIAS } from "./envio-pelo-cliente.ts";
@@ -212,6 +213,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
       if (!para) falha(422, "sem_telefone", "O cliente não tem um celular válido no cadastro.");
       const texto = (b.texto ?? l.m.texto).trim();
       if (texto.length < 2) falha(422, "texto_vazio", "A mensagem está vazia. Escreva o que o cliente precisa saber.");
+      if (c.get("emAvaliacao") && !WHATSAPP_EM_AVALIACAO.permitir(c.get("orgId"))) falha(429, "teto_em_avaliacao", AVISO_DO_WHATSAPP);
       const agora = new Date();
       // Cobrança: o link de envio nasce agora, na aprovação, e vale até o fim do 7º dia no fuso do
       // escritório, como a mensagem diz. O banco guarda só o hash do segredo.

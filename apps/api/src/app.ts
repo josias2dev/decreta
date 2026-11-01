@@ -1,7 +1,9 @@
 import { invitation, organization, user, type Database } from "@decreta/db";
 import { eq, sql } from "drizzle-orm";
 import { Hono, type Context } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
+import { csrf } from "hono/csrf";
 import { HTTPException } from "hono/http-exception";
 import { join, resolve, sep } from "node:path";
 import { z } from "zod";
@@ -58,9 +60,11 @@ export function createApp(deps: AppDeps) {
     app.use("/api/auth/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "OPTIONS"] }));
     app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
     app.use("/api/cadastro", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["POST", "OPTIONS"] }));
+    // Formulário de outro site não entra: sem isso, ele abriria no navegador de alguém a sessão de uma conta do atacante.
+    app.use("/api/cadastro", csrf({ origin: env.WEB_ORIGIN }));
     // Cadastro aberto: poucos escritórios por hora de cada endereço, contra quem cria contas em série.
     app.use("/api/cadastro", limitarPorIp({ janelaMs: 60 * 60_000, maximo: 10 }, ipDoPedido));
-    app.post("/api/cadastro", (c) => cadastrar(c, db, auth, env, log));
+    app.post("/api/cadastro", bodyLimit({ maxSize: TETO_DO_CADASTRO_BYTES, onError: (c) => c.json({ erro: "muito_grande", detalhe: "Os dados passaram do tamanho aceito." }, 413) }), (c) => cadastrar(c, db, auth, env, log));
   }
 
   // Rotas sem login: poucos pedidos por minuto de cada endereço, contra quem tenta adivinhar um segredo ou token.
@@ -103,10 +107,12 @@ export function createApp(deps: AppDeps) {
   return app;
 }
 
+const TETO_DO_CADASTRO_BYTES = 16 * 1024;
+
 const CADASTRO = z.object({
   nome: z.string().trim().min(2, "Diga como você se chama.").max(120),
   email: z.string().trim().toLowerCase().email("Confira o e-mail.").max(200),
-  senha: z.string().min(10, "A senha precisa ter pelo menos 10 caracteres.").max(200),
+  senha: z.string().min(10, "A senha precisa ter pelo menos 10 caracteres.").max(128, "A senha pode ter até 128 caracteres."),
   escritorio: z.string().trim().min(2, "Diga o nome do escritório.").max(120),
 });
 
@@ -124,7 +130,7 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
   if (jaTem) return c.json({ erro: "email_em_uso", detalhe: "Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova." }, 409);
 
   const slug = await slugUnico(db, b.escritorio);
-  const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, onboarding: true, dono: { email: b.email, nome: b.nome, senha: b.senha } });
+  const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, dono: { email: b.email, nome: b.nome, senha: b.senha } });
   await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug }, ip: ipDoPedido(c) }, log);
 
   // A sessão abre pelo mesmo caminho do login (com o registro de "entrou"): o cookie vai na resposta.

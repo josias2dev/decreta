@@ -1,0 +1,2 @@
+ALTER TABLE "organization" ADD COLUMN "em_avaliacao" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "escritorios" ADD COLUMN "onboarding_concluido_em" timestamp with time zone DEFAULT now();

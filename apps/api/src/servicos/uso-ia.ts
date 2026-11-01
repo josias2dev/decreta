@@ -64,6 +64,7 @@ export class LimiteDaIa extends HTTPException {
 export const AVISOS = {
   minuto: "Você mandou muitas mensagens seguidas. Espere um minuto e mande de novo.",
   mensagensDoDia: (n: number) => `Você chegou ao limite de ${n} mensagens por dia no chat da IA. Amanhã, a partir da meia-noite, dá para mandar de novo.`,
+  emAvaliacao: "O escritório chegou ao limite de IA de hoje para contas novas. Amanhã, a partir da meia-noite, volta a funcionar. Fale com a equipe do Decreta para liberar.",
   demonstracao: "A demonstração chegou ao limite de uso da IA de hoje. Amanhã, a partir da meia-noite, volta a funcionar. O resto do Decreta continua aberto.",
   pessoa: "Você chegou ao limite de uso da IA de hoje. Amanhã, a partir da meia-noite, volta a funcionar.",
   site: "A IA do Decreta chegou ao limite de gasto de hoje. Amanhã, a partir da meia-noite, volta a funcionar. Os prazos das publicações novas continuam sendo lidos.",
@@ -146,11 +147,13 @@ export async function usoDoDia(db: Database, quem: { organizationId: string; use
  * Por que a IA não pode atender agora, ou `null` se pode. Na ordem do mais
  * específico para o mais geral, para o aviso dizer o que a pessoa pode fazer.
  */
-export function motivoParaBarrar(limites: LimitesDaIa, uso: UsoDoDia, quem: { demonstracao: boolean; mensagem: boolean }): string | null {
+export function motivoParaBarrar(limites: LimitesDaIa, uso: UsoDoDia, quem: { demonstracao: boolean; emAvaliacao?: boolean; mensagem: boolean }): string | null {
   const porDia = quem.demonstracao ? limites.demonstracao.mensagensPorDia : limites.mensagensPorDia;
   if (quem.mensagem && limites.mensagensPorMinuto && uso.mensagensNoMinuto >= limites.mensagensPorMinuto) return AVISOS.minuto;
   if (quem.mensagem && porDia && uso.mensagensHoje >= porDia) return AVISOS.mensagensDoDia(porDia);
   if (quem.demonstracao && limites.demonstracao.tetoUsd && uso.gastoEscritorioUsd >= limites.demonstracao.tetoUsd) return AVISOS.demonstracao;
+  // Conta nova do cadastro aberto: o mesmo teto da demonstração, para duas contas não gastarem o teto do site inteiro.
+  if (quem.emAvaliacao && limites.demonstracao.tetoUsd && uso.gastoEscritorioUsd >= limites.demonstracao.tetoUsd) return AVISOS.emAvaliacao;
   if (limites.tetoPessoaUsd && uso.gastoPessoaUsd >= limites.tetoPessoaUsd) return AVISOS.pessoa;
   if (limites.tetoSiteUsd && uso.gastoSiteUsd >= limites.tetoSiteUsd) return AVISOS.site;
   return null;
@@ -169,7 +172,7 @@ export interface QuantoResta {
 }
 
 /** O que a pessoa ainda tem de IA hoje, para a tela mostrar antes de o limite chegar. */
-export function quantoResta(limites: LimitesDaIa, uso: UsoDoDia, quem: { demonstracao: boolean }): QuantoResta {
+export function quantoResta(limites: LimitesDaIa, uso: UsoDoDia, quem: { demonstracao: boolean; emAvaliacao?: boolean }): QuantoResta {
   const porDia = quem.demonstracao ? limites.demonstracao.mensagensPorDia : limites.mensagensPorDia;
   const mensagens = porDia ? { restam: Math.max(0, porDia - uso.mensagensHoje), limite: porDia } : null;
   const fracoes = [

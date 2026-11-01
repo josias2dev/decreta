@@ -247,7 +247,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   /** Quanto a pessoa ainda tem de IA hoje: as mensagens do chat, o teto do dia e o aviso de que falta pouco. */
   app.get("/ia/uso", async (c) => {
     const uso = await usoDoDia(db, { organizationId: c.get("orgId"), userId: c.get("userId") });
-    return c.json(quantoResta(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao") }));
+    return c.json(quantoResta(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), emAvaliacao: c.get("emAvaliacao") }));
   });
 
   /* ---------------- Retorno sobre a IA ---------------- */

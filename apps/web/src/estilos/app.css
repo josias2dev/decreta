@@ -1244,8 +1244,8 @@ a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
 /* ---------- Começar (configuração inicial) ----------
    Uma etapa por tela, sem o menu em volta: a marca em cima, a barra das etapas e um cartão só, centrado. */
 .dc-comecar { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--papel); color: var(--tinta); }
-.dc-comecar__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: min(560px, 100%); min-height: 52px; margin: 0 auto; padding: 20px 16px 0; box-sizing: border-box; }
-.dc-comecar__pular { padding: 6px 10px; border: 0; border-radius: var(--radius-md); background: none; font: 500 13px/18px var(--font-sans); color: var(--tinta-3); cursor: pointer; transition: color .15s, background-color .15s; }
+.dc-comecar__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: min(592px, 100%); min-height: 52px; margin: 0 auto; padding: 20px 16px 0; box-sizing: border-box; }
+.dc-comecar__pular { margin-right: -10px; padding: 6px 10px; border: 0; border-radius: var(--radius-md); background: none; font: 500 13px/18px var(--font-sans); color: var(--tinta-3); cursor: pointer; transition: color .15s, background-color .15s; }
 .dc-comecar__pular:hover { color: var(--tinta); background: var(--superficie-2); }
 .dc-comecar__meio { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-5); width: 100%; padding: 36px 16px 48px; box-sizing: border-box; }
 .dc-comecar__progresso { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: min(560px, 100%); margin: 0; padding: 0; list-style: none; }

@@ -7,6 +7,7 @@ import type { Hono } from "hono";
 import { z } from "zod";
 import { listarRegistro, registrar } from "../auditoria.ts";
 import { enviarWhatsapp, resumoDaManha } from "../servicos/avisos.ts";
+import { AVISO_DO_WHATSAPP, WHATSAPP_EM_AVALIACAO } from "../servicos/em-avaliacao.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { textoDaPolitica, TITULO_DA_POLITICA } from "../servicos/politica-ia.ts";
@@ -258,6 +259,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
       eu: (await pessoasDoEscritorio(db, tx, c.get("orgId"))).get(c.get("userId")),
     }));
     if (!eu?.whatsapp) falha(422, "sem_whatsapp", "Cadastre o seu WhatsApp no seu perfil primeiro.");
+    if (c.get("emAvaliacao") && !WHATSAPP_EM_AVALIACAO.permitir(c.get("orgId"))) falha(429, "teto_em_avaliacao", AVISO_DO_WHATSAPP);
     const texto = resumoDaManha(painel, eu, deps.telas) ?? `Bom dia, ${eu.apelido}. Nada vence hoje no Decreta.`;
     await enviarWhatsapp(deps.wameow, eu.whatsapp, texto);
     return c.json({ ok: true, texto });

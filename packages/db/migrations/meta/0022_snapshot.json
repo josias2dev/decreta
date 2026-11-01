@@ -1,5 +1,5 @@
 {
-  "id": "d3b667f8-89e4-4a79-85ae-0b1708821b0c",
+  "id": "886d0581-1ff4-4b63-bc23-2dbcc24ff9bc",
   "prevId": "297264b9-a965-47b7-a889-06050443bc73",
   "version": "7",
   "dialect": "postgresql",
@@ -636,6 +636,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'America/Sao_Paulo'"
+        },
+        "em_avaliacao": {
+          "name": "em_avaliacao",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},
