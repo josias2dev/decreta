@@ -1239,3 +1239,4 @@ a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
    Cabeçalho das tabelas, grupos das listas, do histórico e da busca em caixa normal, como os grupos do menu.
    Os dias da semana dos calendários continuam em caixa alta. */
 .dc-tabela th, .dc-tabela td.dc-tabela__grupo, .dc-busca-grupo__titulo, .dc-historico__grupo h3, .dc-recentes__topo h3, .dc-chat__contexto-grupo h3, .dc-cartao-ia__bloco > h4, .dc-cartao-ia__dia > h4 { text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+.dc-md__host { font-size: 0.85em; color: var(--tinta-3); text-decoration: none; }

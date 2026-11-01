@@ -9,7 +9,23 @@ import { router } from "./router";
 
 // Erros das telas no navegador. O DSN entra no build (VITE_SENTRY_DSN no CI); sem ele, nada sai daqui.
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
-if (sentryDsn) Sentry.init({ dsn: sentryDsn, environment: "producao", tracesSampleRate: 0 });
+// O link de envio do cliente carrega o segredo no endereço: nem a URL da página nem a do pedido vão ao Sentry.
+const semSegredo = (url: string) => url.replace(/\/(enviar|api\/envio)\/[^/?#]+\/[^/?#]+/, "/$1/[omitido]/[omitido]");
+if (sentryDsn)
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: "producao",
+    tracesSampleRate: 0,
+    beforeSend: (evento) => {
+      if (evento.request?.url) evento.request.url = semSegredo(evento.request.url);
+      return evento;
+    },
+    beforeBreadcrumb: (migalha) => {
+      if (typeof migalha.data?.url === "string") migalha.data.url = semSegredo(migalha.data.url);
+      if (typeof migalha.data?.to === "string") migalha.data.to = semSegredo(migalha.data.to);
+      return migalha;
+    },
+  });
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({

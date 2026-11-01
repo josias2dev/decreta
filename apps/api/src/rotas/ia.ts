@@ -654,7 +654,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
           const itens = await citacoesDoTexto({ db, log: deps.log }, orgId, escrito, citadas);
           // "[3]" no texto sem uma citação conferida com esse número: também sai com selo, de não verificada.
           const numeros = new Set(conferidas.map((s) => Number(s.n)));
-          for (const m of escrito.matchAll(/\[(\d{1,2})\]/g)) {
+          // Só no modo Jurisprudência, onde "[n]" remete a uma citação; no Pergunte, "[1]" é só texto.
+          for (const m of b.modo === "jurisprudencia" ? escrito.matchAll(/\[(\d{1,2})\]/g) : []) {
             if (numeros.has(Number(m[1]))) continue;
             numeros.add(Number(m[1]));
             itens.push({ chave: `citacao:${m[1]}`, trecho: m[0], inicio: m.index!, selo: "nao_verificada", motivo: `A resposta remete a [${m[1]}], mas nenhuma citação com esse número foi conferida. Confira antes de usar.`, texto: null, fonte: null });

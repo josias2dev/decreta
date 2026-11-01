@@ -147,6 +147,14 @@ function VerCalculo({ id, processoId, aoFechar }: { id: string; processoId: stri
 type Regime = "civil" | "fazenda" | "contratual";
 type LinhaDeParcela = { descricao: string; valor: string; vencimento: string };
 
+/** "1,5" e "1.5" valem; "1,5." ou vazio, não: juros errados não podem virar 0% em silêncio. */
+function jurosAoMesDe(texto: string): number | null {
+  const limpo = texto.trim().replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(limpo)) return null;
+  const n = Number(limpo);
+  return Number.isFinite(n) && n <= 20 ? n : null;
+}
+
 function NovaAtualizacao({ p, aoFechar }: { p: Processo; aoFechar: (id?: string) => void }) {
   const qc = useQueryClient();
   const eu = useQuery(euQuery);
@@ -161,7 +169,7 @@ function NovaAtualizacao({ p, aoFechar }: { p: Processo; aoFechar: (id?: string)
         json: {
           processoId: p.id,
           titulo: f.titulo.trim(),
-          regime: f.regime === "civil" ? { tipo: "civil" } : f.regime === "fazenda" ? { tipo: "fazenda", ...(f.expedicao ? { expedicao: f.expedicao } : {}) } : { tipo: "contratual", indice: f.indice, jurosAoMes: Number(f.jurosAoMes.replace(",", ".")) || 0 },
+          regime: f.regime === "civil" ? { tipo: "civil" } : f.regime === "fazenda" ? { tipo: "fazenda", ...(f.expedicao ? { expedicao: f.expedicao } : {}) } : { tipo: "contratual", indice: f.indice, jurosAoMes: jurosAoMesDe(f.jurosAoMes) ?? 0 },
           dataDoCalculo: f.dataDoCalculo,
           ...(f.jurosDesde ? { jurosDesde: f.jurosDesde } : {}),
           parcelas: parcelas.map((x) => ({ descricao: x.descricao.trim(), valor: Number(paraValor(x.valor)), vencimento: x.vencimento })),
@@ -185,7 +193,7 @@ function NovaAtualizacao({ p, aoFechar }: { p: Processo; aoFechar: (id?: string)
           <Botao variante="fantasma" onClick={() => aoFechar()}>
             Cancelar
           </Botao>
-          <Botao variante="primaria" onClick={() => calcular.mutate()} ocupado={calcular.isPending} disabled={!prontas || !f.dataDoCalculo || f.titulo.trim().length < 2}>
+          <Botao variante="primaria" onClick={() => calcular.mutate()} ocupado={calcular.isPending} disabled={!prontas || !f.dataDoCalculo || f.titulo.trim().length < 2 || (f.regime === "contratual" && jurosAoMesDe(f.jurosAoMes) === null)}>
             Calcular
           </Botao>
         </>

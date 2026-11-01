@@ -10,7 +10,7 @@ import { Botao, Campo, Faixa, Painel } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { diaCurto, diaDoInstante } from "@/lib/formato";
 
-type TokenMcp = { id: string; nome: string; criadoEm: string; usadoEm: string | null };
+type TokenMcp = { id: string; nome: string; criadoEm: string; usadoEm: string | null; expiraEm: string };
 
 export function ConectorMcp() {
   const qc = useQueryClient();
@@ -41,7 +41,7 @@ export function ConectorMcp() {
     <Painel titulo="Conector MCP (só leitura)">
       <div className="dc-form">
         <p className="dc-nota m-0">
-          Um assistente de IA de fora consulta prazos, processos e publicações do escritório com as suas permissões, sem mudar nada. Os casos de cliente que recusou a IA ficam de fora. Endereço: <span className="dc-num">{endereco}</span>
+          Um assistente de IA de fora consulta prazos, processos e publicações do escritório com as suas permissões, sem mudar nada. Os casos de cliente que recusou a IA ficam de fora. Cada token vale 90 dias, e cada consulta fica no registro do escritório. Endereço: <span className="dc-num">{endereco}</span>
         </p>
         {novo && (
           <Faixa tipo="aviso">
@@ -55,7 +55,7 @@ export function ConectorMcp() {
                 <span className="dc-celula min-w-0 flex-1">
                   <span className="dc-celula__1">{t.nome}</span>
                   <span className="dc-celula__2">
-                    Criado em {diaCurto(diaDoInstante(t.criadoEm))} · {t.usadoEm ? `usado em ${diaCurto(diaDoInstante(t.usadoEm))}` : "ainda não usado"}
+                    Criado em {diaCurto(diaDoInstante(t.criadoEm))} · {t.usadoEm ? `usado em ${diaCurto(diaDoInstante(t.usadoEm))}` : "ainda não usado"} · vale até {diaCurto(diaDoInstante(t.expiraEm))}
                   </span>
                 </span>
                 <Botao variante="fantasma" pequeno onClick={() => revogar.mutate(t.id)} ocupado={revogar.isPending && revogar.variables === t.id}>

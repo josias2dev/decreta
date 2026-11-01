@@ -13,7 +13,9 @@ import { SELOS } from "./verificacao-da-peca";
 
 /** As citações da resposta, na ordem: primeiro as numeradas, depois as do texto. */
 export function citacoesDaResposta(partes: Parte[]): { conferidas: CitacaoConferida[]; doTexto: CitacaoVerificada[] } {
-  const conferidas = partes.flatMap((p) => (p.tipo === "ferramenta" && p.nome === "citar" && p.saida && typeof p.saida === "object" && !p.erro ? [p.saida as CitacaoConferida] : []));
+  const todas = partes.flatMap((p) => (p.tipo === "ferramenta" && p.nome === "citar" && p.saida && typeof p.saida === "object" && !p.erro ? [p.saida as CitacaoConferida] : []));
+  // O mesmo pedido repetido pela IA devolve a mesma citação (mesmo n): um cartão só.
+  const conferidas = [...new Map(todas.map((c) => [c.n, c])).values()];
   const doTexto = partes.flatMap((p) => (p.tipo === "citacoes" ? p.itens : []));
   return { conferidas: conferidas.sort((a, b) => a.n - b.n), doTexto };
 }

@@ -7,19 +7,22 @@ import { useParams } from "@tanstack/react-router";
 import { Camera, Check } from "lucide-react";
 import { useRef, useState } from "react";
 import { Botao, Carregando, Faixa } from "@/componentes/ui";
-import { API_URL } from "@/lib/api";
+import { API_URL, ApiError } from "@/lib/api";
 import { diaCompleto } from "@/lib/formato";
 import type { PedidoDeDocumentos } from "@/lib/tipos";
 
 const ERROS: Record<string, string> = {
   link_vencido: "Este link venceu. Peça um novo ao escritório pelo número oficial.",
   nao_encontrado: "Este link não existe. Confira se copiou o endereço inteiro.",
+  muitas_tentativas: "Muitos pedidos em pouco tempo. Espere um minuto e tente de novo.",
+  ocupado: "Muita gente enviando agora. Tente de novo em instantes.",
 };
 
+/** Erro com o status: link vencido ou inexistente é resposta esperada, não falha para o Sentry. */
 async function pedir<T>(caminho: string, init?: RequestInit): Promise<T> {
   const r = await fetch(`${API_URL}/api/envio${caminho}`, init);
   const corpo = (await r.json().catch(() => null)) as (T & { erro?: string; detalhe?: string }) | null;
-  if (!r.ok) throw new Error(ERROS[corpo?.erro ?? ""] ?? corpo?.detalhe ?? "Não deu certo agora. Tente de novo em alguns minutos.");
+  if (!r.ok) throw new ApiError(r.status, corpo?.erro ?? "falha", ERROS[corpo?.erro ?? ""] ?? corpo?.detalhe ?? "Não deu certo agora. Tente de novo em alguns minutos.");
   return corpo as T;
 }
 

@@ -281,14 +281,16 @@ export async function perguntar(corpo: { texto: string; modo: Modo; conversaId?:
   let terminou = false;
   const linha = (l: string) => {
     if (!l.trim()) return;
+    let e: Evento | { t: "ping" };
     try {
-      const e = JSON.parse(l) as Evento | { t: "ping" };
-      if (e.t === "ping") return;
-      if (e.t === "fim") terminou = true;
-      aoChegar(e);
+      e = JSON.parse(l) as Evento | { t: "ping" };
     } catch {
-      // linha cortada: ignora
+      // linha cortada: ignora. Um erro ao tratar o evento, não: esse sobe.
+      return;
     }
+    if (e.t === "ping") return;
+    if (e.t === "fim") terminou = true;
+    aoChegar(e);
   };
   for (;;) {
     let relogio: ReturnType<typeof setTimeout> | undefined;

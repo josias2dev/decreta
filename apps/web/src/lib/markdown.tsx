@@ -172,9 +172,18 @@ function Ligacao({ href, children }: { href: string; children: ReactNode }) {
     );
   }
   if (/^https?:\/\//i.test(alvo)) {
+    // Link de fora escrito pela IA: o domínio aparece ao lado do rótulo, para a pessoa ver aonde vai antes de clicar.
+    const host = (() => {
+      try {
+        return new URL(alvo).hostname.replace(/^www\./, "");
+      } catch {
+        return null;
+      }
+    })();
     return (
       <a className="dc-md__link" href={alvo} target="_blank" rel="noopener noreferrer">
         {children}
+        {host && <span className="dc-md__host"> ({host})</span>}
       </a>
     );
   }

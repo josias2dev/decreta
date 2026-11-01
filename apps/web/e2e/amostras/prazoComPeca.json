@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/e3bbd072-1444-46c4-a462-cd0769b9c1a5",
+  "path": "/prazos/96a05d35-fb28-4539-8061-30a469f1d652",
   "corpo": {
-    "id": "e3bbd072-1444-46c4-a462-cd0769b9c1a5",
+    "id": "96a05d35-fb28-4539-8061-30a469f1d652",
     "tipo": "Alegações finais",
     "fundamento": "art. 364, § 2º, CPC",
     "dias": 15,
@@ -21,14 +21,14 @@
     "origem": "ia",
     "confirmado": true,
     "confirmadoPor": {
-      "id": "iEGwiChNxMwQWJlF09l3W8y81gr2lzzc",
+      "id": "O1vE4LOqHlPy9IurJVJdv48sfPE1XD1J",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
       "foto": "/demonstracao/beatriz.jpg"
     },
     "responsavel": {
-      "id": "iEGwiChNxMwQWJlF09l3W8y81gr2lzzc",
+      "id": "O1vE4LOqHlPy9IurJVJdv48sfPE1XD1J",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
@@ -60,7 +60,7 @@
       "certidaoDe": null,
       "tempestividade": "A intimação foi disponibilizada no Diário de Justiça Eletrônico Nacional (DJEN) em 06/10/2026 e considera-se publicada em 07/10/2026, primeiro dia útil seguinte (Lei 11.419/2006, art. 4º, § 3º). O prazo de 15 dias úteis (CPC, art. 219) começou a correr em 08/10/2026 (Lei 11.419/2006, art. 4º, § 4º) e termina em 29/10/2026, excluídos os sábados, os domingos e o dia 12/10/2026 (Nossa Senhora Aparecida). Apresentada até 29/10/2026, a presente peça é tempestiva.",
       "confirmadoPor": {
-        "id": "iEGwiChNxMwQWJlF09l3W8y81gr2lzzc",
+        "id": "O1vE4LOqHlPy9IurJVJdv48sfPE1XD1J",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -70,7 +70,7 @@
     },
     "conferencia": null,
     "processo": {
-      "id": "a9169721-5fcc-4136-8152-9ec3962773fd",
+      "id": "83ba5cdf-e7cd-4393-9305-7db86309c50b",
       "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
       "cnj": "5009876-57.2025.8.24.0038",
       "orgao": "4ª Vara Cível",
@@ -80,7 +80,7 @@
       "semIa": false
     },
     "publicacao": {
-      "id": "d1d62f09-78f3-4f00-9564-2e9fe9d15d98",
+      "id": "2a907634-aa4a-4d0a-af6c-384f4b53c5ec",
       "fonte": "djen",
       "texto": "Encerrada a instrução, concedo às partes o prazo sucessivo de 15 (quinze) dias para apresentação de alegações finais por memoriais.",
       "disponibilizadaEm": "2026-10-06",
@@ -95,10 +95,10 @@
     "pecaContraria": null,
     "pecas": [
       {
-        "id": "89790f19-4ff0-4202-bfdb-7e429cfb5dff",
+        "id": "45a066c3-6038-48ad-b40a-511d2bbffb39",
         "titulo": "Alegações finais · Roberto Kühn",
         "situacao": "rascunho",
-        "atualizadaEm": "2026-11-01T03:03:52.654Z",
+        "atualizadaEm": "2026-11-01T13:53:15.252Z",
         "preparadaPelaIa": false
       }
     ],

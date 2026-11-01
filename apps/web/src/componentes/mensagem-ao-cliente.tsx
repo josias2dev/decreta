@@ -26,7 +26,16 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
   const busca = "prazo" in filtro ? `prazo=${filtro.prazo}` : `cliente=${filtro.cliente}`;
   const chave = ["mensagens-cliente", busca];
   const q = useQuery({ queryKey: chave, queryFn: () => api<{ itens: MensagemAoCliente[] }>(`/mensagens-cliente?${busca}`) });
-  const atualizar = () => void qc.invalidateQueries({ queryKey: ["mensagens-cliente"] });
+  // Devolve a promessa: o botão só reabilita depois que a lista nova chegou.
+  const atualizar = () => qc.invalidateQueries({ queryKey: ["mensagens-cliente"] });
+  const invalidar = useMutation({
+    mutationFn: (id: string) => api(`/mensagens-cliente/${id}/invalidar-link`, { method: "POST" }),
+    onSuccess: async () => {
+      await atualizar();
+      avisar("Link invalidado. Quem o abrir vai ver que venceu.");
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
   const novo = useMutation({
     mutationFn: () => api<MensagemAoCliente>(gerar!.caminho, { method: "POST" }),
     onSuccess: atualizar,
@@ -60,6 +69,16 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
               Enviada{m.aprovadaPor ? ` por ${m.aprovadaPor.apelido}` : ""} em {diaCurto(diaDoInstante(m.enviadaEm ?? m.criadaEm))} às {hora(m.enviadaEm ?? m.criadaEm)}
               {m.para ? ` para ${m.para}` : ""}
               {m.tipo === "documentos" ? ` · ${m.recebidos === 1 ? "1 arquivo recebido" : `${m.recebidos} arquivos recebidos`}` : ""}
+              {m.tipo === "documentos" && m.linkValeAte && new Date(m.linkValeAte).getTime() > Date.now() && (
+                <>
+                  {" · link vale até "}
+                  {diaCurto(diaDoInstante(m.linkValeAte))}
+                  {" · "}
+                  <button type="button" className="dc-link" title="Para o link mandado ao número errado, ou quando o cliente já mandou tudo" onClick={() => invalidar.mutate(m.id)} disabled={invalidar.isPending}>
+                    Invalidar link
+                  </button>
+                </>
+              )}
             </span>
           </p>
         ))}
