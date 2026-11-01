@@ -31,7 +31,7 @@ export function PecaPage() {
   const avisar = useAviso();
   const eu = useQuery(euQuery);
 
-  const [tipoEscolhido, setTipo] = useState<string | null>(null);
+  const [tipoEscolhido, setTipo] = useState<string | null>(search.tipo ?? null);
   const pecaSalva = useQuery({ queryKey: ["peca", search.id], queryFn: () => api<Peca>(`/pecas/${search.id}`), enabled: !!search.id });
   const prazoId = search.prazo ?? pecaSalva.data?.prazoId ?? undefined;
   const processoId = search.processo ?? pecaSalva.data?.processoId;

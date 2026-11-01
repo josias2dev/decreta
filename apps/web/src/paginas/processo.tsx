@@ -1,10 +1,11 @@
-/** Ficha do processo: resumo da IA, movimentações, prazos, documentos e o chat dos autos. */
+/** Ficha do processo: resumo da IA, movimentações, prazos, documentos, cálculos e o chat dos autos. */
 import { limparCnpj } from "@decreta/core";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { ArrowRight, Download, ExternalLink, FileText, LoaderCircle, MessageSquare, Plus, RefreshCw, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { AbaCalculos } from "@/componentes/calculos";
 import { DaReceita, documentoDigitado, useEmpresa, usePreencher } from "@/componentes/campos-cliente";
 import { Conversa } from "@/componentes/conversa";
 import { Dialogo } from "@/componentes/dialogo";
@@ -22,8 +23,8 @@ import { diaCompleto, diaCurto, diaDoInstante, diaMes, diasDesde, dinheiro, hora
 import type { Conversa as ConversaDaApi, Documento, ListaDePrazos, Movimentacao, Movimentacoes, Parte, Processo, ResumoDosAutos } from "@/lib/tipos";
 import { Situacao } from "./prazos";
 
-export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos" | "chat";
-export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "chat"];
+export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos" | "calculos" | "chat";
+export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "calculos", "chat"];
 
 const POLO = { ativo: "Polo ativo", passivo: "Polo passivo", terceiro: "Terceiro" } as const;
 const SITUACAO = { ativo: "Ativo", suspenso: "Suspenso", arquivado: "Arquivado", encerrado: "Encerrado" } as const;
@@ -69,8 +70,8 @@ export function ProcessoPage() {
         { id: "movimentacoes", rotulo: "Movimentações", n: celular ? undefined : p.contadores.movimentacoes },
         { id: "prazos", rotulo: "Prazos", n: celular ? undefined : p.contadores.prazos },
         { id: "documentos", rotulo: "Documentos", n: celular ? undefined : p.contadores.documentos },
-        // No celular o chat abre pelo botão Perguntar, em tela própria.
-        ...(celular ? [] : [{ id: "chat" as const, rotulo: "Chat do processo" }]),
+        // No celular o chat abre pelo botão Perguntar, em tela própria; os cálculos ficam no computador.
+        ...(celular ? [] : [{ id: "calculos" as const, rotulo: "Cálculos" }, { id: "chat" as const, rotulo: "Chat do processo" }]),
       ]}
     />
   );
@@ -83,6 +84,8 @@ export function ProcessoPage() {
       <AbaPrazos p={p} celular={celular} />
     ) : aba === "documentos" ? (
       <AbaDocumentos p={p} celular={celular} />
+    ) : aba === "calculos" ? (
+      <AbaCalculos p={p} />
     ) : (
       <AbaChat p={p} celular={celular} />
     );

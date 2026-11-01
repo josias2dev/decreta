@@ -84,10 +84,12 @@ const publicacaoRoute = createRoute({ getParentRoute: () => appRoute, path: "/pu
 const pecaRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/pecas",
-  validateSearch: (s: Record<string, unknown>): { prazo?: string; processo?: string; id?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { prazo?: string; processo?: string; id?: string; tipo?: string } => ({
     ...(texto(s.prazo, 40) ? { prazo: texto(s.prazo, 40) } : {}),
     ...(texto(s.processo, 40) ? { processo: texto(s.processo, 40) } : {}),
     ...(texto(s.id, 40) ? { id: texto(s.id, 40) } : {}),
+    // Peça já escolhida por quem chamou (o cumprimento de sentença, da aba Cálculos).
+    ...(texto(s.tipo, 60) ? { tipo: texto(s.tipo, 60) } : {}),
   }),
   component: PecaPage,
 });
