@@ -130,6 +130,10 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     expect(m.previa).toStartWith("*Souza & Mendes Advocacia*");
     mensagemId = m.id;
     expect(zap.enviados).toHaveLength(0);
+    // De onde veio o rascunho: o modelo e o prompt, para responder por ele depois.
+    const [linha] = await t.owner<{ procedencia: { codigo: string; chamadas: unknown[] } }[]>`select procedencia from mensagens_cliente where id = ${m.id}`;
+    expect(linha!.procedencia.chamadas).toEqual([expect.objectContaining({ metodo: "mensagem-cliente", modelo: "modelo-de-teste" })]);
+    expect(linha!.procedencia.codigo).toMatch(/^[0-9a-f]{7,}$/);
   });
 
   test("editar o rascunho não envia", async () => {

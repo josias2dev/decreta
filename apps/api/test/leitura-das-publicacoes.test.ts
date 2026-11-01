@@ -17,6 +17,7 @@ import { releiturasPendentes } from "../src/inngest.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { resumoDaManha } from "../src/servicos/avisos.ts";
 import { sugerirPrazoDaPublicacao } from "../src/servicos/prazos.ts";
+import { iaMedida } from "../src/servicos/uso-ia.ts";
 import { iaFalsa } from "./ia-falsa.ts";
 
 describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
@@ -124,6 +125,30 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
     await chegouHa2Horas(id);
     expect((await json(chamar(appSemIa, "/hoje"))).contadores.publicacoesSemLeitura).toBe(0);
     expect((await json(chamar(appSemIa, `/publicacoes/${id}`))).leituraParada).toBe(false);
+  });
+
+  /* ---------------- De onde veio a leitura ---------------- */
+
+  test("a leitura guarda o modelo e o prompt que a produziram, com a mesma versão do código, mesmo quando falha", async () => {
+    const id = await publicacao();
+    const medida = iaMedida({ db: t.db }, ia, { organizationId: orgId, userId: null, origem: "fundo" });
+    const procedencias = async () => t.owner<{ situacao: string; procedencia: { codigo: string; chamadas: { metodo: string; modelo: string | null; prompt: string }[] } }[]>`select situacao, procedencia from analises where alvo_id = ${id} order by created_at`;
+
+    ia.respostas["sugerir-prazo"] = { geraPrazo: false, tipo: null, fundamento: null, dias: null, contagem: null, assunto: "laudo", resumo: "Sem prazo.", audiencia: null, recusa: null, citacoes: [] };
+    const lida = await sugerirPrazoDaPublicacao({ db: t.db, ia: medida }, orgId, id);
+    expect(["pronto", "erro"]).toContain(lida!.situacao);
+    const [primeira] = await procedencias();
+    expect(primeira!.procedencia.codigo).toMatch(/^[0-9a-f]{7,}$/);
+    expect(primeira!.procedencia.chamadas.at(0)).toMatchObject({ metodo: "sugerir-prazo", modelo: "modelo-de-teste" });
+    expect(primeira!.procedencia.chamadas.at(0)!.prompt).toMatch(/^[0-9a-f]{12}$/);
+
+    ia.respostas["sugerir-prazo"] = () => {
+      throw new Error("teto do gateway");
+    };
+    await sugerirPrazoDaPublicacao({ db: t.db, ia: medida }, orgId, id);
+    const segunda = (await procedencias()).at(-1)!;
+    expect(segunda.situacao).toBe("erro");
+    expect(segunda.procedencia.chamadas.at(-1)).toMatchObject({ metodo: "sugerir-prazo", modelo: null });
   });
 
   /* ---------------- Releitura sozinha ---------------- */

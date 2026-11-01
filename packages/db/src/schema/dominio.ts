@@ -589,6 +589,8 @@ export const pecas = pgTable(
     modelos: jsonb("modelos").$type<string[]>().notNull().default([]),
     /** O texto como a IA entregou na última geração; nulo na peça escrita à mão. */
     textoGerado: text("texto_gerado"),
+    /** De onde veio a última geração. */
+    procedencia: jsonb("procedencia").$type<Procedencia>(),
     /** A última verificação das citações ("Verificar peça"), com o hash do texto que foi conferido. */
     verificacao: jsonb("verificacao").$type<VerificacaoDaPeca>(),
     createdAt: createdAt(),
@@ -611,6 +613,8 @@ export const revisoesDePeca = pgTable(
       .notNull()
       .references(() => pecas.id, { onDelete: "cascade" }),
     textoGerado: text("texto_gerado"),
+    /** De onde veio a versão revisada: gerar a peça de novo não muda o que já foi revisado. */
+    procedencia: jsonb("procedencia").$type<Procedencia>(),
     textoFinal: text("texto_final").notNull(),
     revisadaPor: pessoa("revisada_por"),
     revisadaEm: timestamp("revisada_em", { withTimezone: true }).notNull().defaultNow(),
@@ -650,6 +654,12 @@ export const modelos = pgTable(
 
 /** De quem é a análise: a IA sempre fala de alguma coisa do escritório. */
 export const alvoIa = pgEnum("alvo_ia", ["processo", "prazo", "publicacao", "audiencia", "cliente", "atendimento", "negocio"]);
+/** De onde veio um resultado da IA: a versão do código e, em cada chamada, o modelo que respondeu e a impressão das instruções. */
+export interface Procedencia {
+  codigo: string | null;
+  chamadas: { metodo: string; alias: string; modelo: string | null; prompt: string }[];
+}
+
 export const situacaoIa = pgEnum("situacao_ia", ["pronto", "recusa", "erro"]);
 
 /**
@@ -672,6 +682,7 @@ export const analises = pgTable(
     fonte: text("fonte"),
     base: text("base").notNull(),
     erro: text("erro"),
+    procedencia: jsonb("procedencia").$type<Procedencia>(),
     pedidaPor: pessoa("pedida_por"),
     createdAt: createdAt(),
   },
@@ -971,6 +982,7 @@ export const mensagensCliente = pgTable(
     situacao: situacaoMensagemCliente("situacao").notNull().default("rascunho"),
     /** O rascunho como a IA escreveu, para comparar com o que o advogado aprovou. */
     textoIa: text("texto_ia"),
+    procedencia: jsonb("procedencia").$type<Procedencia>(),
     /** O corpo que o advogado revisa; o nome do escritório e o rodapé entram no envio. */
     texto: text("texto").notNull(),
     /** Documentos pedidos ao cliente, como ele lê ("Procuração assinada"). */

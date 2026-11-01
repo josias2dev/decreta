@@ -1,6 +1,7 @@
 import { analises, documentos, modelos, pecas, prazos, processos, revisoesDePeca, withTenant, type VerificacaoDaPeca } from "@decreta/db";
 import { MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
-import { CATALOGO, GRUPOS_DE_PECA, gerarPeca, pecaParaPrazo, RODAPE_IA, tipoDePeca, type Ia } from "@decreta/ia";
+import { CATALOGO, colherChamadas, GRUPOS_DE_PECA, gerarPeca, pecaParaPrazo, RODAPE_IA, tipoDePeca, type ChamadaDaIa, type Ia } from "@decreta/ia";
+import { procedenciaDe } from "../servicos/procedencia.ts";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -148,7 +149,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [prazo] = b.prazoId ? await tx.select().from(prazos).where(eq(prazos.id, b.prazoId)) : [];
       const montado = await montarPedidoDePeca(db, tx, { organizationId: c.get("orgId"), nomeDoEscritorio: c.get("orgNome"), quem: { id: c.get("userId"), nome: c.get("userNome") }, processo: p, prazo: prazo ?? null, tipo, instrucoes: b.instrucoes });
       const qualificar = await paraQualificar(tx, p.id);
-      const valores = { tipo: tipo.id, titulo: montado.titulo, instrucoes: b.instrucoes, texto: "", textoGerado: null, situacao: "rascunho" as const, criadaPor: c.get("userId"), revisadaPor: null, revisadaEm: null, modelos: montado.modelos };
+      const valores = { tipo: tipo.id, titulo: montado.titulo, instrucoes: b.instrucoes, texto: "", textoGerado: null, procedencia: null, situacao: "rascunho" as const, criadaPor: c.get("userId"), revisadaPor: null, revisadaEm: null, modelos: montado.modelos };
       const pecaId = b.pecaId
         ? (await tx.update(pecas).set(valores).where(eq(pecas.id, b.pecaId)).returning({ id: pecas.id }))[0]?.id
         : (await tx.insert(pecas).values({ organizationId: c.get("orgId"), processoId: p.id, prazoId: prazo?.id ?? null, ...valores }).returning({ id: pecas.id }))[0]?.id;
@@ -189,7 +190,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const pecaId = id(c);
     const b = await corpo(c, z.object({ texto: z.string().max(400_000).optional(), titulo: z.string().trim().min(2).max(300).optional(), situacao: z.enum(["rascunho", "revisada"]).optional() }));
     const r = await tenant(c, deps, async (tx) => {
-      const [atual] = await tx.select({ texto: pecas.texto, situacao: pecas.situacao, textoGerado: pecas.textoGerado }).from(pecas).where(eq(pecas.id, pecaId));
+      const [atual] = await tx.select({ texto: pecas.texto, situacao: pecas.situacao, textoGerado: pecas.textoGerado, procedencia: pecas.procedencia }).from(pecas).where(eq(pecas.id, pecaId));
       if (!atual) return null;
       const valores: Partial<typeof pecas.$inferInsert> = { ...b };
       const textoMudou = b.texto !== undefined && b.texto !== atual.texto;
@@ -202,7 +203,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         const textoFinal = b.texto ?? atual.texto;
         const [linha] = await tx
           .insert(revisoesDePeca)
-          .values({ organizationId: c.get("orgId"), pecaId, textoGerado: atual.textoGerado, textoFinal, revisadaPor: c.get("userId"), revisadaEm: agora })
+          .values({ organizationId: c.get("orgId"), pecaId, textoGerado: atual.textoGerado, procedencia: atual.procedencia, textoFinal, revisadaPor: c.get("userId"), revisadaEm: agora })
           .returning({ id: revisoesDePeca.id });
         revisao = { revisaoId: linha!.id, geradaPorIa: atual.textoGerado !== null, ...mudancaNaRevisao(atual.textoGerado, textoFinal) };
       } else if (b.situacao === "rascunho" || (textoMudou && atual.situacao === "revisada")) Object.assign(valores, { situacao: "rascunho", revisadaPor: null, revisadaEm: null });
@@ -254,7 +255,8 @@ function mudancaNaRevisao(textoGerado: string | null, textoFinal: string): { par
 
 function transmitirPeca(c: C, deps: DepsDasRotas, ia: Ia, pecaId: string, pedido: Parameters<typeof gerarPeca>[1]) {
   const orgId = c.get("orgId");
-  const r = gerarPeca(ia, pedido, c.req.raw.signal);
+  const chamadas: ChamadaDaIa[] = [];
+  const r = colherChamadas(chamadas, () => gerarPeca(ia, pedido, c.req.raw.signal));
   const encoder = new TextEncoder();
   let texto = "";
   /** Só o que veio da IA, sem o aviso de queda: a versão gerada do registro de revisão. */
@@ -264,7 +266,7 @@ function transmitirPeca(c: C, deps: DepsDasRotas, ia: Ia, pecaId: string, pedido
     withTenant(deps.db, orgId, (tx) =>
       tx
         .update(pecas)
-        .set(fim ? { texto, textoGerado: daIa || null } : { texto })
+        .set(fim ? { texto, textoGerado: daIa || null, procedencia: procedenciaDe(chamadas) } : { texto })
         .where(eq(pecas.id, pecaId)),
     ).catch(() => {});
   const corpoDaResposta = new ReadableStream<Uint8Array>({

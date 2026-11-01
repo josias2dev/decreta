@@ -4,5 +4,6 @@ export * from "./assistente.ts";
 export * from "./contexto.ts";
 export * from "./gateway.ts";
 export * from "./pecas.ts";
+export * from "./procedencia.ts";
 export * from "./uso.ts";
 export * from "./jurisprudencia.ts";

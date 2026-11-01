@@ -90,6 +90,28 @@ describe.skipIf(!hasTestDatabase)("registro de revisão da peça", () => {
     ]);
   });
 
+  test("a peça guarda de onde veio, e a revisão guarda de onde veio a versão que a pessoa revisou", async () => {
+    ia.respostas["gerar-documento"] = GERADO;
+    const g = await call("/pecas", { method: "POST", json: { processoId, tipo: "manifestacao-laudo", instrucoes: "" } });
+    const pecaId = g.headers.get("x-peca-id")!;
+    await g.text();
+    const procedenciaDaPeca = async () => (await t.owner<{ procedencia: { codigo: string; chamadas: { metodo: string; modelo: string; prompt: string }[] } | null }[]>`select procedencia from pecas where id = ${pecaId}`)[0]!.procedencia;
+    const gerada = await procedenciaDaPeca();
+    expect(gerada!.chamadas).toEqual([expect.objectContaining({ metodo: "gerar-documento", modelo: "modelo-de-teste" })]);
+    expect(gerada!.codigo).toMatch(/^[0-9a-f]{7,}$/);
+
+    await revisar(pecaId);
+    const [revisao] = await t.owner<{ procedencia: unknown }[]>`select procedencia from revisoes_de_peca where peca_id = ${pecaId}`;
+    expect(revisao!.procedencia).toEqual(gerada);
+
+    // Gerar de novo troca a procedência da peça; a da revisão anterior fica.
+    ia.respostas["gerar-documento"] = `${GERADO}\n\nOutra versão.`;
+    await (await call("/pecas", { method: "POST", json: { processoId, tipo: "manifestacao-laudo", instrucoes: "", pecaId } })).text();
+    expect((await procedenciaDaPeca())!.chamadas).toHaveLength(1);
+    const [antiga] = await t.owner<{ procedencia: unknown }[]>`select procedencia from revisoes_de_peca where peca_id = ${pecaId}`;
+    expect(antiga!.procedencia).toEqual(gerada);
+  });
+
   test("a peça escrita à mão fica registrada como revisão sem IA", async () => {
     const m = await json(call("/pecas/manual", { method: "POST", json: { processoId, tipo: "manifestacao-laudo", texto: "# Manifestação\n\nTexto da advogada." } }));
     await revisar(m.id);

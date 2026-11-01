@@ -4,8 +4,9 @@
  * avisa quando o material mudou desde então.
  */
 import { analises, withTenant, type Database, type Tx } from "@decreta/db";
-import { IaRecusou } from "@decreta/ia";
+import { colherChamadas, IaRecusou, type ChamadaDaIa } from "@decreta/ia";
 import { and, desc, eq } from "drizzle-orm";
+import { procedenciaDe } from "./procedencia.ts";
 
 export type Alvo = (typeof analises.$inferInsert)["alvo"];
 
@@ -65,8 +66,9 @@ export async function analisar<E>(db: Database, p: PedidoDeAnalise<E>): Promise<
   let situacao: AnaliseNaTela["situacao"] = "pronto";
   let conteudo: Record<string, unknown> = {};
   let erro: string | null = null;
+  const chamadas: ChamadaDaIa[] = [];
   try {
-    conteudo = await p.executar(preparado.entrada);
+    conteudo = await colherChamadas(chamadas, () => p.executar(preparado.entrada));
   } catch (err) {
     if (err instanceof IaRecusou) {
       situacao = "recusa";
@@ -80,7 +82,7 @@ export async function analisar<E>(db: Database, p: PedidoDeAnalise<E>): Promise<
   const [linha] = await withTenant(db, p.organizationId, (tx) =>
     tx
       .insert(analises)
-      .values({ organizationId: p.organizationId, alvo: p.alvo, alvoId: p.alvoId, acao: p.acao, situacao, conteudo, fonte: preparado.fonte, base: preparado.base, erro, pedidaPor: p.userId ?? null })
+      .values({ organizationId: p.organizationId, alvo: p.alvo, alvoId: p.alvoId, acao: p.acao, situacao, conteudo, fonte: preparado.fonte, base: preparado.base, erro, procedencia: procedenciaDe(chamadas), pedidaPor: p.userId ?? null })
       .returning(),
   );
   return naTela(linha!, preparado.base);

@@ -6,6 +6,7 @@
  */
 import { wrapLanguageModel, type LanguageModel, type LanguageModelMiddleware } from "ai";
 import type { Ia, MetodoIa } from "./gateway.ts";
+import { colheitaAtual, impressaoDoPrompt } from "./procedencia.ts";
 
 /* Os tipos do provedor, tirados do middleware (o pacote @ai-sdk/provider não é dependência direta). */
 type Gerar = NonNullable<LanguageModelMiddleware["wrapGenerate"]>;
@@ -77,18 +78,24 @@ export function comMedidor(ia: Ia, preco: PrecoDeReferencia, aoUsar: (uso: UsoDa
       model: model as Parameters<typeof wrapLanguageModel>[0]["model"],
       middleware: {
         specificationVersion: "v4",
-        async wrapGenerate({ doGenerate, params }) {
+        async wrapGenerate({ doGenerate, params, model: chamado }) {
+          const colheita = colheitaAtual();
+          const anotar = (modelo: string | null) => colheita?.push({ metodo, alias: chamado.modelId, modelo, prompt: impressaoDoPrompt(params) });
           try {
             const r = await doGenerate();
+            anotar(r.response?.modelId ?? null);
             await aoUsar(usoDe(metodo, preco, r.usage, params, 0));
             return r;
           } catch (err) {
+            anotar(null);
             // Com resposta de erro do gateway (teto, pedido inválido) nada foi cobrado; sem resposta (parou, caiu), o pedido pode ter sido.
             if ((err as { statusCode?: number }).statusCode === undefined) await aoUsar(usoDe(metodo, preco, undefined, params, 0));
             throw err;
           }
         },
-        async wrapStream({ doStream, params }) {
+        async wrapStream({ doStream, params, model: chamado }) {
+          const colheita = colheitaAtual();
+          let modelo: string | null = null;
           const r = await doStream();
           const leitor = r.stream.getReader();
           let saida = 0;
@@ -96,6 +103,7 @@ export function comMedidor(ia: Ia, preco: PrecoDeReferencia, aoUsar: (uso: UsoDa
           const contar = async (usage?: Uso) => {
             if (contou) return;
             contou = true;
+            colheita?.push({ metodo, alias: chamado.modelId, modelo, prompt: impressaoDoPrompt(params) });
             await aoUsar(usoDe(metodo, preco, usage, params, saida));
           };
           const stream = new ReadableStream<Parte>({
@@ -107,6 +115,7 @@ export function comMedidor(ia: Ia, preco: PrecoDeReferencia, aoUsar: (uso: UsoDa
                   controle.close();
                   return;
                 }
+                if (value.type === "response-metadata" && value.modelId) modelo = value.modelId;
                 saida += caracteresDaParte(value);
                 if (value.type === "finish") await contar(value.usage);
                 controle.enqueue(value);

@@ -169,6 +169,13 @@
       "when": 1793563987544,
       "tag": "0023_envio_incerto",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793573353220,
+      "tag": "0024_procedencia_da_ia",
+      "breakpoints": true
     }
   ]
 }

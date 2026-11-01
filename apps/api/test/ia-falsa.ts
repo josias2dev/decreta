@@ -39,7 +39,7 @@ export function iaFalsa(): IaFalsa {
           // Uma função responde conforme o pedido (cada citação conferida tem a sua resposta).
           const r = sistema.includes("título") ? falsa.titulo : typeof preparada === "function" ? preparada(JSON.stringify(opcoes.prompt)) : preparada;
           if (!sistema.includes("título")) pedidos[metodo] = opcoes.prompt;
-          return { content: [{ type: "text", text: typeof r === "string" ? r : JSON.stringify(r ?? {}) }], finishReason: { unified: "stop", raw: "stop" }, usage: uso, warnings: [] };
+          return { content: [{ type: "text", text: typeof r === "string" ? r : JSON.stringify(r ?? {}) }], finishReason: { unified: "stop", raw: "stop" }, usage: uso, warnings: [], response: { modelId: "modelo-de-teste" } };
         },
         doStream: async (opcoes) => {
           chamadas.push(metodo);
@@ -67,6 +67,7 @@ export function iaFalsa(): IaFalsa {
           return {
             stream: convertArrayToReadableStream([
               { type: "stream-start", warnings: [] },
+              { type: "response-metadata", modelId: "modelo-de-teste" },
               { type: "text-start", id: "t" },
               ...pedacos.map((delta) => ({ type: "text-delta" as const, id: "t", delta })),
               { type: "text-end", id: "t" },

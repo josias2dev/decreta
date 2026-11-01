@@ -6,7 +6,7 @@
 import { randomBytes } from "node:crypto";
 import { comLinkDeEnvio, corpoDaCobranca, documentosQueFaltam, formatarTelefone, hojeEm, instanteLocal, mensagemParaWhatsapp, somarDias, telefoneWhatsapp } from "@decreta/core";
 import { clientes, escritorios, mensagensCliente, prazos, processos, type Tx } from "@decreta/db";
-import { IaRecusou, mensagemAoCliente, type Briefing } from "@decreta/ia";
+import { colherChamadas, IaRecusou, mensagemAoCliente, type Briefing, type ChamadaDaIa } from "@decreta/ia";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -18,6 +18,7 @@ import { ultimaConferencia } from "../servicos/conferencia.ts";
 import { semIa, ClienteSemIa } from "../servicos/contexto.ts";
 import { hashDoSegredo, VALIDADE_DO_LINK_DIAS } from "./envio-pelo-cliente.ts";
 import { pessoasDoEscritorio, resumir, type Pessoa } from "../servicos/pessoas.ts";
+import { procedenciaDe } from "../servicos/procedencia.ts";
 import { comLimiteDaIa, corpo, falha, iaDaRota, id, ip, queryId, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 type Mensagem = typeof mensagensCliente.$inferSelect;
@@ -102,8 +103,9 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
       return { ...p, clienteId: p.clienteId, cliente: cl!.nome, briefing: b.conteudo as unknown as Briefing };
     });
     let texto: string;
+    const chamadas: ChamadaDaIa[] = [];
     try {
-      texto = (await mensagemAoCliente(ia, { cliente: dados.cliente, prazo: dados.tipo, briefing: dados.briefing })).texto.trim();
+      texto = (await colherChamadas(chamadas, () => mensagemAoCliente(ia, { cliente: dados.cliente, prazo: dados.tipo, briefing: dados.briefing }))).texto.trim();
     } catch (err) {
       if (err instanceof IaRecusou) falha(422, "ia_recusou", err.motivo);
       throw err;
@@ -111,7 +113,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
     return tenant(c, deps, async (tx) => {
       const [m] = await tx
         .insert(mensagensCliente)
-        .values({ organizationId: c.get("orgId"), clienteId: dados.clienteId, processoId: dados.processoId, prazoId, tipo: "decisao", textoIa: texto, texto, criadaPor: c.get("userId") })
+        .values({ organizationId: c.get("orgId"), clienteId: dados.clienteId, processoId: dados.processoId, prazoId, tipo: "decisao", textoIa: texto, procedencia: procedenciaDe(chamadas), texto, criadaPor: c.get("userId") })
         .returning();
       const l = await carregar(tx, c, deps, m!.id);
       return c.json(naTela(l.m, l.cliente, l.id_, l.pessoas), 201);

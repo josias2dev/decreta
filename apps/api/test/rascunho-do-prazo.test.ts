@@ -15,6 +15,7 @@ import { criarEscritorio } from "../src/escritorio-novo.ts";
 import type { Pedido } from "../src/rotas/base.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { rascunhoDoPrazo } from "../src/servicos/rascunho.ts";
+import { iaMedida } from "../src/servicos/uso-ia.ts";
 import { iaFalsa } from "./ia-falsa.ts";
 
 const GERADO = "# Excelentíssimo Senhor Juiz\n\n## Da manifestação\n\nA autora concorda com o laudo.";
@@ -84,6 +85,16 @@ describe.skipIf(!hasTestDatabase)("rascunho pronto quando o prazo é confirmado"
 
     const [registro] = await t.owner<{ acao: string; detalhes: Record<string, unknown> }[]>`select acao, detalhes from auditoria where organization_id = ${orgId} and acao = 'peca.preparada'`;
     expect(registro?.detalhes).toEqual({ pecaId, prazoId, tipo: "manifestacao-laudo" });
+  });
+
+  test("o rascunho escrito sozinho também guarda de onde veio", async () => {
+    const prazoId = await prazoSugerido("Réplica");
+    await call(`/prazos/${prazoId}/confirmar`, { method: "POST" });
+    ia.respostas["gerar-documento"] = GERADO;
+    const r = await rascunhoDoPrazo({ ...deps(), ia: iaMedida({ db: t.db }, ia, { organizationId: orgId, userId: null, origem: "fundo" }) }, orgId, prazoId);
+    if (r.situacao !== "pronto") throw new Error(r.situacao);
+    const [p] = await t.owner<{ procedencia: { chamadas: unknown[] } }[]>`select procedencia from pecas where id = ${r.pecaId}`;
+    expect(p!.procedencia.chamadas).toEqual([expect.objectContaining({ metodo: "gerar-documento", modelo: "modelo-de-teste" })]);
   });
 
   test("não refaz o rascunho de quem já tem peça, nem prepara antes de confirmar", async () => {

@@ -133,6 +133,16 @@ Em aberto:
 - **Baixo — leitura da sentença:** a rotina `reler-publicacoes` cobre a sugestão de prazo. A leitura da sentença que falhou continua esperando alguém pedir.
 - **Baixo — seis falhas:** depois disso a rotina desiste, com o aviso no Hoje e o botão "Ler de novo". Uma falha de mais de um dia precisa de alguém.
 
+## 2.4. De onde veio cada resultado da IA (corrigido no mesmo dia)
+
+Não dava para responder "o que gerou este prazo errado?": o modelo pode mudar no painel do gateway sem deploy, e nada guardava qual respondeu. Agora as análises (sugestão de prazo, briefing, resumo dos autos, audiência, leitura da sentença e conferência da pasta), as peças, as revisões de peça e as mensagens ao cliente guardam em `procedencia` o commit em uso e, em cada chamada, o alias, o modelo que respondeu e a impressão das instruções. O texto do caso não entra na impressão. Quem falhou também fica registrado, sem modelo.
+
+Em aberto:
+
+- **Baixo — sem tela:** a procedência só é lida por consulta ao banco.
+- **Baixo — fora do registro:** o Perguntar, a leitura de documentos, a conferência de citações e a transcrição de áudio ainda não guardam a procedência.
+- **Baixo — resultados antigos:** o que foi gerado antes desta mudança fica sem procedência.
+
 ## 3. Depende de você
 
 - **Cobrança e duração do acesso de contas novas:** hoje o cadastro não tem período de teste nem pagamento, e o escritório em avaliação fica assim até alguém liberar à mão.
