@@ -9,6 +9,7 @@ import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
 import type { Auth } from "../auth.ts";
 import type { Mailer } from "../email.ts";
+import { ipDoPedido } from "../limitador.ts";
 import type { DepsDaCaptura } from "../servicos/captura.ts";
 import type { Wameow } from "../servicos/avisos.ts";
 import { AVISOS, iaMedida, LimiteDaIa, motivoParaBarrar, registrarMensagem, reservarVez, SEM_LIMITES, usoDoDia, type LimitesDaIa } from "../servicos/uso-ia.ts";
@@ -155,7 +156,7 @@ export function id(c: C, nome = "id"): string {
 export const ehSocio = (papel: string) => papel === "owner" || papel === "admin";
 
 export function ip(c: C): string | null {
-  return c.req.header("cf-connecting-ip") ?? c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  return ipDoPedido(c);
 }
 
 const COM_ACENTO = "áàâãäéèêëíìîïóòôõöúùûüçñ";

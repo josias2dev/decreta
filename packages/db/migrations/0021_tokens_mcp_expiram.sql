@@ -1,0 +1,1 @@
+ALTER TABLE "tokens_mcp" ADD COLUMN "expira_em" timestamp with time zone DEFAULT now() + interval '90 days' NOT NULL;

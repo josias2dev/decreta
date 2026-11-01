@@ -41,6 +41,7 @@ import {
   type Tx,
 } from "@decreta/db";
 import {
+  AVISO_DO_DOCUMENTO,
   PedidoErrado,
   type AudienciaNaIa,
   type DadosDoEscritorio,
@@ -753,6 +754,8 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
           processo: d.processo?.id ? d.processo : null,
           cliente: d.cliente?.id ? d.cliente : null,
           trecho: null,
+          // Documento com texto escondido ou frase para uma IA: quem lê de fora também precisa saber.
+          aviso: d.d.alertas?.length ? AVISO_DO_DOCUMENTO : null,
           texto: d.d.texto ? cortado(d.d.texto, "documento") : null,
         };
       });

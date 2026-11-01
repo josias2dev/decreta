@@ -12,6 +12,10 @@ DOMINIO {
 		max_size 45MB
 	}
 
+	# O link de envio do cliente carrega o segredo no endereço: fora do log de acesso.
+	@segredo path /api/envio/* /enviar/*
+	log_skip @segredo
+
 	reverse_proxy 127.0.0.1:8791 {
 		# A peça e o chat chegam aos poucos: repassa cada pedaço na hora.
 		flush_interval -1

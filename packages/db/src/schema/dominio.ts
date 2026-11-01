@@ -1056,6 +1056,10 @@ export const tokensMcp = pgTable(
     nome: text("nome").notNull(),
     hash: text("hash").notNull(),
     usadoEm: timestamp("usado_em", { withTimezone: true }),
+    /** O token vence sozinho: quem esqueceu um no computador não deixa a porta aberta para sempre. */
+    expiraEm: timestamp("expira_em", { withTimezone: true })
+      .notNull()
+      .default(sql`now() + interval '90 days'`),
     revogadoEm: timestamp("revogado_em", { withTimezone: true }),
     createdAt: createdAt(),
   },

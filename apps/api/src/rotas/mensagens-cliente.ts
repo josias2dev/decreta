@@ -4,10 +4,10 @@
  * registrada com quem e quando. A demonstração nunca manda WhatsApp.
  */
 import { randomBytes } from "node:crypto";
-import { comLinkDeEnvio, corpoDaCobranca, documentosQueFaltam, formatarTelefone, hojeEm, mensagemParaWhatsapp, somarDias, telefoneWhatsapp } from "@decreta/core";
+import { comLinkDeEnvio, corpoDaCobranca, documentosQueFaltam, formatarTelefone, hojeEm, instanteLocal, mensagemParaWhatsapp, somarDias, telefoneWhatsapp } from "@decreta/core";
 import { clientes, escritorios, mensagensCliente, prazos, processos, type Tx } from "@decreta/db";
 import { IaRecusou, mensagemAoCliente, type Briefing } from "@decreta/ia";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
@@ -165,6 +165,21 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
     });
   });
 
+  /** O link foi para o número errado, ou o cliente já mandou tudo: o advogado o invalida na hora. */
+  app.post("/mensagens-cliente/:id/invalidar-link", async (c) => {
+    const mensagemId = id(c);
+    await tenant(c, deps, async (tx) => {
+      const [m] = await tx
+        .update(mensagensCliente)
+        .set({ linkExpiraEm: new Date(Date.now() - 1000) })
+        .where(and(eq(mensagensCliente.id, mensagemId), eq(mensagensCliente.tipo, "documentos"), isNotNull(mensagensCliente.linkHash)))
+        .returning({ id: mensagensCliente.id });
+      if (!m) falha(404, "nao_encontrado");
+    });
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "mensagem_cliente.link_invalidado", detalhes: { mensagemId }, ip: ip(c) }, deps.log);
+    return c.json({ ok: true });
+  });
+
   app.post("/mensagens-cliente/:id/descartar", async (c) => {
     const mensagemId = id(c);
     await tenant(c, deps, async (tx) => {
@@ -197,10 +212,11 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
       if (!para) falha(422, "sem_telefone", "O cliente não tem um celular válido no cadastro.");
       const texto = b.texto ?? l.m.texto;
       const agora = new Date();
-      // Cobrança: o link de envio nasce agora, na aprovação. O banco guarda só o hash do segredo.
+      // Cobrança: o link de envio nasce agora, na aprovação, e vale até o fim do 7º dia no fuso do
+      // escritório, como a mensagem diz. O banco guarda só o hash do segredo.
       const segredo = randomBytes(24).toString("base64url");
-      const expira = new Date(agora.getTime() + VALIDADE_DO_LINK_DIAS * 86_400_000);
-      const validoAte = hojeEm(l.id_.timezone, expira);
+      const validoAte = somarDias(hojeEm(l.id_.timezone, agora), VALIDADE_DO_LINK_DIAS);
+      const expira = instanteLocal(validoAte, "23:59", l.id_.timezone);
       const link = `${deps.telas.replace(/\/$/, "")}/enviar/${c.get("orgId")}/${segredo}`;
       const montar = (lk: string) => mensagemParaWhatsapp({ escritorio: l.id_.escritorio, corpo: corpoParaEnvio({ tipo: l.m.tipo, texto }, lk, validoAte), numeroOficial: l.id_.numeroOficial! });
       const comLink = l.m.tipo === "documentos" ? { linkHash: hashDoSegredo(segredo), linkExpiraEm: expira } : {};

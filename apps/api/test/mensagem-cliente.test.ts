@@ -5,6 +5,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { randomBytes } from "node:crypto";
+import { hojeEm, horaLocal, somarDias } from "@decreta/core";
 import { analises, clientes, prazos, processos, withTenant } from "@decreta/db";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
@@ -52,6 +53,7 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
   const ia = iaFalsa();
   const zap = wameowFalso();
   const pedidos: Pedido[] = [];
+  let filaFora = false;
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });
 
   const escritorio = { cookie: "", orgId: "", prazoId: "", clienteId: "", userId: "" };
@@ -87,7 +89,10 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     t = await createTestDatabase();
     auth = createAuth(t.db, env);
     const arquivos = armazenamentoEmMemoria();
-    const enfileirar = async (p: Pedido) => void pedidos.push(p);
+    const enfileirar = async (p: Pedido) => {
+      if (filaFora) throw new Error("fila fora do ar");
+      pedidos.push(p);
+    };
     const rotas = createRotas({
       db: t.db,
       auth,
@@ -101,7 +106,8 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
       enfileirar,
       log: () => {},
     });
-    const envio = rotasDoEnvioPeloCliente({ db: t.db, ia, arquivos, maxArquivoBytes: 5e6, enfileirar, log: () => {} });
+    // Dez envios ao mesmo tempo, para o teste do teto por link disparar vários de uma vez.
+    const envio = rotasDoEnvioPeloCliente({ db: t.db, ia, arquivos, maxArquivoBytes: 5e6, enfileirar, log: () => {}, aoMesmoTempo: 10 });
     app = createApp({ db: t.db, env, auth, rotas, envio, log: () => {} });
     await entrar(escritorio, "beatriz@souza.adv.br", "souza-mendes", "Souza & Mendes Advocacia");
     await entrar(demo, "teste@decreta.site", SLUG_DA_DEMONSTRACAO, "Escritório de Demonstração");
@@ -258,9 +264,9 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     expect(linha!.enviado).not.toContain(segredo);
     expect(linha!.enviado).toContain("[link de envio]");
     expect(linha!.link_hash).not.toBe(segredo);
-    const dias = (linha!.link_expira_em.getTime() - Date.now()) / 86_400_000;
-    expect(dias).toBeGreaterThan(6.9);
-    expect(dias).toBeLessThanOrEqual(7);
+    // Vale até o fim do 7º dia no fuso do escritório, como a mensagem diz ("O link vale até DD/MM").
+    expect(hojeEm("America/Sao_Paulo", linha!.link_expira_em)).toBe(somarDias(hojeEm("America/Sao_Paulo"), 7));
+    expect(horaLocal(linha!.link_expira_em)).toBe("23:59");
   });
 
   test("o link abre sem login e mostra só o escritório, o primeiro nome e a lista", async () => {
@@ -289,6 +295,73 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     const form = new FormData();
     form.set("arquivo", new File(["oi"], "bilhete.txt", { type: "text/plain" }));
     expect((await app.request(caminhoDoEnvio(), { method: "POST", body: form })).status).toBe(422);
+  });
+
+  test("o tipo vem dos bytes, não do cabeçalho: executável disfarçado de PDF não entra, e o nome vira seguro", async () => {
+    const exe = new FormData();
+    exe.set("arquivo", new File([new Uint8Array([0x4d, 0x5a, 0x90, 0x00, 1, 2, 3])], "golpe.exe", { type: "application/pdf" }));
+    const r = await app.request(caminhoDoEnvio(), { method: "POST", body: exe });
+    expect(r.status).toBe(422);
+    expect((await json(r)).erro).toBe("tipo_nao_aceito");
+    // Uma foto declarada como PDF, com nome que tenta sair da pasta: entra como JPEG, com o nome limpo.
+    const foto = new FormData();
+    foto.set("arquivo", new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 7, 7])], "..\\fatura.pdf.exe", { type: "application/pdf" }));
+    const r2 = await app.request(caminhoDoEnvio(), { method: "POST", body: foto });
+    expect(r2.status).toBe(201);
+    expect((await json(r2)).nome).toBe("..-fatura.pdf.exe.jpg");
+    const [doc] = await t.owner<{ mime: string }[]>`select mime from documentos where organization_id = ${escritorio.orgId} and nome = '..-fatura.pdf.exe.jpg'`;
+    expect(doc!.mime).toBe("image/jpeg");
+  });
+
+  test("arquivo acima do teto do link é recusado sem ser lido", async () => {
+    const form = new FormData();
+    form.set("arquivo", new File([new Uint8Array(6_100_000)], "grande.pdf", { type: "application/pdf" }));
+    const r = await app.request(caminhoDoEnvio(), { method: "POST", body: form });
+    expect(r.status).toBe(413);
+    expect((await json(r)).erro).toBe("arquivo_grande");
+  });
+
+  test("a fila fora do ar não derruba o envio: o documento fica guardado com a leitura pendente", async () => {
+    filaFora = true;
+    try {
+      const form = new FormData();
+      form.set("arquivo", new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 9])], "rg-da-marina.jpg", { type: "image/jpeg" }));
+      expect((await app.request(caminhoDoEnvio(), { method: "POST", body: form })).status).toBe(201);
+    } finally {
+      filaFora = false;
+    }
+    const [doc] = await t.owner<{ leitura: string }[]>`select leitura from documentos where organization_id = ${escritorio.orgId} and nome = 'rg-da-marina.jpg'`;
+    expect(doc!.leitura).toBe("pendente");
+  });
+
+  test("muitos pedidos do mesmo endereço em um minuto: 429, sem afetar outro endereço", async () => {
+    const de = (ip: string) => app.request(caminhoDoEnvio(), { headers: { "x-forwarded-for": ip } });
+    const status: number[] = [];
+    for (let i = 0; i < 61; i++) status.push((await de("203.0.113.7")).status);
+    expect(status.slice(0, 60).every((s) => s === 200)).toBe(true);
+    expect(status[60]).toBe(429);
+    expect((await de("203.0.113.8")).status).toBe(200);
+  });
+
+  test("o teto de arquivos do link vale mesmo com envios ao mesmo tempo", async () => {
+    await t.owner`update mensagens_cliente set recebidos = 18 where id = ${cobrancaId}`;
+    const envios = Array.from({ length: 5 }, (_, i) => {
+      const form = new FormData();
+      form.set("arquivo", new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, i])], `doc-${i}.jpg`, { type: "image/jpeg" }));
+      return app.request(caminhoDoEnvio(), { method: "POST", body: form });
+    });
+    const status = (await Promise.all(envios)).map((r) => r.status).toSorted();
+    expect(status).toEqual([201, 201, 429, 429, 429]);
+    const [m] = await t.owner<{ recebidos: number }[]>`select recebidos from mensagens_cliente where id = ${cobrancaId}`;
+    expect(m!.recebidos).toBe(20);
+  });
+
+  test("o advogado invalida o link mandado ao número errado: a página passa a dizer que venceu", async () => {
+    const r = await call(`/mensagens-cliente/${cobrancaId}/invalidar-link`, { method: "POST" });
+    expect(r.status).toBe(200);
+    expect((await app.request(caminhoDoEnvio())).status).toBe(410);
+    const registro = await t.owner`select acao from auditoria where organization_id = ${escritorio.orgId} and acao = 'mensagem_cliente.link_invalidado'`;
+    expect(registro).toHaveLength(1);
   });
 
   test("segredo errado ou de outro escritório não abre; vencido também não", async () => {

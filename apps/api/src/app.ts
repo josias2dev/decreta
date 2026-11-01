@@ -6,6 +6,7 @@ import { HTTPException } from "hono/http-exception";
 import { join, resolve, sep } from "node:path";
 import type { Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
+import { ipDoPedido, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
 
@@ -55,6 +56,13 @@ export function createApp(deps: AppDeps) {
     app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
   }
 
+  // Rotas sem login: poucos pedidos por minuto de cada endereço, contra quem tenta adivinhar um segredo ou token.
+  app.use("/api/convites/*", limitarPorIp({ janelaMs: 60_000, maximo: 30 }, ipDoPedido));
+  app.use("/api/envio/*", limitarPorIp({ janelaMs: 60_000, maximo: 60 }, ipDoPedido));
+  const limiteDoMcp = limitarPorIp({ janelaMs: 60_000, maximo: 120 }, ipDoPedido);
+  app.use("/api/mcp", limiteDoMcp);
+  app.use("/api/mcp/*", limiteDoMcp);
+
   /** Convite aberto pelo link do e-mail, antes de a pessoa entrar: de qual escritório é e para qual e-mail. */
   app.get("/api/convites/:id", async (c) => {
     const [row] = await db
@@ -79,8 +87,9 @@ export function createApp(deps: AppDeps) {
 
   app.onError((err, c) => {
     if (err instanceof HTTPException) return err.getResponse();
-    log("erro na requisição", { path: c.req.path, error: err.message });
-    deps.reporter?.error(err, { path: c.req.path, method: c.req.method });
+    // A rota, não o caminho: o caminho do link de envio carrega o segredo.
+    log("erro na requisição", { rota: c.req.routePath, error: err.message });
+    deps.reporter?.error(err, { rota: c.req.routePath, method: c.req.method });
     return c.json({ erro: "falha" }, 500);
   });
 
