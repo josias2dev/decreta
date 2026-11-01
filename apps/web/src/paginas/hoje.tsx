@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, FolderPlus, MessageSquarePlus, UserPlus } from "lucide-react";
 import { useState } from "react";
+import { AuditoriaDaCarteira } from "@/componentes/auditoria";
 import { AvisoDaCaptura } from "@/componentes/captura-do-djen";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
@@ -113,6 +114,7 @@ export function HojePage() {
                 {itens.length ? itens.map((i) => <CartaoDoDia key={`${i.tipo}-${i.id}`} item={i} />) : <Vazio titulo="Nada para hoje">Nenhum prazo, audiência ou tarefa no dia.</Vazio>}
               </div>
             </section>
+            {p.auditoria && <AuditoriaDaCarteira auditoria={p.auditoria} />}
             <section className="dc-secao">
               <h2 className="dc-secao__titulo">Atalhos</h2>
               <div className="dc-linha-acoes">{atalhos(true)}</div>
@@ -157,6 +159,7 @@ export function HojePage() {
               )}
             </Painel>
             <aside className="dc-pilha">
+              {p.auditoria && <AuditoriaDaCarteira auditoria={p.auditoria} />}
               <Painel
                 titulo={
                   <h2 className="dc-painel__titulo flex items-center gap-2">

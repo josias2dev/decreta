@@ -78,6 +78,16 @@
 .dc-fonte { color: var(--acento); text-decoration: underline dotted; text-underline-offset: 3px; border-radius: 4px; white-space: nowrap; }
 .dc-fonte:hover { color: var(--tinta); background: var(--acento-suave); text-decoration-style: solid; }
 .dc-fonte:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
+/* Auditoria da carteira (Hoje): uma linha por achado, o motivo como etiqueta. */
+.dc-auditoria { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.dc-auditoria__item { display: flex; flex-direction: column; gap: 2px; text-decoration: none; border-radius: 8px; padding: 2px 4px; margin: -2px -4px; }
+.dc-auditoria__item:hover { background: var(--superficie-2); }
+.dc-auditoria__item:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
+.dc-auditoria__motivo { align-self: flex-start; font: 600 11px/16px var(--font-sans); letter-spacing: 0.02em; text-transform: uppercase; color: var(--tinta-2); }
+.dc-auditoria__motivo[data-motivo="prazo_sem_dono"], .dc-auditoria__motivo[data-motivo="publicacao_sem_processo"] { color: var(--vencido); }
+.dc-auditoria__motivo[data-motivo="alvara_parado"] { color: var(--hoje); }
+.dc-auditoria__titulo { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-auditoria__detalhe { font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
 
 /* Listas no celular: um ponto menor que no computador, para caber mais sem apertar (Hoje, Prazos, Publicações e as outras). */
 .dc-celular .dc-item__titulo, .dc-celular .dc-cartao__titulo { font-size: 14px; line-height: 19px; }

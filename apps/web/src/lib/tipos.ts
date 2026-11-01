@@ -1,4 +1,5 @@
 /** O que a API das telas devolve (apps/api/src/rotas). */
+import type { AchadoDaAuditoria } from "@decreta/core";
 
 export interface Pessoa {
   id: string;
@@ -54,6 +55,8 @@ export interface PainelDoDia {
   porResponsavel: { pessoa: Pessoa | null; hoje: number; semana: number }[];
   /** Caderno do DJEN que faltou ou falhou. */
   alertasDaCaptura: string[];
+  /** Auditoria da carteira (a resposta antiga, sem ela, ainda pode estar em cache). */
+  auditoria?: { itens: AchadoDaAuditoria[]; total: number };
 }
 
 export type SituacaoNaLista = "a_confirmar" | "confirmado" | "peca_em_revisao" | "cumprido" | "descartado";

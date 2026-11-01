@@ -3,9 +3,10 @@
  * tarefas, num lugar só. A tela Hoje e o resumo da manhã no WhatsApp leem
  * daqui.
  */
-import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, nomeDaAudiencia, somarDias, urgenciaDoPrazo, type Calendario, type Dia, type Urgencia } from "@decreta/core";
+import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, nomeDaAudiencia, somarDias, urgenciaDoPrazo, type AchadoDaAuditoria, type Calendario, type Dia, type Urgencia } from "@decreta/core";
 import { alvaras, analises, audiencias, negocios, prazos, processos, publicacoes, tarefas, type Database, type Tx } from "@decreta/db";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
+import { auditarCarteira } from "./auditoria-carteira.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { saudeDaCaptura } from "./captura.ts";
 import { pessoasDoEscritorio, resumir, type PessoaResumida } from "./pessoas.ts";
@@ -42,7 +43,12 @@ export interface PainelDoDia {
   porResponsavel: { pessoa: PessoaResumida | null; hoje: number; semana: number }[];
   /** Caderno do DJEN que faltou ou falhou (ver saudeDaCaptura). */
   alertasDaCaptura: string[];
+  /** Auditoria da carteira: o que se perde sem controladoria, do mais arriscado ao menos. */
+  auditoria: { itens: AchadoDaAuditoria[]; total: number };
 }
+
+/** Achados que o painel guarda: o resumo de cada pessoa escolhe os dela daqui. */
+const ACHADOS_NO_PAINEL = 50;
 
 /** "prazo sugerido 23/11", "não gera prazo", "falta o teor". */
 export function resumoDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined): string {
@@ -194,5 +200,6 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
     }),
     porResponsavel,
     alertasDaCaptura: (await saudeDaCaptura(tx, hoje)).alertas,
+    auditoria: await auditarCarteira(tx, hoje, timeZone, ACHADOS_NO_PAINEL),
   };
 }
