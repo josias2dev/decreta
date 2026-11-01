@@ -38,6 +38,7 @@ export const ROTULO: Record<string, string> = {
   "documento.enviado": "Anexou um documento",
   "documento.apagado": "Apagou um documento",
   "escritorio.alterado": "Alterou os dados do escritório",
+  "mensagem_cliente.enviada": "Aprovou e enviou uma mensagem ao cliente no WhatsApp",
   "resultado.confirmado": "Confirmou o resultado de uma sentença",
   "peca.revisada": "Marcou uma peça como revisada",
   "modelo.criado": "Guardou um modelo de peça",

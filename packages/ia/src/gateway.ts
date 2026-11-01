@@ -45,6 +45,7 @@ export const METODOS = [
   "ler-imagem",
   "ler-pdf",
   "titulo-conversa",
+  "mensagem-cliente",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -64,6 +65,7 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "ler-imagem": "vision",
   "ler-pdf": "pdf",
   "titulo-conversa": "juridico",
+  "mensagem-cliente": "juridico",
 };
 
 /** Ações que o gateway conhece por outro nome: o título da conversa conta à parte no uso_ia, mas vai ao gateway como o chat. */
@@ -132,6 +134,7 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
   "ler-imagem": "low",
   "ler-pdf": "low",
   "titulo-conversa": "low",
+  "mensagem-cliente": "medium",
 };
 
 /**
