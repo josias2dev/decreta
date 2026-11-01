@@ -63,6 +63,15 @@ bun test                          # precisa do TEST_OWNER_URL do .env (Postgres 
 bun run web:build && bun run web:e2e
 ```
 
+A cada troca de modelo no gateway ou de prompt em `packages/ia`, rode o conjunto-ouro
+(`packages/ia/src/conjunto-ouro.ts`: prazos no dia exato, resumos por rubrica e
+citações só do material) contra a IA de verdade. Gasta uns centavos; a suíte normal
+roda o mesmo conjunto com uma IA de mentira.
+
+```sh
+bun run avaliar
+```
+
 Os testes de tela usam uma API de mentira (`apps/web/e2e/apoio.ts`) que responde com
 as amostras de `apps/web/e2e/amostras`. Mudou uma resposta da API? Gere de novo:
 

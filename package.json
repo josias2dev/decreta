@@ -18,7 +18,8 @@
     "db:migrate": "bun --filter @decreta/db migrate",
     "demonstracao": "bun --env-file=.env apps/api/src/scripts/demonstracao.ts",
     "escritorio:criar": "bun --env-file=.env apps/api/src/scripts/criar-escritorio.ts",
-    "backup": "bun --env-file=.env apps/api/src/scripts/backup.ts"
+    "backup": "bun --env-file=.env apps/api/src/scripts/backup.ts",
+    "avaliar": "bun --env-file=.env apps/api/src/scripts/avaliar-ia.ts"
   },
   "devDependencies": {
     "@types/bun": "1.4.4",
