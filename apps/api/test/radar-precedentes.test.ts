@@ -102,7 +102,7 @@ describe.skipIf(!hasTestDatabase)("radar de precedentes", () => {
       ["sumula:STJ:297", "Vigente"],
     ]);
     expect(guardados[0]!.questao).toBe("Definir a possibilidade de utilização da Central Nacional de Indisponibilidade de Bens (CNIB) como instrumento de busca de patrimônio.");
-    expect(await t.owner`select * from acervo_novidades`).toEqual([]);
+    expect(await t.owner`select * from acervo_novidades`).toHaveLength(0);
     expect(await cruzarRadar({ db: t.db }, new Date(0))).toEqual({ avisos: 0 });
   });
 
