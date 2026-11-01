@@ -1240,3 +1240,62 @@ a.dc-marca:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--anel); }
    Os dias da semana dos calendários continuam em caixa alta. */
 .dc-tabela th, .dc-tabela td.dc-tabela__grupo, .dc-busca-grupo__titulo, .dc-historico__grupo h3, .dc-recentes__topo h3, .dc-chat__contexto-grupo h3, .dc-cartao-ia__bloco > h4, .dc-cartao-ia__dia > h4 { text-transform: none; letter-spacing: 0; font-size: 12.5px; }
 .dc-md__host { font-size: 0.85em; color: var(--tinta-3); text-decoration: none; }
+
+/* ---------- Começar (configuração inicial) ----------
+   Uma etapa por tela, sem o menu em volta: a marca em cima, a barra das etapas e um cartão só, centrado. */
+.dc-comecar { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--papel); color: var(--tinta); }
+.dc-comecar__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: min(560px, 100%); min-height: 52px; margin: 0 auto; padding: 20px 16px 0; box-sizing: border-box; }
+.dc-comecar__pular { padding: 6px 10px; border: 0; border-radius: var(--radius-md); background: none; font: 500 13px/18px var(--font-sans); color: var(--tinta-3); cursor: pointer; transition: color .15s, background-color .15s; }
+.dc-comecar__pular:hover { color: var(--tinta); background: var(--superficie-2); }
+.dc-comecar__meio { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-5); width: 100%; padding: 36px 16px 48px; box-sizing: border-box; }
+.dc-comecar__progresso { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: min(560px, 100%); margin: 0; padding: 0; list-style: none; }
+.dc-comecar__progresso li { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dc-comecar__traco { display: block; height: 4px; border-radius: 999px; background: var(--borda-forte); transition: background-color .2s; }
+.dc-comecar__progresso li.is-feita .dc-comecar__traco, .dc-comecar__progresso li.is-atual .dc-comecar__traco { background: var(--primaria); }
+.dc-comecar__rotulo { font: 500 12.5px/16px var(--font-sans); color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-comecar__progresso li.is-atual .dc-comecar__rotulo { color: var(--tinta); }
+.dc-comecar__cartao { display: flex; flex-direction: column; gap: var(--space-2); width: min(560px, 100%); padding: 32px; box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); box-shadow: var(--sombra-card); }
+.dc-comecar__cartao > .dc-form { margin-top: var(--space-4); }
+.dc-comecar__passo { margin: 0; font: 500 12.5px/16px var(--font-sans); color: var(--tinta-3); }
+.dc-comecar__titulo { margin: 0; font: 600 24px/30px var(--font-sans); letter-spacing: -0.02em; color: var(--tinta); }
+.dc-comecar__sub { margin: 0; font: 400 14px/20px var(--font-sans); color: var(--tinta-2); }
+.dc-comecar__oab { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: var(--space-2); }
+.dc-comecar__opcao { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); cursor: pointer; }
+.dc-comecar__pe { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-2); padding-top: var(--space-4); border-top: 1px solid var(--borda); }
+.dc-comecar .dc-campo input, .dc-comecar .dc-campo select { height: 40px; font-size: 15px; }
+.dc-comecar .dc-campo select { padding-right: 32px; }
+.dc-comecar__pe .dc-btn { height: 40px; padding: 0 var(--space-4); font-size: 15px; }
+.dc-comecar__cartao--pronto { align-items: flex-start; gap: var(--space-3); }
+.dc-comecar__ok { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: var(--space-2); border-radius: 50%; background: var(--cumprido-suave); color: var(--cumprido); }
+.dc-comecar__ok svg { width: 22px; height: 22px; }
+.dc-comecar__atalhos { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; margin-top: var(--space-3); }
+.dc-comecar__atalho { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: 14px var(--space-4); border: 1px solid var(--borda); border-radius: var(--radius-lg); background: var(--superficie); color: var(--tinta); text-align: left; cursor: pointer; transition: border-color .15s, background-color .15s, box-shadow .15s; }
+.dc-comecar__atalho:hover { border-color: var(--borda-forte); background: var(--superficie-2); box-shadow: var(--sombra-card); }
+.dc-comecar__atalho:focus-visible { outline: none; border-color: var(--foco); box-shadow: 0 0 0 3px var(--anel); }
+.dc-comecar__atalho:disabled { opacity: .6; cursor: default; }
+.dc-comecar__atalho > span:not(.dc-comecar__atalho-icone) { display: flex; flex: 1; flex-direction: column; gap: 2px; }
+.dc-comecar__atalho strong { font: 600 15px/20px var(--font-sans); }
+.dc-comecar__atalho small { font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-comecar__atalho-icone { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--acento-suave); color: var(--acento); }
+.dc-comecar__atalho-icone svg { width: 20px; height: 20px; }
+.dc-comecar__atalho-seta { flex: none; width: 18px; height: 18px; color: var(--tinta-3); transition: transform .15s; }
+.dc-comecar__atalho:hover .dc-comecar__atalho-seta { transform: translateX(2px); color: var(--tinta); }
+/* O aviso do Hoje enquanto a configuração está pendente. */
+.dc-comecar-aviso { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 10px var(--space-3); border: 1px dashed var(--acento-borda); border-radius: var(--radius-md); background: var(--acento-suave); font: 500 13px/18px var(--font-sans); color: var(--tinta-2); }
+.dc-comecar-aviso > svg { width: 16px; height: 16px; flex: none; color: var(--acento); }
+.dc-comecar-aviso__link { color: var(--acento); text-decoration: none; }
+.dc-comecar-aviso__link:hover { color: var(--tinta); }
+.dc-comecar-aviso__sep { color: var(--tinta-3); }
+.dc-comecar-aviso__fechar { padding: 0; border: 0; background: none; font: inherit; color: var(--tinta-3); cursor: pointer; }
+.dc-comecar-aviso__fechar:hover { color: var(--tinta); }
+@media (max-width: 639px) {
+  .dc-comecar__meio { gap: var(--space-4); padding: 24px 16px 32px; }
+  .dc-comecar__cartao { padding: 22px 18px; }
+  .dc-comecar__titulo { font-size: 22px; line-height: 28px; }
+  .dc-comecar__rotulo { font-size: 11.5px; }
+  .dc-comecar .dc-campo input, .dc-comecar .dc-campo select { font-size: 16px; }
+  .dc-comecar__pe .dc-btn--fantasma { padding: 0 var(--space-2); }
+  /* No celular o "Não mostrar mais" vai para a linha de baixo, alinhado com o texto. */
+  .dc-comecar-aviso__sep { display: none; }
+  .dc-comecar-aviso__fechar { flex-basis: 100%; margin-left: 24px; text-align: left; }
+}

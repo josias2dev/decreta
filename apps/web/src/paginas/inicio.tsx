@@ -13,7 +13,7 @@ import pagina from "@/landing/pagina.html?raw";
 import vitrineCelular from "@/landing/vitrine-celular.webp";
 import vitrineComputador from "@/landing/vitrine-computador.webp";
 
-/** Para onde vão "Pedir acesso", "Falar com a equipe" e o contato do rodapé: o WhatsApp da equipe, com a mensagem pronta. */
+/** Para onde vão "Falar com a equipe", "Fale com a gente" e o contato do rodapé: o WhatsApp da equipe, com a mensagem pronta. "Criar conta" vai para /cadastro. */
 const CONTATO = `https://wa.me/5546999074372?text=${encodeURIComponent("Olá! Quero conhecer o Decreta para o meu escritório.")}`;
 
 const html = pagina

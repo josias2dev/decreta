@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/7eb52eaa-e516-4c34-b4d2-ee7eba8e23db",
+  "path": "/prazos/7c1212d1-7965-4177-931b-38e2c23871a3",
   "corpo": {
-    "id": "7eb52eaa-e516-4c34-b4d2-ee7eba8e23db",
+    "id": "7c1212d1-7965-4177-931b-38e2c23871a3",
     "tipo": "Manifestação sobre laudo pericial",
     "fundamento": "art. 477, § 1º, CPC",
     "dias": 15,
@@ -27,7 +27,7 @@
     "confirmado": false,
     "confirmadoPor": null,
     "responsavel": {
-      "id": "O1vE4LOqHlPy9IurJVJdv48sfPE1XD1J",
+      "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
@@ -73,7 +73,7 @@
       ]
     },
     "processo": {
-      "id": "e55020e7-473d-45fa-8027-d2cc31035a2d",
+      "id": "c24481d1-fc5d-47de-b36a-dc419c70d366",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "orgao": "2ª Vara Cível",
@@ -83,7 +83,7 @@
       "semIa": false
     },
     "publicacao": {
-      "id": "44cc031e-617a-424e-b03c-2dddb5d90b66",
+      "id": "43a76bea-93e3-447b-a5b8-9077866f05cc",
       "fonte": "djen",
       "texto": "Intimem-se as partes para, querendo, manifestarem-se sobre o laudo pericial juntado no evento 87, no prazo comum de 15 (quinze) dias. Após, voltem conclusos para sentença.",
       "disponibilizadaEm": "2026-10-28",
@@ -95,7 +95,7 @@
       "cancelada": null
     },
     "briefing": {
-      "id": "e89824fb-dbb3-4d2d-8105-680ccc4b27b3",
+      "id": "421c93a1-14cc-47ad-9cd9-c814a64bdec1",
       "acao": "briefing-prazo",
       "situacao": "pronto",
       "conteudo": {

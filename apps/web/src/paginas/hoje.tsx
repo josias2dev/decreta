@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import type { ItemDoDia, PainelDoDia } from "@/lib/tipos";
+import { TerminarDeConfigurar } from "./comecar";
 
 type Filtro = "tudo" | "prazo" | "audiencia" | "tarefa";
 
@@ -88,6 +89,7 @@ export function HojePage() {
           <Carregando />
         ) : (
           <>
+            <TerminarDeConfigurar eu={eu.data} />
             <Numeros painel={p} celular />
             <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
             {p.contadores.publicacoesNovas > 0 && (
@@ -133,6 +135,7 @@ export function HojePage() {
         <Carregando />
       ) : (
         <>
+          <TerminarDeConfigurar eu={eu.data} />
           <Numeros painel={p} />
           <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
           <div className="dc-colunas">

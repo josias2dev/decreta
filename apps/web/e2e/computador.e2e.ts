@@ -20,8 +20,9 @@ test("landing: sem sessão fica na página, mostra as seções e Entrar abre o l
     await expect(page.getByRole("heading", { name: titulo })).toBeAttached();
   }
   await expect(page.locator("#recursos .lp-bloco")).toHaveCount(8);
-  await expect(page.locator("#acesso").getByRole("link", { name: "Pedir acesso" })).toHaveAttribute("href", /^https:\/\/wa\.me\//);
-  await expect(page.locator(".lp-hero").getByRole("link", { name: "Pedir acesso" })).toHaveAttribute("href", /^https:\/\/wa\.me\/55\d+\?text=/);
+  await expect(page.locator("#acesso").getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro");
+  await expect(page.locator("#acesso").getByRole("link", { name: "Falar com a equipe" })).toHaveAttribute("href", /^https:\/\/wa\.me\/55\d+\?text=/);
+  await expect(page.locator(".lp-hero").getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro");
   await page.locator(".lp-topo").getByRole("link", { name: "Entrar" }).click();
   await expect(page.getByRole("heading", { name: "Entrar no Decreta" })).toBeVisible();
   expect(await sobraNaLateral(page)).toBe(0);

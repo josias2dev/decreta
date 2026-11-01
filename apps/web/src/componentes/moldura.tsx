@@ -34,6 +34,7 @@ import { euQuery } from "@/lib/consultas";
 import { numero } from "@/lib/formato";
 import type { Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
+import { comecarJaAberto, marcarComecarAberto } from "@/paginas/comecar";
 import { Avisos } from "./avisos";
 import { Busca } from "./busca";
 import { Marca } from "./marca";
@@ -97,15 +98,37 @@ const SEM_NAVEGACAO = [/^\/prazos\/[^/]+$/, /^\/publicacoes\/[^/]+$/, /^\/pecas/
 
 export function AppLayout() {
   const eu = useQuery(euQuery);
+  const caminho = useRouterState({ select: (s) => s.location.pathname });
   if (eu.isPending) return <Esperando />;
   if (eu.error instanceof ApiError && eu.error.status === 401) return <IrParaEntrar />;
   if (eu.error instanceof ApiError && eu.error.status === 403) return <SemEscritorio />;
   if (eu.error) return <ErroDeConexao aoTentar={() => void eu.refetch()} />;
+  // A configuração inicial fica sozinha na tela, sem o menu em volta.
+  if (caminho === "/comecar") {
+    return (
+      <Avisos>
+        <Outlet />
+      </Avisos>
+    );
+  }
   return (
     <Avisos>
+      <ComecarUmaVez eu={eu.data} caminho={caminho} />
       <Moldura eu={eu.data} />
     </Avisos>
   );
+}
+
+/** Configuração inicial pendente: o app abre em /comecar uma vez por sessão do navegador (depois do login), e não mais. */
+function ComecarUmaVez({ eu, caminho }: { eu: Eu; caminho: string }) {
+  const navigate = useNavigate();
+  const pendente = !!eu.escritorio.onboarding;
+  useEffect(() => {
+    if (!pendente || caminho !== "/hoje" || comecarJaAberto()) return;
+    marcarComecarAberto();
+    void navigate({ to: "/comecar", replace: true });
+  }, [pendente, caminho, navigate]);
+  return null;
 }
 
 function Moldura({ eu }: { eu: Eu }) {

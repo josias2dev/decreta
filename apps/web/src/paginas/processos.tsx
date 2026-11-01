@@ -35,7 +35,7 @@ export function ProcessosPage() {
   const navigate = useNavigate({ from: "/processos" });
   const situacao: Situacao = search.situacao ?? "ativos";
   const [texto, setTexto] = useBuscaNaUrl(search.busca, (busca) => void navigate({ search: (s) => ({ ...s, busca }), replace: true }));
-  const [novo, setNovo] = useState(false);
+  const [novo, setNovo] = useState(!!search.novo);
   const lista = useInfiniteQuery({
     queryKey: ["processos", situacao, search.busca ?? ""],
     queryFn: ({ pageParam }) => api<PaginaDaApi<ProcessoNaLista>>(`/processos?${new URLSearchParams({ situacao, pagina: String(pageParam), ...(search.busca ? { busca: search.busca } : {}) })}`),

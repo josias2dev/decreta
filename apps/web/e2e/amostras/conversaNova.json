@@ -1,9 +1,9 @@
 {
-  "path": "/ia/conversas/c1611099-ff08-4140-a3e8-d1d6dc58141c",
+  "path": "/ia/conversas/398df3ab-8f9e-488f-95aa-d3df9508eeb5",
   "corpo": {
     "rodape": "Gerado por IA. Confira nos autos.",
     "conversa": {
-      "id": "c1611099-ff08-4140-a3e8-d1d6dc58141c",
+      "id": "398df3ab-8f9e-488f-95aa-d3df9508eeb5",
       "titulo": "Resumo do dia",
       "modo": "pergunte",
       "fixada": false,
@@ -13,14 +13,14 @@
     },
     "mensagens": [
       {
-        "id": "06837958-261f-4bcd-bf79-91ae1c179191",
+        "id": "21b0fa9f-c148-4f33-ac43-f849bd5b78f2",
         "papel": "pessoa",
         "texto": "Como está o meu dia?",
         "partes": null,
         "em": "2026-10-29T12:30:00.000Z"
       },
       {
-        "id": "c24cd436-9fb4-4f59-9bdf-94961428555f",
+        "id": "93bfa517-d626-4123-ac7b-643c18663b98",
         "papel": "ia",
         "texto": "Hoje o escritório tem **3 prazos vencendo** e **1 já vencido**. Dos seus 16 prazos abertos, nenhum está atrasado.\n\nAinda hoje há **2 audiências**, e chegaram **8 publicações** que ninguém tratou. Vale olhar também os 8 prazos com data a confirmar e os 4 sem responsável.",
         "partes": [

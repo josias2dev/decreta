@@ -15,7 +15,8 @@ export type Contagem = "uteis" | "corridos";
 
 export interface Eu {
   usuario: Pessoa & { cargo: string | null; papel: string };
-  escritorio: { id: string; nome: string; pessoas: number; timezone: string; logo?: boolean; demonstracao?: boolean };
+  /** `onboarding`: a configuração inicial (/comecar) ainda está pendente e esta pessoa, sócia, pode fazê-la. */
+  escritorio: { id: string; nome: string; pessoas: number; timezone: string; logo?: boolean; demonstracao?: boolean; onboarding?: boolean };
   hoje: string;
   ia: boolean;
   equipe: (Pessoa & { cargo: string | null; papel: string })[];

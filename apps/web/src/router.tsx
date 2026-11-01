@@ -6,7 +6,9 @@ import type { Quando, SituacaoPublicacao } from "./lib/tipos";
 import { ConvitePage, RedefinirSenhaPage } from "./paginas/acesso";
 import { AgendaPage, AudienciaPage, VISTAS_DA_AGENDA, type VistaDaAgenda } from "./paginas/agenda";
 import { AlvarasPage } from "./paginas/alvaras";
+import { CadastroPage } from "./paginas/cadastro";
 import { ClientePage, ClientesPage } from "./paginas/clientes";
+import { ComecarPage } from "./paginas/comecar";
 import { ConfiguracoesPage } from "./paginas/configuracoes";
 import { ContaPage } from "./paginas/conta";
 import { DocumentosPage } from "./paginas/documentos";
@@ -43,6 +45,8 @@ const entrarRoute = createRoute({
   }),
   component: EntrarPage,
 });
+// Cadastro aberto: a pessoa, o escritório e a sessão; depois, a configuração inicial em /comecar.
+const cadastroRoute = createRoute({ getParentRoute: () => rootRoute, path: "/cadastro", component: CadastroPage });
 const conviteRoute = createRoute({ getParentRoute: () => rootRoute, path: "/convite/$id", component: ConvitePage });
 // O link que o cliente recebe no WhatsApp para mandar os documentos que faltam: sem login.
 const enviarRoute = createRoute({ getParentRoute: () => rootRoute, path: "/enviar/$org/$segredo", component: EnviarDocumentosPage });
@@ -61,6 +65,8 @@ const segurancaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/se
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
 const hojeRoute = createRoute({ getParentRoute: () => appRoute, path: "/hoje", component: HojePage });
+// A configuração inicial do escritório, uma etapa por tela, sem o menu em volta.
+const comecarRoute = createRoute({ getParentRoute: () => appRoute, path: "/comecar", component: ComecarPage });
 const prazosRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/prazos",
@@ -96,9 +102,11 @@ const pecaRoute = createRoute({
 const processosRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/processos",
-  validateSearch: (s: Record<string, unknown>): { busca?: string; situacao?: "arquivados" | "todos" } => ({
+  // `novo`: abre já com o diálogo de novo processo (o atalho do /comecar).
+  validateSearch: (s: Record<string, unknown>): { busca?: string; situacao?: "arquivados" | "todos"; novo?: true } => ({
     ...(texto(s.busca) ? { busca: texto(s.busca) } : {}),
     ...(s.situacao === "arquivados" || s.situacao === "todos" ? { situacao: s.situacao } : {}),
+    ...(s.novo === true ? { novo: true } : {}),
   }),
   component: ProcessosPage,
 });
@@ -155,11 +163,13 @@ const routeTree = rootRoute.addChildren([
   inicioRoute,
   segurancaRoute,
   entrarRoute,
+  cadastroRoute,
   conviteRoute,
   enviarRoute,
   redefinirRoute,
   appRoute.addChildren([
     hojeRoute,
+    comecarRoute,
     prazosRoute,
     prazoRoute,
     publicacoesRoute,

@@ -4,13 +4,13 @@ import { abrir, amostras, ApiFalsa, euComIa, ids, sobraNaLateral } from "./apoio
 
 test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 
-test("landing no celular: Entrar e Pedir acesso no topo, sem rolar para o lado", async ({ page }) => {
+test("landing no celular: Entrar e Criar conta no topo, sem rolar para o lado", async ({ page }) => {
   const api = new ApiFalsa();
   api.logado = false;
   await abrir(page, "/", api);
   const topo = page.locator(".lp-topo");
   await expect(topo.getByRole("link", { name: "Entrar" })).toBeInViewport();
-  await expect(topo.getByRole("link", { name: "Pedir acesso" })).toBeInViewport();
+  await expect(topo.getByRole("link", { name: "Criar conta" })).toBeInViewport();
   await expect.poll(() => page.locator(".lp-vitrine__img").evaluate((img: HTMLImageElement) => img.currentSrc)).toContain("vitrine-celular");
   expect(await sobraNaLateral(page)).toBe(0);
 });
@@ -262,13 +262,18 @@ const ROTAS = [
   "/configuracoes",
   "/conta",
   "/mais",
+  "/comecar",
+  "/cadastro",
 ];
 for (const rota of ROTAS) {
   test(`${rota.replace(/[0-9a-f-]{36}/, ":id")} cabe na largura do celular`, async ({ page }) => {
     const erros: string[] = [];
     page.on("pageerror", (e) => erros.push(String(e)));
-    await abrir(page, rota);
-    await expect(page.locator(".dc-topo__titulo")).toBeVisible();
+    const api = new ApiFalsa();
+    if (rota === "/cadastro") api.logado = false;
+    await abrir(page, rota, api);
+    // O título da tela: o topo do celular, o cartão do /comecar ou a caixa de entrar do /cadastro.
+    await expect(page.locator(".dc-topo__titulo, .dc-comecar__titulo, .lp-cartao-entrar__titulo").first()).toBeVisible();
     await expect(page.getByLabel("Carregando")).toHaveCount(0);
     expect(await sobraNaLateral(page)).toBe(0);
     // Abas são a única coisa que pode passar da largura sem rolar a página.

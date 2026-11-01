@@ -85,6 +85,14 @@ export class ApiFalsa {
       return json(200, { ok: true });
     }
     if (url.pathname.startsWith("/api/convites/")) return json(404, { erro: "nao_encontrado" });
+    // O cadastro aberto: cria a conta e já abre a sessão.
+    if (url.pathname === "/api/cadastro") {
+      this.pedidos.push({ metodo, caminho: "/cadastro", corpo });
+      const troca = this.trocas.get("/cadastro");
+      if (troca) return json(troca.status ?? 200, troca.corpo);
+      this.logado = true;
+      return json(201, { ok: true, sessao: true, escritorio: { id: amostras.eu!.corpo.escritorio.id, slug: "souza-mendes" } });
+    }
     if (!url.pathname.startsWith("/api/app/")) return json(404, { erro: "nao_encontrado" });
 
     const caminho = url.pathname.slice("/api/app".length);

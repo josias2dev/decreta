@@ -1,15 +1,15 @@
 {
-  "path": "/pecas/preparar?prazo=96a05d35-fb28-4539-8061-30a469f1d652",
+  "path": "/pecas/preparar?prazo=69ec4e25-f017-4bc6-a051-4d80046c7bef",
   "corpo": {
     "processo": {
-      "id": "83ba5cdf-e7cd-4393-9305-7db86309c50b",
+      "id": "3c433e4b-3ca2-48d8-b1ca-aa1a4b94a7f8",
       "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
       "cnj": "5009876-57.2025.8.24.0038",
       "orgao": "4ª Vara Cível",
       "semIa": false
     },
     "prazo": {
-      "id": "96a05d35-fb28-4539-8061-30a469f1d652",
+      "id": "69ec4e25-f017-4bc6-a051-4d80046c7bef",
       "tipo": "Alegações finais",
       "fim": "2026-10-29"
     },
@@ -21,18 +21,18 @@
     ],
     "modelos": [
       {
-        "id": "b14087e5-7d6b-443d-90de-6e1c0c11aa21",
+        "id": "443773be-4c7e-4f17-95b4-548c0c0b62c2",
         "titulo": "Manifestação sobre laudo · invalidez no seguro de vida"
       }
     ],
     "ultima": {
-      "id": "45a066c3-6038-48ad-b40a-511d2bbffb39",
+      "id": "478ed2ba-85e8-49ea-a096-fec44356e198",
       "titulo": "Alegações finais · Roberto Kühn",
       "tipo": "alegacoes-finais",
       "instrucoes": null,
       "texto": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA 4ª VARA CÍVEL DA COMARCA DE JOINVILLE/SC\n\n**ROBERTO KÜHN**, já qualificado nos autos da ação que move em face de **TRANSPORTES SERRA AZUL LTDA.**, vem apresentar ALEGAÇÕES FINAIS POR MEMORIAIS.\n\n## 1. DOS FATOS PROVADOS\n\nA prova testemunhal confirmou que o caminhão da ré invadiu a preferencial e atingiu o veículo do autor. O boletim de ocorrência e as fotografias juntadas na inicial vão no mesmo sentido.\n\n## 2. DOS DANOS\n\nOs orçamentos de conserto não foram impugnados de forma específica. [COMPLETAR: valor atualizado dos lucros cessantes]\n\n## 3. DOS PEDIDOS\n\nRequer a procedência integral dos pedidos, com a condenação da ré nos termos da inicial. [JURISPRUDÊNCIA: responsabilidade objetiva da transportadora]",
       "situacao": "rascunho",
-      "atualizadaEm": "2026-11-01T13:53:15.252Z"
+      "atualizadaEm": "2026-11-01T14:21:06.933Z"
     }
   }
 }

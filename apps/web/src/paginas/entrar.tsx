@@ -188,7 +188,18 @@ export function EntrarPage() {
   }
 
   return (
-    <CaixaDeEntrada titulo="Entrar no Decreta" sub="Prazos, publicações e processos do escritório." pe="Conta nova só por convite de um sócio do escritório.">
+    <CaixaDeEntrada
+      titulo="Entrar no Decreta"
+      sub="Prazos, publicações e processos do escritório."
+      pe={
+        <span>
+          Escritório novo?{" "}
+          <Link to="/cadastro" className="dc-link text-[13px]">
+            Criar conta
+          </Link>
+        </span>
+      }
+    >
       <form className="dc-form" onSubmit={entrar}>
         <Campo rotulo="E-mail" htmlFor="en-email">
           <input id="en-email" type="email" autoComplete="email" placeholder="voce@escritorio.adv.br" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus={!email} />

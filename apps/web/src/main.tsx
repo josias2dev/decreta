@@ -31,9 +31,9 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (err) => {
       // Sessão expirou com a tela aberta: volta para o login e depois para onde estava.
-      // Na landing e no login, 401 é só "ainda não entrou".
+      // Na landing, no login e no cadastro, 401 é só "ainda não entrou".
       const { pathname, href } = router.state.location;
-      if (err instanceof ApiError && err.status === 401 && pathname !== "/entrar" && pathname !== "/") {
+      if (err instanceof ApiError && err.status === 401 && pathname !== "/entrar" && pathname !== "/cadastro" && pathname !== "/") {
         void router.navigate({ to: "/entrar", search: { redirect: href }, replace: true });
       } else if (!(err instanceof ApiError && err.status < 500)) {
         // 4xx é resposta esperada (sem permissão, não encontrado); o resto é falha de verdade.

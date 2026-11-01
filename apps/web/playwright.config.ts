@@ -4,7 +4,8 @@
  */
 import { defineConfig } from "@playwright/test";
 
-const PORTA = 4179;
+// `E2E_PORTA` para rodar em outra porta quando outra cópia do repositório já usa a 4179.
+const PORTA = Number(process.env.E2E_PORTA) || 4179;
 
 export default defineConfig({
   testDir: "e2e",
