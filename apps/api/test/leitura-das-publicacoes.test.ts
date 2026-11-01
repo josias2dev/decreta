@@ -9,9 +9,11 @@ import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta
 import { armazenamentoEmMemoria } from "@decreta/documentos";
 import { createApp } from "../src/app.ts";
 import { createAuth } from "../src/auth.ts";
+import { SLUG_DA_DEMONSTRACAO } from "../src/demonstracao/slug.ts";
 import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { criarEscritorio } from "../src/escritorio-novo.ts";
+import { releiturasPendentes } from "../src/inngest.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { resumoDaManha } from "../src/servicos/avisos.ts";
 import { sugerirPrazoDaPublicacao } from "../src/servicos/prazos.ts";
@@ -22,6 +24,8 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
   let app: ReturnType<typeof createApp>;
   let appSemIa: ReturnType<typeof createApp>;
   let orgId = "";
+  let outroId = "";
+  let demoId = "";
   let cookie = "";
   const ia = iaFalsa();
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });
@@ -30,17 +34,19 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
   const json = async <T = any>(r: Response | Promise<Response>): Promise<T> => (await r).json() as Promise<T>;
   const hoje = () => json(chamar(app, "/hoje"));
 
-  async function publicacao(o: { processoId?: string; canceladaEm?: Date } = {}) {
-    const [p] = await withTenant(t.db, orgId, (tx) =>
+  async function publicacao(o: { processoId?: string; canceladaEm?: Date } = {}, escritorio = orgId) {
+    const [p] = await withTenant(t.db, escritorio, (tx) =>
       tx
         .insert(publicacoes)
-        .values({ organizationId: orgId, idExterno: randomUUID(), disponibilizadaEm: "2026-10-29", publicadaEm: "2026-10-30", texto: "Intime-se a parte autora para falar sobre o laudo pericial em 15 dias.", tipoComunicacao: "Intimação", ...o })
+        .values({ organizationId: escritorio, idExterno: randomUUID(), disponibilizadaEm: "2026-10-29", publicadaEm: "2026-10-30", texto: "Intime-se a parte autora para falar sobre o laudo pericial em 15 dias.", tipoComunicacao: "Intimação", ...o })
         .returning({ id: publicacoes.id }),
     );
     return p!.id;
   }
   const analise = (alvoId: string, situacao: "pronto" | "recusa" | "erro") =>
     withTenant(t.db, orgId, (tx) => tx.insert(analises).values({ organizationId: orgId, alvo: "publicacao", alvoId, acao: "sugerir-prazo", situacao, conteudo: { geraPrazo: false }, base: "b" }));
+  const leituraHa = (alvoId: string, situacao: "pronto" | "recusa" | "erro", horas: number) =>
+    withTenant(t.db, orgId, (tx) => tx.insert(analises).values({ organizationId: orgId, alvo: "publicacao", alvoId, acao: "sugerir-prazo", situacao, conteudo: {}, base: "b", createdAt: new Date(Date.now() - horas * 3_600_000) }));
   const chegouHa2Horas = (id: string) => t.owner`update publicacoes set created_at = now() - interval '2 hours' where id = ${id}`;
   const seloNaLista = async (id: string) => (await json(chamar(app, "/publicacoes"))).itens.find((i: { id: string }) => i.id === id).selo;
 
@@ -55,6 +61,8 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
     const r = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email, password: "senha-bem-longa-123" }) });
     cookie = r.headers.get("set-cookie")?.split(";")[0] ?? "";
     await app.request("/api/auth/organization/set-active", { method: "POST", headers: { "content-type": "application/json", cookie, origin: env.WEB_ORIGIN }, body: JSON.stringify({ organizationId: orgId }) });
+    ({ organizationId: outroId } = await criarEscritorio(t.db, auth, { nome: "Outro Escritório", slug: "outro", dono: { email: "outra@outro.adv.br", nome: "Outra Pessoa", senha: "senha-bem-longa-123", cargo: "Advogada · sócia", oabNumero: "1.234", oabUf: "SC" } }));
+    ({ organizationId: demoId } = await criarEscritorio(t.db, auth, { nome: "Escritório de Demonstração", slug: SLUG_DA_DEMONSTRACAO, dono: { email: "teste@decreta.site", nome: "Demonstração", senha: "senha-bem-longa-123", cargo: "Advogada · sócia", oabNumero: "9.999", oabUf: "SC" } }));
   });
 
   afterAll(async () => {
@@ -116,6 +124,79 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
     await chegouHa2Horas(id);
     expect((await json(chamar(appSemIa, "/hoje"))).contadores.publicacoesSemLeitura).toBe(0);
     expect((await json(chamar(appSemIa, `/publicacoes/${id}`))).leituraParada).toBe(false);
+  });
+
+  /* ---------------- Releitura sozinha ---------------- */
+
+  test("a IA falhou: relê depois de uma hora, não na mesma hora", async () => {
+    const recente = await publicacao();
+    await leituraHa(recente, "erro", 0.5);
+    const antiga = await publicacao();
+    await leituraHa(antiga, "erro", 1.5);
+    expect(await releiturasPendentes(t.db)).toEqual([{ organizationId: orgId, publicacaoId: antiga, nuncaLida: false }]);
+  });
+
+  test("a espera dobra a cada falha, para não insistir com o gateway fora do ar", async () => {
+    const espera = await publicacao();
+    await leituraHa(espera, "erro", 5);
+    await leituraHa(espera, "erro", 1.5);
+    const passou = await publicacao();
+    await leituraHa(passou, "erro", 6);
+    await leituraHa(passou, "erro", 2.5);
+    expect((await releiturasPendentes(t.db)).map((r) => r.publicacaoId)).toEqual([passou]);
+  });
+
+  test("depois de seis falhas para de tentar: fica o aviso no Hoje e o botão de ler de novo", async () => {
+    const id = await publicacao();
+    for (const horas of [100, 90, 80, 70, 60, 50]) await leituraHa(id, "erro", horas);
+    expect(await releiturasPendentes(t.db)).toEqual([]);
+    expect((await hoje()).contadores.publicacoesSemLeitura).toBe(1);
+  });
+
+  test("não relê o que já leu, nem o que não tem teor: a resposta seria a mesma", async () => {
+    const lida = await publicacao();
+    await leituraHa(lida, "erro", 10);
+    await leituraHa(lida, "pronto", 5);
+    await leituraHa(await publicacao(), "recusa", 5);
+    expect(await releiturasPendentes(t.db)).toEqual([]);
+  });
+
+  test("sem leitura nenhuma: pede a leitura de novo depois de uma hora, como publicação nunca lida", async () => {
+    const nova = await publicacao();
+    expect(await releiturasPendentes(t.db)).toEqual([]);
+    await chegouHa2Horas(nova);
+    expect(await releiturasPendentes(t.db)).toEqual([{ organizationId: orgId, publicacaoId: nova, nuncaLida: true }]);
+  });
+
+  test("não manda para a IA o caso de cliente que recusou, a publicação cancelada nem a já tratada", async () => {
+    const [cliente] = await withTenant(t.db, orgId, (tx) => tx.insert(clientes).values({ organizationId: orgId, nome: "Paula Ramos", semIa: true }).returning({ id: clientes.id }));
+    const [processo] = await withTenant(t.db, orgId, (tx) => tx.insert(processos).values({ organizationId: orgId, titulo: "Paula Ramos × Banco Delta", clienteId: cliente!.id }).returning({ id: processos.id }));
+    const semIa = await publicacao({ processoId: processo!.id });
+    const cancelada = await publicacao({ canceladaEm: new Date() });
+    const tratada = await publicacao();
+    for (const id of [semIa, cancelada, tratada]) await chegouHa2Horas(id);
+    await t.owner`update publicacoes set situacao = 'lida' where id = ${tratada}`;
+    expect(await releiturasPendentes(t.db)).toEqual([]);
+  });
+
+  test("vale para cada escritório, e a demonstração nunca vai para a IA de verdade", async () => {
+    const minha = await publicacao();
+    const doOutro = await publicacao({}, outroId);
+    const daDemo = await publicacao({}, demoId);
+    for (const id of [minha, doOutro, daDemo]) await chegouHa2Horas(id);
+    const pendentes = await releiturasPendentes(t.db);
+    expect(pendentes.map((r) => r.publicacaoId).toSorted()).toEqual([minha, doOutro].toSorted());
+    expect(pendentes.find((r) => r.publicacaoId === doOutro)?.organizationId).toBe(outroId);
+  });
+
+  test("no máximo vinte por escritório a cada rodada, as mais antigas primeiro", async () => {
+    const ids: string[] = [];
+    for (let i = 0; i < 22; i++) {
+      const id = await publicacao();
+      ids.push(id);
+      await t.owner`update publicacoes set created_at = now() - make_interval(hours => ${100 - i}) where id = ${id}`;
+    }
+    expect((await releiturasPendentes(t.db)).map((r) => r.publicacaoId)).toEqual(ids.slice(0, 20));
   });
 
   test("o resumo da manhã avisa, para não depender de abrir o Hoje", async () => {

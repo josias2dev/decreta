@@ -126,9 +126,12 @@ Em aberto:
 
 A falha só aparecia no selo da lista de publicações, e no Hoje apenas nas três primeiras novas. Uma publicação cuja rotina de fundo não rodou ficava para sempre em "IA lendo", sem botão para tentar de novo. Agora o Hoje e o resumo da manhã contam as publicações novas sem leitura: falha da IA, falta de teor e nenhuma leitura uma hora depois de chegar. Cliente sem IA, publicação cancelada e servidor com a IA desligada não contam. A publicação parada mostra que a IA não conseguiu ler e oferece "Ler de novo".
 
+A rotina `reler-publicacoes` roda de hora em hora e relê sozinha o que falhou: a espera dobra a cada falha (1, 2, 4, 8 e 16 horas), até seis falhas, e são no máximo 20 por escritório a cada rodada. Falta de teor, cliente sem IA, publicação cancelada e a demonstração ficam de fora.
+
 Em aberto:
 
-- **Médio — nada relê sozinho:** depois de uma falha, a publicação continua sem leitura até alguém pedir. Um dia inteiro de gateway fora do ar vira várias publicações para reler uma a uma.
+- **Baixo — leitura da sentença:** a rotina `reler-publicacoes` cobre a sugestão de prazo. A leitura da sentença que falhou continua esperando alguém pedir.
+- **Baixo — seis falhas:** depois disso a rotina desiste, com o aviso no Hoje e o botão "Ler de novo". Uma falha de mais de um dia precisa de alguém.
 
 ## 3. Depende de você
 

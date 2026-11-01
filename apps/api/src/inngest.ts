@@ -2,6 +2,7 @@
  * Rotinas de fundo no Inngest.
  *
  *   04:30 (dias úteis) ── capturar-cadernos-djen (todos os escritórios) ──► publicação nova ──► sugerir-prazo
+ *   de hora em hora ── reler-publicacoes (o que a IA não conseguiu ler) ──► sugerir-prazo
  *   publicação nova ── guardar-certidao (a prova da data, do DJEN, guardada com o escritório)
  *   12:40, 18:40 (dias úteis) ── capturar-djen (por OAB, reforço do mesmo dia) ──► publicação nova
  *   05:00 (todo dia) ── atualizar-datajud ──► processo.datajud (no ritmo que o DataJud aguenta)
@@ -32,6 +33,7 @@ import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
 import { ClienteSemIa } from "./servicos/contexto.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
+import { publicacoesParaReler } from "./servicos/publicacoes.ts";
 import { rascunhoDoPrazo } from "./servicos/rascunho.ts";
 import { lerSentencaSozinha } from "./servicos/sentencas.ts";
 import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
@@ -42,6 +44,7 @@ export const inngest = new Inngest({ id: "decreta" });
 type Org = { organizationId: string } & Record<string, unknown>;
 export const capturaPedida = eventType("decreta/captura.djen", { schema: staticSchema<Org>() });
 export const publicacaoNova = eventType("decreta/publicacao.nova", { schema: staticSchema<Org & { publicacaoId: string }>() });
+export const publicacaoParaReler = eventType("decreta/publicacao.reler", { schema: staticSchema<Org & { publicacaoId: string }>() });
 export const datajudDoEscritorio = eventType("decreta/datajud.escritorio", { schema: staticSchema<Org>() });
 export const processoDataJud = eventType("decreta/processo.datajud", { schema: staticSchema<Org & { processoId: string }>() });
 export const documentoParaLer = eventType("decreta/documento.ler", { schema: staticSchema<Org & { documentoId: string }>() });
@@ -79,6 +82,16 @@ export interface DepsDasRotinas {
 /** Os escritórios das rotinas. A demonstração fica de fora: nada dela sai para o DJEN, o DataJud ou o WhatsApp. */
 async function escritoriosAtivos(db: Database) {
   return db.select({ id: organization.id, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao }).from(organization).where(ne(organization.slug, SLUG_DA_DEMONSTRACAO));
+}
+
+/** O que a IA deve ler de novo em cada escritório (a demonstração fica de fora, como nas outras rotinas). */
+export async function releiturasPendentes(db: Database) {
+  const pendentes: { organizationId: string; publicacaoId: string; nuncaLida: boolean }[] = [];
+  for (const o of await escritoriosAtivos(db)) {
+    const dele = await withTenant(db, o.id, publicacoesParaReler);
+    pendentes.push(...dele.map((p) => ({ organizationId: o.id, ...p })));
+  }
+  return pendentes;
 }
 
 export function createFunctions(deps: DepsDasRotinas) {
@@ -131,7 +144,7 @@ export function createFunctions(deps: DepsDasRotinas) {
   const sugerir = inngest.createFunction(
     {
       id: "sugerir-prazo",
-      triggers: [publicacaoNova],
+      triggers: [publicacaoNova, publicacaoParaReler],
       concurrency: { limit: 2, key: "event.data.organizationId" },
       retries: 2,
       onFailure: async ({ event, error }) => reporter.error(error, { funcao: "sugerir-prazo", ...(event.data.event.data as Org) }),
@@ -148,6 +161,18 @@ export function createFunctions(deps: DepsDasRotinas) {
           throw err;
         }
       }),
+  );
+
+  const relerFn = inngest.createFunction(
+    { id: "reler-publicacoes", triggers: [{ cron: "TZ=America/Sao_Paulo 20 * * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "reler-publicacoes" }) },
+    async ({ step }) => {
+      if (!deps.ia) return { desligado: true };
+      const pendentes = await step.run("publicacoes", () => releiturasPendentes(db));
+      // Nunca lida: o evento da chegada se perdeu, e a certidão e a sentença também ficaram para trás. Quem falhou só relê o prazo.
+      const eventos = pendentes.map(({ organizationId, publicacaoId, nuncaLida }) => (nuncaLida ? publicacaoNova.create({ organizationId, publicacaoId }) : publicacaoParaReler.create({ organizationId, publicacaoId })));
+      if (eventos.length) await step.sendEvent("reler", eventos);
+      return { releituras: pendentes.length };
+    },
   );
 
   // A certidão é a prova da data da publicação: guardada já, e não só quando alguém abrir.
@@ -355,5 +380,5 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn];
+  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn];
 }
