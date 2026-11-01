@@ -104,7 +104,7 @@ const curto = (texto: string, max: number) => {
   const t = texto.replace(/\s+/g, " ").trim();
   return t.length > max ? `${t.slice(0, max).replace(/\s\S*$/, "")}…` : t;
 };
-const cortado = (texto: string, aviso: string) => (texto.length > TETO_DO_TEXTO ? `${texto.slice(0, TETO_DO_TEXTO)}\n[${aviso} cortado aqui]` : texto);
+export const cortado = (texto: string, aviso: string) => (texto.length > TETO_DO_TEXTO ? `${texto.slice(0, TETO_DO_TEXTO)}\n[${aviso} cortado aqui]` : texto);
 /** "sex., 6 nov" */
 const rotuloDoDia = (d: Dia, hoje: Dia) => `${nomeDoDiaDaSemana(d).slice(0, 3)}., ${diaPorExtensoCurto(d, hoje)}`;
 

@@ -64,7 +64,7 @@ export async function conferirCitacaoNoAcervo(db: Database, p: { chave: string; 
   const [d] = await db.select().from(acervoDocumentos).where(eq(acervoDocumentos.chave, p.chave));
   if (!d) return { chave: p.chave, rotulo, trecho: p.trecho, literal: null, selo: "nao_verificada", motivo: FORA_DO_ACERVO, texto: null, fonte: null };
   const base = seloDoDocumento(rotulo, d);
-  const literal = ehLiteral([d.texto, d.questao].filter(Boolean).join("\n"), p.trecho);
+  const literal = ehLiteral(d.texto ?? "", p.trecho);
   const ressalvas = literal ? [] : [NAO_LITERAL];
   return {
     chave: d.chave,

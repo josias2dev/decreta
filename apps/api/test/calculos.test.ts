@@ -182,7 +182,7 @@ describe.skipIf(!hasTestDatabase)("cálculos pela API", () => {
 
   test("datas fora da faixa são 422 antes de qualquer conta: futuro, antes do Plano Real, juros depois do cálculo, expedição fora", async () => {
     const base = { titulo: "Teste", regime: { tipo: "contratual", indice: "nenhum", jurosAoMes: 1 }, parcelas: [{ descricao: "Parcela", valor: 100, vencimento: "2024-01-10" }] };
-    const erro = async (json: unknown) => (await (await call("/calculos/atualizacao", { method: "POST", json })).json()).erro;
+    const erro = async (json: unknown) => ((await (await call("/calculos/atualizacao", { method: "POST", json })).json()) as { erro: string }).erro;
     expect(await erro({ ...base, dataDoCalculo: "2999-01-01" })).toBe("calculo_no_futuro");
     expect(await erro({ ...base, dataDoCalculo: "2024-06-01", parcelas: [{ descricao: "Antiga", valor: 100, vencimento: "1990-01-10" }] })).toBe("antes_do_real");
     expect(await erro({ ...base, dataDoCalculo: "2024-06-01", jurosDesde: "2024-07-01" })).toBe("juros_depois_do_calculo");

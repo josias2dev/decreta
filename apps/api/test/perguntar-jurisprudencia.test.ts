@@ -143,6 +143,7 @@ describe.skipIf(!hasTestDatabase)("Perguntar no modo Jurisprudência: citação 
 
   test("número que a IA escreveu por conta própria no texto também ganha selo (sem repetir o que já passou por citar)", async () => {
     ia.respostas.jurisprudencia = [
+      { ferramentas: [{ nome: "buscarJurisprudencia", entrada: { busca: "plano de saúde internação" } }] },
       { ferramentas: [{ nome: "citar", entrada: { chave: "sumula:STJ:302", trecho: "limita no tempo a internação hospitalar do segurado", afirmacao: "O plano não pode limitar o tempo de internação." } }] },
       "A Súmula 302 do STJ vale aqui [1]. O Tema 952 do STJ trata de outra coisa, e a Súmula 9999 do STJ eu não conferi.",
     ];
@@ -160,5 +161,23 @@ describe.skipIf(!hasTestDatabase)("Perguntar no modo Jurisprudência: citação 
     const conversa = (await (await call(`/ia/conversas/${eventos[0]!.conversa.id}`)).json()) as any;
     const parte = conversa.mensagens[1].partes.find((p: { tipo: string }) => p.tipo === "citacoes");
     expect(parte.itens.map((c: { selo: string }) => c.selo)).toEqual(["verificada", "nao_verificada"]);
+  });
+
+  test("chave que não veio da busca não vira citação, e o [n] que ficou no texto sai como não verificada", async () => {
+    ia.respostas.jurisprudencia = [
+      // Sem buscar antes: a chave é bem formada, mas veio da cabeça do modelo.
+      { ferramentas: [{ nome: "citar", entrada: { chave: "sumula:STJ:302", trecho: "limita no tempo a internação hospitalar do segurado", afirmacao: "O plano não pode limitar o tempo de internação." } }] },
+      "O plano não pode limitar a internação [1], e há precedente para a cirurgia [2].",
+    ];
+    const eventos = await perguntar("E sem buscar?");
+    const citar = eventos.find((e) => e.t === "resultado" && e.nome === "citar")!;
+    expect(citar.saida).toBeUndefined();
+    expect(String(citar.erro)).toContain("não veio de buscarJurisprudencia nesta resposta");
+    const itens = eventos.find((e) => e.t === "citacoes")!.itens as { chave: string; trecho: string; selo: string; motivo: string }[];
+    expect(itens.map((c) => [c.chave, c.trecho, c.selo])).toEqual([
+      ["citacao:1", "[1]", "nao_verificada"],
+      ["citacao:2", "[2]", "nao_verificada"],
+    ]);
+    expect(itens[0]!.motivo).toBe("A resposta remete a [1], mas nenhuma citação com esse número foi conferida. Confira antes de usar.");
   });
 });

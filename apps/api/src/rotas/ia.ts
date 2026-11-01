@@ -20,6 +20,7 @@ import {
   resumirAutos,
   RODAPE_IA,
   IaRecusou,
+  AVISO_DO_DOCUMENTO,
   tituloDaConversa,
   tituloProvisorio,
   type Ia,
@@ -33,6 +34,7 @@ import { dadosDoEscritorio, prazosDeAgora } from "../servicos/assistente.ts";
 import type { CitacaoVerificada } from "../servicos/acervo.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { ClienteSemIa, contextoParaIa, semIa } from "../servicos/contexto.ts";
+import { cortado } from "../servicos/assistente.ts";
 import { citacoesDoTexto } from "../servicos/jurisprudencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { AVISOS, quantoResta, SEM_LIMITES, usoDoDia } from "../servicos/uso-ia.ts";
@@ -161,13 +163,18 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         const [p] = await tx.select().from(prazos).where(eq(prazos.id, prazoId));
         if (!p) return null;
         const [doc] = await tx
-          .select({ nome: documentos.nome, evento: documentos.evento, texto: documentos.texto })
+          .select({ nome: documentos.nome, evento: documentos.evento, texto: documentos.texto, alertas: documentos.alertas })
           .from(documentos)
           .where(and(eq(documentos.id, documentoId), eq(documentos.processoId, p.processoId)));
         if (!doc) return null;
         const ctx = await contextoParaIa(tx, p.processoId);
         return {
-          entrada: { prazo: { tipo: p.tipo, fim: p.fim }, peca: { nome: doc.nome, evento: doc.evento, texto: doc.texto ?? "" }, contextoDoProcesso: ctx?.texto ?? "" },
+          entrada: {
+            prazo: { tipo: p.tipo, fim: p.fim },
+            // A peça da outra parte é o documento mais hostil do sistema: cortada no teto e marcada como dado.
+            peca: { nome: doc.nome, evento: doc.evento, texto: cortado(doc.texto ?? "", "peça"), aviso: doc.alertas?.length ? AVISO_DO_DOCUMENTO : null },
+            contextoDoProcesso: ctx?.texto ?? "",
+          },
           base: ctx?.base ?? "",
           fonte: doc.evento != null ? `${doc.nome} · evento ${doc.evento}` : doc.nome,
         };
@@ -641,9 +648,17 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
           enviar({ t: "texto", v: `\n\n${aviso}` });
         }
         // Nenhuma citação sem selo: as que passaram por citar já têm; as escritas direto no texto são conferidas aqui.
-        if (escrito.trim() && !parou) {
-          const citadas = new Set(partes.flatMap((x) => (x.tipo === "ferramenta" && x.nome === "citar" && x.saida && typeof x.saida === "object" ? [String((x.saida as { chave?: unknown }).chave)] : [])));
+        if (escrito.trim()) {
+          const conferidas = partes.flatMap((x) => (x.tipo === "ferramenta" && x.nome === "citar" && x.saida && typeof x.saida === "object" ? [x.saida as { chave?: unknown; n?: unknown }] : []));
+          const citadas = new Set(conferidas.map((s) => String(s.chave)));
           const itens = await citacoesDoTexto({ db, log: deps.log }, orgId, escrito, citadas);
+          // "[3]" no texto sem uma citação conferida com esse número: também sai com selo, de não verificada.
+          const numeros = new Set(conferidas.map((s) => Number(s.n)));
+          for (const m of escrito.matchAll(/\[(\d{1,2})\]/g)) {
+            if (numeros.has(Number(m[1]))) continue;
+            numeros.add(Number(m[1]));
+            itens.push({ chave: `citacao:${m[1]}`, trecho: m[0], inicio: m.index!, selo: "nao_verificada", motivo: `A resposta remete a [${m[1]}], mas nenhuma citação com esse número foi conferida. Confira antes de usar.`, texto: null, fonte: null });
+          }
           if (itens.length) {
             partes.push({ tipo: "citacoes", itens });
             enviar({ t: "citacoes", itens });

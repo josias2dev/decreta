@@ -78,7 +78,7 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
  * leitura da peça contrária, como o briefing do prazo (o mesmo tipo de leitura);
  * a conferência de uma citação (o trecho sustenta a afirmação?), como a jurisprudência.
  */
-const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar", "ler-peca-contraria": "briefing-prazo", "conferir-citacao": "jurisprudencia" };
+const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar", "ler-peca-contraria": "briefing-prazo", "mensagem-cliente": "briefing-prazo", "conferir-citacao": "jurisprudencia" };
 
 /** O teto do dia não passa em segundos: a AI SDK não deve pedir de novo (a pessoa esperava o aviso uns 2 s a mais). */
 function semNovaTentativaNoTeto(err: unknown): never {
