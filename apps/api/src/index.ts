@@ -7,6 +7,7 @@ import { createAuth } from "./auth.ts";
 import { createLogMailer, createResendMailer } from "./email.ts";
 import { readEnv } from "./env.ts";
 import { createFunctions, eventoDoPedido, inngest } from "./inngest.ts";
+import { rotasDoEnvioPeloCliente } from "./rotas/envio-pelo-cliente.ts";
 import { createRotas } from "./rotas/index.ts";
 import { startSentry } from "./sentry.ts";
 import { limitesDoEnv } from "./servicos/uso-ia.ts";
@@ -59,11 +60,16 @@ const rotas = createRotas({
   limites,
 });
 
+const enfileirarPedido = async (p: Parameters<typeof eventoDoPedido>[0]) => {
+  await inngest.send(eventoDoPedido(p));
+};
+
 const app = createApp({
   db,
   env,
   auth,
   rotas,
+  envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log }),
   inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites }) }),
   log,
   reporter,

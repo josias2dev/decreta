@@ -15,6 +15,7 @@ import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { criarEscritorio } from "../src/escritorio-novo.ts";
 import type { Pedido } from "../src/rotas/base.ts";
+import { rotasDoEnvioPeloCliente } from "../src/rotas/envio-pelo-cliente.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import type { Wameow } from "../src/servicos/avisos.ts";
 import { iaFalsa } from "./ia-falsa.ts";
@@ -85,20 +86,23 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
   beforeAll(async () => {
     t = await createTestDatabase();
     auth = createAuth(t.db, env);
+    const arquivos = armazenamentoEmMemoria();
+    const enfileirar = async (p: Pedido) => void pedidos.push(p);
     const rotas = createRotas({
       db: t.db,
       auth,
       ia,
-      arquivos: armazenamentoEmMemoria(),
+      arquivos,
       mailer: createLogMailer(() => {}),
       telas: "https://decreta.local",
       captura: { db: t.db, datajudKey: "" },
       wameow: zap.w,
       maxArquivoBytes: 5e6,
-      enfileirar: async (p) => void pedidos.push(p),
+      enfileirar,
       log: () => {},
     });
-    app = createApp({ db: t.db, env, auth, rotas, log: () => {} });
+    const envio = rotasDoEnvioPeloCliente({ db: t.db, ia, arquivos, maxArquivoBytes: 5e6, enfileirar, log: () => {} });
+    app = createApp({ db: t.db, env, auth, rotas, envio, log: () => {} });
     await entrar(escritorio, "beatriz@souza.adv.br", "souza-mendes", "Souza & Mendes Advocacia");
     await entrar(demo, "teste@decreta.site", SLUG_DA_DEMONSTRACAO, "Escritório de Demonstração");
   });
@@ -196,5 +200,105 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     expect(r.status).toBe(403);
     expect((await json(r)).erro).toBe("demonstracao");
     expect(zap.enviados).toHaveLength(antes);
+  });
+
+  /* ---------------- 3.3 Cobrar os documentos que faltam ---------------- */
+
+  let cobrancaId = "";
+  let link = "";
+  const caminhoDoEnvio = () => `/api/envio${new URL(link).pathname.replace(/^\/enviar/, "")}`;
+
+  test("sem conferência da pasta não há o que cobrar", async () => {
+    const r = await call(`/clientes/${escritorio.clienteId}/cobrar-documentos`, { method: "POST" });
+    expect(r.status).toBe(422);
+    expect((await json(r)).erro).toBe("sem_conferencia");
+  });
+
+  test("a conferência sabe o que falta: o rascunho lista os documentos, sem link, e nada sai", async () => {
+    const antes = zap.enviados.length;
+    await withTenant(t.db, escritorio.orgId, (tx) =>
+      tx.insert(analises).values({
+        organizationId: escritorio.orgId,
+        alvo: "cliente",
+        alvoId: escritorio.clienteId,
+        acao: "conferir-pasta",
+        situacao: "pronto",
+        conteudo: {
+          itens: [
+            { item: "procuracao", situacao: "falta", detalhe: "Não está na pasta.", documento: null },
+            { item: "cpf", situacao: "certo", detalhe: "Bate com o cadastro.", documento: "rg.pdf" },
+          ],
+          outros: [],
+          resumo: "Falta a procuração.",
+          recusa: null,
+        },
+        base: "b",
+      }),
+    );
+    const r = await call(`/clientes/${escritorio.clienteId}/cobrar-documentos`, { method: "POST" });
+    expect(r.status).toBe(201);
+    const m = await json(r);
+    expect(m).toMatchObject({ tipo: "documentos", situacao: "rascunho", itens: ["Procuração assinada", "Termo de uso de inteligência artificial assinado"] });
+    expect(m.texto).toStartWith("Olá, Marina.");
+    expect(m.previa).toContain("[link de envio]");
+    cobrancaId = m.id;
+    expect(zap.enviados).toHaveLength(antes);
+  });
+
+  test("aprovada, sai com o link de envio; o banco guarda só o hash do segredo", async () => {
+    const r = await call(`/mensagens-cliente/${cobrancaId}/enviar`, { method: "POST", json: {} });
+    expect(r.status).toBe(200);
+    const texto = zap.enviados.at(-1)!.text;
+    expect(texto).toContain("• Procuração assinada");
+    expect(texto).toContain("Este escritório nunca pede Pix para liberar valores.");
+    link = texto.match(/https:\/\/decreta\.local\/enviar\/\S+/)![0];
+    expect(link.startsWith(`https://decreta.local/enviar/${escritorio.orgId}/`)).toBe(true);
+    const segredo = link.split("/").at(-1)!;
+    const [linha] = await t.owner<{ enviado: string; link_hash: string; link_expira_em: Date }[]>`select enviado, link_hash, link_expira_em from mensagens_cliente where id = ${cobrancaId}`;
+    expect(linha!.enviado).not.toContain(segredo);
+    expect(linha!.enviado).toContain("[link de envio]");
+    expect(linha!.link_hash).not.toBe(segredo);
+    const dias = (linha!.link_expira_em.getTime() - Date.now()) / 86_400_000;
+    expect(dias).toBeGreaterThan(6.9);
+    expect(dias).toBeLessThanOrEqual(7);
+  });
+
+  test("o link abre sem login e mostra só o escritório, o primeiro nome e a lista", async () => {
+    const r = await app.request(caminhoDoEnvio());
+    expect(r.status).toBe(200);
+    const p = await json(r);
+    expect(p).toMatchObject({ escritorio: "Souza & Mendes Advocacia", cliente: "Marina", itens: ["Procuração assinada", "Termo de uso de inteligência artificial assinado"], recebidos: 0 });
+    expect(p.validoAte).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(JSON.stringify(p)).not.toContain("99123");
+  });
+
+  test("a foto enviada vai para a pasta do cliente e entra na leitura de documentos, com aviso de resposta automática", async () => {
+    const form = new FormData();
+    form.set("arquivo", new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3])], "procuracao.jpg", { type: "image/jpeg" }));
+    const r = await app.request(caminhoDoEnvio(), { method: "POST", body: form });
+    expect(r.status).toBe(201);
+    const resposta = await json(r);
+    expect(resposta.aviso).toContain("automática");
+    const [doc] = await t.owner<{ id: string; cliente_id: string; leitura: string; enviado_por: string | null }[]>`select id, cliente_id, leitura, enviado_por from documentos where organization_id = ${escritorio.orgId} and nome = 'procuracao.jpg'`;
+    expect(doc).toMatchObject({ cliente_id: escritorio.clienteId, leitura: "pendente", enviado_por: null });
+    expect(pedidos).toContainEqual({ nome: "documento.ler", organizationId: escritorio.orgId, documentoId: doc!.id });
+    expect((await json(app.request(caminhoDoEnvio()))).recebidos).toBe(1);
+  });
+
+  test("o link só aceita foto ou PDF", async () => {
+    const form = new FormData();
+    form.set("arquivo", new File(["oi"], "bilhete.txt", { type: "text/plain" }));
+    expect((await app.request(caminhoDoEnvio(), { method: "POST", body: form })).status).toBe(422);
+  });
+
+  test("segredo errado ou de outro escritório não abre; vencido também não", async () => {
+    const segredo = link.split("/").at(-1)!;
+    expect((await app.request(`/api/envio/${escritorio.orgId}/segredo-errado-${segredo.slice(0, 4)}`)).status).toBe(404);
+    expect((await app.request(`/api/envio/${demo.orgId}/${segredo}`)).status).toBe(404);
+    await t.owner`update mensagens_cliente set link_expira_em = now() - interval '1 minute' where id = ${cobrancaId}`;
+    expect((await app.request(caminhoDoEnvio())).status).toBe(410);
+    const form = new FormData();
+    form.set("arquivo", new File([new Uint8Array([1])], "rg.jpg", { type: "image/jpeg" }));
+    expect((await app.request(caminhoDoEnvio(), { method: "POST", body: form })).status).toBe(410);
   });
 });

@@ -15,6 +15,8 @@ export interface AppDeps {
   auth?: Auth;
   /** Rotas das telas (`/api/app/*`), já com a checagem de sessão. */
   rotas?: ReturnType<typeof createRotas>;
+  /** O link de envio de documentos pelo cliente (`/api/envio/*`), sem login. */
+  envio?: Hono;
   /** Endpoint que o Inngest chama para rodar as funções (`inngest/hono`). */
   inngestHandler?: (c: Context) => Promise<Response>;
   log?: (msg: string, extra?: Record<string, unknown>) => void;
@@ -62,6 +64,8 @@ export function createApp(deps: AppDeps) {
     const status = row.status === "pending" && row.expiresAt.getTime() < Date.now() ? "expirado" : row.status;
     return c.json({ email: row.email, papel: row.role, status, escritorio: row.escritorio });
   });
+
+  if (deps.envio) app.route("/api/envio", deps.envio);
 
   if (deps.rotas) {
     app.use("/api/app/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], exposeHeaders: ["x-peca-id"] }));
