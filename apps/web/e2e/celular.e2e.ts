@@ -207,6 +207,12 @@ test("peça revisada: o registro de revisão cabe na tela, com o botão das vers
   expect(await sobraNaLateral(page)).toBe(0);
 });
 
+test("publicação que a IA não leu vira aviso no Hoje do celular", async ({ page }) => {
+  const hoje = amostras.hoje!.corpo;
+  await abrir(page, "/hoje", new ApiFalsa().responder("/hoje", { ...hoje, contadores: { ...(hoje.contadores as object), publicacoesSemLeitura: 1 } }));
+  await expect(page.getByText("1 publicação nova ficou sem leitura da IA. Confira o prazo nela.")).toBeVisible();
+});
+
 test("agenda no celular: o mês com pontinhos, o dia embaixo e arrastar troca o mês", async ({ page }) => {
   await abrir(page, "/agenda?vista=mes");
   await expect(page.locator(".dc-topo__sobre")).toHaveText("Outubro de 2026");

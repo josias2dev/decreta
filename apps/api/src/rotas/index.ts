@@ -85,7 +85,7 @@ export function createRotas(deps: DepsDasRotas) {
 
   app.get("/hoje", async (c) => {
     const hoje = hojeEm(c.get("timezone"));
-    return c.json(await tenant(c, deps, (tx) => painelDoDia(db, tx, c.get("orgId"), hoje, c.get("timezone"))));
+    return c.json(await tenant(c, deps, (tx) => painelDoDia(db, tx, c.get("orgId"), hoje, c.get("timezone"), { iaLigada: !!deps.ia })));
   });
 
   /** Busca do menu (⌘K): processos por número, partes ou título; clientes por nome, documento ou telefone. */

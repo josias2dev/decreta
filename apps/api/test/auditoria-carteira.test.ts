@@ -86,7 +86,7 @@ describe.skipIf(!hasTestDatabase)("auditoria da carteira", () => {
     const painel = {
       hoje: HOJE,
       rotulo: "quinta, 29 de outubro",
-      contadores: { vencemHoje: 0, vencidos: 0, publicacoesNovas: 0, publicacoesComPrazo: 0, audienciasHoje: 0, alvarasAguardando: 0 },
+      contadores: { vencemHoje: 0, vencidos: 0, publicacoesNovas: 0, publicacoesComPrazo: 0, publicacoesSemLeitura: 0, audienciasHoje: 0, alvarasAguardando: 0 },
       itens: [],
       publicacoes: [],
       porResponsavel: [],

@@ -255,7 +255,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
     if (!deps.wameow) falha(503, "whatsapp_desligado", "O WhatsApp do Decreta ainda não foi ligado neste servidor.");
     const hoje = hojeEm(c.get("timezone"));
     const { painel, eu } = await tenant(c, deps, async (tx) => ({
-      painel: await painelDoDia(db, tx, c.get("orgId"), hoje, c.get("timezone")),
+      painel: await painelDoDia(db, tx, c.get("orgId"), hoje, c.get("timezone"), { iaLigada: !!deps.ia }),
       eu: (await pessoasDoEscritorio(db, tx, c.get("orgId"))).get(c.get("userId")),
     }));
     if (!eu?.whatsapp) falha(422, "sem_whatsapp", "Cadastre o seu WhatsApp no seu perfil primeiro.");

@@ -46,7 +46,7 @@ const publicacaoQuery = (id: string) => ({
   // Enquanto a IA lê o teor, a tela pergunta de novo; a leitura da sentença chega logo depois (e só se a IA estiver ligada).
   refetchInterval: (q: { state: { data?: Publicacao; dataUpdateCount: number } }) => {
     const d = q.state.data;
-    return d && (!d.sugestao || (d.decisao && !d.sentenca && q.state.dataUpdateCount < 30)) ? 4000 : false;
+    return d && ((!d.sugestao && !d.leituraParada) || (d.decisao && !d.sentenca && q.state.dataUpdateCount < 30)) ? 4000 : false;
   },
 });
 
@@ -418,14 +418,17 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
     <BlocoIa
       titulo={tituloIa}
       analise={s}
-      aoRefazer={iaAqui && s ? () => refazer.mutate() : undefined}
-      refazendo={refazer.isPending || (!s && iaAqui)}
-      rodape={s ? "Gerado por IA. Confira nos autos." : iaAqui ? "A IA está lendo o teor." : undefined}
+      aoRefazer={iaAqui && (s || pub.leituraParada) ? () => refazer.mutate() : undefined}
+      rotuloGerar="Ler de novo"
+      refazendo={refazer.isPending || (!s && iaAqui && !pub.leituraParada)}
+      rodape={s ? "Gerado por IA. Confira nos autos." : !iaAqui ? undefined : pub.leituraParada ? "Sem leitura da IA." : "A IA está lendo o teor."}
     >
       {c ? (
         <ConteudoDaSugestao c={c} responsavel={s!.responsavel} />
       ) : !iaAqui ? (
         <p className="m-0 text-[14px]">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
+      ) : pub.leituraParada ? (
+        <p className="m-0 text-[14px]">A IA não conseguiu ler esta publicação. Confira o teor e o prazo, ou peça para ler de novo.</p>
       ) : null}
     </BlocoIa>
   );
@@ -596,7 +599,7 @@ function LeituraDaDecisao({ pub }: { pub: Publicacao }) {
   // As duas leituras saem juntas quando a publicação chega: enquanto não há nenhuma, a IA está lendo.
   const semIa = !!pub.processo?.semIa;
   const iaAqui = !!eu.data?.ia && !semIa;
-  const lendo = ler.isPending || (!a && iaAqui && !pub.sugestao);
+  const lendo = ler.isPending || (!a && iaAqui && !pub.sugestao && !pub.leituraParada);
   const r = pub.resultado;
   return (
     <BlocoIa

@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, FolderPlus, MessageSquarePlus, UserPlus } from "lucide-react";
+import { ChevronRight, CircleAlert, FolderPlus, MessageSquarePlus, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { AuditoriaDaCarteira } from "@/componentes/auditoria";
 import { AvisoDaCaptura } from "@/componentes/captura-do-djen";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
-import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, MarcaIa, Painel, Responsavel, Selo, Vazio } from "@/componentes/ui";
+import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, Faixa, MarcaIa, Painel, Responsavel, Selo, Vazio } from "@/componentes/ui";
 import { api } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
@@ -18,6 +18,17 @@ type Filtro = "tudo" | "prazo" | "audiencia" | "tarefa";
 export const hojeQuery = { queryKey: ["hoje"], queryFn: () => api<PainelDoDia>("/hoje"), refetchInterval: 60_000 } as const;
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+
+function AvisoDaLeitura({ n }: { n: number }) {
+  if (!n) return null;
+  return (
+    <Faixa tipo="aviso">
+      <CircleAlert />
+      <span className="flex-1">{n === 1 ? "1 publicação nova ficou sem leitura da IA. Confira o prazo nela." : `${n} publicações novas ficaram sem leitura da IA. Confira o prazo em cada uma.`}</span>
+      <Link to="/publicacoes" className="dc-link">Ver</Link>
+    </Faixa>
+  );
+}
 
 export function HojePage() {
   const celular = useCelular();
@@ -92,6 +103,7 @@ export function HojePage() {
             <TerminarDeConfigurar eu={eu.data} />
             <Numeros painel={p} celular />
             <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
+            <AvisoDaLeitura n={p.contadores.publicacoesSemLeitura} />
             {p.contadores.publicacoesNovas > 0 && (
               <Link to="/publicacoes" className="dc-cartao" style={{ flexDirection: "row", alignItems: "center", gap: 12, background: "var(--acento-suave)", borderColor: "var(--acento-borda)", boxShadow: "none" }}>
                 <MarcaIa />
@@ -138,6 +150,7 @@ export function HojePage() {
           <TerminarDeConfigurar eu={eu.data} />
           <Numeros painel={p} />
           <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
+          <AvisoDaLeitura n={p.contadores.publicacoesSemLeitura} />
           <div className="dc-colunas">
             <Painel titulo="Do dia" acao={chips} corpo={false}>
               {itens.length ? (

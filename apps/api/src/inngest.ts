@@ -276,7 +276,7 @@ export function createFunctions(deps: DepsDasRotinas) {
             if (!avisos.manha || !horaDoResumo(agora, avisos.hora, org.timezone)) return 0;
             const pessoas = await pessoasDoEscritorio(db, tx, org.id);
             const ja = new Set((await tx.select({ userId: avisosEnviados.userId }).from(avisosEnviados).where(and(eq(avisosEnviados.tipo, "manha"), eq(avisosEnviados.dia, hoje)))).map((x) => x.userId));
-            const painel = await painelDoDia(db, tx, org.id, hoje, org.timezone);
+            const painel = await painelDoDia(db, tx, org.id, hoje, org.timezone, { iaLigada: !!deps.ia });
             let n = 0;
             for (const p of pessoas.values()) {
               if (!p.whatsapp || !p.avisoManha || ja.has(p.id)) continue;

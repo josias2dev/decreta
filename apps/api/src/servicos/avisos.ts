@@ -53,7 +53,9 @@ export function resumoDaManha(painel: PainelDoDia, pessoa: { id: string; apelido
   if (semDono.length) partes.push(`*Sem responsável (${semDono.length})*\n${semDono.map(linha).join("\n")}`);
   if (painel.contadores.publicacoesNovas) {
     const n = painel.contadores.publicacoesNovas;
-    partes.push(`${n === 1 ? "1 publicação nova" : `${n} publicações novas`} para revisar: ${base}/publicacoes`);
+    const semLeitura = painel.contadores.publicacoesSemLeitura;
+    const aviso = semLeitura === 0 ? "" : semLeitura === 1 ? "\n1 ficou sem leitura da IA: confira o prazo nela." : `\n${semLeitura} ficaram sem leitura da IA: confira o prazo em cada uma.`;
+    partes.push(`${n === 1 ? "1 publicação nova" : `${n} publicações novas`} para revisar: ${base}/publicacoes${aviso}`);
   }
   if (alertas.length) partes.push(`*Captura do DJEN*\n${alertas.map((a) => `• ${a}`).join("\n")}`);
   if (achados.length) {

@@ -13,15 +13,15 @@ import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
 import { comLimiteDaIa, corpo, falha, id, ip, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
-import { tituloDaPublicacao } from "../servicos/publicacoes.ts";
+import { leituraParada, tituloDaPublicacao } from "../servicos/publicacoes.ts";
 
 const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
 type Situacao = (typeof SITUACOES)[number];
 
 /** O selo da lista: o que a IA achou, numa linha. */
-export function seloDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, semIa = false): { tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro" | "sem_ia"; texto: string } {
+export function seloDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, semIa = false, parada = false): { tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro" | "sem_ia"; texto: string } {
   // Cliente que recusou a IA: a rotina de fundo não lê, e a pessoa trata à mão.
-  if (!a) return semIa ? { tipo: "sem_ia", texto: "Cliente sem IA" } : { tipo: "lendo", texto: "IA lendo" };
+  if (!a) return semIa ? { tipo: "sem_ia", texto: "Cliente sem IA" } : parada ? { tipo: "erro", texto: "A IA não conseguiu ler" } : { tipo: "lendo", texto: "IA lendo" };
   if (a.situacao === "recusa") return { tipo: "sem_teor", texto: "Falta o teor: abrir no sistema do tribunal" };
   if (a.situacao === "erro") return { tipo: "erro", texto: "A IA não conseguiu ler" };
   const s = a.conteudo as Partial<SugestaoNaTela>;
@@ -79,7 +79,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
             disponibilizadaEm: pub.disponibilizadaEm,
             partes: processo?.titulo ?? (pub.destinatarios.map((d) => d.nome).join(" × ") || pub.cnj || "Sem processo vinculado"),
             processoId: processo?.id ?? null,
-            selo: pub.canceladaEm ? { tipo: "erro" as const, texto: "Cancelada pelo tribunal" } : seloDaSugestao(s, recusou),
+            selo: pub.canceladaEm ? { tipo: "erro" as const, texto: "Cancelada pelo tribunal" } : seloDaSugestao(s, recusou, !!deps.ia && leituraParada(pub.createdAt)),
           };
         }),
       });
@@ -138,6 +138,8 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         /** Dá para abrir a certidão de publicação do DJEN. */
         certidao: !!(pub.certidao || pub.hash),
         cancelada: pub.canceladaEm ? { em: pub.canceladaEm.toISOString(), motivo: pub.motivoCancelamento } : null,
+        /** Sem leitura muito depois de chegar: a tela para de dizer que a IA está lendo e oferece ler de novo. */
+        leituraParada: !sugestao && !!deps.ia && leituraParada(pub.createdAt),
         destinatarios: pub.destinatarios,
         advogados: pub.advogados,
         processo: processo ? { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, classe: processo.classe, orgao: processo.orgao, comarca: processo.comarca, responsavel: resumir(pessoas, processo.responsavelId), semIa: await semIa(tx, { processoId: processo.id }) } : null,

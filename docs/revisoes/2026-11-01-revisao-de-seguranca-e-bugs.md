@@ -122,6 +122,14 @@ Em aberto:
 - **Baixo — onde o aviso aparece:** a conferência só aparece no prazo ou na ficha do cliente, não no Hoje.
 - **Baixo — queda de conexão no meio do envio:** só o tempo esgotado conta como "pode ter saído". Uma conexão cortada depois de o pedido chegar ao WhatsApp ainda vira "falhou" e oferece reenviar.
 
+## 2.3. Publicação que a IA não leu passava despercebida (corrigido no mesmo dia)
+
+A falha só aparecia no selo da lista de publicações, e no Hoje apenas nas três primeiras novas. Uma publicação cuja rotina de fundo não rodou ficava para sempre em "IA lendo", sem botão para tentar de novo. Agora o Hoje e o resumo da manhã contam as publicações novas sem leitura: falha da IA, falta de teor e nenhuma leitura uma hora depois de chegar. Cliente sem IA, publicação cancelada e servidor com a IA desligada não contam. A publicação parada mostra que a IA não conseguiu ler e oferece "Ler de novo".
+
+Em aberto:
+
+- **Médio — nada relê sozinho:** depois de uma falha, a publicação continua sem leitura até alguém pedir. Um dia inteiro de gateway fora do ar vira várias publicações para reler uma a uma.
+
 ## 3. Depende de você
 
 - **Cobrança e duração do acesso de contas novas:** hoje o cadastro não tem período de teste nem pagamento, e o escritório em avaliação fica assim até alguém liberar à mão.

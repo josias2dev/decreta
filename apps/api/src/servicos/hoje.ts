@@ -10,7 +10,7 @@ import { auditarCarteira } from "./auditoria-carteira.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { saudeDaCaptura } from "./captura.ts";
 import { pessoasDoEscritorio, resumir, type PessoaResumida } from "./pessoas.ts";
-import { tituloDaPublicacao } from "./publicacoes.ts";
+import { leituraParada, tituloDaPublicacao } from "./publicacoes.ts";
 
 export interface ItemDoDia {
   tipo: "prazo" | "audiencia" | "tarefa";
@@ -37,7 +37,7 @@ export interface PublicacaoDoDia {
 export interface PainelDoDia {
   hoje: Dia;
   rotulo: string;
-  contadores: { vencemHoje: number; vencidos: number; publicacoesNovas: number; publicacoesComPrazo: number; audienciasHoje: number; alvarasAguardando: number };
+  contadores: { vencemHoje: number; vencidos: number; publicacoesNovas: number; publicacoesComPrazo: number; publicacoesSemLeitura: number; audienciasHoje: number; alvarasAguardando: number };
   itens: ItemDoDia[];
   publicacoes: PublicacaoDoDia[];
   porResponsavel: { pessoa: PessoaResumida | null; hoje: number; semana: number }[];
@@ -51,8 +51,8 @@ export interface PainelDoDia {
 const ACHADOS_NO_PAINEL = 50;
 
 /** "prazo sugerido 23/11", "não gera prazo", "falta o teor". */
-export function resumoDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined): string {
-  if (!a) return "a IA ainda vai ler";
+export function resumoDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, parada = false): string {
+  if (!a) return parada ? "a IA não conseguiu ler" : "a IA ainda vai ler";
   if (a.situacao === "recusa") return "falta o teor";
   if (a.situacao === "erro") return "a IA não conseguiu ler";
   const c = a.conteudo as { geraPrazo?: boolean; audiencia?: { data: string; hora: string } | null; contagemCalculada?: { fim: string } | null };
@@ -71,8 +71,8 @@ export function quandoDoPrazo(urgencia: Urgencia, fim: Dia, hoje: Dia): string {
 const detalheDoProcesso = (p: { titulo: string; orgao: string | null; comarca: string | null }) =>
   [p.titulo, p.orgao && p.comarca && !p.orgao.includes(p.comarca) ? `${p.orgao} de ${p.comarca}` : p.orgao].filter(Boolean).join(" · ");
 
-export async function painelDoDia(db: Database, tx: Tx, organizationId: string, hoje: Dia, timeZone: string, calendario?: Calendario): Promise<PainelDoDia> {
-  const cal = calendario ?? (await calendarioDoEscritorio(tx, await tribunalPadrao(tx, organizationId)));
+export async function painelDoDia(db: Database, tx: Tx, organizationId: string, hoje: Dia, timeZone: string, opcoes: { calendario?: Calendario; iaLigada?: boolean } = {}): Promise<PainelDoDia> {
+  const cal = opcoes.calendario ?? (await calendarioDoEscritorio(tx, await tribunalPadrao(tx, organizationId)));
   const pessoas = await pessoasDoEscritorio(db, tx, organizationId);
   const semana = somarDias(hoje, 7);
   const inicio = instanteLocal(hoje, "00:00", timeZone);
@@ -99,7 +99,7 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       .where(and(isNull(tarefas.concluidaEm), lte(tarefas.dia, hoje)))
       .orderBy(asc(tarefas.dia)),
     tx
-      .select({ id: publicacoes.id, tipoDocumento: publicacoes.tipoDocumento, tipoComunicacao: publicacoes.tipoComunicacao, processo: processos.titulo, destinatarios: publicacoes.destinatarios })
+      .select({ id: publicacoes.id, tipoDocumento: publicacoes.tipoDocumento, tipoComunicacao: publicacoes.tipoComunicacao, processo: processos.titulo, destinatarios: publicacoes.destinatarios, canceladaEm: publicacoes.canceladaEm, chegouEm: publicacoes.createdAt, semIa: sql<boolean>`coalesce((select c.sem_ia from clientes c where c.id = ${processos.clienteId}), false)` })
       .from(publicacoes)
       .leftJoin(processos, eq(processos.id, publicacoes.processoId))
       .where(eq(publicacoes.situacao, "nova"))
@@ -116,6 +116,12 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
     : [];
   const ultimaSugestao = new Map<string, (typeof sugestoes)[number]>();
   for (const s of sugestoes) if (!ultimaSugestao.has(s.alvoId)) ultimaSugestao.set(s.alvoId, s);
+  // A IA falhou ou recusou, ou a rotina nem rodou: o prazo só aparece se alguém abrir. Cliente sem IA a pessoa já trata à mão.
+  const semLeitura = (p: (typeof pubs)[number]) => {
+    if (p.canceladaEm || p.semIa) return false;
+    const s = ultimaSugestao.get(p.id);
+    return s ? s.situacao !== "pronto" : !!opcoes.iaLigada && leituraParada(p.chegouEm);
+  };
 
   const itens: ItemDoDia[] = [];
   let vencemHoje = 0;
@@ -187,6 +193,7 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       publicacoesNovas: pubs.length,
       // Das novas, quantas a IA já leu e disse que abrem prazo (falta a pessoa confirmar).
       publicacoesComPrazo: [...ultimaSugestao.values()].filter((s) => s.situacao === "pronto" && (s.conteudo as { geraPrazo?: boolean }).geraPrazo).length,
+      publicacoesSemLeitura: pubs.slice(0, 200).filter(semLeitura).length,
       audienciasHoje: auds.length,
       alvarasAguardando: alv?.n ?? 0,
     },
@@ -196,7 +203,7 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       const lida = s?.situacao === "pronto" ? (s.conteudo as { geraPrazo?: boolean; tipo?: string; assunto?: string }) : null;
       const quem = p.processo?.split(" × ")[0] ?? p.destinatarios[0]?.nome ?? "Sem processo";
       const titulo = lida?.geraPrazo && lida.tipo ? lida.tipo : tituloDaPublicacao(p.tipoComunicacao, lida?.assunto ?? p.tipoDocumento?.toLocaleLowerCase("pt-BR") ?? null);
-      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s)}` };
+      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s, semLeitura(p))}` };
     }),
     porResponsavel,
     alertasDaCaptura: (await saudeDaCaptura(tx, hoje)).alertas,

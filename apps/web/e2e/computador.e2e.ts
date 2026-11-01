@@ -261,7 +261,7 @@ test("publicações: a captura do DJEN, tribunal por tribunal", async ({ page })
 
 test("caderno do DJEN que faltou vira aviso em Hoje e em Publicações", async ({ page }) => {
   const aviso = "O TJSC não publicou o caderno de 28/10 no DJEN. A busca pela OAB das 12:40 e das 18:40 cobre o dia.";
-  const api = new ApiFalsa().responder("/publicacoes/saude", { ...amostras.saudeDaCaptura!.corpo, alertas: [aviso] }).responder("/hoje", { ...amostras.hoje!.corpo, alertasDaCaptura: [aviso] });
+  const api = new ApiFalsa().responder("/publicacoes/saude", { ...amostras.saudeDaCaptura!.corpo, alertas: [aviso] }).responder("/hoje", { ...amostras.hoje!.corpo, alertasDaCaptura: [aviso], contadores: { ...(amostras.hoje!.corpo.contadores as object), publicacoesSemLeitura: 0 } });
   await abrir(page, "/hoje", api);
   await expect(page.getByText(aviso)).toBeVisible();
   await page.getByRole("link", { name: "Ver", exact: true }).click();
@@ -269,6 +269,33 @@ test("caderno do DJEN que faltou vira aviso em Hoje e em Publicações", async (
   await expect(page.getByText(aviso)).toBeVisible();
   await page.getByRole("button", { name: "Ver a captura" }).first().click();
   await expect(page.getByRole("dialog", { name: "Captura do DJEN" }).getByText(aviso)).toBeVisible();
+});
+
+test("publicação que a IA não leu vira aviso em Hoje, com o caminho até ela", async ({ page }) => {
+  const hoje = amostras.hoje!.corpo;
+  const api = new ApiFalsa().responder("/hoje", { ...hoje, contadores: { ...(hoje.contadores as object), publicacoesSemLeitura: 2 } });
+  await abrir(page, "/hoje", api);
+  await expect(page.getByText("2 publicações novas ficaram sem leitura da IA. Confira o prazo em cada uma.")).toBeVisible();
+  await page.getByRole("link", { name: "Ver", exact: true }).click();
+  await expect(page).toHaveURL(/\/publicacoes/);
+});
+
+test("em dia sem falha, Hoje não fala da leitura da IA", async ({ page }) => {
+  const hoje = amostras.hoje!.corpo;
+  await abrir(page, "/hoje", new ApiFalsa().responder("/hoje", { ...hoje, contadores: { ...(hoje.contadores as object), publicacoesSemLeitura: 0 } }));
+  await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+  await expect(page.getByText(/sem leitura da IA/)).toHaveCount(0);
+});
+
+test("publicação com a leitura parada: para de dizer que a IA está lendo e deixa pedir de novo", async ({ page }) => {
+  const pub = amostras.publicacaoMarina!.corpo;
+  const api = new ApiFalsa().responder("/eu", euComIa).responder(`/publicacoes/${ids.publicacao}`, { ...pub, sugestao: null, sentenca: null, leituraParada: true });
+  api.responder(`POST /publicacoes/${ids.publicacao}/sugerir`, { ok: true });
+  await abrir(page, `/publicacoes/${ids.publicacao}`, api);
+  await expect(page.getByText("A IA não conseguiu ler esta publicação. Confira o teor e o prazo, ou peça para ler de novo.").first()).toBeVisible();
+  await expect(page.getByText("A IA está lendo o teor.")).toHaveCount(0);
+  await page.getByRole("button", { name: "Ler de novo" }).first().click();
+  await expect.poll(() => api.mudancas(`/publicacoes/${ids.publicacao}/sugerir`)).toHaveLength(1);
 });
 
 test("publicação cancelada pelo tribunal: avisa, não puxa a confirmação e traz a certidão do DJEN", async ({ page }) => {

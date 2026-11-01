@@ -50,7 +50,7 @@ export interface ItemDoDia {
 export interface PainelDoDia {
   hoje: string;
   rotulo: string;
-  contadores: { vencemHoje: number; vencidos: number; publicacoesNovas: number; publicacoesComPrazo: number; audienciasHoje: number; alvarasAguardando: number };
+  contadores: { vencemHoje: number; vencidos: number; publicacoesNovas: number; publicacoesComPrazo: number; publicacoesSemLeitura: number; audienciasHoje: number; alvarasAguardando: number };
   itens: ItemDoDia[];
   publicacoes: { id: string; titulo: string; detalhe: string }[];
   porResponsavel: { pessoa: Pessoa | null; hoje: number; semana: number }[];
@@ -260,6 +260,8 @@ export interface DoDjen {
 
 export interface Publicacao extends DoDjen {
   id: string;
+  /** Sem leitura muito depois de chegar: a rotina de fundo não rodou. */
+  leituraParada: boolean;
   situacao: SituacaoPublicacao;
   fonte: "djen" | "datajud" | "manual";
   disponibilizadaEm: string;
