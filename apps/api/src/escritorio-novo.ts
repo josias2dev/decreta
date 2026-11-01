@@ -2,11 +2,13 @@
  * Escritório novo: a organização, a ficha do escritório e a primeira pessoa
  * (sócia, papel owner). Quem vem depois entra por convite pela tela da Equipe.
  *
- * Usado pelo script `escritorio:criar`, pela demonstração e pelos testes.
+ * Usado pelo cadastro aberto (POST /api/cadastro), pelo script
+ * `escritorio:criar`, pela demonstração e pelos testes.
  */
 import { equipe, escritorios, member, organization, user, withTenant, type Database } from "@decreta/db";
 import { eq } from "drizzle-orm";
 import type { Auth } from "./auth.ts";
+import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 
 export interface EscritorioNovo {
   nome: string;
@@ -14,7 +16,33 @@ export interface EscritorioNovo {
   slug: string;
   tribunal?: string;
   timezone?: string;
+  /** Pelo cadastro aberto: a configuração inicial das telas fica pendente (`onboarding_concluido_em` nulo). */
+  onboarding?: boolean;
   dono: { email: string; nome: string; senha: string; apelido?: string; cargo?: string; oabNumero?: string; oabUf?: string; whatsapp?: string };
+}
+
+/** O endereço curto a partir do nome: "Souza & Mendes Advocacia" → "souza-mendes-advocacia". */
+export function slugDoNome(nome: string): string {
+  const s = nome
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60)
+    .replace(/-+$/, "");
+  return s || "escritorio";
+}
+
+/** O slug do nome, com sufixo numérico quando já existe um escritório com ele ("souza-mendes-2"). */
+export async function slugUnico(db: Database, nome: string): Promise<string> {
+  const base = slugDoNome(nome);
+  for (let n = 1; ; n++) {
+    const slug = n === 1 ? base : `${base}-${n}`;
+    if (slug === SLUG_DA_DEMONSTRACAO) continue;
+    const [jaTem] = await db.select({ id: organization.id }).from(organization).where(eq(organization.slug, slug));
+    if (!jaTem) return slug;
+  }
 }
 
 export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNovo): Promise<{ organizationId: string; userId: string }> {
@@ -37,7 +65,7 @@ export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNov
     await tx.insert(member).values({ id: crypto.randomUUID(), organizationId, userId: pessoa.id, role: "owner" });
   });
   await withTenant(db, organizationId, async (tx) => {
-    await tx.insert(escritorios).values({ organizationId, tribunal: e.tribunal ?? "TJSC" });
+    await tx.insert(escritorios).values({ organizationId, tribunal: e.tribunal ?? "TJSC", ...(e.onboarding ? { onboardingConcluidoEm: null } : {}) });
     await tx.insert(equipe).values({
       organizationId,
       userId: pessoa.id,

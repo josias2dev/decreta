@@ -1,11 +1,14 @@
-import { invitation, organization, type Database } from "@decreta/db";
+import { invitation, organization, user, type Database } from "@decreta/db";
 import { eq, sql } from "drizzle-orm";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { join, resolve, sep } from "node:path";
+import { z } from "zod";
+import { registrar } from "./auditoria.ts";
 import type { Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
+import { criarEscritorio, slugUnico } from "./escritorio-novo.ts";
 import { ipDoPedido, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
@@ -54,6 +57,10 @@ export function createApp(deps: AppDeps) {
     const auth = deps.auth;
     app.use("/api/auth/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "OPTIONS"] }));
     app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+    app.use("/api/cadastro", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["POST", "OPTIONS"] }));
+    // Cadastro aberto: poucos escritórios por hora de cada endereço, contra quem cria contas em série.
+    app.use("/api/cadastro", limitarPorIp({ janelaMs: 60 * 60_000, maximo: 10 }, ipDoPedido));
+    app.post("/api/cadastro", (c) => cadastrar(c, db, auth, env, log));
   }
 
   // Rotas sem login: poucos pedidos por minuto de cada endereço, contra quem tenta adivinhar um segredo ou token.
@@ -94,6 +101,43 @@ export function createApp(deps: AppDeps) {
   });
 
   return app;
+}
+
+const CADASTRO = z.object({
+  nome: z.string().trim().min(2, "Diga como você se chama.").max(120),
+  email: z.string().trim().toLowerCase().email("Confira o e-mail.").max(200),
+  senha: z.string().min(10, "A senha precisa ter pelo menos 10 caracteres.").max(200),
+  escritorio: z.string().trim().min(2, "Diga o nome do escritório.").max(120),
+});
+
+/**
+ * Cadastro aberto: a pessoa (sócia, papel owner), o escritório e a sessão, de
+ * uma vez. O e-mail já cadastrado dá 409 sem dizer mais nada sobre a conta. A
+ * conta nasce pelo `criarEscritorio`, não pelo sign-up do Better Auth, que
+ * continua fechado a quem não tem convite.
+ */
+async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: NonNullable<AppDeps["log"]>) {
+  const r = CADASTRO.safeParse(await c.req.json().catch(() => null));
+  if (!r.success) return c.json({ erro: "dados_invalidos", detalhe: r.error.issues.map((i) => i.message).join(" ") }, 400);
+  const b = r.data;
+  const [jaTem] = await db.select({ id: user.id }).from(user).where(eq(user.email, b.email));
+  if (jaTem) return c.json({ erro: "email_em_uso", detalhe: "Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova." }, 409);
+
+  const slug = await slugUnico(db, b.escritorio);
+  const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, onboarding: true, dono: { email: b.email, nome: b.nome, senha: b.senha } });
+  await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug }, ip: ipDoPedido(c) }, log);
+
+  // A sessão abre pelo mesmo caminho do login (com o registro de "entrou"): o cookie vai na resposta.
+  const headers = new Headers({ "content-type": "application/json" });
+  for (const nome of ["origin", "user-agent", "cf-connecting-ip", "x-forwarded-for"]) {
+    const v = c.req.header(nome);
+    if (v) headers.set(nome, v);
+  }
+  const login = await auth.handler(new Request(`${env.BETTER_AUTH_URL.replace(/\/$/, "")}/api/auth/sign-in/email`, { method: "POST", headers, body: JSON.stringify({ email: b.email, password: b.senha }) }));
+  if (!login.ok) log("cadastro: a sessão não abriu", { organizationId, status: login.status });
+  const resposta = c.json({ ok: true, sessao: login.ok, escritorio: { id: organizationId, slug } }, 201);
+  for (const cookie of login.headers.getSetCookie()) resposta.headers.append("set-cookie", cookie);
+  return resposta;
 }
 
 /**

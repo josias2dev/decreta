@@ -10,7 +10,7 @@ import { Hono } from "hono";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { ehMembro, pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
-import { semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { ehSocio, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { rotasDaAgenda } from "./agenda.ts";
 import { rotasDosCalculos } from "./calculos.ts";
 import { rotasDosClientes } from "./clientes.ts";
@@ -66,13 +66,14 @@ export function createRotas(deps: DepsDasRotas) {
         conta(tx.select({ n }).from(clientes)),
         conta(tx.select({ n }).from(negocios).where(eq(negocios.etapa, "triagem"))),
         conta(tx.select({ n }).from(alvaras).where(inArray(alvaras.etapa, ["novo", "aguardando_saque", "sacado"]))),
-        tx.select({ timbre: escritorios.timbre }).from(escritorios),
+        tx.select({ timbre: escritorios.timbre, onboardingConcluidoEm: escritorios.onboardingConcluidoEm }).from(escritorios),
       ]);
       const eu = pessoas.get(c.get("userId"));
       return c.json({
         usuario: { id: c.get("userId"), nome: c.get("userNome"), apelido: eu?.apelido ?? c.get("userNome"), iniciais: eu?.iniciais ?? "?", foto: eu?.foto ?? null, cargo: eu?.cargo ?? null, papel: c.get("papel") },
         // O logo do timbre aparece no menu; ele sai de GET /escritorio/logo.
-        escritorio: { id: c.get("orgId"), nome: c.get("orgNome"), pessoas: pessoas.size, timezone: c.get("timezone"), logo: !!esc?.timbre?.logoDocumentoId, demonstracao: c.get("demonstracao") },
+        // `onboarding`: a configuração inicial ainda está pendente, e esta pessoa (sócia) pode fazê-la.
+        escritorio: { id: c.get("orgId"), nome: c.get("orgNome"), pessoas: pessoas.size, timezone: c.get("timezone"), logo: !!esc?.timbre?.logoDocumentoId, demonstracao: c.get("demonstracao"), onboarding: !!esc && !esc.onboardingConcluidoEm && ehSocio(c.get("papel")) },
         hoje,
         ia: deps.ia !== null,
         equipe: [...pessoas.values()].map((p) => ({ id: p.id, nome: p.nome, apelido: p.apelido, iniciais: p.iniciais, foto: p.foto, cargo: p.cargo, papel: p.papel })),

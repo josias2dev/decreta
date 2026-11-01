@@ -1,0 +1,1 @@
+ALTER TABLE "escritorios" ADD COLUMN "onboarding_concluido_em" timestamp with time zone DEFAULT now();

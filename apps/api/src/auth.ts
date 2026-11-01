@@ -34,10 +34,11 @@ const REGISTRADAS: Record<string, string> = {
  * Login da equipe. O escritório ativo da sessão é o tenant que as telas
  * enxergam; as rotas abrem `withTenant` com ele.
  *
- * Escritório novo nasce pelo script `escritorio:criar`, nunca pelo `create` do
- * plugin. Quem entra depois chega por convite (e-mail com o link /convite/:id).
- * Conta nova só abre para um e-mail com convite pendente: o Decreta não tem
- * cadastro aberto.
+ * Escritório novo nasce pelo cadastro aberto (POST /api/cadastro, que cria a
+ * conta por `criarEscritorio`) ou pelo script `escritorio:criar`, nunca pelo
+ * `create` do plugin. Quem entra depois chega por convite (e-mail com o link
+ * /convite/:id). O sign-up do Better Auth só abre para um e-mail com convite
+ * pendente: sem convite, conta nova é só pelo cadastro, que já traz o escritório.
  */
 export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEmailError?: (err: unknown) => void; log?: Log } = {}) {
   const telas = env.WEB_ORIGIN.replace(/\/$/, "");

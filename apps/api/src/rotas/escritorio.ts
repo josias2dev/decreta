@@ -96,6 +96,13 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return c.json({ ok: true });
   });
 
+  /** A configuração inicial (/comecar) terminou, ou a pessoa dispensou de vez: o aviso sai do Hoje e o app abre direto no dia. */
+  app.post("/escritorio/onboarding", async (c) => {
+    soSocios(c);
+    await tenant(c, deps, (tx) => tx.update(escritorios).set({ onboardingConcluidoEm: new Date() }).where(eq(escritorios.organizationId, c.get("orgId"))));
+    return c.json({ ok: true });
+  });
+
   /** O logo do timbre, para o menu e a prévia da folha. */
   app.get("/escritorio/logo", async (c) => {
     const chave = await tenant(c, deps, async (tx) => {

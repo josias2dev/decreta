@@ -107,6 +107,12 @@ export const escritorios = pgTable(
     jeito: jsonb("jeito").$type<JeitoDoEscritorio>().notNull().default({}),
     /** O nível de automação escolhido por ação ("rascunho-da-peca" → "sugestao"); o que falta vale o padrão. */
     automacao: jsonb("automacao").$type<Record<string, string>>().notNull().default({}),
+    /**
+     * Quando o escritório terminou (ou pulou de vez) a configuração inicial das telas.
+     * Nulo = pendente. Nasce preenchido por padrão: só o cadastro aberto zera, para
+     * os escritórios que já existem e os do script e da demonstração não passarem por ela.
+     */
+    onboardingConcluidoEm: timestamp("onboarding_concluido_em", { withTimezone: true }).defaultNow(),
     updatedAt: updatedAt(),
   },
   () => [tenantPolicy("escritorios")],

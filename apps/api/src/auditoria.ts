@@ -15,6 +15,7 @@ export interface Registro {
 }
 
 export const ROTULO: Record<string, string> = {
+  "escritorio.criado": "Criou o escritório no Decreta",
   login: "Entrou no Decreta",
   "senha.trocada": "Trocou a senha",
   "2fa.ligada": "Ligou a verificação em duas etapas",
