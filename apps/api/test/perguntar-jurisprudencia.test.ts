@@ -123,7 +123,7 @@ describe.skipIf(!hasTestDatabase)("Perguntar no modo Jurisprudência: citação 
       literal: true,
       sustenta: "nao",
       selo: "com_ressalva",
-      motivo: "Tema 952 do STJ: Trânsito em Julgado. O trecho não sustenta a afirmação: A tese trata de reajuste por faixa etária, não de cobertura de cirurgia.",
+      motivo: "Tema 952 do STJ: Trânsito em Julgado. O trecho não sustenta a afirmação: a tese trata de reajuste por faixa etária, não de cobertura de cirurgia.",
     });
 
     // O segundo passo recebeu a afirmação e o trecho, e mais nada da conversa.

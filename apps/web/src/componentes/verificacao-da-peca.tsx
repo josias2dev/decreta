@@ -11,7 +11,8 @@ import { api, mensagemDoErro } from "@/lib/api";
 import { diaCurto, diaDoInstante, hora } from "@/lib/formato";
 import type { CitacaoVerificada, Peca, SeloDaCitacao, VerificacaoDaPeca } from "@/lib/tipos";
 
-const SELOS: Record<SeloDaCitacao, { rotulo: string; Icone: typeof CircleCheck }> = {
+/** O nome e o ícone de cada selo; os mesmos no Perguntar. */
+export const SELOS: Record<SeloDaCitacao, { rotulo: string; Icone: typeof CircleCheck }> = {
   verificada: { rotulo: "Verificada", Icone: CircleCheck },
   com_ressalva: { rotulo: "Com ressalva", Icone: TriangleAlert },
   nao_verificada: { rotulo: "Não verificada", Icone: CircleHelp },

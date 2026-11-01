@@ -9,6 +9,7 @@ import { dvCnj } from "@decreta/core";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { acervoDocumentos } from "@decreta/db";
 import { createTestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
 import { createApp } from "../src/app.ts";
@@ -262,10 +263,48 @@ try {
     ],
     "Honorários na desistência antes da citação",
   );
+  // O acervo (em produção, os temas do STJ e o BNP): duas súmulas para a IA de mentira citar.
+  await t.db.insert(acervoDocumentos).values([
+    {
+      chave: "sumula:STJ:608",
+      fonte: "cnj_bnp",
+      situacao: "Vigente",
+      texto: "Aplica-se o Código de Defesa do Consumidor aos contratos de plano de saúde, salvo os administrados por entidades de autogestão.",
+      url: "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-608",
+      hash: "amostra",
+      capturadoEm: new Date("2026-10-16T06:00:00-03:00"),
+    },
+    {
+      chave: "sumula:STJ:302",
+      fonte: "cnj_bnp",
+      situacao: "Vigente",
+      texto: "É abusiva a cláusula contratual de plano de saúde que limita no tempo a internação hospitalar do segurado.",
+      url: "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-302",
+      hash: "amostra",
+      capturadoEm: new Date("2026-10-16T06:00:00-03:00"),
+    },
+  ]);
+  ia.respostas["conferir-citacao"] = (pedido: string) =>
+    pedido.includes("é de consumo")
+      ? { veredito: "sim", justificativa: "O enunciado aplica o CDC aos planos de saúde." }
+      : { veredito: "nao", justificativa: "O enunciado trata do limite de tempo da internação, não de dano moral pela negativa de cirurgia." };
   const juris = await perguntar(
     { texto: "Negativa de cirurgia pelo plano de saúde gera dano moral?", modo: "jurisprudencia" },
     [
-      "Na maioria dos casos, sim. O STJ tem entendimento firme de que a recusa indevida de cobertura de tratamento urgente vai além do mero inadimplemento contratual e gera dano moral, porque agrava a aflição de quem já está doente.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Onde costuma perder\n- Dúvida razoável sobre a cobertura no contrato.\n- Procedimento eletivo, sem prejuízo concreto.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada decisão na fonte antes de levar para a peça.",
+      { ferramentas: [{ nome: "buscarJurisprudencia", entrada: { busca: "plano de saúde negativa cobertura cirurgia" } }] },
+      {
+        ferramentas: [
+          {
+            nome: "citar",
+            entrada: { chave: "sumula:STJ:608", trecho: "Aplica-se o Código de Defesa do Consumidor aos contratos de plano de saúde", afirmacao: "A relação entre o beneficiário e o plano de saúde é de consumo." },
+          },
+          {
+            nome: "citar",
+            entrada: { chave: "sumula:STJ:302", trecho: "É abusiva a cláusula contratual de plano de saúde que limita no tempo a internação hospitalar do segurado", afirmacao: "A negativa de cirurgia pelo plano de saúde gera dano moral." },
+          },
+        ],
+      },
+      "Na maioria dos casos, sim, mas o acervo não traz precedente que diga isso com todas as letras. A relação com o plano é de consumo [1], o que ajuda a afastar a cláusula que restringe o tratamento indicado pelo médico. A outra súmula que achei trata do tempo de internação e não sustenta o dano moral pela negativa [2]: não use para isso.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada citação na fonte antes de levar para a peça.",
     ],
     "Negativa de cirurgia e dano moral",
   );

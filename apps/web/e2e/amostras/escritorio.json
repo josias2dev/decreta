@@ -10,7 +10,7 @@
       "contato": "(47) 3433-0000 · contato@souzafreitas.adv.br",
       "endereco": "Rua das Palmeiras, 120, sala 804 · Centro · Joinville/SC · 89201-000",
       "registro": "OAB/SC 9.876",
-      "logoDocumentoId": "51af5667-7771-4e67-8764-dd70c1449c47"
+      "logoDocumentoId": "c56e38fa-b74d-42d3-99fe-cbf828153a71"
     },
     "avisos": {
       "hora": "07:30",
@@ -33,7 +33,7 @@
     "iaLigada": false,
     "suspensoes": [
       {
-        "id": "e7186cba-29d6-4053-b703-6e2dc0dd1a1c",
+        "id": "ff800526-eac4-4e3f-8491-1c6d4f6f2cfc",
         "dia": "2026-11-25",
         "motivo": "Instabilidade do eproc (portaria da Presidência)",
         "tipo": "forense",
@@ -41,7 +41,7 @@
         "comarca": null
       },
       {
-        "id": "75b9947f-b8f6-4564-9daa-9318168b5c47",
+        "id": "38e3b6f3-f94e-4bec-b7b2-66957d5ca035",
         "dia": "2027-03-09",
         "motivo": "Aniversário de Joinville",
         "tipo": "local",

@@ -112,7 +112,11 @@ export async function conferirSustentacao(ia: Ia, p: { rotulo: string; trecho: s
   return r.output as Veredito;
 }
 
-const comPonto = (s: string) => (/[.!?…]$/.test(s.trim()) ? s.trim() : `${s.trim()}.`);
+/** A justificativa depois dos dois-pontos: minúscula no começo (menos sigla ou nome) e ponto no fim. */
+const depoisDosDoisPontos = (s: string) => {
+  const t = s.trim().replace(/^\p{Lu}(?=[\p{Ll}\s])/u, (c) => c.toLocaleLowerCase("pt-BR"));
+  return /[.!?…]$/.test(t) ? t : `${t}.`;
+};
 
 /**
  * A citação que a IA pediu, conferida antes de aparecer: primeiro no acervo
@@ -138,6 +142,6 @@ export async function citarNoAcervo(
     return ressalva("Não deu para conferir agora se o trecho sustenta a afirmação.", null);
   }
   if (s.veredito === "sim") return { ...base, sustenta: "sim" };
-  if (s.veredito === "parcial") return ressalva(`O trecho sustenta a afirmação só em parte: ${comPonto(s.justificativa)}`, "parcial");
-  return ressalva(`O trecho não sustenta a afirmação: ${comPonto(s.justificativa)}`, "nao");
+  if (s.veredito === "parcial") return ressalva(`O trecho sustenta a afirmação só em parte: ${depoisDosDoisPontos(s.justificativa)}`, "parcial");
+  return ressalva(`O trecho não sustenta a afirmação: ${depoisDosDoisPontos(s.justificativa)}`, "nao");
 }

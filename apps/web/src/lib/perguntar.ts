@@ -4,7 +4,7 @@
  * linha JSON por acontecimento.
  */
 import { API_URL, ApiError } from "./api";
-import type { Urgencia } from "./tipos";
+import type { CitacaoVerificada, SeloDaCitacao, Urgencia } from "./tipos";
 
 export type Modo = "pergunte" | "jurisprudencia";
 
@@ -25,7 +25,25 @@ export interface ConversaNaLista {
  */
 export type Parte =
   | { tipo: "texto"; texto: string }
-  | { tipo: "ferramenta"; id: string; nome: string; entrada: Record<string, unknown> | null; saida: unknown; erro?: string };
+  | { tipo: "ferramenta"; id: string; nome: string; entrada: Record<string, unknown> | null; saida: unknown; erro?: string }
+  /** As citações que a IA escreveu direto no texto, cada uma com o selo (nenhuma aparece sem selo). */
+  | { tipo: "citacoes"; itens: CitacaoVerificada[] };
+
+/** A citação que a IA pediu no modo Jurisprudência (ferramenta "citar"), montada e conferida pelo Decreta. */
+export interface CitacaoConferida {
+  n: number;
+  chave: string;
+  /** "Súmula 608 do STJ": vem do acervo, não da IA. */
+  rotulo: string;
+  afirmacao: string;
+  trecho: string;
+  literal: boolean | null;
+  sustenta: "sim" | "parcial" | "nao" | null;
+  selo: SeloDaCitacao;
+  motivo: string;
+  texto: string | null;
+  fonte: { nome: string; url: string; capturadoEm: string } | null;
+}
 
 export interface MensagemDaConversa {
   id: string;
@@ -226,6 +244,7 @@ export type Evento =
   | { t: "texto"; v: string }
   | { t: "ferramenta"; id: string; nome: string; entrada: Record<string, unknown> | null }
   | { t: "resultado"; id: string; nome: string; saida?: unknown; erro?: string }
+  | { t: "citacoes"; itens: CitacaoVerificada[] }
   | { t: "fim"; mensagem: { id: string } | null }
   | { t: "titulo"; v: string };
 
@@ -300,6 +319,7 @@ export function juntarEvento(partes: Parte[], e: Evento): Parte[] {
   }
   if (e.t === "ferramenta") return [...partes, { tipo: "ferramenta", id: e.id, nome: e.nome, entrada: e.entrada, saida: undefined }];
   if (e.t === "resultado") return partes.map((p) => (p.tipo === "ferramenta" && p.id === e.id ? { ...p, saida: e.saida ?? null, erro: e.erro } : p));
+  if (e.t === "citacoes") return [...partes, { tipo: "citacoes", itens: e.itens }];
   return partes;
 }
 

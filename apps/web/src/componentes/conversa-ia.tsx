@@ -15,6 +15,7 @@ import { DestinoDoLink, Markdown } from "@/lib/markdown";
 import { conversaQuery, conversasQuery, juntarEvento, perguntar, type AlvaraNaIa, type ConversaAberta, type ConversaNaLista, type Evento, type MensagemDaConversa, type Modo, type Parte } from "@/lib/perguntar";
 import { cn } from "@/lib/util";
 import { Cartao, CartoesCompactos, cartoesDaResposta, erroDaParte, Passos, type OndeEsta } from "./cartoes-ia";
+import { CitacoesDaResposta } from "./citacoes-da-resposta";
 import { AvisoDoLimite, usoDaIaQuery } from "./limite-da-ia";
 import { MarcaIa } from "./ui";
 
@@ -266,6 +267,8 @@ function Resposta({ partes, texto, em, escrevendo = false, onde }: { partes: Par
           <span />
         </div>
       )}
+      {/* As citações, cada uma com o selo, quando a resposta termina: o texto remete a elas por [1], [2]. */}
+      {!escrevendo && <CitacoesDaResposta partes={partes} />}
       {/* Os cartões vêm depois do texto, quando a resposta termina; enquanto ela chega, os passos dizem o que a IA consulta. */}
       {cartoes.length > 0 && !escrevendo && (
         <CartoesCompactos.Provider value>

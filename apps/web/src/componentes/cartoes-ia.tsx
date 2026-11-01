@@ -26,6 +26,8 @@ import {
   LoaderCircle,
   MessageCircle,
   Phone,
+  Scale,
+  ShieldCheck,
   Undo2,
   UserPlus,
   Users,
@@ -42,6 +44,7 @@ import type {
   AlvaraNaIa,
   AudienciaNaIa,
   ClienteNaIa,
+  CitacaoConferida,
   ContagemNaIa,
   DocumentoNaIa,
   FichaDoCliente,
@@ -62,6 +65,7 @@ import { useAviso } from "./avisos";
 import { Dialogo } from "./dialogo";
 import { IconeDoArquivo } from "./icone-arquivo";
 import { Avatar, Botao, Selo } from "./ui";
+import { SELOS } from "./verificacao-da-peca";
 
 type Ferramenta = Extract<Parte, { tipo: "ferramenta" }>;
 
@@ -87,6 +91,8 @@ const ICONE: Record<string, LucideIcon> = {
   verEquipe: UsersRound,
   contarPrazo: Hourglass,
   proporTarefa: ListTodo,
+  buscarJurisprudencia: Scale,
+  citar: ShieldCheck,
 };
 
 const LENDO: Record<string, string> = {
@@ -107,6 +113,8 @@ const LENDO: Record<string, string> = {
   verEquipe: "Vendo a equipe",
   contarPrazo: "Contando o prazo",
   proporTarefa: "Preparando a tarefa",
+  buscarJurisprudencia: "Buscando no acervo",
+  citar: "Conferindo a citação",
 };
 
 const plural = (n: number, um: string, varios: string) => `${numero(n)} ${n === 1 ? um : varios}`;
@@ -171,6 +179,12 @@ export function rotuloDoPasso(f: Ferramenta, escrevendo = false): string {
       return "Prazo contado";
     case "proporTarefa":
       return "Tarefa pronta";
+    case "buscarJurisprudencia":
+      return total === 0 ? "Nada no acervo" : `Acervo · ${plural(total ?? 0, "documento", "documentos")}`;
+    case "citar": {
+      const c = s as unknown as CitacaoConferida;
+      return `Citação [${c.n}] · ${SELOS[c.selo]?.rotulo.toLocaleLowerCase("pt-BR") ?? "conferida"}`;
+    }
     default:
       return "Consulta";
   }
@@ -224,7 +238,8 @@ export function Passos({ ferramentas: todas, escrevendo = false }: { ferramentas
 /* Quais viram cartão                                                  */
 /* ------------------------------------------------------------------ */
 
-const SEM_CARTAO = new Set(["verEquipe"]);
+/** A busca no acervo e as citações aparecem na lista de citações da resposta, com o selo de cada uma. */
+const SEM_CARTAO = new Set(["verEquipe", "buscarJurisprudencia", "citar"]);
 /** Busca que levou a abrir um item: o cartão do item basta. */
 const ABRE: Record<string, { busca: string; chave: string }> = {
   lerProcesso: { busca: "buscarProcessos", chave: "processoId" },

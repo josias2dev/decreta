@@ -1,9 +1,9 @@
 {
-  "path": "/ia/conversas/ec995074-0530-4b3c-9117-5937c5b97c8f",
+  "path": "/ia/conversas/9a0c49d7-868c-4d83-8f0f-96aed6c75aa0",
   "corpo": {
     "rodape": "Gerado por IA. Confira nos autos.",
     "conversa": {
-      "id": "ec995074-0530-4b3c-9117-5937c5b97c8f",
+      "id": "9a0c49d7-868c-4d83-8f0f-96aed6c75aa0",
       "titulo": "Negativa de cirurgia e dano moral",
       "modo": "jurisprudencia",
       "fixada": false,
@@ -13,20 +13,113 @@
     },
     "mensagens": [
       {
-        "id": "23e47e99-ed62-411a-8141-c49cf6486d78",
+        "id": "41124e99-d31e-4b40-a1a1-99ff4447c30f",
         "papel": "pessoa",
         "texto": "Negativa de cirurgia pelo plano de saúde gera dano moral?",
         "partes": null,
         "em": "2026-10-28T20:10:05.000Z"
       },
       {
-        "id": "eec1e974-8eb7-413d-944f-45d30f5b9d11",
+        "id": "9cca2607-84ff-4c78-95e7-acb2555c46dc",
         "papel": "ia",
-        "texto": "Na maioria dos casos, sim. O STJ tem entendimento firme de que a recusa indevida de cobertura de tratamento urgente vai além do mero inadimplemento contratual e gera dano moral, porque agrava a aflição de quem já está doente.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Onde costuma perder\n- Dúvida razoável sobre a cobertura no contrato.\n- Procedimento eletivo, sem prejuízo concreto.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada decisão na fonte antes de levar para a peça.",
+        "texto": "Na maioria dos casos, sim, mas o acervo não traz precedente que diga isso com todas as letras. A relação com o plano é de consumo [1], o que ajuda a afastar a cláusula que restringe o tratamento indicado pelo médico. A outra súmula que achei trata do tempo de internação e não sustenta o dano moral pela negativa [2]: não use para isso.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada citação na fonte antes de levar para a peça.",
         "partes": [
           {
+            "id": "chamada-1-0",
+            "nome": "buscarJurisprudencia",
+            "tipo": "ferramenta",
+            "saida": {
+              "itens": [
+                {
+                  "chave": "sumula:STJ:302",
+                  "fonte": {
+                    "url": "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-302",
+                    "nome": "CNJ, Banco Nacional de Precedentes",
+                    "capturadoEm": "2026-10-16T09:00:00.000Z"
+                  },
+                  "texto": "É abusiva a cláusula contratual de plano de saúde que limita no tempo a internação hospitalar do segurado.",
+                  "rotulo": "Súmula 302 do STJ",
+                  "questao": null,
+                  "situacao": "Vigente",
+                  "cancelado": false
+                },
+                {
+                  "chave": "sumula:STJ:608",
+                  "fonte": {
+                    "url": "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-608",
+                    "nome": "CNJ, Banco Nacional de Precedentes",
+                    "capturadoEm": "2026-10-16T09:00:00.000Z"
+                  },
+                  "texto": "Aplica-se o Código de Defesa do Consumidor aos contratos de plano de saúde, salvo os administrados por entidades de autogestão.",
+                  "rotulo": "Súmula 608 do STJ",
+                  "questao": null,
+                  "situacao": "Vigente",
+                  "cancelado": false
+                }
+              ],
+              "total": 2
+            },
+            "entrada": {
+              "busca": "plano de saúde negativa cobertura cirurgia"
+            }
+          },
+          {
+            "id": "chamada-2-0",
+            "nome": "citar",
+            "tipo": "ferramenta",
+            "saida": {
+              "n": 1,
+              "selo": "verificada",
+              "chave": "sumula:STJ:608",
+              "fonte": {
+                "url": "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-608",
+                "nome": "CNJ, Banco Nacional de Precedentes",
+                "capturadoEm": "2026-10-16T09:00:00.000Z"
+              },
+              "texto": "Aplica-se o Código de Defesa do Consumidor aos contratos de plano de saúde, salvo os administrados por entidades de autogestão.",
+              "motivo": "Súmula 608 do STJ: Vigente.",
+              "rotulo": "Súmula 608 do STJ",
+              "trecho": "Aplica-se o Código de Defesa do Consumidor aos contratos de plano de saúde",
+              "literal": true,
+              "sustenta": "sim",
+              "afirmacao": "A relação entre o beneficiário e o plano de saúde é de consumo."
+            },
+            "entrada": {
+              "chave": "sumula:STJ:608",
+              "trecho": "Aplica-se o Código de Defesa do Consumidor aos contratos de plano de saúde",
+              "afirmacao": "A relação entre o beneficiário e o plano de saúde é de consumo."
+            }
+          },
+          {
+            "id": "chamada-2-1",
+            "nome": "citar",
+            "tipo": "ferramenta",
+            "saida": {
+              "n": 2,
+              "selo": "com_ressalva",
+              "chave": "sumula:STJ:302",
+              "fonte": {
+                "url": "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-302",
+                "nome": "CNJ, Banco Nacional de Precedentes",
+                "capturadoEm": "2026-10-16T09:00:00.000Z"
+              },
+              "texto": "É abusiva a cláusula contratual de plano de saúde que limita no tempo a internação hospitalar do segurado.",
+              "motivo": "Súmula 302 do STJ: Vigente. O trecho não sustenta a afirmação: o enunciado trata do limite de tempo da internação, não de dano moral pela negativa de cirurgia.",
+              "rotulo": "Súmula 302 do STJ",
+              "trecho": "É abusiva a cláusula contratual de plano de saúde que limita no tempo a internação hospitalar do segurado",
+              "literal": true,
+              "sustenta": "nao",
+              "afirmacao": "A negativa de cirurgia pelo plano de saúde gera dano moral."
+            },
+            "entrada": {
+              "chave": "sumula:STJ:302",
+              "trecho": "É abusiva a cláusula contratual de plano de saúde que limita no tempo a internação hospitalar do segurado",
+              "afirmacao": "A negativa de cirurgia pelo plano de saúde gera dano moral."
+            }
+          },
+          {
             "tipo": "texto",
-            "texto": "Na maioria dos casos, sim. O STJ tem entendimento firme de que a recusa indevida de cobertura de tratamento urgente vai além do mero inadimplemento contratual e gera dano moral, porque agrava a aflição de quem já está doente.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Onde costuma perder\n- Dúvida razoável sobre a cobertura no contrato.\n- Procedimento eletivo, sem prejuízo concreto.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada decisão na fonte antes de levar para a peça."
+            "texto": "Na maioria dos casos, sim, mas o acervo não traz precedente que diga isso com todas as letras. A relação com o plano é de consumo [1], o que ajuda a afastar a cláusula que restringe o tratamento indicado pelo médico. A outra súmula que achei trata do tempo de internação e não sustenta o dano moral pela negativa [2]: não use para isso.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada citação na fonte antes de levar para a peça."
           }
         ],
         "em": "2026-10-28T20:10:31.000Z"

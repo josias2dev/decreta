@@ -155,7 +155,26 @@ test.describe("no computador", () => {
     expect(await sobraNaLateral(page)).toBe(0);
   });
 
-  test("tela larga: sem nada consultado, o painel ao lado não aparece", async ({ page }) => {
+  test("Jurisprudência: cada citação da resposta aparece com o selo, o motivo e a fonte, montada pelo Decreta", async ({ page }) => {
+    await abrir(page, `/perguntar/${ids.conversaJurisprudencia}`, comIa());
+    await expect(page.getByText("A relação com o plano é de consumo [1]")).toBeVisible();
+    const citacoes = page.getByRole("list", { name: "Citações da resposta" });
+    await expect(citacoes.getByRole("listitem")).toHaveCount(2);
+
+    const primeira = citacoes.getByRole("listitem").filter({ hasText: "Súmula 608 do STJ" });
+    await expect(primeira).toContainText("[1]");
+    await expect(primeira).toContainText("Verificada");
+    await expect(primeira).toContainText("Aplica-se o Código de Defesa do Consumidor aos contratos de plano de saúde");
+    await expect(primeira.getByRole("link", { name: /CNJ, Banco Nacional de Precedentes/ })).toHaveAttribute("href", "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-608");
+
+    const segunda = citacoes.getByRole("listitem").filter({ hasText: "Súmula 302 do STJ" });
+    await expect(segunda).toContainText("[2]");
+    await expect(segunda).toContainText("Com ressalva");
+    await expect(segunda).toContainText("O trecho não sustenta a afirmação: o enunciado trata do limite de tempo da internação, não de dano moral pela negativa de cirurgia.");
+    expect(await sobraNaLateral(page)).toBe(0);
+  });
+
+  test("tela larga: sem processo, prazo ou cliente consultado, o painel ao lado não aparece", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await abrir(page, `/perguntar/${ids.conversaJurisprudencia}`, comIa());
     await expect(page.getByRole("heading", { level: 1, name: "Negativa de cirurgia e dano moral" })).toBeVisible();
