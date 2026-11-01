@@ -133,7 +133,8 @@ export interface Prazo {
   processo: ProcessoResumido & { poloCliente: "ativo" | "passivo" | "terceiro" };
   publicacao: ({ id: string; fonte: "djen" | "datajud" | "manual"; texto: string; disponibilizadaEm: string; publicadaEm: string; tipoComunicacao: string | null; tipoDocumento: string | null; link: string | null } & DoDjen) | null;
   briefing: Analise<Briefing> | null;
-  pecas: { id: string; titulo: string; situacao: "rascunho" | "revisada"; atualizadaEm: string }[];
+  /** `preparadaPelaIa`: o rascunho que ficou pronto sozinho quando o prazo foi confirmado. */
+  pecas: { id: string; titulo: string; situacao: "rascunho" | "revisada"; atualizadaEm: string; preparadaPelaIa?: boolean }[];
   historico: { em: string; titulo: string; detalhe: string | null }[];
   conta: ContaDoPrazo;
   /** A segunda conferência, enquanto a sugestão da IA espera alguém confirmar. */

@@ -67,7 +67,7 @@ export function PrazoPage() {
   const rotuloConfirmar = conferir ? "Conferir e confirmar" : "Confirmar prazo";
   const peca = p.pecas[0];
   const irParaPeca = () => void navigate(peca ? { to: "/pecas", search: { id: peca.id } } : { to: "/pecas", search: { prazo: p.id } });
-  const rotuloPeca = peca ? "Abrir a peça deste prazo" : "Gerar peça para este prazo";
+  const rotuloPeca = peca?.preparadaPelaIa && peca.situacao === "rascunho" ? "Revisar o rascunho pronto" : peca ? "Abrir a peça deste prazo" : "Gerar peça para este prazo";
 
   const selos = (
     <>
@@ -154,8 +154,9 @@ export function PrazoPage() {
             <span className="dc-celula min-w-0 flex-1">
               <span className="dc-celula__1">{pc.titulo}</span>
               <span className="dc-celula__2">
-                {pc.situacao === "revisada" ? "Revisada" : "Rascunho"} · {diaCurto(diaDoInstante(pc.atualizadaEm))} {hora(pc.atualizadaEm)}
+                {pc.situacao === "revisada" ? "Revisada" : pc.preparadaPelaIa ? "Rascunho pronto" : "Rascunho"} · {diaCurto(diaDoInstante(pc.atualizadaEm))} {hora(pc.atualizadaEm)}
               </span>
+              {pc.preparadaPelaIa && pc.situacao === "rascunho" && <span className="dc-celula__2">A IA preparou quando o prazo foi confirmado. Revise antes de usar; nada foi enviado nem protocolado.</span>}
             </span>
           </Link>
         ))}
@@ -178,7 +179,7 @@ export function PrazoPage() {
     ) : p.confirmado ? (
       <>
         <Botao variante="primaria" bloco onClick={irParaPeca}>
-          <FileText /> {peca ? "Abrir a peça" : "Gerar peça para este prazo"}
+          <FileText /> {rotuloPeca}
         </Botao>
         <div className="dc-rodape__par">
           <Botao bloco onClick={() => acao.mutate("cumprir")} ocupado={acao.isPending && acao.variables === "cumprir"}>

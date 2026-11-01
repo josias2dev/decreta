@@ -27,6 +27,17 @@ const auditoria = {
   ],
 };
 
+test("5.3: o prazo confirmado já mostra o rascunho pronto, e o botão leva a ele", async ({ page }) => {
+  const prazo = amostras.prazoComPeca!.corpo;
+  const rascunho = { ...prazo.pecas[0], preparadaPelaIa: true };
+  const api = new ApiFalsa().responder(`/prazos/${ids.prazoComPeca}`, { ...prazo, pecas: [rascunho] });
+  await abrir(page, `/prazos/${ids.prazoComPeca}`, api);
+  await expect(page.getByText("Rascunho pronto", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("nada foi enviado nem protocolado")).toBeVisible();
+  await page.getByRole("button", { name: "Revisar o rascunho pronto" }).click();
+  await expect(page).toHaveURL(new RegExp(`/pecas\\?id=${rascunho.id}$`));
+});
+
 test("5.2: a auditoria da carteira aparece no Hoje e cada achado leva aonde resolver", async ({ page }) => {
   const api = new ApiFalsa().responder("/hoje", { ...amostras.hoje!.corpo, auditoria });
   await abrir(page, "/hoje", api);

@@ -12,7 +12,7 @@ import { semIa } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
-import { comLimiteDaIa, corpo, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, falha, id, ip, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { tituloDaPublicacao } from "../servicos/publicacoes.ts";
 
 const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
@@ -243,6 +243,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       return { prazoId, fim: valores.fim };
     });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "prazo.confirmado", detalhes: { prazoId: r.prazoId, publicacaoId: pubId, fim: r.fim }, ip: ip(c) }, deps.log);
+    await pedirRascunho(c, deps, r.prazoId);
     return c.json(r);
   });
 

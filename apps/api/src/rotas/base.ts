@@ -29,12 +29,19 @@ export type Vars = {
 export type Ambiente = { Variables: Vars };
 export type C = Context<Ambiente>;
 
-/** Evento para as rotinas de fundo (Inngest): sugerir prazo, capturar agora, atualizar do DataJud, ler um documento. */
+/** Evento para as rotinas de fundo (Inngest): sugerir prazo, capturar agora, atualizar do DataJud, ler um documento, preparar o rascunho do prazo confirmado. */
 export type Pedido =
   | { nome: "publicacao.nova"; organizationId: string; publicacaoId: string }
   | { nome: "captura.djen"; organizationId: string }
   | { nome: "processo.datajud"; organizationId: string; processoId: string }
-  | { nome: "documento.ler"; organizationId: string; documentoId: string };
+  | { nome: "documento.ler"; organizationId: string; documentoId: string }
+  | { nome: "prazo.confirmado"; organizationId: string; prazoId: string };
+
+/** Prazo confirmado: pede o rascunho da peça sugerida. Na demonstração, não (nada sai para a IA de verdade). A falha não desfaz a confirmação. */
+export async function pedirRascunho(c: C, deps: DepsDasRotas, prazoId: string): Promise<void> {
+  if (c.get("demonstracao")) return;
+  await deps.enfileirar({ nome: "prazo.confirmado", organizationId: c.get("orgId"), prazoId }).catch((err) => deps.log("pedido do rascunho falhou", { prazoId, error: err instanceof Error ? err.message : String(err) }));
+}
 
 export interface DepsDasRotas {
   db: Database;

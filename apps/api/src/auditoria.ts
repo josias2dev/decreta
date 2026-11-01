@@ -31,6 +31,7 @@ export const ROTULO: Record<string, string> = {
   "prazo.descartado": "Descartou um prazo",
   "publicacao.sem_prazo": "Marcou que a publicação não gera prazo",
   "peca.gerada": "Gerou uma peça com a IA",
+  "peca.preparada": "A IA preparou o rascunho da peça do prazo confirmado",
   "peca.baixada": "Baixou uma peça em DOCX",
   "processo.criado": "Cadastrou um processo",
   "cliente.criado": "Cadastrou um cliente",

@@ -8,6 +8,7 @@
  *   06:00 às 10:45, de 15 em 15 min ── resumo-da-manha (cada escritório na hora dele)
  *   publicação nova que é sentença ou acórdão ── ler-sentenca
  *   foto ou PDF escaneado enviado ── ler-documento
+ *   prazo confirmado ── rascunho-do-prazo (a peça sugerida, em rascunho)
  *
  * A captura de um escritório roda uma por vez; a sugestão da IA, duas por vez
  * por escritório. Repetir uma rodada é inócuo: publicação e movimentação
@@ -29,6 +30,7 @@ import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
 import { ClienteSemIa } from "./servicos/contexto.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
+import { rascunhoDoPrazo } from "./servicos/rascunho.ts";
 import { lerSentencaDaPublicacao } from "./servicos/sentencas.ts";
 import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
 import { silentReporter, type Reporter } from "./sentry.ts";
@@ -41,6 +43,7 @@ export const publicacaoNova = eventType("decreta/publicacao.nova", { schema: sta
 export const datajudDoEscritorio = eventType("decreta/datajud.escritorio", { schema: staticSchema<Org>() });
 export const processoDataJud = eventType("decreta/processo.datajud", { schema: staticSchema<Org & { processoId: string }>() });
 export const documentoParaLer = eventType("decreta/documento.ler", { schema: staticSchema<Org & { documentoId: string }>() });
+export const prazoConfirmado = eventType("decreta/prazo.confirmado", { schema: staticSchema<Org & { prazoId: string }>() });
 
 /** O pedido de uma rota vira o evento certo. */
 export function eventoDoPedido(p: Pedido) {
@@ -53,6 +56,8 @@ export function eventoDoPedido(p: Pedido) {
       return processoDataJud.create({ organizationId: p.organizationId, processoId: p.processoId });
     case "documento.ler":
       return documentoParaLer.create({ organizationId: p.organizationId, documentoId: p.documentoId });
+    case "prazo.confirmado":
+      return prazoConfirmado.create({ organizationId: p.organizationId, prazoId: p.prazoId });
   }
 }
 
@@ -303,5 +308,26 @@ export function createFunctions(deps: DepsDasRotinas) {
     async ({ step }) => step.run("temas", () => sincronizarTemasDoStj({ db, fetch: deps.captura.fetch, log })),
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn];
+  // O prazo foi confirmado: a peça sugerida fica pronta em rascunho. Nada é enviado nem protocolado.
+  const rascunhoFn = inngest.createFunction(
+    {
+      id: "rascunho-do-prazo",
+      triggers: [prazoConfirmado],
+      concurrency: { limit: 2, key: "event.data.organizationId" },
+      retries: 1,
+      onFailure: async ({ event, error }) => reporter.error(error, { funcao: "rascunho-do-prazo", ...(event.data.event.data as Org) }),
+    },
+    async ({ event, step }) =>
+      step.run("preparar", async () => {
+        if (await motivoNoFundo(db, limites, event.data.organizationId)) return "limite";
+        try {
+          return (await rascunhoDoPrazo({ db, ia: iaDo(event.data.organizationId, "fundo"), log }, event.data.organizationId, event.data.prazoId)).situacao;
+        } catch (err) {
+          if (err instanceof IaDesligada) return "ia-desligada";
+          throw err;
+        }
+      }),
+  );
+
+  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn];
 }

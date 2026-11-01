@@ -10,7 +10,7 @@ import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { conferir, contaDoPrazo, contagemNaTela, contarParaProcesso, historicoDasSugestoes } from "../servicos/prazos.ts";
-import { corpo, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { corpo, falha, id, ip, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const QUANDO = ["hoje", "semana", "vencidos", "abertos", "cumpridos"] as const;
 type Quando = (typeof QUANDO)[number];
@@ -182,7 +182,11 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const contexto = await carregarContexto(tx, processo.id);
       const briefing = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "briefing-prazo"), contexto?.base);
       const sugestao = pub ? await ultimaAnalise(tx, "publicacao", pub.id, "sugerir-prazo") : null;
-      const pecasDoPrazo = await tx.select({ id: pecas.id, titulo: pecas.titulo, situacao: pecas.situacao, atualizadaEm: pecas.updatedAt }).from(pecas).where(eq(pecas.prazoId, prazo.id)).orderBy(desc(pecas.updatedAt));
+      const pecasDoPrazo = await tx
+        .select({ id: pecas.id, titulo: pecas.titulo, situacao: pecas.situacao, atualizadaEm: pecas.updatedAt, criadaPor: pecas.criadaPor, textoGerado: pecas.textoGerado })
+        .from(pecas)
+        .where(eq(pecas.prazoId, prazo.id))
+        .orderBy(desc(pecas.updatedAt));
 
       const historico: { em: string; titulo: string; detalhe: string | null }[] = [];
       if (pub) historico.push({ em: pub.createdAt.toISOString(), titulo: "Publicação capturada", detalhe: pub.fonte === "djen" ? `DJEN${pub.advogados[0]?.oab ? `, pela OAB${pub.advogados[0].uf ? `/${pub.advogados[0].uf}` : ""} ${pub.advogados[0].oab}` : ""}` : null });
@@ -216,7 +220,8 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, tribunal: processo.tribunal, poloCliente: processo.poloCliente, semIa: contexto?.semIa ?? false },
         publicacao: pub ? { id: pub.id, fonte: pub.fonte, texto: pub.texto, disponibilizadaEm: pub.disponibilizadaEm, publicadaEm: pub.publicadaEm, tipoComunicacao: pub.tipoComunicacao, tipoDocumento: pub.tipoDocumento, link: pub.link, certidao: !!(pub.certidao || pub.hash), cancelada: pub.canceladaEm ? { em: pub.canceladaEm.toISOString(), motivo: pub.motivoCancelamento } : null } : null,
         briefing,
-        pecas: pecasDoPrazo.map((p) => ({ ...p, atualizadaEm: p.atualizadaEm.toISOString() })),
+        // Sem autor e com texto da IA: o rascunho que ficou pronto sozinho quando o prazo foi confirmado.
+        pecas: pecasDoPrazo.map(({ criadaPor, textoGerado, ...p }) => ({ ...p, atualizadaEm: p.atualizadaEm.toISOString(), preparadaPelaIa: criadaPor === null && textoGerado !== null })),
         historico,
       });
     });
@@ -290,6 +295,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       if (p.publicacaoId) await tx.update(publicacoes).set({ situacao: "vinculada", tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, p.publicacaoId));
     });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "prazo.ajustado", detalhes: { prazoId, ...b }, ip: ip(c) }, deps.log);
+    await pedirRascunho(c, deps, prazoId);
     return c.json({ ok: true });
   });
 
@@ -304,6 +310,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         if (caminho === "confirmar" && p.publicacaoId) await tx.update(publicacoes).set({ situacao: "vinculada", tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, p.publicacaoId));
       });
       await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao, detalhes: { prazoId, motivo }, ip: ip(c) }, deps.log);
+      if (caminho === "confirmar") await pedirRascunho(c, deps, prazoId);
       return c.json({ ok: true });
     });
 

@@ -1,23 +1,18 @@
-import { formatarDia } from "@decreta/core";
-import { analises, documentos, escritorios, modelos, pecas, prazos, processos, revisoesDePeca, withTenant, type VerificacaoDaPeca } from "@decreta/db";
+import { analises, documentos, modelos, pecas, prazos, processos, revisoesDePeca, withTenant, type VerificacaoDaPeca } from "@decreta/db";
 import { MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
-import { CATALOGO, GRUPOS_DE_PECA, gerarPeca, pecaParaPrazo, RODAPE_IA, tipoDePeca, type Briefing, type Ia } from "@decreta/ia";
+import { CATALOGO, GRUPOS_DE_PECA, gerarPeca, pecaParaPrazo, RODAPE_IA, tipoDePeca, type Ia } from "@decreta/ia";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { hashDoTexto, resumoDaVerificacao, verificarCitacoes } from "../servicos/acervo.ts";
 import { paraQualificar, qualificacaoDasPartes } from "../servicos/cadastros.ts";
-import { contextoParaIa, semIa } from "../servicos/contexto.ts";
+import { semIa } from "../servicos/contexto.ts";
 import { modelosParaPeca } from "../servicos/modelos.ts";
+import { montarPedidoDePeca, sobreOCaso } from "../servicos/pecas.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
-import { contaDoPrazo } from "../servicos/prazos.ts";
 import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
 import { comLimiteDaIa, corpo, falha, iaDaRota, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
-
-function briefingEmTexto(b: Briefing): string {
-  return [`O que o juízo decidiu: ${b.decidiu}`, `O que fazer: ${b.fazer.join(" ")}`, `A nosso favor: ${b.aFavor.join(" ")}`, `Contra nós: ${b.contra.join(" ")}`].join("\n");
-}
 
 export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
@@ -148,42 +143,14 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const [p] = await tx.select().from(processos).where(eq(processos.id, b.processoId));
       if (!p) falha(404, "processo_nao_encontrado");
       const [prazo] = b.prazoId ? await tx.select().from(prazos).where(eq(prazos.id, b.prazoId)) : [];
-      const [briefing] = prazo
-        ? await tx.select({ conteudo: analises.conteudo }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.situacao, "pronto"))).orderBy(desc(analises.createdAt)).limit(1)
-        : [];
-      const ctx = await contextoParaIa(tx, p.id, { documentos: true });
+      const montado = await montarPedidoDePeca(db, tx, { organizationId: c.get("orgId"), nomeDoEscritorio: c.get("orgNome"), quem: { id: c.get("userId"), nome: c.get("userNome") }, processo: p, prazo: prazo ?? null, tipo, instrucoes: b.instrucoes });
       const qualificar = await paraQualificar(tx, p.id);
-      const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: [sobreOCaso(p, prazo?.tipo), b.instrucoes].join(" ") });
-      const [esc] = await tx.select().from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
-      const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
-      const advogadoId = prazo?.responsavelId ?? p.responsavelId ?? c.get("userId");
-      const advogado = pessoas.get(advogadoId) ?? pessoas.get(c.get("userId"));
-      const titulo = `${tipo.nome} · ${p.titulo.split(" × ")[0]}`;
-      const valores = { tipo: tipo.id, titulo, instrucoes: b.instrucoes, texto: "", textoGerado: null, situacao: "rascunho" as const, criadaPor: c.get("userId"), revisadaPor: null, revisadaEm: null, modelos: doBanco.map((m) => m.id) };
+      const valores = { tipo: tipo.id, titulo: montado.titulo, instrucoes: b.instrucoes, texto: "", textoGerado: null, situacao: "rascunho" as const, criadaPor: c.get("userId"), revisadaPor: null, revisadaEm: null, modelos: montado.modelos };
       const pecaId = b.pecaId
         ? (await tx.update(pecas).set(valores).where(eq(pecas.id, b.pecaId)).returning({ id: pecas.id }))[0]?.id
         : (await tx.insert(pecas).values({ organizationId: c.get("orgId"), processoId: p.id, prazoId: prazo?.id ?? null, ...valores }).returning({ id: pecas.id }))[0]?.id;
       if (!pecaId) falha(404, "nao_encontrado");
-      return {
-        pecaId,
-        pedido: {
-          tipo,
-          instrucoes: b.instrucoes,
-          prazo: prazo
-            ? {
-                tipo: prazo.tipo,
-                fim: formatarDia(prazo.fim),
-                fundamento: prazo.fundamento,
-                briefing: briefing ? briefingEmTexto(briefing.conteudo as unknown as Briefing) : undefined,
-                tempestividade: (await contaDoPrazo(tx, c.get("orgId"), prazo)).tempestividade,
-              }
-            : undefined,
-          contextoDoProcesso: ctx?.texto ?? "",
-          escritorio: { nome: esc?.timbre?.nome ?? c.get("orgNome"), advogado: advogado?.nome ?? c.get("userNome"), oab: advogado?.oab ?? null, cidade: p.comarca },
-          modelos: doBanco.map((m) => ({ titulo: m.titulo, tese: m.tese, texto: m.texto })),
-        },
-        qualificar,
-      };
+      return { pecaId, pedido: montado.pedido, qualificar };
     });
     // A Receita é consultada fora da transação: pode levar alguns segundos.
     const qualificacao = await qualificacaoDasPartes({ fetch: deps.captura.fetch, log: deps.log }, preparado.qualificar, c.get("demonstracao"));
@@ -278,11 +245,6 @@ function mudancaNaRevisao(textoGerado: string | null, textoFinal: string): { par
   const final = paragrafos(textoFinal);
   const daIa = new Set(textoGerado === null ? [] : paragrafos(textoGerado));
   return { paragrafos: final.length, mudaram: final.filter((p) => !daIa.has(p)).length };
-}
-
-/** Do que é o caso, em palavras: o que a busca dos modelos compara. */
-function sobreOCaso(p: { assunto: string | null; classe: string | null; titulo: string }, tipoDoPrazo?: string): string {
-  return [p.assunto, p.classe, tipoDoPrazo].filter(Boolean).join(" ");
 }
 
 function transmitirPeca(c: C, deps: DepsDasRotas, ia: Ia, pecaId: string, pedido: Parameters<typeof gerarPeca>[1]) {
