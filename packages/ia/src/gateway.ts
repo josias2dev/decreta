@@ -47,6 +47,7 @@ export const METODOS = [
   "titulo-conversa",
   "ler-peca-contraria",
   "mensagem-cliente",
+  "conferir-citacao",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -68,14 +69,16 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "titulo-conversa": "juridico",
   "ler-peca-contraria": "juridico",
   "mensagem-cliente": "juridico",
+  "conferir-citacao": "juridico",
 };
 
 /**
  * Ações que o gateway conhece por outro nome: contam à parte no uso_ia, mas vão
  * ao gateway como uma que ele já tem. O título da conversa vai como o chat; a
- * leitura da peça contrária, como o briefing do prazo (o mesmo tipo de leitura).
+ * leitura da peça contrária, como o briefing do prazo (o mesmo tipo de leitura);
+ * a conferência de uma citação (o trecho sustenta a afirmação?), como a jurisprudência.
  */
-const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar", "ler-peca-contraria": "briefing-prazo" };
+const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar", "ler-peca-contraria": "briefing-prazo", "conferir-citacao": "jurisprudencia" };
 
 /** O teto do dia não passa em segundos: a AI SDK não deve pedir de novo (a pessoa esperava o aviso uns 2 s a mais). */
 function semNovaTentativaNoTeto(err: unknown): never {
@@ -142,6 +145,7 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
   "titulo-conversa": "low",
   "ler-peca-contraria": "high",
   "mensagem-cliente": "medium",
+  "conferir-citacao": "low",
 };
 
 /**

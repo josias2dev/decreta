@@ -30,8 +30,10 @@ import type { Hono } from "hono";
 import { z } from "zod";
 import { analisar } from "../servicos/analises.ts";
 import { dadosDoEscritorio, prazosDeAgora } from "../servicos/assistente.ts";
+import type { CitacaoVerificada } from "../servicos/acervo.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { ClienteSemIa, contextoParaIa, semIa } from "../servicos/contexto.ts";
+import { citacoesDoTexto } from "../servicos/jurisprudencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { AVISOS, quantoResta, SEM_LIMITES, usoDoDia } from "../servicos/uso-ia.ts";
 import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
@@ -54,6 +56,8 @@ export type EventoDaConversa =
   | { t: "texto"; v: string }
   | { t: "ferramenta"; id: string; nome: string; entrada: unknown }
   | { t: "resultado"; id: string; nome: string; saida?: unknown; erro?: string }
+  /** As citações que a IA escreveu no texto por conta própria, cada uma com o selo (chega antes do fim). */
+  | { t: "citacoes"; itens: CitacaoVerificada[] }
   | { t: "fim"; mensagem: { id: string } | null }
   | { t: "titulo"; v: string }
   | { t: "ping" };
@@ -635,6 +639,15 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         if (aviso) {
           partes.push({ tipo: "texto", texto: aviso });
           enviar({ t: "texto", v: `\n\n${aviso}` });
+        }
+        // Nenhuma citação sem selo: as que passaram por citar já têm; as escritas direto no texto são conferidas aqui.
+        if (escrito.trim() && !parou) {
+          const citadas = new Set(partes.flatMap((x) => (x.tipo === "ferramenta" && x.nome === "citar" && x.saida && typeof x.saida === "object" ? [String((x.saida as { chave?: unknown }).chave)] : [])));
+          const itens = await citacoesDoTexto({ db, log: deps.log }, orgId, escrito, citadas);
+          if (itens.length) {
+            partes.push({ tipo: "citacoes", itens });
+            enviar({ t: "citacoes", itens });
+          }
         }
         const texto = textoDe();
         // Um "Tentar de novo" desta pergunta começou depois desta resposta: fica só a mais nova.

@@ -4,10 +4,11 @@
  * chave e o trecho; o rótulo, a situação e a fonte vêm do banco. Tudo local:
  * nenhuma fonte externa é chamada daqui, nem na demonstração.
  */
+import { extrairCitacoes } from "@decreta/core";
 import { acervoDocumentos, type Database } from "@decreta/db";
 import type { CitacaoNoAcervo, DocumentoDoAcervoNaIa, FiltroDeJurisprudencia, Lista } from "@decreta/ia";
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
-import { fonteDo, seloDoDocumento } from "./acervo.ts";
+import { fonteDo, seloDoDocumento, verificarCitacoes, type CitacaoVerificada, type DepsDoAcervo } from "./acervo.ts";
 import { consultaDeTexto } from "./modelos.ts";
 import { rotuloDoPrecedente } from "./radar.ts";
 
@@ -75,6 +76,22 @@ export async function conferirCitacaoNoAcervo(db: Database, p: { chave: string; 
     texto: d.texto,
     fonte: fonteDo(d),
   };
+}
+
+/**
+ * Nenhuma citação sem selo: súmula, tema, artigo de lei ou processo que a IA
+ * escreveu no texto por conta própria (fora de citar) é conferido só no acervo
+ * guardado. Se a conferência falhar, cada uma sai como não verificada.
+ */
+export async function citacoesDoTexto(deps: DepsDoAcervo, organizationId: string, texto: string, jaCitadas: ReadonlySet<string>): Promise<CitacaoVerificada[]> {
+  try {
+    return (await verificarCitacoes(deps, organizationId, texto, { soAcervo: true })).filter((c) => !jaCitadas.has(c.chave));
+  } catch (err) {
+    deps.log?.("as citações da resposta não foram conferidas", { error: err instanceof Error ? err.message : String(err) });
+    return extrairCitacoes(texto)
+      .filter((c) => !jaCitadas.has(c.chave))
+      .map((c) => ({ chave: c.chave, trecho: c.trecho, inicio: c.inicio, selo: "nao_verificada" as const, motivo: "Não deu para conferir agora. Confira na fonte antes de usar.", texto: null, fonte: null }));
+  }
 }
 
 const FORA_DO_ACERVO = "Não está no acervo do Decreta. Confira na fonte antes de usar.";

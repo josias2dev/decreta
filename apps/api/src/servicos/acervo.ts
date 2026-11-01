@@ -193,9 +193,13 @@ async function conferir(ctx: Contexto, c: Citacao): Promise<Omit<CitacaoVerifica
   return documento(ctx, c);
 }
 
-/** Todas as citações do texto, cada uma com o selo, o motivo e a fonte. */
-export async function verificarCitacoes(deps: DepsDoAcervo, organizationId: string, texto: string): Promise<CitacaoVerificada[]> {
-  const ctx: Contexto = { ...deps, soAcervo: await ehDemonstracao(deps.db, organizationId), ultimoNoBnp: 0 };
+/**
+ * Todas as citações do texto, cada uma com o selo, o motivo e a fonte. Com
+ * `soAcervo`, confere só no que já está guardado, sem ir às fontes (a resposta
+ * do Perguntar não espera download).
+ */
+export async function verificarCitacoes(deps: DepsDoAcervo, organizationId: string, texto: string, opcoes: { soAcervo?: boolean } = {}): Promise<CitacaoVerificada[]> {
+  const ctx: Contexto = { ...deps, soAcervo: opcoes.soAcervo || (await ehDemonstracao(deps.db, organizationId)), ultimoNoBnp: 0 };
   const saida: CitacaoVerificada[] = [];
   // Uma por vez: as fontes pedem calma, e a mesma lei citada duas vezes é baixada uma só.
   for (const c of extrairCitacoes(texto)) saida.push({ chave: c.chave, trecho: c.trecho, inicio: c.inicio, ...(await conferir(ctx, c)) });

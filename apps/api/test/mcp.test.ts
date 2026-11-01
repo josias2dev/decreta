@@ -85,6 +85,9 @@ describe.skipIf(!hasTestDatabase)("conector MCP somente leitura", () => {
     expect(nomes).toContain("buscarProcessos");
     expect(nomes).toContain("lerProcesso");
     expect(nomes).not.toContain("proporTarefa");
+    // A busca no acervo é leitura; a conferência de citação é do Perguntar (gasta IA) e fica de fora.
+    expect(nomes).toContain("buscarJurisprudencia");
+    expect(nomes).not.toContain("citar");
     expect(result.tools.every((f: { annotations: { readOnlyHint: boolean }; inputSchema: { type: string } }) => f.annotations.readOnlyHint && f.inputSchema.type === "object")).toBe(true);
   });
 

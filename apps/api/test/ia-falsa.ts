@@ -8,7 +8,7 @@ const uso = { inputTokens: { total: 100, noCache: 100, cacheRead: 0, cacheWrite:
 export type Passo = string | { ferramentas: { nome: string; entrada: unknown }[] };
 
 export interface IaFalsa extends Ia {
-  /** Texto, objeto (saída estruturada) ou, nas conversas, um roteiro: um passo por rodada da IA. */
+  /** Texto, objeto (saída estruturada), função do pedido (que devolve um dos dois) ou, nas conversas, um roteiro: um passo por rodada da IA. */
   respostas: Partial<Record<MetodoIa, unknown>>;
   /** O nome que a IA dá para uma conversa nova. */
   titulo: string;
@@ -35,7 +35,9 @@ export function iaFalsa(): IaFalsa {
         doGenerate: async (opcoes) => {
           chamadas.push(metodo);
           const sistema = JSON.stringify(opcoes.prompt.filter((m) => m.role === "system"));
-          const r = sistema.includes("título") ? falsa.titulo : respostas[metodo];
+          const preparada = respostas[metodo];
+          // Uma função responde conforme o pedido (cada citação conferida tem a sua resposta).
+          const r = sistema.includes("título") ? falsa.titulo : typeof preparada === "function" ? preparada(JSON.stringify(opcoes.prompt)) : preparada;
           if (!sistema.includes("título")) pedidos[metodo] = opcoes.prompt;
           return { content: [{ type: "text", text: typeof r === "string" ? r : JSON.stringify(r ?? {}) }], finishReason: { unified: "stop", raw: "stop" }, usage: uso, warnings: [] };
         },

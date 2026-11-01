@@ -56,6 +56,7 @@ import { and, asc, desc, eq, exists, gte, inArray, isNotNull, isNull, like, lt, 
 import { semAcentoNoBanco } from "../rotas/base.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { carregarContexto, semIa } from "./contexto.ts";
+import { buscarNoAcervo, conferirCitacaoNoAcervo } from "./jurisprudencia.ts";
 import { quandoDoPrazo } from "./hoje.ts";
 import { pessoasDoEscritorio, type Pessoa } from "./pessoas.ts";
 import { contagemNaTela } from "./prazos.ts";
@@ -856,6 +857,10 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
         return { titulo: p.titulo, dia: p.dia, detalhe: p.detalhe ?? null, responsavel: pessoa(mapa, responsavel), processo, cliente };
       });
     },
+
+    // O acervo é público e igual para todos: fora do RLS do escritório, e só no banco (nada de fonte externa).
+    jurisprudencia: (f) => buscarNoAcervo(e.db, f),
+    citacao: (p) => conferirCitacaoNoAcervo(e.db, p),
   };
 }
 

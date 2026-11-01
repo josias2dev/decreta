@@ -702,11 +702,14 @@ export const conversas = pgTable(
 
 /**
  * O que a IA consultou para responder, na ordem: cada ferramenta com o pedido
- * e o resultado (é o que vira cartão na tela), e o texto entre elas.
+ * e o resultado (é o que vira cartão na tela), e o texto entre elas. No fim,
+ * as citações que a IA escreveu no texto por conta própria, com o selo de cada
+ * uma (nenhuma citação aparece sem selo no Perguntar).
  */
 export type ParteDaMensagem =
   | { tipo: "texto"; texto: string }
-  | { tipo: "ferramenta"; id: string; nome: string; entrada: unknown; saida: unknown; erro?: string };
+  | { tipo: "ferramenta"; id: string; nome: string; entrada: unknown; saida: unknown; erro?: string }
+  | { tipo: "citacoes"; itens: VerificacaoDaPeca["citacoes"] };
 
 /** Conversa com a IA: o chat do processo (com `processoId`) ou uma conversa do Perguntar (com `conversaId`). */
 export const mensagensIa = pgTable(

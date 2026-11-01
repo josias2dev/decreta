@@ -74,7 +74,8 @@ export function rotasDoMcp(deps: { db: Database; log: (msg: string, extra?: Reco
             protocolVersion: VERSAO_DO_PROTOCOLO,
             capabilities: { tools: {} },
             serverInfo: { name: "decreta", version: "1.0.0" },
-            instructions: "Dados do escritório no Decreta, só leitura: prazos, processos, publicações, audiências, clientes, documentos e alvarás. Datas no formato AAAA-MM-DD. Confira nos autos antes de agir.",
+            instructions:
+              "Dados do escritório no Decreta, só leitura: prazos, processos, publicações, audiências, clientes, documentos e alvarás, e os temas e súmulas do acervo de jurisprudência. Datas no formato AAAA-MM-DD. Confira nos autos antes de agir.",
           }),
         );
       case "ping":

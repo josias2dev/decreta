@@ -14,6 +14,7 @@ import { generateText, jsonSchema, stepCountIs, streamText, tool, type JSONSchem
 import { z } from "zod";
 import { REGRA_DA_FONTE } from "./contexto.ts";
 import type { Ia } from "./gateway.ts";
+import { citarNoAcervo, filtroDeJurisprudencia, pedidoDeCitacao, type CitacaoNoAcervo, type DocumentoDoAcervoNaIa, type FiltroDeJurisprudencia } from "./jurisprudencia.ts";
 
 /* ------------------------------------------------------------------ */
 /* O que as ferramentas pedem                                          */
@@ -359,6 +360,10 @@ export interface DadosDoEscritorio {
   equipe(): Promise<{ itens: (PessoaNaIa & { nome: string; cargo: string | null; oab: string | null; prazosAbertos: number; prazosVencidos: number })[] }>;
   contarPrazo(p: PedidoDeContagemNaIa): Promise<ContagemNaIa>;
   proporTarefa(p: PropostaDeTarefaNaIa): Promise<TarefaProposta>;
+  /** Temas e súmulas do acervo (dados públicos, iguais para todo escritório). */
+  jurisprudencia(f: FiltroDeJurisprudencia): Promise<Lista<DocumentoDoAcervoNaIa>>;
+  /** A conferência sem IA de uma citação no acervo: existe, o trecho é literal, continua valendo. */
+  citacao(p: { chave: string; trecho: string }): Promise<CitacaoNoAcervo>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -514,6 +519,11 @@ export function ferramentasDoEscritorio(d: DadosDoEscritorio) {
       (f) => d.negocios(f),
     ),
     verEquipe: consulta("A equipe do escritório, com cargo, OAB e quantos prazos cada um tem em aberto e vencidos.", z.object({}), () => d.equipe()),
+    buscarJurisprudencia: consulta(
+      "Procura no acervo do Decreta, por palavras da tese: temas repetitivos e súmulas do STJ, súmulas vinculantes, súmulas e temas de repercussão geral do STF e precedentes qualificados (IRDR, IAC) dos tribunais. Cada um vem com a chave, a tese ou o enunciado, a situação (vigente, cancelado, revisado) e a fonte oficial. Não tem acórdãos nem ementas.",
+      filtroDeJurisprudencia,
+      async (f) => comDica(await d.jurisprudencia(f), f.busca, "Nada no acervo com essas palavras. Tente sinônimos ou termos mais gerais da tese, com menos palavras."),
+    ),
     contarPrazo: consulta(
       "Conta um prazo no calendário do tribunal (feriados, recesso, suspensões do escritório) e devolve início, vencimento e o calendário usado. Com o processo, entram os feriados da comarca dele. Use sempre que precisar de uma data de vencimento: nunca conte de cabeça.",
       pedidoDeContagem,
@@ -566,7 +576,8 @@ export type ModoDaConversa = "pergunte" | "jurisprudencia";
 export interface MensagemGuardada {
   papel: "pessoa" | "ia";
   texto: string;
-  partes?: ({ tipo: "texto"; texto: string } | { tipo: "ferramenta"; id: string; nome: string; entrada: unknown; saida: unknown; erro?: string })[] | null;
+  /** "citacoes": os selos das citações escritas no texto; ficam só para a tela, não voltam para a IA. */
+  partes?: ({ tipo: "texto"; texto: string } | { tipo: "ferramenta"; id: string; nome: string; entrada: unknown; saida: unknown; erro?: string } | { tipo: "citacoes"; itens: unknown[] })[] | null;
 }
 
 type ParteDeFerramenta = Extract<NonNullable<MensagemGuardada["partes"]>[number], { tipo: "ferramenta" }>;
@@ -659,6 +670,7 @@ export function mensagensParaIa(historico: MensagemGuardada[]): ModelMessage[] {
         texto = texto.trim() ? `${texto}\n\n${p.texto}` : p.texto;
         continue;
       }
+      if (p.tipo !== "ferramenta") continue;
       saida.push({ role: "assistant", content: [...(texto.trim() ? [{ type: "text" as const, text: texto }] : []), { type: "tool-call", toolCallId: p.id, toolName: p.nome, input: p.entrada ?? {} }] });
       texto = "";
       saida.push({ role: "tool", content: [{ type: "tool-result", toolCallId: p.id, toolName: p.nome, output: resultadoParaIa(p, inteiras.has(i)) }] });
@@ -729,12 +741,13 @@ export function instrucoesFixas(modo: ModoDaConversa): string {
   const foco =
     modo === "jurisprudencia"
       ? `## Jurisprudência
-A pessoa procura jurisprudência e teses. Você não consulta bases de jurisprudência nem os sites dos tribunais: o que sabe vem do seu treinamento, que tem data de corte e pode estar desatualizado.
-- Explique as teses e a posição que costuma prevalecer, com o fundamento legal.
-- Nunca escreva número de processo, relator, órgão julgador, data de julgamento nem trecho de ementa, mesmo que a pessoa peça e mesmo que pareça certo: um julgado com número errado numa peça é grave.
-- Súmula e tema repetitivo: só com o número e o enunciado que você conhece bem, com "(confira)" ao lado. Na dúvida, descreva a tese sem número.
-- Dê os termos de busca prontos para o site do tribunal do escritório (em "Agora", no fim), do STJ e do STF; em assunto trabalhista, do TRT da região e do TST. Entre aspas, com operadores quando ajudar.
-- Avise que a posição pode ter mudado depois do seu conhecimento e que cada decisão precisa ser conferida na fonte antes de ir para a peça.
+A pessoa procura jurisprudência e teses. Você consulta o acervo do Decreta com buscarJurisprudencia: temas repetitivos e súmulas do STJ, súmulas vinculantes, súmulas e temas de repercussão geral do STF e precedentes qualificados dos tribunais, cada um com a tese, a situação e a fonte oficial. O acervo não tem acórdãos nem ementas.
+- Antes de responder, busque no acervo com os termos jurídicos da pergunta (de 2 a 6 palavras). Se não vier nada que sirva, tente outros termos antes de desistir.
+- Toda afirmação que se apoia num precedente passa por citar: a chave que veio de buscarJurisprudencia, o trecho copiado letra por letra do texto que veio na busca e a afirmação que ele sustenta, numa frase. Só chaves que vieram da busca.
+- No texto, remeta à citação só pelo número que citar devolveu, entre colchetes: [1], [2]. Nunca escreva número de súmula, tema, processo, relator, órgão julgador nem data, mesmo que a pessoa peça e mesmo que pareça certo: quem monta a citação é o Decreta, com os dados do acervo, e a pessoa vê cada uma com o selo da conferência.
+- Citação que voltou com ressalva (cancelada, revisada, trecho que não confere, trecho que não sustenta a afirmação) ou não verificada: diga isso no texto e não apoie a resposta nela.
+- O que não está no acervo: explique a tese e a posição que costuma prevalecer, sem número, diga que não achou precedente no acervo e dê os termos de busca prontos para o site do tribunal do escritório (em "Agora", no fim), do STJ e do STF; em assunto trabalhista, do TRT da região e do TST. Entre aspas, com operadores quando ajudar. O que você sabe vem do seu treinamento, que tem data de corte e pode estar desatualizado.
+- Avise que cada citação precisa ser conferida na fonte antes de ir para a peça.
 - Se a pergunta for sobre um caso do escritório, abra o processo com as ferramentas para entender os fatos.`
       : `## Como responder
 - Pergunta sobre o escritório (prazos, processos, publicações, audiências, agenda, clientes, documentos, alvarás, novos negócios, equipe): consulte as ferramentas antes de responder. Você tem acesso aos dados do escritório; nunca diga que não tem nem peça para a pessoa colar os dados.
@@ -790,11 +803,27 @@ function comCacheNaUltima<T extends ToolSet>(ferramentas: T): T {
   return ultima ? { ...ferramentas, [ultima]: { ...ferramentas[ultima], providerOptions: CACHE } } : ferramentas;
 }
 
+/**
+ * A citação do modo Jurisprudência: a IA aponta a chave e o trecho, e o
+ * servidor confere antes de mostrar (acervo e, depois, o segundo passo de IA).
+ * O número ([1], [2]) conta as citações desta resposta.
+ */
+function ferramentaDeCitar(ia: Ia, d: DadosDoEscritorio, signal?: AbortSignal) {
+  let n = 0;
+  return consulta(
+    "Cita um documento do acervo para sustentar uma afirmação da resposta. O Decreta confere antes de mostrar: se o documento existe, se o trecho está no texto guardado, se continua valendo e se o trecho sustenta a afirmação. Devolve o número da citação ([1], [2]) para você remeter no texto, o selo (verificada, com_ressalva, nao_verificada) e o motivo.",
+    pedidoDeCitacao,
+    (p) => citarNoAcervo(ia, (x) => d.citacao(x), p, ++n, signal),
+  );
+}
+
 export function conversarComAssistente(
   ia: Ia,
   entrada: { modo: ModoDaConversa; quem: QuemPergunta; historico: MensagemGuardada[]; dados: DadosDoEscritorio },
   signal?: AbortSignal,
 ) {
+  const doEscritorio = ferramentasDoEscritorio(entrada.dados);
+  const ferramentas = entrada.modo === "jurisprudencia" ? { ...doEscritorio, citar: ferramentaDeCitar(ia, entrada.dados, signal) } : doEscritorio;
   return streamText({
     model: ia.modelo(entrada.modo === "jurisprudencia" ? "jurisprudencia" : "perguntar"),
     instructions: [
@@ -802,7 +831,7 @@ export function conversarComAssistente(
       { role: "system", content: instrucoesDeAgora(entrada.quem) },
     ],
     messages: mensagensParaIa(entrada.historico),
-    tools: comCacheNaUltima(ferramentasDoEscritorio(entrada.dados)),
+    tools: comCacheNaUltima<ToolSet>(ferramentas),
     stopWhen: stepCountIs(PASSOS),
     // Na última rodada, sem ferramentas: a IA tem de responder com o que já consultou.
     prepareStep: ({ stepNumber }) => (stepNumber >= PASSOS - 1 ? { toolChoice: "none" } : {}),

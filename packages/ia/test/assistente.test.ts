@@ -93,10 +93,13 @@ describe("as instruções", () => {
     expect(p).toContain(`Você tem até ${PASSOS} rodadas de consulta`);
   });
 
-  test("jurisprudência: nunca número de processo nem relator, e o tribunal do escritório no lugar do TJSC fixo", () => {
+  test("jurisprudência: busca no acervo, cita pela chave e remete pelo número; nunca escreve número de súmula, tema ou processo", () => {
     const j = instrucoesFixas("jurisprudencia");
-    expect(j).toContain("Nunca escreva número de processo, relator, órgão julgador, data de julgamento nem trecho de ementa");
-    expect(j).toContain('com "(confira)" ao lado');
+    expect(j).toContain("Você consulta o acervo do Decreta com buscarJurisprudencia");
+    expect(j).toContain("Toda afirmação que se apoia num precedente passa por citar");
+    expect(j).toContain("remeta à citação só pelo número que citar devolveu, entre colchetes: [1], [2]");
+    expect(j).toContain("Nunca escreva número de súmula, tema, processo, relator, órgão julgador nem data");
+    expect(j).not.toContain("(confira)");
     expect(j).toContain("pode estar desatualizado");
     expect(j).toContain("site do tribunal do escritório");
     expect(j).not.toContain("que você não tenha certeza que existe");
