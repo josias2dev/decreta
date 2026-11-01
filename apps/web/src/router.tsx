@@ -11,6 +11,7 @@ import { ConfiguracoesPage } from "./paginas/configuracoes";
 import { ContaPage } from "./paginas/conta";
 import { DocumentosPage } from "./paginas/documentos";
 import { ModelosPage } from "./paginas/modelos";
+import { EnviarDocumentosPage } from "./paginas/enviar";
 import { EntrarPage } from "./paginas/entrar";
 import { EquipePage } from "./paginas/equipe";
 import { HojePage } from "./paginas/hoje";
@@ -43,6 +44,8 @@ const entrarRoute = createRoute({
   component: EntrarPage,
 });
 const conviteRoute = createRoute({ getParentRoute: () => rootRoute, path: "/convite/$id", component: ConvitePage });
+// O link que o cliente recebe no WhatsApp para mandar os documentos que faltam: sem login.
+const enviarRoute = createRoute({ getParentRoute: () => rootRoute, path: "/enviar/$org/$segredo", component: EnviarDocumentosPage });
 const redefinirRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/redefinir-senha",
@@ -146,6 +149,7 @@ const routeTree = rootRoute.addChildren([
   segurancaRoute,
   entrarRoute,
   conviteRoute,
+  enviarRoute,
   redefinirRoute,
   appRoute.addChildren([
     hojeRoute,

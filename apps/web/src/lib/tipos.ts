@@ -669,6 +669,8 @@ export interface Escritorio {
   demonstracao: boolean;
   capturaDatajud: boolean;
   whatsappLigado: boolean;
+  /** O número oficial do rodapé das mensagens ao cliente. */
+  whatsappOficial: string | null;
   datajudLigado: boolean;
   iaLigada: boolean;
   suspensoes: { id: string; dia: string; motivo: string; tipo: "local" | "forense" | "recesso" | "reduzido"; tribunal: string | null; comarca: string | null }[];
@@ -803,4 +805,37 @@ export interface Busca {
 
 export interface Registro {
   itens: { id: string; em: string; nome: string | null; acao: string; rotulo: string; detalhes: Record<string, unknown> }[];
+}
+
+/** Mensagem do escritório ao cliente no WhatsApp: só sai depois que um advogado aprova. */
+export interface MensagemAoCliente {
+  id: string;
+  tipo: "decisao" | "documentos";
+  situacao: "rascunho" | "enviada" | "falhou" | "descartada";
+  /** O corpo que o advogado revisa. */
+  texto: string;
+  /** Como o cliente vai ler: o nome do escritório, o corpo e o rodapé contra o golpe. */
+  previa: string;
+  itens: string[];
+  cliente: { id: string; nome: string };
+  para: string | null;
+  processoId: string | null;
+  prazoId: string | null;
+  linkValeAte: string | null;
+  recebidos: number;
+  criadaEm: string;
+  aprovadaPor: Pessoa | null;
+  aprovadaEm: string | null;
+  enviadaEm: string | null;
+  erro: string | null;
+  numeroOficial: string | null;
+}
+
+/** A página do link de envio, aberta pelo cliente sem login. */
+export interface PedidoDeDocumentos {
+  escritorio: string;
+  cliente: string;
+  itens: string[];
+  validoAte: string;
+  recebidos: number;
 }

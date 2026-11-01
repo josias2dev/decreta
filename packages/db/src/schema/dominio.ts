@@ -98,6 +98,8 @@ export const escritorios = pgTable(
     capturaDatajud: boolean("captura_datajud").notNull().default(true),
     /** Até quando o DataJud tem dados de cada tribunal da carteira ("TJSC" → instante), pela última conferência. */
     datajudAte: jsonb("datajud_ate").$type<Record<string, string>>().notNull().default({}),
+    /** O número oficial do escritório, que vai no rodapé de toda mensagem ao cliente (contra o golpe do falso advogado). */
+    whatsappOficial: text("whatsapp_oficial"),
     updatedAt: updatedAt(),
   },
   () => [tenantPolicy("escritorios")],
@@ -927,6 +929,55 @@ export const avisosEnviados = pgTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("avisos_enviados_uq").on(t.organizationId, t.userId, t.tipo, t.dia), tenantPolicy("avisos_enviados")],
+).enableRLS();
+
+export const tipoMensagemCliente = pgEnum("tipo_mensagem_cliente", ["decisao", "documentos"]);
+export const situacaoMensagemCliente = pgEnum("situacao_mensagem_cliente", ["rascunho", "enviada", "falhou", "descartada"]);
+
+/**
+ * Mensagem do escritório ao cliente no WhatsApp: o que uma decisão significa
+ * para ele, ou a lista dos documentos que faltam com o link de envio. Nasce
+ * rascunho; só sai quando um advogado aprova, e fica registrado quem e quando.
+ */
+export const mensagensCliente = pgTable(
+  "mensagens_cliente",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    clienteId: uuid("cliente_id")
+      .notNull()
+      .references(() => clientes.id, { onDelete: "cascade" }),
+    processoId: uuid("processo_id").references(() => processos.id, { onDelete: "set null" }),
+    prazoId: uuid("prazo_id").references(() => prazos.id, { onDelete: "set null" }),
+    tipo: tipoMensagemCliente("tipo").notNull(),
+    situacao: situacaoMensagemCliente("situacao").notNull().default("rascunho"),
+    /** O rascunho como a IA escreveu, para comparar com o que o advogado aprovou. */
+    textoIa: text("texto_ia"),
+    /** O corpo que o advogado revisa; o nome do escritório e o rodapé entram no envio. */
+    texto: text("texto").notNull(),
+    /** Documentos pedidos ao cliente, como ele lê ("Procuração assinada"). */
+    itens: jsonb("itens").$type<string[]>().notNull().default([]),
+    /** O texto inteiro como saiu, com o link de envio escondido. */
+    enviado: text("enviado"),
+    para: text("para"),
+    /** Link de envio sem login: só o hash do segredo, e até quando vale. */
+    linkHash: text("link_hash"),
+    linkExpiraEm: timestamp("link_expira_em", { withTimezone: true }),
+    recebidos: integer("recebidos").notNull().default(0),
+    criadaPor: pessoa("criada_por"),
+    aprovadaPor: pessoa("aprovada_por"),
+    aprovadaEm: timestamp("aprovada_em", { withTimezone: true }),
+    enviadaEm: timestamp("enviada_em", { withTimezone: true }),
+    erro: text("erro"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("mensagens_cliente_cliente_idx").on(t.organizationId, t.clienteId, t.createdAt),
+    index("mensagens_cliente_prazo_idx").on(t.organizationId, t.prazoId),
+    uniqueIndex("mensagens_cliente_link_uq").on(t.organizationId, t.linkHash),
+    tenantPolicy("mensagens_cliente"),
+  ],
 ).enableRLS();
 
 /** Quem fez o quê: confirmou prazo, gerou peça, apagou cliente. */

@@ -89,7 +89,7 @@ function useSalvarEscritorio() {
   const qc = useQueryClient();
   const avisar = useAviso();
   return useMutation({
-    mutationFn: (corpo: Partial<Pick<Escritorio, "tribunal" | "timbre" | "avisos" | "capturaDjen" | "capturaDatajud">>) => api("/escritorio", { method: "PUT", json: corpo }),
+    mutationFn: (corpo: Partial<Pick<Escritorio, "tribunal" | "timbre" | "avisos" | "capturaDjen" | "capturaDatajud" | "whatsappOficial">>) => api("/escritorio", { method: "PUT", json: corpo }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["escritorio"] });
       avisar("Configuração salva.");
@@ -206,6 +206,7 @@ function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
   const salvar = useSalvarEscritorio();
   const avisar = useAviso();
   const [horaDoAviso, setHora] = useState(e.avisos.hora);
+  const [oficial, setOficial] = useState(e.whatsappOficial ?? "");
   const teste = useMutation({
     mutationFn: () => api<{ texto: string }>("/avisos/teste", { method: "POST" }),
     onSuccess: () => avisar("Mandei o resumo de hoje no seu WhatsApp."),
@@ -230,6 +231,18 @@ function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
           <Botao onClick={() => teste.mutate()} ocupado={teste.isPending} disabled={!e.whatsappLigado}>
             <Send /> Mandar teste para o meu WhatsApp
           </Botao>
+        </div>
+      </Painel>
+      <Painel titulo="WhatsApp com o cliente">
+        <div className="dc-form">
+          <Campo
+            rotulo="Número oficial do escritório"
+            htmlFor="av-oficial"
+            ajuda="Vai no rodapé de toda mensagem ao cliente, com o aviso de que o escritório nunca pede Pix para liberar valores (contra o golpe do falso advogado)."
+          >
+            <input id="av-oficial" inputMode="tel" value={oficial} onChange={(ev) => setOficial(ev.target.value)} onBlur={() => oficial.trim() !== (e.whatsappOficial ?? "") && salvar.mutate({ whatsappOficial: oficial.trim() || null })} placeholder="(47) 3433-1000" disabled={!socio} />
+          </Campo>
+          <p className="dc-nota m-0">Nenhuma mensagem sai sem um advogado aprovar o texto.</p>
         </div>
       </Painel>
       <Painel titulo="Captura automática">

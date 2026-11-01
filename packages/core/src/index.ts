@@ -1,6 +1,7 @@
 export * from "./calculos.ts";
 export * from "./calendario.ts";
 export * from "./citacoes.ts";
+export * from "./cliente.ts";
 export * from "./cnj.ts";
 export * from "./conferencia.ts";
 export * from "./datas.ts";

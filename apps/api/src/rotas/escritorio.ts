@@ -1,4 +1,4 @@
-import { ehDia, feriadosForenses, feriadosNacionais, hojeEm, telefoneWhatsapp } from "@decreta/core";
+import { ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, telefoneWhatsapp } from "@decreta/core";
 import { documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
 import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { and, asc, eq, gte } from "drizzle-orm";
@@ -43,6 +43,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         capturaDatajud: e?.capturaDatajud ?? true,
         demonstracao: c.get("demonstracao"),
         whatsappLigado: !!deps.wameow,
+        whatsappOficial: e?.whatsappOficial ?? null,
         datajudLigado: !!deps.captura.datajudKey,
         iaLigada: !!deps.ia,
         suspensoes: susp.map((s) => ({ id: s.id, dia: s.dia, motivo: s.motivo, tipo: s.tipo, tribunal: s.tribunal, comarca: s.comarca })),
@@ -60,12 +61,21 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         avisos: z.object({ manha: z.boolean(), hora: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/) }).optional(),
         capturaDjen: z.boolean().optional(),
         capturaDatajud: z.boolean().optional(),
+        /** O número oficial do rodapé das mensagens ao cliente. Vazio apaga. */
+        whatsappOficial: z
+          .string()
+          .trim()
+          .max(30)
+          .nullable()
+          .optional()
+          .refine((v) => !v || telefoneWhatsapp(v) !== null, "Número de telefone inválido."),
       }),
     );
     if (c.get("demonstracao") && (b.capturaDjen || b.capturaDatajud)) falha(403, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");
     await tenant(c, deps, async (tx) => {
       const valores = Object.fromEntries(Object.entries(b).filter(([, v]) => v !== undefined)) as Partial<typeof escritorios.$inferInsert>;
       if (b.timbre) valores.timbre = { ...b.timbre, cor: b.timbre.cor ? `#${b.timbre.cor.replace("#", "")}` : undefined } as Timbre;
+      if (b.whatsappOficial !== undefined) valores.whatsappOficial = b.whatsappOficial ? formatarTelefone(b.whatsappOficial) : null;
       await tx
         .insert(escritorios)
         .values({ organizationId: c.get("orgId"), ...valores })

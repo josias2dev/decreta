@@ -11,6 +11,7 @@ import {
   IaRecusou,
   impressao,
   itemDoChecklist,
+  mensagemAoCliente,
   pecaParaPrazo,
   prepararAudiencia,
   semTeor,
@@ -248,5 +249,48 @@ describe("leitura da sentença, conferência e leitura de foto", () => {
     expect(prompt).toContain("Modelos do escritório");
     expect(prompt).toContain("Tese: Laudo basta");
     expect(prompt).toContain("Não copie delas fatos");
+  });
+});
+
+describe("mensagem ao cliente a partir do briefing", () => {
+  const BRIEFING = {
+    decidiu: "O juízo abriu 15 dias úteis para as partes falarem sobre o laudo pericial do evento 87.",
+    fazer: ["Ler o laudo com a cliente", "Protocolar a manifestação até 23/11"],
+    aFavor: ["O laudo confirma a incapacidade parcial (evento 87)."],
+    contra: ["A ré impugnou o valor da causa (evento 89)."],
+    recusa: null,
+  };
+
+  test("escreve em linguagem simples só com o que foi decidido e o próximo passo, sem os pontos a favor e contra", async () => {
+    let pedido = "";
+    let instrucoes = "";
+    const chamadas: MetodoIa[] = [];
+    const ia: Ia = {
+      modelo: (metodo) =>
+        new MockLanguageModelV4({
+          doGenerate: async (o) => {
+            chamadas.push(metodo);
+            instrucoes = JSON.stringify(o.prompt.filter((m) => m.role === "system"));
+            pedido = JSON.stringify(o.prompt.filter((m) => m.role !== "system"));
+            return responde(JSON.stringify({ texto: "Olá, Marina. O juiz pediu que as partes falem sobre o laudo do perito. Vamos preparar a resposta e combinamos os detalhes com você.", recusa: null }));
+          },
+        }),
+      transcrever: async () => "",
+    };
+    const r = await mensagemAoCliente(ia, { cliente: "Marina Duarte", prazo: "Manifestação sobre laudo pericial", briefing: BRIEFING });
+    expect(r.texto).toStartWith("Olá, Marina.");
+    expect(chamadas).toEqual(["mensagem-cliente"]);
+    expect(pedido).toContain("evento 87");
+    expect(pedido).toContain("Protocolar a manifestação");
+    expect(pedido).not.toContain("impugnou o valor da causa");
+    expect(pedido).not.toContain("incapacidade parcial");
+    expect(instrucoes).toContain("parecer");
+  });
+
+  test("briefing sem o que foi decidido recusa sem chamar o modelo", async () => {
+    const chamadas: MetodoIa[] = [];
+    const r = mensagemAoCliente(iaFalsa({}, chamadas), { cliente: "Marina Duarte", prazo: "Manifestação", briefing: { ...BRIEFING, decidiu: " " } });
+    await expect(r).rejects.toBeInstanceOf(IaRecusou);
+    expect(chamadas).toEqual([]);
   });
 });
