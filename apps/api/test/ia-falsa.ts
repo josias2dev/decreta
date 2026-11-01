@@ -12,6 +12,8 @@ export interface IaFalsa extends Ia {
   respostas: Partial<Record<MetodoIa, unknown>>;
   /** O nome que a IA dá para uma conversa nova. */
   titulo: string;
+  /** O que a transcrição do áudio devolve. */
+  transcricao: string;
   chamadas: MetodoIa[];
   /** O último pedido de cada ação (o prompt que a IA recebeu). */
   pedidos: Partial<Record<MetodoIa, unknown>>;
@@ -71,7 +73,12 @@ export function iaFalsa(): IaFalsa {
           };
         },
       }),
-    transcrever: async () => "transcrição",
+    transcricao: "transcrição",
+    transcrever: async (_audio, _mime, aoUsar) => {
+      chamadas.push("transcription");
+      await aoUsar?.({ entrada: 300, saida: 60, custoUsd: 0.002 });
+      return falsa.transcricao;
+    },
   };
   return falsa;
 }

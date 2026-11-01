@@ -693,14 +693,17 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     }
   });
 
-  /** Áudio do atendimento → texto (pelo gateway). */
+  /** Áudio do atendimento → texto (pela rota de transcrição do gateway). O gasto fica anotado pela IA medida. */
   app.post("/ia/transcrever", comIa, async (c) => {
     const ia = iaDaRota(c);
     const form = await c.req.formData().catch(() => null);
     const arquivo = form?.get("audio");
     if (!(arquivo instanceof File)) falha(400, "sem_audio");
     if (arquivo.size > 25 * 1024 * 1024) falha(422, "audio_grande", "O áudio passa de 25 MB. Grave em partes.");
+    const clienteId = form?.get("clienteId");
+    if (typeof clienteId === "string" && /^[0-9a-f-]{36}$/i.test(clienteId) && (await tenant(c, deps, (tx) => semIa(tx, { clienteId })))) throw new ClienteSemIa();
     const texto = await ia.transcrever(new Uint8Array(await arquivo.arrayBuffer()), arquivo.type || "audio/ogg");
+    if (!texto) falha(422, "sem_fala", "Não deu para ouvir fala neste áudio. Confira a gravação ou escreva o resumo.");
     return c.json({ texto });
   });
 }

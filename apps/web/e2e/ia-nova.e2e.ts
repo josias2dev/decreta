@@ -64,6 +64,17 @@ test("5.5: a petição da ré vira pontos a rebater no prazo", async ({ page }) 
   expect(api.mudancas(`/ia/peca-contraria/${ids.prazo}`).map((p) => p.corpo)).toEqual([{ documentoId: peticao.id }]);
 });
 
+test("5.6: o áudio do atendimento vira texto no campo", async ({ page }) => {
+  const texto = "A cliente contou que a seguradora negou o pagamento em março.";
+  const api = new ApiFalsa().responder("/eu", euComIa).responder("POST /ia/transcrever", { texto });
+  await abrir(page, `/clientes/${ids.cliente}`, api);
+  await page.getByRole("button", { name: "Novo atendimento" }).click();
+  const dialogo = page.getByRole("dialog", { name: "Registrar atendimento" });
+  await dialogo.getByLabel("Áudio do atendimento").setInputFiles({ name: "atendimento.ogg", mimeType: "audio/ogg", buffer: Buffer.from([1, 2, 3, 4]) });
+  await expect(dialogo.getByLabel("O que foi conversado")).toHaveValue(texto);
+  expect(api.mudancas("/ia/transcrever")).toHaveLength(1);
+});
+
 test("5.2: a auditoria da carteira aparece no Hoje e cada achado leva aonde resolver", async ({ page }) => {
   const api = new ApiFalsa().responder("/hoje", { ...amostras.hoje!.corpo, auditoria });
   await abrir(page, "/hoje", api);

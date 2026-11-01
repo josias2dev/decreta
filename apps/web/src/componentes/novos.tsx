@@ -402,6 +402,21 @@ export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { abe
   const [canal, setCanal] = useState<Canal>("presencial");
   const [resumo, setResumo] = useState("");
   const [organizando, setOrganizando] = useState(false);
+  const entradaDoAudio = useRef<HTMLInputElement>(null);
+  /** O áudio da conversa vira texto no campo; daí a pessoa confere e, se quiser, a IA organiza. */
+  const transcrever = useMutation({
+    mutationFn: (audio: File) => {
+      const form = new FormData();
+      form.append("audio", audio);
+      if (cli) form.append("clienteId", cli.id);
+      return api<{ texto: string }>("/ia/transcrever", { form });
+    },
+    onSuccess: (r) => {
+      setResumo((atual) => (atual.trim() ? `${atual.trimEnd()}\n\n${r.texto}` : r.texto));
+      avisar("Áudio transcrito. Confira o texto antes de registrar.");
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
   const salvar = useMutation({
     mutationFn: () => api(`/clientes/${cli!.id}/atendimentos`, { json: { canal, resumo, processoId: processoId ?? null } }),
     onSuccess: () => {
@@ -460,7 +475,22 @@ export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { abe
           <textarea id="at-resumo" rows={6} value={resumo} onChange={(e) => setResumo(e.target.value)} placeholder={eu.data?.ia && !cliente?.semIa ? "Anote do jeito que vier. A IA organiza em resumo, pedidos e próximos passos." : "Anote do jeito que vier."} />
         </Campo>
         {eu.data?.ia && !cliente?.semIa && (
-          <div>
+          <div className="dc-linha-acoes">
+            <input
+              ref={entradaDoAudio}
+              type="file"
+              accept="audio/*"
+              hidden
+              aria-label="Áudio do atendimento"
+              onChange={(ev) => {
+                const audio = ev.target.files?.[0];
+                ev.target.value = "";
+                if (audio) transcrever.mutate(audio);
+              }}
+            />
+            <Botao pequeno onClick={() => entradaDoAudio.current?.click()} ocupado={transcrever.isPending}>
+              {transcrever.isPending ? "Transcrevendo…" : "Enviar áudio"}
+            </Botao>
             <Botao variante="ia" pequeno onClick={organizar} ocupado={organizando} disabled={resumo.trim().length < 20}>
               Organizar com IA
             </Botao>
