@@ -81,6 +81,9 @@ export interface Avisos {
   hora: string;
 }
 
+/** O jeito do escritório por tipo de peça ("geral" para todas). */
+export type JeitoDoEscritorio = Record<string, { estilo: string; teses: string; evitar: string }>;
+
 /** Configuração do escritório, uma linha por organização. */
 export const escritorios = pgTable(
   "escritorios",
@@ -100,6 +103,8 @@ export const escritorios = pgTable(
     datajudAte: jsonb("datajud_ate").$type<Record<string, string>>().notNull().default({}),
     /** O número oficial do escritório, que vai no rodapé de toda mensagem ao cliente (contra o golpe do falso advogado). */
     whatsappOficial: text("whatsapp_oficial"),
+    /** Como o escritório faz cada peça (estilo, teses, o que evitar), pelo tipo do catálogo; "geral" vale para todas. */
+    jeito: jsonb("jeito").$type<JeitoDoEscritorio>().notNull().default({}),
     updatedAt: updatedAt(),
   },
   () => [tenantPolicy("escritorios")],

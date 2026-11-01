@@ -1,10 +1,11 @@
-/** Configurações do escritório: timbre das peças, avisos e captura, calendário forense, a IA (política e retorno) e o registro. */
+/** Configurações do escritório: timbre das peças, o jeito de cada peça, avisos e captura, calendário forense, a IA (política e retorno) e o registro. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
+import { JeitoDasPecas } from "@/componentes/jeito-das-pecas";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Abas, Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
@@ -15,7 +16,7 @@ import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora } from "@/lib/f
 import type { Escritorio, Feriados, Registro, RetornosDaIa, Timbre } from "@/lib/tipos";
 import { Folha } from "./peca";
 
-type Aba = "escritorio" | "avisos" | "calendario" | "ia" | "registro";
+type Aba = "escritorio" | "pecas" | "avisos" | "calendario" | "ia" | "registro";
 const FONTES = ["Arial", "Times New Roman", "Calibri", "Garamond"] as const;
 const TRIBUNAIS = [
   { id: "TJSC", nome: "TJSC · Justiça estadual de Santa Catarina" },
@@ -40,6 +41,7 @@ export function ConfiguracoesPage() {
       aoMudar={setAba}
       abas={[
         { id: "escritorio", rotulo: "Timbre" },
+        { id: "pecas", rotulo: "Jeito das peças" },
         { id: "avisos", rotulo: "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
         ...(socio ? [{ id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }] : []),
@@ -51,6 +53,8 @@ export function ConfiguracoesPage() {
     <Carregando />
   ) : aba === "escritorio" ? (
     <AbaTimbre e={e} socio={socio} celular={celular} />
+  ) : aba === "pecas" ? (
+    <JeitoDasPecas e={e} socio={socio} />
   ) : aba === "avisos" ? (
     <AbaAvisos e={e} socio={socio} />
   ) : aba === "calendario" ? (

@@ -86,6 +86,39 @@ export interface PedidoDePeca {
   modelos?: ModeloParaIa[];
   /** Documento e endereço das partes, da ficha do cliente e da Receita Federal, uma por linha. */
   qualificacao?: string | null;
+  /** Como o escritório faz esta peça: estilo, teses e o que evitar. */
+  jeito?: JeitoDaPeca | null;
+}
+
+/** Como o escritório faz uma peça, nas palavras dele. */
+export interface JeitoDaPeca {
+  estilo: string;
+  teses: string;
+  evitar: string;
+}
+
+/** O jeito que vale para a peça: o geral do escritório somado ao do tipo. Nada escrito, nada a seguir. */
+export function jeitoParaPeca(jeito: Record<string, JeitoDaPeca>, tipo: string): JeitoDaPeca | null {
+  const partes = [jeito.geral, jeito[tipo]].filter((j): j is JeitoDaPeca => !!j);
+  const juntar = (campo: keyof JeitoDaPeca) =>
+    partes
+      .map((j) => j[campo].trim())
+      .filter(Boolean)
+      .join("\n");
+  const r = { estilo: juntar("estilo"), teses: juntar("teses"), evitar: juntar("evitar") };
+  return r.estilo || r.teses || r.evitar ? r : null;
+}
+
+function textoDoJeito(j: JeitoDaPeca): string {
+  return [
+    "## Jeito do escritório",
+    "O escritório descreveu como faz esta peça. Siga o estilo e use as teses quando couberem nos fatos do processo; nunca invente fato para encaixar uma tese. O que está em \"O que evitar\" não entra na peça.",
+    j.estilo && `Estilo: ${j.estilo}`,
+    j.teses && `Teses que o escritório usa: ${j.teses}`,
+    j.evitar && `O que evitar: ${j.evitar}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export interface ModeloParaIa {
@@ -130,6 +163,7 @@ Estrutura usual: ${tipo.estrutura}`,
       prazo?.tempestividade &&
         `## Tempestividade\nSe a peça tiver tópico de tempestividade, use este parágrafo como está, sem mudar datas nem artigos: a conta é do sistema, conferida pelo advogado.\n${prazo.tempestividade}`,
       pedido.instrucoes.trim() && `## Instruções de quem pediu\n${pedido.instrucoes.trim()}`,
+      pedido.jeito && textoDoJeito(pedido.jeito),
       pedido.modelos?.length && textoDosModelos(pedido.modelos),
       pedido.qualificacao && `## Qualificação das partes\nUse na qualificação quando a peça pedir; o que não estiver aqui vira [COMPLETAR].\n${pedido.qualificacao}`,
       `## Quem assina\n${escritorio.advogado}${escritorio.oab ? `, ${escritorio.oab}` : ""}, ${escritorio.nome}${escritorio.cidade ? `, ${escritorio.cidade}` : ""}.`,

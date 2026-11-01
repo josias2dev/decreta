@@ -684,6 +684,8 @@ export interface Escritorio {
   whatsappLigado: boolean;
   /** O número oficial do rodapé das mensagens ao cliente. */
   whatsappOficial: string | null;
+  /** Como o escritório faz cada peça, pelo tipo do catálogo; "geral" vale para todas. */
+  jeito?: Record<string, JeitoDaPeca>;
   datajudLigado: boolean;
   iaLigada: boolean;
   suspensoes: { id: string; dia: string; motivo: string; tipo: "local" | "forense" | "recesso" | "reduzido"; tribunal: string | null; comarca: string | null }[];
@@ -711,6 +713,12 @@ export interface Feriados {
   tribunal: string;
   dias: { dia: string; nome: string; tipo: string; origem: string }[];
   suspensaoDeFimDeAno: { de: string; ate: string };
+}
+
+export interface JeitoDaPeca {
+  estilo: string;
+  teses: string;
+  evitar: string;
 }
 
 export interface Catalogo {

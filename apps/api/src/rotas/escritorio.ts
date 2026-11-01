@@ -1,6 +1,7 @@
 import { ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, telefoneWhatsapp } from "@decreta/core";
 import { documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
 import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
+import { tipoDePeca } from "@decreta/ia";
 import { and, asc, eq, gte } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -44,6 +45,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         demonstracao: c.get("demonstracao"),
         whatsappLigado: !!deps.wameow,
         whatsappOficial: e?.whatsappOficial ?? null,
+        jeito: e?.jeito ?? {},
         datajudLigado: !!deps.captura.datajudKey,
         iaLigada: !!deps.ia,
         suspensoes: susp.map((s) => ({ id: s.id, dia: s.dia, motivo: s.motivo, tipo: s.tipo, tribunal: s.tribunal, comarca: s.comarca })),
@@ -69,6 +71,11 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
           .nullable()
           .optional()
           .refine((v) => !v || telefoneWhatsapp(v) !== null, "Número de telefone inválido."),
+        /** Como o escritório faz cada peça; a chave é o tipo do catálogo ou "geral". Manda o mapa inteiro. */
+        jeito: z
+          .record(z.string(), z.object({ estilo: z.string().max(3000), teses: z.string().max(3000), evitar: z.string().max(3000) }))
+          .refine((j) => Object.keys(j).every((k) => k === "geral" || !!tipoDePeca(k)), "Tipo de peça fora do catálogo.")
+          .optional(),
       }),
     );
     if (c.get("demonstracao") && (b.capturaDjen || b.capturaDatajud)) falha(403, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");

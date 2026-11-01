@@ -75,6 +75,21 @@ test("5.6: o áudio do atendimento vira texto no campo", async ({ page }) => {
   expect(api.mudancas("/ia/transcrever")).toHaveLength(1);
 });
 
+test("5.7: o sócio descreve o jeito da contestação, e o geral continua guardado", async ({ page }) => {
+  const geral = { estilo: "Frases curtas, sem latim.", teses: "", evitar: "" };
+  const api = new ApiFalsa().responder("/escritorio", { ...amostras.escritorio!.corpo, jeito: { geral } });
+  await abrir(page, "/configuracoes", api);
+  await page.getByRole("tab", { name: "Jeito das peças" }).click();
+  await expect(page.getByLabel("Estilo")).toHaveValue(geral.estilo);
+  await page.getByLabel("Peça", { exact: true }).selectOption("contestacao");
+  await expect(page.getByLabel("Estilo")).toHaveValue("");
+  await page.getByLabel("Teses que o escritório usa").fill("Prescrição sempre em preliminar.");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect.poll(() => api.mudancas("/escritorio").map((p) => p.corpo)).toEqual([
+    { jeito: { geral, contestacao: { estilo: "", teses: "Prescrição sempre em preliminar.", evitar: "" } } },
+  ]);
+});
+
 test("5.2: a auditoria da carteira aparece no Hoje e cada achado leva aonde resolver", async ({ page }) => {
   const api = new ApiFalsa().responder("/hoje", { ...amostras.hoje!.corpo, auditoria });
   await abrir(page, "/hoje", api);

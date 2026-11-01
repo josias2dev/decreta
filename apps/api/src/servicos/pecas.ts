@@ -1,7 +1,7 @@
 /** O pedido de peça que vai à IA: o mesmo na tela Gerar peça e no rascunho preparado sozinho. */
 import { formatarDia } from "@decreta/core";
 import { analises, escritorios, prazos, processos, type Database, type Tx } from "@decreta/db";
-import { pontosEmTexto, type Briefing, type LeituraDaPecaContraria, type PedidoDePeca, type TipoDePeca } from "@decreta/ia";
+import { jeitoParaPeca, pontosEmTexto, type Briefing, type LeituraDaPecaContraria, type PedidoDePeca, type TipoDePeca } from "@decreta/ia";
 import { and, desc, eq } from "drizzle-orm";
 import { contextoParaIa } from "./contexto.ts";
 import { modelosParaPeca } from "./modelos.ts";
@@ -79,6 +79,7 @@ export async function montarPedidoDePeca(
       contextoDoProcesso: ctx?.texto ?? "",
       escritorio: { nome: esc?.timbre?.nome ?? a.nomeDoEscritorio, advogado: advogado?.nome ?? a.quem?.nome ?? "[COMPLETAR: advogado]", oab: advogado?.oab ?? null, cidade: p.comarca },
       modelos: doBanco.map((m) => ({ titulo: m.titulo, tese: m.tese, texto: m.texto })),
+      jeito: jeitoParaPeca(esc?.jeito ?? {}, tipo.id),
     },
   };
 }
