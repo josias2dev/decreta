@@ -17,6 +17,8 @@ export interface AppDeps {
   rotas?: ReturnType<typeof createRotas>;
   /** O link de envio de documentos pelo cliente (`/api/envio/*`), sem login. */
   envio?: Hono;
+  /** O conector MCP somente leitura (`/api/mcp`), com token pessoal no lugar da sessão. */
+  mcp?: Hono;
   /** Endpoint que o Inngest chama para rodar as funções (`inngest/hono`). */
   inngestHandler?: (c: Context) => Promise<Response>;
   log?: (msg: string, extra?: Record<string, unknown>) => void;
@@ -66,6 +68,7 @@ export function createApp(deps: AppDeps) {
   });
 
   if (deps.envio) app.route("/api/envio", deps.envio);
+  if (deps.mcp) app.route("/api/mcp", deps.mcp);
 
   if (deps.rotas) {
     app.use("/api/app/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], exposeHeaders: ["x-peca-id"] }));

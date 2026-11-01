@@ -1002,3 +1002,25 @@ export const auditoria = pgTable(
   },
   (t) => [index("auditoria_criada_idx").on(t.organizationId, t.createdAt), tenantPolicy("auditoria")],
 ).enableRLS();
+
+/**
+ * Token pessoal do conector MCP (só leitura): um assistente de fora (Claude,
+ * por exemplo) consulta o escritório com as permissões de quem criou o token.
+ * O banco guarda só o hash; o token aparece uma vez, na criação.
+ */
+export const tokensMcp = pgTable(
+  "tokens_mcp",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    nome: text("nome").notNull(),
+    hash: text("hash").notNull(),
+    usadoEm: timestamp("usado_em", { withTimezone: true }),
+    revogadoEm: timestamp("revogado_em", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("tokens_mcp_hash_uq").on(t.hash), index("tokens_mcp_pessoa_idx").on(t.organizationId, t.userId), tenantPolicy("tokens_mcp")],
+).enableRLS();

@@ -8,6 +8,7 @@ import { createLogMailer, createResendMailer } from "./email.ts";
 import { readEnv } from "./env.ts";
 import { createFunctions, eventoDoPedido, inngest } from "./inngest.ts";
 import { rotasDoEnvioPeloCliente } from "./rotas/envio-pelo-cliente.ts";
+import { rotasDoMcp } from "./rotas/mcp.ts";
 import { createRotas } from "./rotas/index.ts";
 import { startSentry } from "./sentry.ts";
 import { limitesDoEnv } from "./servicos/uso-ia.ts";
@@ -70,6 +71,7 @@ const app = createApp({
   auth,
   rotas,
   envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log }),
+  mcp: rotasDoMcp({ db, log }),
   inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites }) }),
   log,
   reporter,

@@ -32,6 +32,8 @@ export const ROTULO: Record<string, string> = {
   "publicacao.sem_prazo": "Marcou que a publicação não gera prazo",
   "peca.gerada": "Gerou uma peça com a IA",
   "peca.preparada": "A IA preparou o rascunho da peça do prazo confirmado",
+  "mcp.token_criado": "Criou um token do conector MCP",
+  "mcp.token_revogado": "Revogou um token do conector MCP",
   "peca.baixada": "Baixou uma peça em DOCX",
   "processo.criado": "Cadastrou um processo",
   "cliente.criado": "Cadastrou um cliente",

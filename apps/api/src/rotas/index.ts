@@ -17,6 +17,7 @@ import { rotasDasConsultas } from "./consultas.ts";
 import { rotasDosDocumentos } from "./documentos.ts";
 import { rotasDoEscritorio } from "./escritorio.ts";
 import { rotasDaIa } from "./ia.ts";
+import { rotasDosTokensMcp } from "./mcp.ts";
 import { rotasDasMensagensAoCliente } from "./mensagens-cliente.ts";
 import { rotasDosModelos } from "./modelos.ts";
 import { rotasDosNegocios } from "./negocios.ts";
@@ -119,5 +120,6 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDosNegocios(app, deps);
   rotasDoEscritorio(app, deps);
   rotasDasMensagensAoCliente(app, deps);
+  rotasDosTokensMcp(app, deps);
   return app;
 }

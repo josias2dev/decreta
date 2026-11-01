@@ -1,10 +1,11 @@
-/** Minha conta: perfil, senha, verificação em duas etapas e sair. */
+/** Minha conta: perfil, senha, conector MCP, verificação em duas etapas e sair. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { LogOut, ShieldCheck } from "lucide-react";
 import QRCode from "qrcode";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { ConectorMcp } from "@/componentes/conector-mcp";
 import { Dialogo } from "@/componentes/dialogo";
 import { UsoDaIaHoje } from "@/componentes/limite-da-ia";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
@@ -48,6 +49,7 @@ export function ContaPage() {
       </div>
       <div className="dc-pilha">
         <UsoDaIaHoje />
+        {!demonstracao && <ConectorMcp />}
         {!demonstracao && <DuasEtapas ligada={!!(sessao.data?.user as { twoFactorEnabled?: boolean } | undefined)?.twoFactorEnabled} />}
         <Painel titulo="Sair">
           <p className="dc-nota mb-3 mt-0">A sessão dura 30 dias neste aparelho. Saia se o aparelho não for seu.</p>

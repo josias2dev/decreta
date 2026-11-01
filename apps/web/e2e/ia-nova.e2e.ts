@@ -101,6 +101,25 @@ test("5.9: o rascunho da peça vira sugestão, e o prazo continua travado em exi
   await expect.poll(() => api.mudancas("/escritorio").map((p) => p.corpo)).toEqual([{ automacao: { "rascunho-da-peca": "sugestao", "leitura-da-sentenca": "automatico" } }]);
 });
 
+test("5.10: a pessoa cria um token do conector MCP, que aparece uma vez, e pode revogá-lo", async ({ page }) => {
+  const eu = { ...amostras.eu!.corpo, escritorio: { ...amostras.eu!.corpo.escritorio, demonstracao: false } };
+  const token = `dcmcp.org.${"a".repeat(43)}`;
+  const api = new ApiFalsa()
+    .responder("/eu", eu)
+    .responder("GET /mcp/tokens", { itens: [{ id: "00000000-0000-4000-8000-0000000000aa", nome: "Claude no notebook", criadoEm: "2026-10-20T12:00:00.000Z", usadoEm: null }] })
+    .responder("POST /mcp/tokens", { id: "00000000-0000-4000-8000-0000000000bb", token }, 201);
+  await abrir(page, "/conta", api);
+  const painel = page.locator("section", { hasText: "Conector MCP (só leitura)" });
+  const lista = painel.getByRole("list", { name: "Tokens do conector" });
+  await expect(lista).toContainText("Claude no notebook");
+  await expect(lista).toContainText("ainda não usado");
+  await painel.getByLabel("Nome do token").fill("Claude no computador");
+  await painel.getByRole("button", { name: "Criar token" }).click();
+  await expect(painel.getByLabel("Token novo")).toHaveText(token);
+  await painel.getByRole("button", { name: "Revogar" }).click();
+  await expect.poll(() => api.mudancas(/^\/mcp\/tokens/).map((p) => `${p.metodo} ${p.caminho}`)).toEqual(["POST /mcp/tokens", "DELETE /mcp/tokens/00000000-0000-4000-8000-0000000000aa"]);
+});
+
 test("5.2: a auditoria da carteira aparece no Hoje e cada achado leva aonde resolver", async ({ page }) => {
   const api = new ApiFalsa().responder("/hoje", { ...amostras.hoje!.corpo, auditoria });
   await abrir(page, "/hoje", api);

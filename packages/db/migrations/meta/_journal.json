@@ -127,6 +127,13 @@
       "when": 1793495833087,
       "tag": "0017_automacao",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793496097115,
+      "tag": "0018_tokens_mcp",
+      "breakpoints": true
     }
   ]
 }
