@@ -13,7 +13,7 @@ import { hojeEm, RESPOSTA_AUTOMATICA } from "@decreta/core";
 import { clientes, documentos, escritorios, mensagensCliente, organization, withTenant, type Database } from "@decreta/db";
 import { chaveDoDocumento, lerDocumento, tipoPelosBytes, varrerDocumento, type Armazenamento } from "@decreta/documentos";
 import type { Ia } from "@decreta/ia";
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { Hono, type Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { registrar } from "../auditoria.ts";
@@ -71,7 +71,7 @@ async function cobrancaDoLink(deps: DepsDoEnvio, c: Context) {
       .select({ id: mensagensCliente.id, itens: mensagensCliente.itens, expira: mensagensCliente.linkExpiraEm, recebidos: mensagensCliente.recebidos, clienteId: clientes.id, nome: clientes.nome })
       .from(mensagensCliente)
       .innerJoin(clientes, eq(clientes.id, mensagensCliente.clienteId))
-      .where(and(eq(mensagensCliente.linkHash, hashDoSegredo(segredo)), eq(mensagensCliente.situacao, "enviada"), eq(mensagensCliente.tipo, "documentos")));
+      .where(and(eq(mensagensCliente.linkHash, hashDoSegredo(segredo)), inArray(mensagensCliente.situacao, ["enviando", "enviada"]), eq(mensagensCliente.tipo, "documentos")));
     if (!l) return null;
     const [e] = await tx.select({ timbre: escritorios.timbre }).from(escritorios).where(eq(escritorios.organizationId, org));
     return { ...l, nomeDoTimbre: e?.timbre?.nome ?? null };

@@ -30,16 +30,18 @@ const BRIEFING = {
 };
 const RASCUNHO = "Olá, Marina. O juiz pediu que as partes falem sobre o laudo do perito. Vamos preparar a resposta e combinamos os detalhes com você.";
 
-/** Um wameow de mentira: guarda cada envio e pode falhar de propósito. */
+/** Um wameow de mentira: guarda cada envio e pode falhar de propósito, ou não responder a tempo. */
 function wameowFalso() {
   const enviados: { number: string; text: string }[] = [];
-  const estado = { falhar: false };
+  const estado = { falhar: false, semResposta: false, aoEnviar: null as (() => Promise<void>) | null };
   const w: Wameow = {
     url: "http://wameow.local",
     token: "token-de-teste",
     fetch: (async (_url: string, init: RequestInit) => {
+      await estado.aoEnviar?.();
       if (estado.falhar) return new Response("fora do ar", { status: 500 });
       enviados.push(JSON.parse(String(init.body)));
+      if (estado.semResposta) throw new DOMException("sem resposta", "TimeoutError");
       return new Response("{}", { status: 200 });
     }) as unknown as typeof fetch,
   };
@@ -190,6 +192,105 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     const lista = await json(call(`/mensagens-cliente?cliente=${escritorio.clienteId}`));
     expect(lista.itens.find((x: { id: string }) => x.id === m.id)).toMatchObject({ situacao: "falhou" });
     expect((await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} })).status).toBe(200);
+  });
+
+  /* ---------------- Envio sem confirmação ---------------- */
+
+  const novaMensagem = async () => {
+    ia.respostas["mensagem-cliente"] = { texto: RASCUNHO, recusa: null };
+    return json<{ id: string }>(call(`/prazos/${escritorio.prazoId}/mensagem-cliente`, { method: "POST" }));
+  };
+  const naLista = async (id: string) => (await json(call(`/mensagens-cliente?cliente=${escritorio.clienteId}`))).itens.find((x: { id: string }) => x.id === id);
+
+  test("enquanto o WhatsApp não responde, a mensagem aparece como enviando, não como enviada", async () => {
+    const m = await novaMensagem();
+    let durante: unknown;
+    zap.estado.aoEnviar = async () => {
+      durante = await naLista(m.id);
+    };
+    const r = await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} });
+    zap.estado.aoEnviar = null;
+    expect(durante).toMatchObject({ situacao: "enviando", envioIncerto: false, enviadaEm: null });
+    expect(r.status).toBe(200);
+    const depois = await json(r);
+    expect(depois).toMatchObject({ situacao: "enviada", envioIncerto: false });
+    expect(depois.enviadaEm).toBeTruthy();
+  });
+
+  /** O que a queda do servidor deixa para trás: aprovada há minutos, sem resposta do WhatsApp. */
+  const interrompida = async () => {
+    const m = await novaMensagem();
+    await t.owner`update mensagens_cliente set situacao = 'enviando', aprovada_por = ${escritorio.userId}, aprovada_em = now() - interval '5 minutes', para = '(47) 99123-4567' where id = ${m.id}`;
+    return m;
+  };
+
+  test("envio interrompido: avisa que ninguém sabe se saiu, e nada manda de novo nem muda o texto", async () => {
+    const m = await interrompida();
+    const antes = zap.enviados.length;
+    expect(await naLista(m.id)).toMatchObject({ situacao: "enviando", envioIncerto: true, enviadaEm: null });
+    const r = await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} });
+    expect(r.status).toBe(409);
+    expect((await json(r)).erro).toBe("enviando");
+    expect((await call(`/mensagens-cliente/${m.id}`, { method: "PUT", json: { texto: "Outro texto qualquer." } })).status).toBe(409);
+    expect((await call(`/mensagens-cliente/${m.id}/descartar`, { method: "POST" })).status).toBe(409);
+    expect(zap.enviados).toHaveLength(antes);
+  });
+
+  test("a pessoa confere e diz que saiu: vira enviada, sem mandar de novo, e fica registrado", async () => {
+    const m = await interrompida();
+    const antes = zap.enviados.length;
+    const r = await call(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu: true } });
+    expect(r.status).toBe(200);
+    const depois = await json(r);
+    expect(depois).toMatchObject({ situacao: "enviada", envioIncerto: false });
+    expect(depois.enviadaEm).toBe(depois.aprovadaEm);
+    expect(zap.enviados).toHaveLength(antes);
+    const registro = await t.owner<{ detalhes: { conferida?: boolean; mensagemId: string } }[]>`select detalhes from auditoria where organization_id = ${escritorio.orgId} and acao = 'mensagem_cliente.enviada' order by created_at desc limit 1`;
+    expect(registro[0]!.detalhes).toMatchObject({ mensagemId: m.id, conferida: true });
+    // Já conferida, não confere de novo.
+    expect((await call(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu: false } })).status).toBe(409);
+  });
+
+  test("a pessoa confere e diz que não saiu: volta para revisar, e só o novo clique manda", async () => {
+    const m = await interrompida();
+    const antes = zap.enviados.length;
+    const r = await call(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu: false } });
+    expect(r.status).toBe(200);
+    expect(await json(r)).toMatchObject({ situacao: "falhou", enviadaEm: null, envioIncerto: false });
+    expect(zap.enviados).toHaveLength(antes);
+    const registro = await t.owner`select 1 from auditoria where organization_id = ${escritorio.orgId} and acao = 'mensagem_cliente.nao_saiu'`;
+    expect(registro).toHaveLength(1);
+    expect((await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} })).status).toBe(200);
+    expect(zap.enviados).toHaveLength(antes + 1);
+  });
+
+  test("não dá para conferir um envio que ainda está em andamento, nem sem OAB, nem de outro escritório", async () => {
+    const recente = await novaMensagem();
+    await t.owner`update mensagens_cliente set situacao = 'enviando', aprovada_em = now() where id = ${recente.id}`;
+    const andamento = await call(`/mensagens-cliente/${recente.id}/conferir-envio`, { method: "POST", json: { saiu: false } });
+    expect(andamento.status).toBe(409);
+    expect((await json(andamento)).erro).toBe("sem_o_que_conferir");
+
+    const m = await interrompida();
+    expect((await call(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu: true } }, demo.cookie)).status).toBe(404);
+    await t.owner`update equipe set oab_numero = null where user_id = ${escritorio.userId}`;
+    const semOab = await call(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu: true } });
+    await t.owner`update equipe set oab_numero = '41.233' where user_id = ${escritorio.userId}`;
+    expect(semOab.status).toBe(403);
+    expect(await naLista(m.id)).toMatchObject({ situacao: "enviando" });
+  });
+
+  test("o WhatsApp não responde a tempo: a mensagem pode ter saído, então pede para conferir na hora e não oferece reenviar", async () => {
+    const m = await novaMensagem();
+    const antes = zap.enviados.length;
+    zap.estado.semResposta = true;
+    const r = await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} });
+    zap.estado.semResposta = false;
+    expect(r.status).toBe(504);
+    expect((await json(r)).erro).toBe("whatsapp_sem_resposta");
+    expect(await naLista(m.id)).toMatchObject({ situacao: "enviando", envioIncerto: true });
+    expect((await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} })).status).toBe(409);
+    expect(zap.enviados).toHaveLength(antes + 1);
   });
 
   test("o rascunho é do escritório: outro escritório não vê nem envia", async () => {
@@ -373,5 +474,17 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     const form = new FormData();
     form.set("arquivo", new File([new Uint8Array([1])], "rg.jpg", { type: "image/jpeg" }));
     expect((await app.request(caminhoDoEnvio(), { method: "POST", body: form })).status).toBe(410);
+  });
+
+  test("link de um envio sem confirmação: abre, porque o cliente pode ter recebido, e fecha quando a pessoa diz que não saiu", async () => {
+    const m = await json<{ id: string }>(call(`/clientes/${escritorio.clienteId}/cobrar-documentos`, { method: "POST" }));
+    zap.estado.semResposta = true;
+    expect((await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} })).status).toBe(504);
+    zap.estado.semResposta = false;
+    const novo = zap.enviados.at(-1)!.text.match(/https:\/\/decreta\.local\/enviar\/\S+/)![0];
+    const caminho = `/api/envio${new URL(novo).pathname.replace(/^\/enviar/, "")}`;
+    expect((await app.request(caminho, { headers: { "x-forwarded-for": "203.0.113.9" } })).status).toBe(200);
+    expect((await call(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu: false } })).status).toBe(200);
+    expect((await app.request(caminho, { headers: { "x-forwarded-for": "203.0.113.9" } })).status).toBe(404);
   });
 });

@@ -948,12 +948,14 @@ export const avisosEnviados = pgTable(
 ).enableRLS();
 
 export const tipoMensagemCliente = pgEnum("tipo_mensagem_cliente", ["decisao", "documentos"]);
-export const situacaoMensagemCliente = pgEnum("situacao_mensagem_cliente", ["rascunho", "enviada", "falhou", "descartada"]);
+export const situacaoMensagemCliente = pgEnum("situacao_mensagem_cliente", ["rascunho", "enviando", "enviada", "falhou", "descartada"]);
 
 /**
  * Mensagem do escritório ao cliente no WhatsApp: o que uma decisão significa
  * para ele, ou a lista dos documentos que faltam com o link de envio. Nasce
  * rascunho; só sai quando um advogado aprova, e fica registrado quem e quando.
+ * "enviando" dura enquanto o WhatsApp não responde; se ficar assim, ninguém sabe
+ * se saiu, e uma pessoa confere em vez de o sistema mandar de novo.
  */
 export const mensagensCliente = pgTable(
   "mensagens_cliente",

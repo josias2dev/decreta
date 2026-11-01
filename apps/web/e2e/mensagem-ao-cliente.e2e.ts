@@ -16,6 +16,7 @@ function mensagem(campos: Record<string, unknown> = {}) {
     id: MENSAGEM,
     tipo: "decisao",
     situacao: "rascunho",
+    envioIncerto: false,
     texto,
     previa: `*Souza & Mendes Advocacia*\n\n${texto}\n\n${RODAPE}`,
     itens: [],
@@ -68,6 +69,45 @@ test("prazo: a IA escreve ao cliente, o advogado edita e só o clique em Aprovar
   await expect(page.getByText("Mensagem enviada no WhatsApp do cliente.")).toBeVisible();
   await expect(painel.getByText(`Enviada por ${eu.apelido}`)).toBeVisible();
   await expect(painel.getByRole("button", { name: "Aprovar e enviar" })).toHaveCount(0);
+});
+
+test("prazo: envio sem confirmação pede para conferir, não oferece reenviar, e só manda de novo depois do novo clique", async ({ page }) => {
+  const incerta = mensagem({ situacao: "enviando", envioIncerto: true, aprovadaEm: "2026-10-29T12:35:00.000Z", erro: "sem resposta" });
+  const api = new ApiFalsa().responder("/eu", euComIa).responder("GET /mensagens-cliente", { itens: [incerta] });
+  api.responder(`POST /mensagens-cliente/${MENSAGEM}/conferir-envio`, mensagem({ situacao: "falhou" }));
+  await abrir(page, `/prazos/${ids.prazo}`, api);
+
+  const painel = page.locator("section.dc-painel").filter({ has: page.getByRole("heading", { name: "Para o cliente" }) });
+  await expect(painel.getByText(/Não conseguimos confirmar se esta mensagem saiu/)).toBeVisible();
+  await expect(painel.getByLabel("Mensagem a conferir")).toContainText(RASCUNHO);
+  await expect(painel.getByRole("button", { name: "Aprovar e enviar" })).toHaveCount(0);
+  await expect(painel.getByRole("button", { name: "Descartar" })).toHaveCount(0);
+
+  api.responder("GET /mensagens-cliente", { itens: [mensagem({ situacao: "falhou" })] });
+  await painel.getByRole("button", { name: "Não saiu, voltar a revisar" }).click();
+  await expect.poll(() => api.mudancas(`/mensagens-cliente/${MENSAGEM}/conferir-envio`).map((p) => p.corpo)).toEqual([{ saiu: false }]);
+  await expect(page.getByText("A mensagem voltou para você revisar. Nada foi enviado.")).toBeVisible();
+  await expect(painel.getByText("Esta mensagem não saiu. Confira o texto e tente de novo.")).toBeVisible();
+  await expect(painel.getByRole("button", { name: "Aprovar e enviar" })).toBeVisible();
+  expect(api.mudancas(/\/enviar$/)).toHaveLength(0);
+});
+
+test("prazo: a pessoa confere que a mensagem saiu e ela vira enviada, sem mandar nada", async ({ page }) => {
+  const incerta = mensagem({ situacao: "enviando", envioIncerto: true, aprovadaEm: "2026-10-29T12:35:00.000Z" });
+  const api = new ApiFalsa().responder("/eu", euComIa).responder("GET /mensagens-cliente", { itens: [incerta] });
+  const enviada = mensagem({ situacao: "enviada", aprovadaPor: { id: eu.id, nome: eu.nome, apelido: eu.apelido, iniciais: eu.iniciais }, aprovadaEm: "2026-10-29T12:35:00.000Z", enviadaEm: "2026-10-29T12:35:00.000Z" });
+  api.responder(`POST /mensagens-cliente/${MENSAGEM}/conferir-envio`, enviada);
+  await abrir(page, `/prazos/${ids.prazo}`, api);
+
+  const painel = page.locator("section.dc-painel").filter({ has: page.getByRole("heading", { name: "Para o cliente" }) });
+  const saiu = painel.getByRole("button", { name: "A mensagem saiu" });
+  await expect(saiu).toBeVisible();
+  api.responder("GET /mensagens-cliente", { itens: [enviada] });
+  await saiu.click();
+  await expect.poll(() => api.mudancas(`/mensagens-cliente/${MENSAGEM}/conferir-envio`).map((p) => p.corpo)).toEqual([{ saiu: true }]);
+  await expect(painel.getByText(`Enviada por ${eu.apelido}`)).toBeVisible();
+  await expect(painel.getByText(/Não conseguimos confirmar/)).toHaveCount(0);
+  expect(api.mudancas(/\/enviar$/)).toHaveLength(0);
 });
 
 test("cliente: a cobrança lista o que falta e avisa que o link entra na aprovação", async ({ page }) => {

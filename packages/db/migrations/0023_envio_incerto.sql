@@ -1,0 +1,1 @@
+ALTER TYPE "public"."situacao_mensagem_cliente" ADD VALUE 'enviando' BEFORE 'enviada';

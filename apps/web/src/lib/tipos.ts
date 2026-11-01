@@ -849,7 +849,9 @@ export interface Registro {
 export interface MensagemAoCliente {
   id: string;
   tipo: "decisao" | "documentos";
-  situacao: "rascunho" | "enviada" | "falhou" | "descartada";
+  situacao: "rascunho" | "enviando" | "enviada" | "falhou" | "descartada";
+  /** Em "enviando" sem resposta do WhatsApp: ninguém sabe se saiu, e o advogado confere. */
+  envioIncerto: boolean;
   /** O corpo que o advogado revisa. */
   texto: string;
   /** Como o cliente vai ler: o nome do escritório, o corpo e o rodapé contra o golpe. */

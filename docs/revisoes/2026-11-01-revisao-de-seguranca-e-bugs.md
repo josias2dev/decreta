@@ -113,6 +113,15 @@ Em aberto:
 - **Baixo — volume por conta nova:** não há teto de OABs consultadas no DJEN nem de espaço em documentos.
 - **Baixo — e-mail já cadastrado:** o 409 revela que o e-mail tem conta; só o limite de 10 pedidos por hora por endereço segura a enumeração.
 
+## 2.2. Mensagem ao cliente marcada como enviada sem ter saído (corrigido no mesmo dia)
+
+A mensagem virava "enviada" antes de o WhatsApp responder. Se o servidor caísse nesse intervalo, ela ficava como enviada sem ter saído, e o escritório achava que o cliente tinha sido avisado. Agora ela fica em "enviando" até a resposta. Sem resposta em 20 segundos, ou com o envio interrompido há mais de 1 minuto, a tela pede para conferir a conversa e o Decreta não reenvia sozinho, para o cliente não receber duas vezes. O link de documentos abre enquanto ninguém sabe se saiu, porque o cliente pode ter recebido, e fecha quando a pessoa diz que não saiu.
+
+Em aberto:
+
+- **Baixo — onde o aviso aparece:** a conferência só aparece no prazo ou na ficha do cliente, não no Hoje.
+- **Baixo — queda de conexão no meio do envio:** só o tempo esgotado conta como "pode ter saído". Uma conexão cortada depois de o pedido chegar ao WhatsApp ainda vira "falhou" e oferece reenviar.
+
 ## 3. Depende de você
 
 - **Cobrança e duração do acesso de contas novas:** hoje o cadastro não tem período de teste nem pagamento, e o escritório em avaliação fica assim até alguém liberar à mão.

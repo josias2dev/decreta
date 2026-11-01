@@ -25,7 +25,12 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
   const avisar = useAviso();
   const busca = "prazo" in filtro ? `prazo=${filtro.prazo}` : `cliente=${filtro.cliente}`;
   const chave = ["mensagens-cliente", busca];
-  const q = useQuery({ queryKey: chave, queryFn: () => api<{ itens: MensagemAoCliente[] }>(`/mensagens-cliente?${busca}`) });
+  const q = useQuery({
+    queryKey: chave,
+    queryFn: () => api<{ itens: MensagemAoCliente[] }>(`/mensagens-cliente?${busca}`),
+    // Outra pessoa pode estar enviando: a resposta do WhatsApp demora até 20 segundos.
+    refetchInterval: (consulta) => (consulta.state.data?.itens.some((m) => m.situacao === "enviando" && !m.envioIncerto) ? 15_000 : false),
+  });
   // Devolve a promessa: o botão só reabilita depois que a lista nova chegou.
   const atualizar = () => qc.invalidateQueries({ queryKey: ["mensagens-cliente"] });
   const invalidar = useMutation({
@@ -44,12 +49,16 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
 
   const itens = q.data?.itens ?? [];
   const rascunho = itens.find((m) => m.situacao === "rascunho" || m.situacao === "falhou");
+  const enviando = itens.filter((m) => m.situacao === "enviando");
   const enviadas = itens.filter((m) => m.situacao === "enviada");
-  if (!rascunho && !enviadas.length && !gerar) return null;
+  if (!rascunho && !enviando.length && !enviadas.length && !gerar) return null;
 
   return (
     <Painel titulo={titulo}>
       <div className="flex flex-col gap-3">
+        {enviando.map((m) => (
+          <EmEnvio key={m.id} m={m} aoMudar={atualizar} />
+        ))}
         {rascunho ? (
           <Rascunho key={rascunho.id} m={rascunho} aoMudar={atualizar} />
         ) : (
@@ -87,6 +96,37 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
   );
 }
 
+function EmEnvio({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void }) {
+  const avisar = useAviso();
+  const conferir = useMutation({
+    mutationFn: (saiu: boolean) => api<MensagemAoCliente>(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu } }),
+    onSuccess: (_r, saiu) => {
+      aoMudar();
+      avisar(saiu ? "Marcada como enviada." : "A mensagem voltou para você revisar. Nada foi enviado.");
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+  if (!m.envioIncerto) return <Faixa tipo="ia">Enviando a mensagem para {m.cliente.nome} no WhatsApp.</Faixa>;
+  return (
+    <>
+      <Faixa tipo="aviso">
+        Não conseguimos confirmar se esta mensagem saiu. Confira a conversa com {m.cliente.nome} no WhatsApp{m.para ? ` (${m.para})` : ""}: o Decreta não manda de novo sem você dizer.
+      </Faixa>
+      <div aria-label="Mensagem a conferir" className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[var(--borda)] bg-[var(--superficie-2)] p-3 text-[14px] leading-[21px]">
+        {m.previa}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Botao variante="primaria" onClick={() => conferir.mutate(true)} ocupado={conferir.isPending && conferir.variables}>
+          <Check /> A mensagem saiu
+        </Botao>
+        <Botao variante="fantasma" onClick={() => conferir.mutate(false)} ocupado={conferir.isPending && !conferir.variables}>
+          Não saiu, voltar a revisar
+        </Botao>
+      </div>
+    </>
+  );
+}
+
 function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void }) {
   const avisar = useAviso();
   const [texto, setTexto] = useState(m.texto);
@@ -97,7 +137,11 @@ function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void })
       aoMudar();
       avisar("Mensagem enviada no WhatsApp do cliente.");
     },
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+    // O erro também muda a mensagem (falhou, ou pede conferência): a lista precisa mostrar isso.
+    onError: (err) => {
+      aoMudar();
+      avisar(mensagemDoErro(err), { erro: true });
+    },
   });
   const descartar = useMutation({
     mutationFn: () => api(`/mensagens-cliente/${m.id}/descartar`, { method: "POST" }),
@@ -111,7 +155,7 @@ function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void })
   return (
     <>
       {m.situacao === "falhou" ? (
-        <Faixa tipo="erro">O WhatsApp não aceitou a mensagem. Confira e tente de novo.</Faixa>
+        <Faixa tipo="erro">Esta mensagem não saiu. Confira o texto e tente de novo.</Faixa>
       ) : (
         <Faixa tipo="ia">
           {m.tipo === "decisao"

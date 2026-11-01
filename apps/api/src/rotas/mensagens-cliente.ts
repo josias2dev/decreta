@@ -32,6 +32,14 @@ const SEM_NUMERO = "(número oficial ainda não cadastrado)";
 /** O link de envio como aparece na prévia e no texto guardado: o segredo só vai no WhatsApp. */
 const LINK_ESCONDIDO = "[link de envio]";
 
+/** Mais que o tempo que o envio espera o WhatsApp (20 s): passou disso em "enviando", o envio foi interrompido. */
+const ENVIO_INCERTO_DEPOIS_MS = 60_000;
+
+/** Ninguém sabe se saiu: o WhatsApp não respondeu a tempo (fica o erro), ou o envio foi interrompido. */
+function envioIncerto(m: Pick<Mensagem, "situacao" | "aprovadaEm" | "erro">): boolean {
+  return m.situacao === "enviando" && (m.erro !== null || Date.now() - (m.aprovadaEm?.getTime() ?? 0) > ENVIO_INCERTO_DEPOIS_MS);
+}
+
 /** O corpo como sai: na cobrança, com o link de envio e a validade no fim. */
 function corpoParaEnvio(m: Pick<Mensagem, "tipo" | "texto">, link: string, validoAte: string): string {
   return m.tipo === "documentos" ? comLinkDeEnvio(m.texto, link, validoAte) : m.texto;
@@ -43,6 +51,7 @@ function naTela(m: Mensagem, cliente: { id: string; nome: string; telefone: stri
     id: m.id,
     tipo: m.tipo,
     situacao: m.situacao,
+    envioIncerto: envioIncerto(m),
     texto: m.texto,
     previa: m.enviado ?? mensagemParaWhatsapp({ escritorio: id_.escritorio, corpo: corpoParaEnvio(m, LINK_ESCONDIDO, validade), numeroOficial: id_.numeroOficial ?? SEM_NUMERO }),
     itens: m.itens,
@@ -206,6 +215,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
     if (!wameow) falha(503, "whatsapp_desligado", "O WhatsApp do Decreta ainda não foi ligado neste servidor.");
     const envio = await tenant(c, deps, async (tx) => {
       const l = await carregar(tx, c, deps, mensagemId);
+      if (l.m.situacao === "enviando") falha(409, "enviando", "Esta mensagem já foi para o WhatsApp, e não mandamos de novo. Confira nesta tela se ela saiu.");
       if (l.m.situacao !== "rascunho" && l.m.situacao !== "falhou") falha(409, "ja_enviada", "Esta mensagem já saiu ou foi descartada.");
       if (!l.pessoas.get(c.get("userId"))?.oab) falha(403, "sem_oab", "Só advogado com OAB cadastrada no perfil aprova mensagem ao cliente.");
       if (!l.id_.numeroOficial) falha(422, "sem_numero_oficial", "Cadastre o WhatsApp oficial do escritório nas configurações: ele vai no rodapé contra o golpe do falso advogado.");
@@ -223,10 +233,11 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
       const link = `${deps.telas.replace(/\/$/, "")}/enviar/${c.get("orgId")}/${segredo}`;
       const montar = (lk: string) => mensagemParaWhatsapp({ escritorio: l.id_.escritorio, corpo: corpoParaEnvio({ tipo: l.m.tipo, texto }, lk, validoAte), numeroOficial: l.id_.numeroOficial! });
       const comLink = l.m.tipo === "documentos" ? { linkHash: hashDoSegredo(segredo), linkExpiraEm: expira } : {};
-      // A aprovação reserva a mensagem: dois cliques seguidos não mandam duas vezes.
+      // A aprovação reserva a mensagem: dois cliques seguidos não mandam duas vezes. Só vira "enviada" depois
+      // que o WhatsApp aceitar; se o servidor cair no meio, fica "enviando" e uma pessoa confere.
       const [reservada] = await tx
         .update(mensagensCliente)
-        .set({ texto, enviado: montar(LINK_ESCONDIDO), ...comLink, para: formatarTelefone(para), situacao: "enviada", aprovadaPor: c.get("userId"), aprovadaEm: agora, enviadaEm: agora, erro: null })
+        .set({ texto, enviado: montar(LINK_ESCONDIDO), ...comLink, para: formatarTelefone(para), situacao: "enviando", aprovadaPor: c.get("userId"), aprovadaEm: agora, enviadaEm: null, erro: null })
         .where(and(eq(mensagensCliente.id, mensagemId), inArray(mensagensCliente.situacao, ["rascunho", "falhou"])))
         .returning({ id: mensagensCliente.id });
       if (!reservada) falha(409, "ja_enviada", "Esta mensagem já saiu ou foi descartada.");
@@ -237,10 +248,39 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
     } catch (err) {
       const erro = err instanceof Error ? err.message.slice(0, 300) : String(err);
       deps.log("mensagem ao cliente não saiu", { mensagemId, error: erro });
+      // Sem resposta, o WhatsApp pode ter entregado: fica para uma pessoa conferir, para o cliente não receber duas vezes.
+      if (err instanceof Error && err.name === "TimeoutError") {
+        await tenant(c, deps, (tx) => tx.update(mensagensCliente).set({ erro }).where(eq(mensagensCliente.id, mensagemId)));
+        falha(504, "whatsapp_sem_resposta", "O WhatsApp não respondeu a tempo, e a mensagem pode ter saído. Confira a conversa com o cliente antes de mandar de novo.");
+      }
       await tenant(c, deps, (tx) => tx.update(mensagensCliente).set({ situacao: "falhou", enviadaEm: null, erro }).where(eq(mensagensCliente.id, mensagemId)));
       falha(503, "whatsapp_falhou", "O WhatsApp não aceitou a mensagem agora. Tente de novo em alguns minutos.");
     }
+    await tenant(c, deps, (tx) => tx.update(mensagensCliente).set({ situacao: "enviada", enviadaEm: new Date() }).where(eq(mensagensCliente.id, mensagemId)));
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "mensagem_cliente.enviada", detalhes: { mensagemId, clienteId: envio.clienteId, tipo: envio.tipo }, ip: ip(c) }, deps.log);
+    return tenant(c, deps, async (tx) => {
+      const l = await carregar(tx, c, deps, mensagemId);
+      return c.json(naTela(l.m, l.cliente, l.id_, l.pessoas));
+    });
+  });
+
+  /** Envio sem confirmação: o advogado olha a conversa no WhatsApp e diz se saiu. Daqui nada é enviado. */
+  app.post("/mensagens-cliente/:id/conferir-envio", async (c) => {
+    const mensagemId = id(c);
+    const { saiu } = await corpo(c, z.object({ saiu: z.boolean() }));
+    const clienteId = await tenant(c, deps, async (tx) => {
+      const l = await carregar(tx, c, deps, mensagemId);
+      if (!envioIncerto(l.m)) falha(409, "sem_o_que_conferir", "Esta mensagem não está esperando conferência.");
+      if (!l.pessoas.get(c.get("userId"))?.oab) falha(403, "sem_oab", "Só advogado com OAB cadastrada no perfil confere o envio ao cliente.");
+      const [conferida] = await tx
+        .update(mensagensCliente)
+        .set(saiu ? { situacao: "enviada", enviadaEm: l.m.aprovadaEm, erro: null } : { situacao: "falhou", erro: "Conferido: a mensagem não saiu." })
+        .where(and(eq(mensagensCliente.id, mensagemId), eq(mensagensCliente.situacao, "enviando")))
+        .returning({ id: mensagensCliente.id });
+      if (!conferida) falha(409, "sem_o_que_conferir", "Esta mensagem não está esperando conferência.");
+      return l.cliente.id;
+    });
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: saiu ? "mensagem_cliente.enviada" : "mensagem_cliente.nao_saiu", detalhes: { mensagemId, clienteId, conferida: true }, ip: ip(c) }, deps.log);
     return tenant(c, deps, async (tx) => {
       const l = await carregar(tx, c, deps, mensagemId);
       return c.json(naTela(l.m, l.cliente, l.id_, l.pessoas));

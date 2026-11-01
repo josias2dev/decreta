@@ -76,7 +76,7 @@ export async function corpo<S extends z.ZodType>(c: C, schema: S): Promise<z.inf
   return r.data;
 }
 
-export function falha(status: 400 | 403 | 404 | 409 | 410 | 422 | 429 | 503, erro: string, detalhe?: string): never {
+export function falha(status: 400 | 403 | 404 | 409 | 410 | 422 | 429 | 503 | 504, erro: string, detalhe?: string): never {
   throw new HTTPException(status, { res: Response.json({ erro, detalhe }, { status }) });
 }
 
