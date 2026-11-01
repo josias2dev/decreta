@@ -130,7 +130,7 @@ describe.skipIf(!hasTestDatabase)("cálculos pela API", () => {
     const p = await call("/processos", { method: "POST", json: { cnj: null, tipo: "extrajudicial", titulo: "Ana Ribeiro × Banco Colina Verde", partes: [{ nome: "Ana Ribeiro Lopes", polo: "ativo", cliente: true }] } });
     expect(p.status).toBe(201);
     processoId = (await json(p)).id;
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await t?.drop();
