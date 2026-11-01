@@ -15,6 +15,7 @@ import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoPrazo } from "@/componentes/novo-prazo";
+import { RadarDoProcesso } from "@/componentes/radar-do-processo";
 import { Abas, Avatar, BlocoIa, Botao, Campo, Carregando, Chip, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -341,6 +342,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
       <>
         {resumo}
         {proximo}
+        <RadarDoProcesso processoId={p.id} />
         {ultimas}
         {dados}
         {pessoas}
@@ -357,6 +359,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
       </div>
       <div className="dc-pilha">
         {proximo}
+        <RadarDoProcesso processoId={p.id} />
         {dados}
         {pessoas}
         {agenda}

@@ -980,6 +980,40 @@ export const mensagensCliente = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * Radar de precedentes (Fase 5.4): um precedente do BNP que mudou e pode
+ * afetar um processo do escritório, porque o assunto do processo aparece na
+ * questão julgada. É um "confira": o advogado lê e descarta o que não serve.
+ */
+export const radarPrecedentes = pgTable(
+  "radar_precedentes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    processoId: uuid("processo_id")
+      .notNull()
+      .references(() => processos.id, { onDelete: "cascade" }),
+    /** A chave do precedente no acervo: "irdr:TJSC:37". */
+    chave: text("chave").notNull(),
+    /** "IRDR 37 do TJSC" */
+    rotulo: text("rotulo").notNull(),
+    situacao: text("situacao").notNull(),
+    /** A questão ou a tese, como estava no BNP quando o radar achou. */
+    texto: text("texto"),
+    url: text("url").notNull(),
+    /** Por que o radar ligou o precedente ao processo. */
+    motivo: text("motivo").notNull(),
+    descartadoPor: pessoa("descartado_por"),
+    descartadoEm: timestamp("descartado_em", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("radar_precedentes_uq").on(t.organizationId, t.processoId, t.chave, t.situacao),
+    index("radar_precedentes_processo_idx").on(t.organizationId, t.processoId),
+    tenantPolicy("radar_precedentes"),
+  ],
+).enableRLS();
+
 /** Quem fez o quê: confirmou prazo, gerou peça, apagou cliente. */
 export const auditoria = pgTable(
   "auditoria",

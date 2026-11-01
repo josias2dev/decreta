@@ -61,8 +61,9 @@ export async function sincronizarTemasDoStj(deps: DepsDoAcervo): Promise<{ temas
   return { temas: linhas.length };
 }
 
-async function guardarPrecedente(db: Database, chave: string, p: PrecedenteDoBnp) {
-  const valores = { chave, fonte: "cnj_bnp", situacao: p.situacao, cancelado: p.cancelado, texto: p.texto, url: p.url, hash: hash(p.situacao, p.texto), atualizadoNaFonte: p.atualizadoEm };
+/** Guarda (ou atualiza) um precedente do BNP no acervo, pela chave da citação. */
+export async function guardarPrecedente(db: Database, chave: string, p: PrecedenteDoBnp) {
+  const valores = { chave, fonte: "cnj_bnp", situacao: p.situacao, cancelado: p.cancelado, texto: p.texto, questao: p.questao, url: p.url, hash: hash(p.situacao, p.texto), atualizadoNaFonte: p.atualizadoEm };
   await db
     .insert(acervoDocumentos)
     .values(valores)

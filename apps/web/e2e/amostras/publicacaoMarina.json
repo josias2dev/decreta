@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/48bccccd-187d-4da9-9baa-8cf0887ff08e",
+  "path": "/publicacoes/11255887-5c2c-4429-93ec-05ca166d12e1",
   "corpo": {
-    "id": "48bccccd-187d-4da9-9baa-8cf0887ff08e",
+    "id": "11255887-5c2c-4429-93ec-05ca166d12e1",
     "situacao": "nova",
     "fonte": "djen",
     "disponibilizadaEm": "2026-10-28",
@@ -29,14 +29,14 @@
       }
     ],
     "processo": {
-      "id": "afa02982-ee2f-4058-86c9-d32d7080c354",
+      "id": "44dc69ff-8b57-4471-9926-31259971c2c8",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "classe": "Procedimento comum cível",
       "orgao": "2ª Vara Cível",
       "comarca": "Joinville",
       "responsavel": {
-        "id": "FopQnyELX5HIUfMJLMVpHChi7G0uwkpU",
+        "id": "mnCDPsLamFWuaIs7TwDO3FoqXf5rAUhL",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -45,7 +45,7 @@
       "semIa": false
     },
     "sugestao": {
-      "id": "45641916-c170-41c5-b518-7e27a36f44a3",
+      "id": "62ba4480-e12e-4482-8977-bd3a400f2595",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -65,7 +65,7 @@
           ],
           "confianca": "alta"
         },
-        "responsavelId": "FopQnyELX5HIUfMJLMVpHChi7G0uwkpU",
+        "responsavelId": "mnCDPsLamFWuaIs7TwDO3FoqXf5rAUhL",
         "contagemCalculada": {
           "fim": "2026-11-23",
           "dias": 15,
@@ -93,7 +93,7 @@
       "desatualizada": false,
       "erro": null,
       "responsavel": {
-        "id": "FopQnyELX5HIUfMJLMVpHChi7G0uwkpU",
+        "id": "mnCDPsLamFWuaIs7TwDO3FoqXf5rAUhL",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -101,7 +101,7 @@
       }
     },
     "prazo": {
-      "id": "f013535c-b319-42d9-a083-668724461caf",
+      "id": "aa6604a9-f158-4fac-8672-c0e235bd4160",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Manifestação sobre laudo pericial"

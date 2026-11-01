@@ -1,9 +1,9 @@
 {
-  "path": "/ia/conversas/76804b46-8ba7-4a79-a161-f0d50c791135",
+  "path": "/ia/conversas/2fc4b4cd-f4b9-4294-849e-5701c575d954",
   "corpo": {
     "rodape": "Gerado por IA. Confira nos autos.",
     "conversa": {
-      "id": "76804b46-8ba7-4a79-a161-f0d50c791135",
+      "id": "2fc4b4cd-f4b9-4294-849e-5701c575d954",
       "titulo": "Contagem de 15 dias úteis",
       "modo": "pergunte",
       "fixada": false,
@@ -13,14 +13,14 @@
     },
     "mensagens": [
       {
-        "id": "d365e797-aa91-48ee-9fbc-f84ea42653c5",
+        "id": "c79db4ea-2501-40ce-afe4-151ddf938038",
         "papel": "pessoa",
         "texto": "Conta 15 dias úteis de uma intimação publicada hoje",
         "partes": null,
         "em": "2026-10-29T11:20:10.000Z"
       },
       {
-        "id": "1462ef23-ac1f-4d27-bf1a-bb54fb230651",
+        "id": "d7d92877-9db1-4c02-b792-495be1f8b419",
         "papel": "ia",
         "texto": "Vence em **23/11/2026**, uma segunda-feira. A contagem começa amanhã, 30/10, e pula Finados (02/11) e a Consciência Negra (20/11).\n\nSe o processo for de outra comarca, me diga qual: o calendário do tribunal pode ter outro feriado no meio.",
         "partes": [

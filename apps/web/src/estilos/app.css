@@ -442,6 +442,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-citacoes__texto a:hover { text-decoration: underline; }
 .dc-citacoes__texto a svg { width: 12px; height: 12px; }
 .dc-celular .dc-citacoes__texto, .dc-celular .dc-citacoes__nota { font-size: 14px; line-height: 20px; }
+.dc-radar__item { grid-template-columns: 16px minmax(0, 1fr) auto; }
+.dc-radar__texto { color: var(--tinta); }
 .dc-dialogo--versoes { width: min(760px, calc(100vw - 32px)); }
 .dc-dialogo--versoes > .dc-segmentos { align-self: flex-start; }
 .dc-versao { border-radius: var(--radius-md); }

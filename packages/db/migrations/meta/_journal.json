@@ -120,6 +120,13 @@
       "when": 1793494946311,
       "tag": "0016_calculos",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793497327505,
+      "tag": "0017_radar_precedentes",
+      "breakpoints": true
     }
   ]
 }

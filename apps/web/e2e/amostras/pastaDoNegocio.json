@@ -1,28 +1,28 @@
 {
-  "path": "/negocios/2a0ddd80-e4f3-4ce5-8f1b-a99d9479efb5/pasta",
+  "path": "/negocios/6492536a-60b0-4bb1-ac5d-4ffc305e761a/pasta",
   "corpo": {
     "documentos": [
       {
-        "id": "a2f8bb76-6b85-49d7-bba9-564147da0d00",
+        "id": "397006cd-3770-4bef-93d7-034b3ba739f2",
         "nome": "procuracao.txt",
         "mime": "text/plain",
         "tamanho": 151,
         "leitura": null,
         "lido": true,
-        "em": "2026-11-01T00:18:11.830Z"
+        "em": "2026-11-01T01:42:26.029Z"
       },
       {
-        "id": "4c90f845-edd8-4013-aacf-a7f63c5ae554",
+        "id": "da0da601-f83c-44d1-a921-7534d7a51854",
         "nome": "conta-de-luz.txt",
         "mime": "text/plain",
         "tamanho": 90,
         "leitura": null,
         "lido": true,
-        "em": "2026-11-01T00:18:11.848Z"
+        "em": "2026-11-01T01:42:26.048Z"
       }
     ],
     "conferencia": {
-      "id": "45223d2c-72d9-43ae-804d-9f6f97893147",
+      "id": "ee73cdbb-c5ba-44ef-b857-64333a3df6f6",
       "acao": "conferir-pasta",
       "situacao": "pronto",
       "conteudo": {
@@ -75,7 +75,7 @@
         "resumo": "Ainda não dá para protocolar: falta o documento com foto e o comprovante de residência está velho."
       },
       "fonte": "2 documentos · 29/10/2026",
-      "em": "2026-11-01T00:18:11.869Z",
+      "em": "2026-11-01T01:42:26.094Z",
       "desatualizada": false,
       "erro": null
     }

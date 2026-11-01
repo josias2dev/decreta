@@ -1,7 +1,7 @@
 {
-  "path": "/audiencias/55a5877e-c29b-4d45-b030-15933b60a810",
+  "path": "/audiencias/1f283c9a-7d61-4949-b041-1def74844fb7",
   "corpo": {
-    "id": "55a5877e-c29b-4d45-b030-15933b60a810",
+    "id": "1f283c9a-7d61-4949-b041-1def74844fb7",
     "dia": "2026-10-29",
     "hora": "14:30",
     "em": "2026-10-29T17:30:00.000Z",
@@ -28,14 +28,14 @@
       }
     ],
     "responsavel": {
-      "id": "1FGz3aoOVOvalRmFHMrI5tVC8f80kLpK",
+      "id": "a8JJfBfhUBtxqoNHo7fuSH8vNi7Kf6W8",
       "nome": "Rafael Freitas",
       "apelido": "Rafael",
       "iniciais": "RF",
       "foto": "/demonstracao/rafael.jpg"
     },
     "processo": {
-      "id": "83833048-700e-4401-ad24-daacda736e58",
+      "id": "ae7657c3-1bd5-4f26-9395-175a48fe1789",
       "titulo": "Carlos Henrique Prado × Construtora Vale Norte",
       "cnj": "5007745-68.2026.8.24.0008",
       "orgao": "Juizado Especial Cível",
@@ -43,7 +43,7 @@
       "semIa": false
     },
     "preparacao": {
-      "id": "4b3d1907-bbfd-4e2a-a074-13376bfe2e8a",
+      "id": "f4ff1eb1-b5dc-4d55-b56b-a7d8b83c3a5b",
       "acao": "preparar-audiencia",
       "situacao": "pronto",
       "conteudo": {

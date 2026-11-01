@@ -25,6 +25,7 @@ import { rotasDasPecas } from "./pecas.ts";
 import { rotasDosPrazos } from "./prazos.ts";
 import { rotasDosProcessos } from "./processos.ts";
 import { rotasDasPublicacoes } from "./publicacoes.ts";
+import { rotasDoRadar } from "./radar.ts";
 
 export function createRotas(deps: DepsDasRotas) {
   const { db, auth } = deps;
@@ -121,5 +122,6 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDosNegocios(app, deps);
   rotasDoEscritorio(app, deps);
   rotasDasMensagensAoCliente(app, deps);
+  rotasDoRadar(app, deps);
   return app;
 }

@@ -1,9 +1,9 @@
 {
-  "path": "/ia/conversas/16d166f4-10d8-4d0b-ace3-b16b23cf70df",
+  "path": "/ia/conversas/7cfca11d-8d99-454a-bbce-724fa46d8a4e",
   "corpo": {
     "rodape": "Gerado por IA. Confira nos autos.",
     "conversa": {
-      "id": "16d166f4-10d8-4d0b-ace3-b16b23cf70df",
+      "id": "7cfca11d-8d99-454a-bbce-724fa46d8a4e",
       "titulo": "Negativa de cirurgia e dano moral",
       "modo": "jurisprudencia",
       "fixada": false,
@@ -13,14 +13,14 @@
     },
     "mensagens": [
       {
-        "id": "d0a12aa6-1456-4698-83ba-d1a1414268b9",
+        "id": "11cd69ab-f2a4-4062-be3e-6b232599c4e5",
         "papel": "pessoa",
         "texto": "Negativa de cirurgia pelo plano de saúde gera dano moral?",
         "partes": null,
         "em": "2026-10-28T20:10:05.000Z"
       },
       {
-        "id": "23d0ef5b-bffc-4b8e-bb74-5214eb72793c",
+        "id": "cecf5d1f-50ee-444b-bc25-886ad71de556",
         "papel": "ia",
         "texto": "Na maioria dos casos, sim. O STJ tem entendimento firme de que a recusa indevida de cobertura de tratamento urgente vai além do mero inadimplemento contratual e gera dano moral, porque agrava a aflição de quem já está doente.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Onde costuma perder\n- Dúvida razoável sobre a cobertura no contrato.\n- Procedimento eletivo, sem prejuízo concreto.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada decisão na fonte antes de levar para a peça.",
         "partes": [
