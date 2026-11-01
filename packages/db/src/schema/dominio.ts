@@ -105,6 +105,8 @@ export const escritorios = pgTable(
     whatsappOficial: text("whatsapp_oficial"),
     /** Como o escritório faz cada peça (estilo, teses, o que evitar), pelo tipo do catálogo; "geral" vale para todas. */
     jeito: jsonb("jeito").$type<JeitoDoEscritorio>().notNull().default({}),
+    /** O nível de automação escolhido por ação ("rascunho-da-peca" → "sugestao"); o que falta vale o padrão. */
+    automacao: jsonb("automacao").$type<Record<string, string>>().notNull().default({}),
     updatedAt: updatedAt(),
   },
   () => [tenantPolicy("escritorios")],

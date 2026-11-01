@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
+import { NiveisDeAutomacao } from "@/componentes/automacao";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { JeitoDasPecas } from "@/componentes/jeito-das-pecas";
@@ -61,6 +62,7 @@ export function ConfiguracoesPage() {
     <AbaCalendario e={e} socio={socio} celular={celular} />
   ) : aba === "ia" ? (
     <div className="dc-pilha">
+      <NiveisDeAutomacao e={e} socio={socio} />
       <PoliticaDeIa />
       <AbaRetorno celular={celular} />
     </div>

@@ -16,7 +16,7 @@ import type { Pedido } from "../src/rotas/base.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { consultaDeTexto } from "../src/servicos/modelos.ts";
 import { lerDocumentoComIa } from "../src/servicos/leitura.ts";
-import { lerSentencaDaPublicacao } from "../src/servicos/sentencas.ts";
+import { lerSentencaDaPublicacao, lerSentencaSozinha } from "../src/servicos/sentencas.ts";
 import { iaFalsa } from "./ia-falsa.ts";
 
 const SENTENCA =
@@ -121,6 +121,16 @@ describe.skipIf(!hasTestDatabase)("propostas 1 a 5 pela API", () => {
     expect(ia.chamadas.length).toBe(antes);
     expect((await json(call(`/publicacoes/${pub.id}`))).decisao).toBe(false);
     expect((await json(call(`/publicacoes/${pub.id}/sentenca`, { method: "POST" }))).situacao).toBe("pronto");
+  });
+
+  test("sentença: no nível de sugestão (5.9), a rotina não lê sozinha; a pessoa pede", async () => {
+    await call("/escritorio", { method: "PUT", json: { automacao: { "leitura-da-sentenca": "sugestao" } } });
+    const pub = await json(call("/publicacoes", { method: "POST", json: { processoId, disponibilizadaEm: "2026-10-28", tipoDocumento: "Sentença", texto: SENTENCA } }));
+    const antes = ia.chamadas.length;
+    expect(await lerSentencaSozinha({ db: t.db, ia }, orgId, pub.id)).toBeNull();
+    expect(ia.chamadas.length).toBe(antes);
+    await call("/escritorio", { method: "PUT", json: { automacao: {} } });
+    expect((await lerSentencaSozinha({ db: t.db, ia }, orgId, pub.id))?.situacao).toBe("pronto");
   });
 
   /* 2. Leitura de foto e PDF escaneado */

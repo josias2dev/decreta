@@ -3,10 +3,11 @@
  * diz o que ganhamos e o que perdemos pedido a pedido e qual recurso cabe. O
  * resultado só entra no processo quando uma pessoa confirma (`resultados`).
  */
-import { publicacoes, type Database } from "@decreta/db";
+import { publicacoes, withTenant, type Database } from "@decreta/db";
 import { ehDecisaoFinal, impressao, lerSentenca, type Ia } from "@decreta/ia";
 import { eq } from "drizzle-orm";
 import { analisar, type AnaliseNaTela } from "./analises.ts";
+import { nivelNoEscritorio } from "./automacao.ts";
 import { contextoParaIa } from "./contexto.ts";
 import { IaDesligada } from "./prazos.ts";
 
@@ -54,4 +55,11 @@ export async function lerSentencaDaPublicacao(deps: Deps, organizationId: string
         contextoDoProcesso: contexto,
       }),
   });
+}
+
+/** A leitura da rotina de fundo: só quando o escritório deixou a leitura da sentença no automático (5.9). */
+export async function lerSentencaSozinha(deps: Deps, organizationId: string, publicacaoId: string): Promise<AnaliseNaTela | null> {
+  const nivel = await withTenant(deps.db, organizationId, (tx) => nivelNoEscritorio(tx, organizationId, "leitura-da-sentenca"));
+  if (nivel !== "automatico") return null;
+  return lerSentencaDaPublicacao(deps, organizationId, publicacaoId);
 }

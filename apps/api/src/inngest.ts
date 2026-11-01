@@ -31,7 +31,7 @@ import { lerDocumentoComIa } from "./servicos/leitura.ts";
 import { ClienteSemIa } from "./servicos/contexto.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
 import { rascunhoDoPrazo } from "./servicos/rascunho.ts";
-import { lerSentencaDaPublicacao } from "./servicos/sentencas.ts";
+import { lerSentencaSozinha } from "./servicos/sentencas.ts";
 import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
 import { silentReporter, type Reporter } from "./sentry.ts";
 
@@ -176,7 +176,8 @@ export function createFunctions(deps: DepsDasRotinas) {
       step.run("ler", async () => {
         try {
           // Só lê o que parece sentença ou acórdão; o resto passa direto.
-          const a = await lerSentencaDaPublicacao({ ...deps, ia: iaDo(event.data.organizationId, "fundo") }, event.data.organizationId, event.data.publicacaoId);
+          // No nível de sugestão (Configurações > Automação), a pessoa pede a leitura pela tela.
+          const a = await lerSentencaSozinha({ ...deps, ia: iaDo(event.data.organizationId, "fundo") }, event.data.organizationId, event.data.publicacaoId);
           return a?.situacao ?? "nao-e-decisao";
         } catch (err) {
           if (err instanceof IaDesligada) return "ia-desligada";

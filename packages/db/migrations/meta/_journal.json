@@ -120,6 +120,13 @@
       "when": 1793495573191,
       "tag": "0016_jeito_do_escritorio",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793495833087,
+      "tag": "0017_automacao",
+      "breakpoints": true
     }
   ]
 }

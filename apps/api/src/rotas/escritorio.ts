@@ -1,4 +1,4 @@
-import { ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, telefoneWhatsapp } from "@decreta/core";
+import { automacaoValida, ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, nivelDaAcao, REGRAS_DE_AUTOMACAO, telefoneWhatsapp } from "@decreta/core";
 import { documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
 import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { tipoDePeca } from "@decreta/ia";
@@ -46,6 +46,8 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         whatsappLigado: !!deps.wameow,
         whatsappOficial: e?.whatsappOficial ?? null,
         jeito: e?.jeito ?? {},
+        /** O nível que vale em cada ação, já com o padrão e as travas. */
+        automacao: Object.fromEntries(REGRAS_DE_AUTOMACAO.map((r) => [r.id, nivelDaAcao(e?.automacao ?? {}, r.id)])),
         datajudLigado: !!deps.captura.datajudKey,
         iaLigada: !!deps.ia,
         suspensoes: susp.map((s) => ({ id: s.id, dia: s.dia, motivo: s.motivo, tipo: s.tipo, tribunal: s.tribunal, comarca: s.comarca })),
@@ -76,6 +78,8 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
           .record(z.string(), z.object({ estilo: z.string().max(3000), teses: z.string().max(3000), evitar: z.string().max(3000) }))
           .refine((j) => Object.keys(j).every((k) => k === "geral" || !!tipoDePeca(k)), "Tipo de peça fora do catálogo.")
           .optional(),
+        /** O nível de automação por ação. Prazo, mensagem ao cliente e valores não mudam: sempre exigem confirmação. */
+        automacao: z.record(z.string(), z.string()).refine(automacaoValida, "Nível de automação que esta ação não aceita.").optional(),
       }),
     );
     if (c.get("demonstracao") && (b.capturaDjen || b.capturaDatajud)) falha(403, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");

@@ -686,6 +686,8 @@ export interface Escritorio {
   whatsappOficial: string | null;
   /** Como o escritório faz cada peça, pelo tipo do catálogo; "geral" vale para todas. */
   jeito?: Record<string, JeitoDaPeca>;
+  /** O nível de automação que vale em cada ação ("rascunho-da-peca" → "automatico"). */
+  automacao?: Record<string, "automatico" | "sugestao" | "confirmar">;
   datajudLigado: boolean;
   iaLigada: boolean;
   suspensoes: { id: string; dia: string; motivo: string; tipo: "local" | "forense" | "recesso" | "reduzido"; tribunal: string | null; comarca: string | null }[];

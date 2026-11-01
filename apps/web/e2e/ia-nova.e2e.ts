@@ -90,6 +90,17 @@ test("5.7: o sócio descreve o jeito da contestação, e o geral continua guarda
   ]);
 });
 
+test("5.9: o rascunho da peça vira sugestão, e o prazo continua travado em exigir confirmação", async ({ page }) => {
+  const automacao = { "rascunho-da-peca": "automatico", "leitura-da-sentenca": "automatico", prazo: "confirmar", "mensagem-ao-cliente": "confirmar", valores: "confirmar" };
+  const api = new ApiFalsa().responder("/escritorio", { ...amostras.escritorio!.corpo, automacao });
+  await abrir(page, "/configuracoes", api);
+  await page.getByRole("tab", { name: "IA", exact: true }).click();
+  const prazo = page.getByRole("radiogroup", { name: "Prazo sugerido pela IA" });
+  await expect(prazo.getByRole("radio", { name: "Exige confirmação" })).toBeDisabled();
+  await page.getByRole("radiogroup", { name: "Rascunho da peça do prazo" }).getByRole("radio", { name: "Vira sugestão" }).click();
+  await expect.poll(() => api.mudancas("/escritorio").map((p) => p.corpo)).toEqual([{ automacao: { "rascunho-da-peca": "sugestao", "leitura-da-sentenca": "automatico" } }]);
+});
+
 test("5.2: a auditoria da carteira aparece no Hoje e cada achado leva aonde resolver", async ({ page }) => {
   const api = new ApiFalsa().responder("/hoje", { ...amostras.hoje!.corpo, auditoria });
   await abrir(page, "/hoje", api);

@@ -94,6 +94,10 @@
 .dc-rebater__tese { font: 600 14px/22px var(--font-sans); color: var(--tinta); }
 .dc-rebater__como { font: 400 14px/22px var(--font-sans); color: var(--tinta-2); }
 .dc-rebater__escolha { flex: 1; min-width: 200px; }
+/* Níveis de automação: uma ação por bloco, os níveis em fichas. */
+.dc-automacao { margin: 0; padding: var(--space-3) 0 0; border: 0; border-top: 1px solid var(--borda); display: grid; gap: var(--space-2); }
+.dc-automacao__nome { padding: 0; font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.dc-automacao__ajuda { margin: 0; font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
 
 /* Listas no celular: um ponto menor que no computador, para caber mais sem apertar (Hoje, Prazos, Publicações e as outras). */
 .dc-celular .dc-item__titulo, .dc-celular .dc-cartao__titulo { font-size: 14px; line-height: 19px; }

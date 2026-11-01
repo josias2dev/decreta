@@ -96,6 +96,22 @@ describe.skipIf(!hasTestDatabase)("rascunho pronto quando o prazo é confirmado"
     expect(ia.chamadas.length).toBe(chamadas);
   });
 
+  test("no nível de sugestão, o rascunho não é escrito sozinho", async () => {
+    const r = await call("/escritorio", { method: "PUT", json: { automacao: { "rascunho-da-peca": "sugestao" } } });
+    expect(r.status).toBe(200);
+    expect((await json(call("/escritorio"))).automacao).toMatchObject({ "rascunho-da-peca": "sugestao", "leitura-da-sentenca": "automatico", prazo: "confirmar" });
+    const prazoId = await prazoSugerido("Alegações finais");
+    await call(`/prazos/${prazoId}/confirmar`, { method: "POST" });
+    const chamadas = ia.chamadas.length;
+    expect(await rascunhoDoPrazo(deps(), orgId, prazoId)).toEqual({ situacao: "so-sugestao" });
+    expect(ia.chamadas.length).toBe(chamadas);
+    await call("/escritorio", { method: "PUT", json: { automacao: {} } });
+  });
+
+  test("prazo, mensagem ao cliente e valores não saem do exigir confirmação", async () => {
+    expect((await call("/escritorio", { method: "PUT", json: { automacao: { prazo: "automatico" } } })).status).toBe(400);
+  });
+
   test("o cliente que recusou a IA fica sem rascunho, e a IA nem é chamada", async () => {
     await t.owner`update clientes set sem_ia = true where id = ${clienteId}`;
     const prazoId = await prazoSugerido("Réplica à contestação");

@@ -10,3 +10,4 @@ export * from "./prazos.ts";
 export * from "./publicacao.ts";
 export * from "./fontes.ts";
 export * from "./auditoria.ts";
+export * from "./automacao.ts";

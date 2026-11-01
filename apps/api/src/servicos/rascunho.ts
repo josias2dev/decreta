@@ -7,6 +7,7 @@ import { organization, pecas, prazos, processos, withTenant, type Database } fro
 import { gerarPeca, pecaParaPrazo, type Ia } from "@decreta/ia";
 import { eq } from "drizzle-orm";
 import { registrar } from "../auditoria.ts";
+import { nivelNoEscritorio } from "./automacao.ts";
 import { ehDemonstracao } from "./captura.ts";
 import { semIa } from "./contexto.ts";
 import { montarPedidoDePeca } from "./pecas.ts";
@@ -14,7 +15,7 @@ import { IaDesligada } from "./prazos.ts";
 
 export type ResultadoDoRascunho =
   | { situacao: "pronto"; pecaId: string }
-  | { situacao: "sem-prazo" | "nao-confirmado" | "ja-tem-peca" | "sem-peca-sugerida" | "cliente-sem-ia" | "demonstracao" };
+  | { situacao: "sem-prazo" | "nao-confirmado" | "ja-tem-peca" | "so-sugestao" | "sem-peca-sugerida" | "cliente-sem-ia" | "demonstracao" };
 
 export interface DepsDoRascunho {
   db: Database;
@@ -33,6 +34,8 @@ export async function rascunhoDoPrazo(deps: DepsDoRascunho, organizationId: stri
     if (!prazo.confirmadoEm || prazo.situacao !== "aberto") return { situacao: "nao-confirmado" as const };
     const [existente] = await tx.select({ id: pecas.id }).from(pecas).where(eq(pecas.prazoId, prazo.id)).limit(1);
     if (existente) return { situacao: "ja-tem-peca" as const };
+    // No nível de sugestão, a tela do prazo sugere a peça e a IA só escreve quando alguém pedir.
+    if ((await nivelNoEscritorio(tx, organizationId, "rascunho-da-peca")) !== "automatico") return { situacao: "so-sugestao" as const };
     const tipo = pecaParaPrazo(prazo.tipo);
     if (tipo.id === "outro") return { situacao: "sem-peca-sugerida" as const };
     if (await semIa(tx, { processoId: prazo.processoId })) return { situacao: "cliente-sem-ia" as const };
