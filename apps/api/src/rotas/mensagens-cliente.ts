@@ -17,7 +17,7 @@ import { ultimaConferencia } from "../servicos/conferencia.ts";
 import { semIa, ClienteSemIa } from "../servicos/contexto.ts";
 import { hashDoSegredo, VALIDADE_DO_LINK_DIAS } from "./envio-pelo-cliente.ts";
 import { pessoasDoEscritorio, resumir, type Pessoa } from "../servicos/pessoas.ts";
-import { comLimiteDaIa, corpo, falha, iaDaRota, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, falha, iaDaRota, id, ip, queryId, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 type Mensagem = typeof mensagensCliente.$inferSelect;
 
@@ -129,8 +129,8 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
 
   /** As mensagens de um cliente ou de um prazo, das mais novas para as mais antigas. */
   app.get("/mensagens-cliente", async (c) => {
-    const clienteId = c.req.query("cliente");
-    const prazoId = c.req.query("prazo");
+    const clienteId = queryId(c, "cliente");
+    const prazoId = queryId(c, "prazo");
     if (!clienteId && !prazoId) falha(400, "sem_filtro", "Diga o cliente ou o prazo.");
     return tenant(c, deps, async (tx) => {
       const linhas = await tx
@@ -210,7 +210,8 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
       if (!l.id_.numeroOficial) falha(422, "sem_numero_oficial", "Cadastre o WhatsApp oficial do escritório nas configurações: ele vai no rodapé contra o golpe do falso advogado.");
       const para = l.cliente.telefone ? telefoneWhatsapp(l.cliente.telefone) : null;
       if (!para) falha(422, "sem_telefone", "O cliente não tem um celular válido no cadastro.");
-      const texto = b.texto ?? l.m.texto;
+      const texto = (b.texto ?? l.m.texto).trim();
+      if (texto.length < 2) falha(422, "texto_vazio", "A mensagem está vazia. Escreva o que o cliente precisa saber.");
       const agora = new Date();
       // Cobrança: o link de envio nasce agora, na aprovação, e vale até o fim do 7º dia no fuso do
       // escritório, como a mensagem diz. O banco guarda só o hash do segredo.

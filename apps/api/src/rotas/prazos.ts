@@ -276,6 +276,9 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const publicadoEm = b.publicadoEm ?? p.publicadoEm;
       const intimadoNoSistemaEm = b.intimadoNoSistemaEm === undefined ? p.intimadoNoSistemaEm : b.intimadoNoSistemaEm;
       const r = await contarParaProcesso(tx, c.get("orgId"), p.processoId, { publicacao: publicadoEm, intimacaoNoSistema: intimadoNoSistemaEm, dias, contagem });
+      // A data digitada à mão fica quando a conta não mudou e ninguém mandou outra: trocar o responsável não refaz o prazo.
+      const contaIgual = dias === p.dias && contagem === p.contagem && publicadoEm === p.publicadoEm && intimadoNoSistemaEm === p.intimadoNoSistemaEm;
+      const manterManual = b.fimManual === undefined && p.fimDigitado && contaIgual;
       await tx
         .update(prazos)
         .set({
@@ -286,11 +289,11 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
           publicadoEm,
           intimadoNoSistemaEm,
           inicio: r.inicio,
-          fim: b.fimManual ?? r.fim,
-          fimDigitado: !!b.fimManual,
-          desconsiderados: b.fimManual ? [] : r.desconsiderados,
+          fim: manterManual ? p.fim : (b.fimManual ?? r.fim),
+          fimDigitado: manterManual || !!b.fimManual,
+          desconsiderados: manterManual ? p.desconsiderados : b.fimManual ? [] : r.desconsiderados,
           responsavelId: b.responsavelId === undefined ? p.responsavelId : b.responsavelId,
-          observacoes: b.fimManual ? [b.observacoes ?? p.observacoes, `Data final digitada à mão (a conta dava ${formatarDia(r.fim)}).`].filter(Boolean).join(" ") : b.observacoes === undefined ? p.observacoes : b.observacoes,
+          observacoes: b.fimManual && !manterManual ? [b.observacoes ?? p.observacoes, `Data final digitada à mão (a conta dava ${formatarDia(r.fim)}).`].filter(Boolean).join(" ") : b.observacoes === undefined ? p.observacoes : b.observacoes,
           confirmadoPor: c.get("userId"),
           confirmadoEm: new Date(),
         })

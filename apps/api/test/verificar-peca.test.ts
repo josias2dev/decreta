@@ -182,12 +182,15 @@ describe.skipIf(!hasTestDatabase)("verificar peça", () => {
       dono: { email: "demo@decreta.local", nome: "Sócia da Demonstração", senha: "senha-bem-longa-123", cargo: "Advogada", oabNumero: "1.234", oabUf: "SC" },
     });
     const outras = fontes();
-    const citacoes = await verificarCitacoes({ db: t.db, fetch: outras.fetch }, organizationId, "A Súmula 297 do STJ, a Súmula 500 do STJ e o art. 1º do CTN.");
+    const citacoes = await verificarCitacoes({ db: t.db, fetch: outras.fetch }, organizationId, "A Súmula 297 do STJ, a Súmula 500 do STJ, o art. 1º do CTN e o art. 159 do CC/16.");
     expect(outras.pedidos).toEqual({ stj: 0, bnp: 0, normas: 0 });
     expect(citacoes.map((c) => [c.trecho, c.selo])).toEqual([
       ["Súmula 297 do STJ", "verificada"],
       ["Súmula 500 do STJ", "nao_verificada"],
       ["art. 1º do CTN", "nao_verificada"],
+      // Código revogado citado pelo ano antigo: ressalva, porque o art. 159 do CC/2002 é outro.
+      ["art. 159 do CC/16", "com_ressalva"],
     ]);
+    expect(citacoes[3]!.motivo).toBe("Código Civil de 1916, revogado pelo CC/2002: confira o artigo correspondente no código atual.");
   });
 });

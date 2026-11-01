@@ -158,6 +158,9 @@ describe.skipIf(!hasTestDatabase)("prazo à prova de auditoria", () => {
     await call(`/prazos/${prazoId}`, { method: "PUT", json: { fimManual: "2026-11-24" } });
     const p = await json(call(`/prazos/${prazoId}`));
     expect(p.conta).toMatchObject({ fim: "2026-11-24", fimDigitado: true, pelaConta: "2026-11-23", tempestividade: null });
+    // Trocar só o responsável, sem mexer na conta, não refaz a data digitada à mão.
+    await call(`/prazos/${prazoId}`, { method: "PUT", json: { responsavelId: null } });
+    expect((await json(call(`/prazos/${prazoId}`))).conta).toMatchObject({ fim: "2026-11-24", fimDigitado: true });
     await call(`/prazos/${prazoId}`, { method: "PUT", json: { fimManual: null, observacoes: null } });
     expect((await json(call(`/prazos/${prazoId}`))).conta).toMatchObject({ fim: "2026-11-23", fimDigitado: false, pelaConta: null });
   });

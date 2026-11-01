@@ -94,7 +94,7 @@ const TIPOS: Array<[TipoNaLinhaDoTempo, RegExp, RegExp[]]> = [
   ["laudo", /laudo|pericia medica|atestado|exame medico|relatorio medico/, [/conclus/i, /incapacidade|\bCID\b/i]],
 ];
 
-const DATA_COM_ROTULO = /(?:data d[ao] per[ií]cia|data do exame|emitid[oa] em|data da decis[aã]o|data)\s*:?\s*(\d{2})\/(\d{2})\/(\d{4})/i;
+const DATA_COM_ROTULO = /(?:data d[ao] per[ií]cia|data do exame|emitid[oa] em|data da decis[aã]o|data)\s{0,3}:?\s{0,3}(\d{2})\/(\d{2})\/(\d{4})/i;
 const QUALQUER_DATA = /\b(\d{2})\/(\d{2})\/(\d{4})\b/;
 
 function dataDoTexto(texto: string): string | null {

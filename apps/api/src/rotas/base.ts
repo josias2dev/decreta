@@ -147,6 +147,14 @@ export function iaDaRota(c: C): Ia {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Id da URL: formato errado é 404, não 500 do Postgres. */
+/** Um id na query (`?processo=`): UUID ou nada; outra coisa é 400, não 500. */
+export function queryId(c: C, nome: string): string | undefined {
+  const v = c.req.query(nome);
+  if (v === undefined || v === "") return undefined;
+  if (!UUID.test(v)) falha(400, "id_invalido", `${nome}: id inválido.`);
+  return v;
+}
+
 export function id(c: C, nome = "id"): string {
   const v = c.req.param(nome) ?? "";
   if (!UUID.test(v)) falha(404, "nao_encontrado");

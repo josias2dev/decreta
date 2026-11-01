@@ -315,6 +315,8 @@ export function createFunctions(deps: DepsDasRotinas) {
     {
       id: "rascunho-do-prazo",
       triggers: [prazoConfirmado],
+      // Confirmar e ajustar em seguida não paga duas gerações: um rascunho por prazo por dia.
+      idempotency: "event.data.prazoId",
       concurrency: { limit: 2, key: "event.data.organizationId" },
       retries: 1,
       onFailure: async ({ event, error }) => reporter.error(error, { funcao: "rascunho-do-prazo", ...(event.data.event.data as Org) }),

@@ -6,7 +6,7 @@
 import { diaDoInstante, formatarDia, hojeEm } from "@decreta/core";
 import { clientes, documentos, negocios, partes, processos, type Database, type Tx } from "@decreta/db";
 import { conferirPasta, impressao, type Conferencia, type Ia, type PedidoDeConferencia } from "@decreta/ia";
-import { and, asc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, isNull, notInArray, or, sql } from "drizzle-orm";
 import { analisar, ultimaAnalise, naTela, type AnaliseNaTela } from "./analises.ts";
 import { ClienteSemIa, semIa } from "./contexto.ts";
 import { IaDesligada } from "./prazos.ts";
@@ -34,10 +34,12 @@ async function documentosDaPasta(tx: Tx, negocioId: string | null, clienteId: st
 /** Processos do cliente e, para quem ainda não é cliente, os que têm uma parte com o mesmo nome. */
 async function processosDaPessoa(tx: Tx, nome: string, clienteId: string | null) {
   const porParte = tx.select({ id: partes.processoId }).from(partes).where(sql`lower(${partes.nome}) = lower(${nome})`);
+  // Processo de cliente que recusou a IA não entra, nem quando o nome da parte bate.
+  const semIa = tx.select({ id: clientes.id }).from(clientes).where(eq(clientes.semIa, true));
   return tx
     .select({ titulo: processos.titulo, cnj: processos.cnj, assunto: processos.assunto, situacao: processos.situacao })
     .from(processos)
-    .where(clienteId ? or(eq(processos.clienteId, clienteId), inArray(processos.id, porParte)) : inArray(processos.id, porParte))
+    .where(and(clienteId ? or(eq(processos.clienteId, clienteId), inArray(processos.id, porParte)) : inArray(processos.id, porParte), or(isNull(processos.clienteId), notInArray(processos.clienteId, semIa))))
     .limit(30);
 }
 

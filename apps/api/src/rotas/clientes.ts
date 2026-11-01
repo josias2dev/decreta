@@ -178,6 +178,8 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.put("/clientes/:id", async (c) => {
     const clienteId = id(c);
     const b = await corpo(c, dadosDoCliente.partial());
+    // Proteger o cliente da IA qualquer um pode; desfazer a recusa, só o sócio.
+    if (b.semIa === false && !ehSocio(c.get("papel"))) falha(403, "so_socios", "Só os sócios desfazem a recusa da IA de um cliente.");
     const mudouSemIa = await tenant(c, deps, async (tx) => {
       const [cl] = await tx.select({ tipo: clientes.tipo, semIa: clientes.semIa }).from(clientes).where(eq(clientes.id, clienteId));
       if (!cl) falha(404, "nao_encontrado");

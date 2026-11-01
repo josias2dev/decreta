@@ -86,9 +86,10 @@ export async function sincronizarPrecedentesDoBnp(deps: DepsDoRadar): Promise<{ 
     for (const [j, p] of lista.entries()) {
       const chave = chaves[j]!;
       const situacaoAntes = antes.get(chave);
-      const mudou = situacaoAntes !== undefined ? situacaoAntes !== p.situacao : !base;
-      if (mudou && p.situacao) novas.push({ chave, situacaoAntes: situacaoAntes ?? null, situacao: p.situacao });
-      await guardarPrecedente(deps.db, chave, p);
+      // Situação que mudou, o guardar anota; o que aparece numa espécie já carregada é novidade aqui.
+      const { novidade } = await guardarPrecedente(deps.db, chave, p);
+      if (novidade) novidades++;
+      else if (situacaoAntes === undefined && !base && p.situacao) novas.push({ chave, situacaoAntes: null, situacao: p.situacao });
     }
     if (novas.length) await deps.db.insert(acervoNovidades).values(novas);
     await deps.db.insert(acervoSincronizacoes).values({ especie: nome }).onConflictDoUpdate({ target: acervoSincronizacoes.especie, set: { ultimaEm: sql`now()` } });

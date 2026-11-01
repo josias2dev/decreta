@@ -67,4 +67,21 @@ describe("citações na peça", () => {
   test("artigo sem a norma não vira citação: não há o que conferir", () => {
     expect(chaves("Como dispõe o art. 5º, o prazo é de quinze dias, e o item 3 do contrato prevê multa.")).toEqual([]);
   });
+
+  test("código revogado citado pelo ano antigo tem sigla própria: o artigo não é o do código atual", () => {
+    expect(chaves("Nos termos do art. 159 do CC/16 e do art. 282 do CPC/73, e ainda do art. 300 do CPC/2015 e do art. 5º da CF/88.")).toEqual([
+      "dispositivo:CC-1916:art159",
+      "dispositivo:CPC-1973:art282",
+      "dispositivo:CPC:art300",
+      "dispositivo:CF:art5",
+    ]);
+  });
+
+  test("milhares de espaços depois de um artigo solto, de uma súmula ou de um recurso não travam a leitura", () => {
+    const muitos = " ".repeat(20_000);
+    const texto = `art. 5${muitos}\nSúmula${muitos}7 do STJ e o REsp${muitos}1 e a Lei nº 8.213${muitos}/91`;
+    const inicio = performance.now();
+    chaves(texto);
+    expect(performance.now() - inicio).toBeLessThan(500);
+  });
 });

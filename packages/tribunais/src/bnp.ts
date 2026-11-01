@@ -8,6 +8,8 @@
 import { z } from "zod";
 
 export const BNP_URL = "https://pangeabnp.pdpj.jus.br";
+/** A maior espécie (ADI do STF) tem menos de 5 mil itens: 200 páginas de 100 é folga. */
+const MAXIMO_DE_PAGINAS = 200;
 
 export interface PrecedenteDoBnp {
   /** Como o BNP identifica: "stj-sum-297". */
@@ -117,10 +119,12 @@ export async function listarNoBnp(busca: { orgao: string; tipo: string }, opcoes
   const dormir = opcoes.dormir ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
   const porPagina = opcoes.porPagina ?? 100;
   const todos: PrecedenteDoBnp[] = [];
-  for (let pagina = 1; ; pagina++) {
+  // Teto de páginas: se o BNP ignorar a página pedida e devolver sempre a mesma, o laço para mesmo assim.
+  for (let pagina = 1; pagina <= MAXIMO_DE_PAGINAS; pagina++) {
     if (pagina > 1) await dormir(opcoes.pausa ?? 1000);
     const { total, resultados } = await pesquisar({ orgaos: [busca.orgao], tipos: [busca.tipo], cancelados: true, ordenacao: "Crono-Asc", pagina, tamanhoPagina: porPagina }, opcoes);
     todos.push(...resultados);
     if (!resultados.length || todos.length >= total) return todos;
   }
+  throw new ErroBnp(`O BNP não terminou a lista de ${busca.orgao}/${busca.tipo} em ${MAXIMO_DE_PAGINAS} páginas`);
 }

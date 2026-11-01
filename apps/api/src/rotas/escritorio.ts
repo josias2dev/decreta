@@ -182,6 +182,9 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
       }),
     );
     if (b.whatsapp && !telefoneWhatsapp(b.whatsapp)) falha(422, "whatsapp_invalido", "Confira o número: DDD e número, como (47) 99123-4567.");
+    // A OAB abre a aprovação de mensagem ao cliente e guia a captura do Diário: só o sócio a grava, e com a UF.
+    if (b.oabNumero !== undefined || b.oabUf !== undefined) soSocios(c);
+    if (b.oabNumero && !b.oabUf) falha(422, "sem_uf", "Informe a UF da OAB junto com o número.");
     await tenant(c, deps, async (tx) => {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       if (!pessoas.has(userId)) falha(404, "nao_encontrado");
@@ -240,6 +243,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
 
   /** Manda agora o resumo da manhã para o próprio WhatsApp, para conferir. */
   app.post("/avisos/teste", async (c) => {
+    if (c.get("demonstracao")) falha(403, "demonstracao", "Na demonstração nada sai no WhatsApp.");
     if (!deps.wameow) falha(503, "whatsapp_desligado", "O WhatsApp do Decreta ainda não foi ligado neste servidor.");
     const hoje = hojeEm(c.get("timezone"));
     const { painel, eu } = await tenant(c, deps, async (tx) => ({

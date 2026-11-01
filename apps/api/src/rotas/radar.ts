@@ -6,12 +6,12 @@ import { processos, radarPrecedentes } from "@decreta/db";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { registrar } from "../auditoria.ts";
-import { falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { falha, id, ip, queryId, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 export function rotasDoRadar(app: Hono<Ambiente>, deps: DepsDasRotas) {
   /** Os avisos ainda não descartados, do processo (`?processo=`) ou do escritório inteiro. */
   app.get("/radar", async (c) => {
-    const processoId = c.req.query("processo");
+    const processoId = queryId(c, "processo");
     return tenant(c, deps, async (tx) => {
       const linhas = await tx
         .select({ r: radarPrecedentes, processo: { id: processos.id, titulo: processos.titulo } })

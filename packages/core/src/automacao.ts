@@ -74,13 +74,13 @@ export function nivelDaAcao(config: Partial<Record<string, string>>, acao: AcaoA
   const regra = POR_ID.get(acao)!;
   if (regra.travada) return "confirmar";
   const escolhido = config[acao] as NivelDeAutomacao | undefined;
-  return escolhido && escolhido in regra.niveis ? escolhido : regra.padrao;
+  return escolhido && Object.hasOwn(regra.niveis, escolhido) ? escolhido : regra.padrao;
 }
 
 /** A configuração que chega da tela: só ações conhecidas, destravadas, com um nível que elas aceitam. */
 export function automacaoValida(config: Record<string, string>): boolean {
   return Object.entries(config).every(([id, nivel]) => {
     const regra = POR_ID.get(id as AcaoAutomatizavel);
-    return !!regra && !regra.travada && nivel in regra.niveis;
+    return !!regra && !regra.travada && Object.hasOwn(regra.niveis, nivel);
   });
 }

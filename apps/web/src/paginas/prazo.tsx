@@ -389,7 +389,8 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
     intimadoNoSistemaEm: prazo.conta.intimadoNoSistemaEm ?? "",
     responsavelId: prazo.responsavel?.id ?? "",
     observacoes: prazo.observacoes ?? "",
-    sabeData: false,
+    // Prazo com data digitada à mão continua assim ao abrir: ajustar outra coisa não refaz a conta.
+    sabeData: prazo.conta.fimDigitado,
     fimManual: prazo.fim,
   });
   const [f, setF] = useState(inicial);

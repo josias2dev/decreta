@@ -195,6 +195,8 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const textoMudou = b.texto !== undefined && b.texto !== atual.texto;
       let revisao: Record<string, unknown> | null = null;
       if (b.situacao === "revisada") {
+        // O registro de revisão é de advogado: quem não tem OAB no perfil não assina a revisão.
+        if (!(await pessoasDoEscritorio(db, tx, c.get("orgId"))).get(c.get("userId"))?.oab) falha(403, "sem_oab", "Só advogado com OAB cadastrada no perfil registra a revisão da peça.");
         const agora = new Date();
         Object.assign(valores, { revisadaPor: c.get("userId"), revisadaEm: agora });
         const textoFinal = b.texto ?? atual.texto;

@@ -10,7 +10,7 @@
  */
 import { createHash } from "node:crypto";
 import { extrairCitacoes, formatarDia, type Citacao } from "@decreta/core";
-import { acervoDocumentos, acervoNormas, type Database, type DispositivoNoAcervo, type SeloDaCitacao, type VerificacaoDaPeca } from "@decreta/db";
+import { acervoDocumentos, acervoNormas, acervoNovidades, type Database, type DispositivoNoAcervo, type SeloDaCitacao, type VerificacaoDaPeca } from "@decreta/db";
 import { acharDispositivo, baixarNorma, baixarTemasDoStj, buscarNoBnp, urnDaNorma, type NormaDoNormasLeg, type PrecedenteDoBnp } from "@decreta/tribunais";
 import { eq, sql } from "drizzle-orm";
 import { ehDemonstracao } from "./captura.ts";
@@ -61,13 +61,21 @@ export async function sincronizarTemasDoStj(deps: DepsDoAcervo): Promise<{ temas
   return { temas: linhas.length };
 }
 
-/** Guarda (ou atualiza) um precedente do BNP no acervo, pela chave da citação. */
-export async function guardarPrecedente(db: Database, chave: string, p: PrecedenteDoBnp) {
+/**
+ * Guarda (ou atualiza) um precedente do BNP no acervo, pela chave da citação.
+ * Situação que mudou desde a última vez é novidade para o radar, mesmo quando
+ * quem a descobriu foi uma verificação de peça, e não a sincronização.
+ */
+export async function guardarPrecedente(db: Database, chave: string, p: PrecedenteDoBnp): Promise<{ novidade: boolean }> {
+  const [antes] = await db.select({ situacao: acervoDocumentos.situacao }).from(acervoDocumentos).where(eq(acervoDocumentos.chave, chave));
   const valores = { chave, fonte: "cnj_bnp", situacao: p.situacao, cancelado: p.cancelado, texto: p.texto, questao: p.questao, url: p.url, hash: hash(p.situacao, p.texto), atualizadoNaFonte: p.atualizadoEm };
   await db
     .insert(acervoDocumentos)
     .values(valores)
     .onConflictDoUpdate({ target: acervoDocumentos.chave, set: { ...valores, capturadoEm: new Date() } });
+  const novidade = !!antes && !!p.situacao && antes.situacao !== p.situacao;
+  if (novidade) await db.insert(acervoNovidades).values({ chave, situacaoAntes: antes!.situacao, situacao: p.situacao });
+  return { novidade };
 }
 
 async function guardarNorma(db: Database, sigla: string, n: NormaDoNormasLeg) {
@@ -109,9 +117,16 @@ interface Contexto extends DepsDoAcervo {
   soAcervo: boolean;
   /** Quando foi o último pedido ao BNP: no máximo um por segundo. */
   ultimoNoBnp: number;
+  /** Quantos pedidos às fontes esta verificação já fez: há um teto por peça. */
+  pedidosExternos: number;
+  /** A mesma lei citada várias vezes, inclusive uma que não existe, é consultada uma vez só. */
+  normas: Map<string, typeof acervoNormas.$inferSelect | null | "fora">;
 }
 
 const INTERVALO_DO_BNP_MS = 1000;
+/** Teto de pedidos às fontes por verificação: uma peça com centenas de citações não prende o servidor por horas. */
+const TETO_DE_PEDIDOS_EXTERNOS = 30;
+const MUITAS_FONTES = "Muitas citações para conferir nas fontes de uma vez; esta ficou sem conferência. Verifique de novo.";
 
 async function esperarVezNoBnp(ctx: Contexto) {
   const falta = ctx.ultimoNoBnp + INTERVALO_DO_BNP_MS - Date.now();
@@ -126,6 +141,10 @@ async function documento(ctx: Contexto, c: Citacao): Promise<Omit<CitacaoVerific
   let [d] = await ctx.db.select().from(acervoDocumentos).where(eq(acervoDocumentos.chave, c.chave));
   const vencido = d?.fonte === "cnj_bnp" && Date.now() - d.capturadoEm.getTime() > VALIDADE_DO_BNP_MS;
   if ((!d || vencido) && bnp && !ctx.soAcervo) {
+    if (ctx.pedidosExternos >= TETO_DE_PEDIDOS_EXTERNOS) {
+      if (!d) return { selo: "nao_verificada", motivo: MUITAS_FONTES, texto: null, fonte: null };
+    } else {
+    ctx.pedidosExternos++;
     try {
       await esperarVezNoBnp(ctx);
       const p = await buscarNoBnp(bnp, { fetch: ctx.fetch });
@@ -138,6 +157,7 @@ async function documento(ctx: Contexto, c: Citacao): Promise<Omit<CitacaoVerific
       // Sem a fonte, a versão guardada (mesmo vencida) ainda serve.
       if (!d) return { selo: "nao_verificada", motivo: "A fonte não respondeu agora. Confira antes de usar.", texto: null, fonte: null };
     }
+    }
   }
   if (d) return { ...seloDoDocumento(rotulo, d), texto: d.texto, fonte: fonteDo(d) };
   const motivo = ctx.soAcervo
@@ -149,11 +169,20 @@ async function documento(ctx: Contexto, c: Citacao): Promise<Omit<CitacaoVerific
 }
 
 async function norma(ctx: Contexto, sigla: string): Promise<typeof acervoNormas.$inferSelect | null | "fora"> {
+  if (ctx.normas.has(sigla)) return ctx.normas.get(sigla)!;
+  const n = await normaDaFonte(ctx, sigla);
+  ctx.normas.set(sigla, n);
+  return n;
+}
+
+async function normaDaFonte(ctx: Contexto, sigla: string): Promise<typeof acervoNormas.$inferSelect | null | "fora"> {
   const [guardada] = await ctx.db.select().from(acervoNormas).where(eq(acervoNormas.sigla, sigla));
   const fresca = guardada && Date.now() - guardada.capturadoEm.getTime() < VALIDADE_DA_NORMA_MS;
   if (fresca || ctx.soAcervo) return guardada ?? null;
   const urn = urnDaNorma(sigla);
   if (!urn) return guardada ?? null;
+  if (ctx.pedidosExternos >= TETO_DE_PEDIDOS_EXTERNOS) return guardada ?? "fora";
+  ctx.pedidosExternos++;
   try {
     const n = await baixarNorma(urn, { fetch: ctx.fetch });
     if (!n) return null;
@@ -169,6 +198,9 @@ async function norma(ctx: Contexto, sigla: string): Promise<typeof acervoNormas.
 
 async function dispositivo(ctx: Contexto, c: Citacao): Promise<Omit<CitacaoVerificada, "chave" | "trecho" | "inicio">> {
   const [, sigla, id] = c.chave.split(":") as [string, string, string];
+  // Código revogado citado pelo ano antigo: o artigo não corresponde ao do código atual.
+  if (sigla === "CPC-1973") return { selo: "com_ressalva", motivo: "Código de Processo Civil de 1973, revogado pelo CPC/2015: confira o artigo correspondente no código atual.", texto: null, fonte: null };
+  if (sigla === "CC-1916") return { selo: "com_ressalva", motivo: "Código Civil de 1916, revogado pelo CC/2002: confira o artigo correspondente no código atual.", texto: null, fonte: null };
   const n = await norma(ctx, sigla);
   if (n === "fora") return { selo: "nao_verificada", motivo: "A fonte não respondeu agora. Confira antes de usar.", texto: null, fonte: null };
   if (!n) return { selo: "nao_verificada", motivo: ctx.soAcervo ? `Não está no acervo guardado. ${CONFIRA}` : `Não achei esta lei no normas.leg.br. ${CONFIRA}`, texto: null, fonte: null };
@@ -199,7 +231,7 @@ async function conferir(ctx: Contexto, c: Citacao): Promise<Omit<CitacaoVerifica
  * do Perguntar não espera download).
  */
 export async function verificarCitacoes(deps: DepsDoAcervo, organizationId: string, texto: string, opcoes: { soAcervo?: boolean } = {}): Promise<CitacaoVerificada[]> {
-  const ctx: Contexto = { ...deps, soAcervo: opcoes.soAcervo || (await ehDemonstracao(deps.db, organizationId)), ultimoNoBnp: 0 };
+  const ctx: Contexto = { ...deps, soAcervo: opcoes.soAcervo || (await ehDemonstracao(deps.db, organizationId)), ultimoNoBnp: 0, pedidosExternos: 0, normas: new Map() };
   const saida: CitacaoVerificada[] = [];
   // Uma por vez: as fontes pedem calma, e a mesma lei citada duas vezes é baixada uma só.
   for (const c of extrairCitacoes(texto)) saida.push({ chave: c.chave, trecho: c.trecho, inicio: c.inicio, ...(await conferir(ctx, c)) });

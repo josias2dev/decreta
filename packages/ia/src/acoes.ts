@@ -172,7 +172,7 @@ Cada ponto a favor ou contra cita a fonte nos autos ("laudo do evento 87", "peti
 /* ------------------------------------------------------------------ */
 
 export const mensagemAoClienteSchema = z.object({
-  texto: z.string().describe("A mensagem ao cliente, pronta para o advogado revisar: de 3 a 6 frases curtas, sem cabeçalho nem assinatura."),
+  texto: z.string().min(10).describe("A mensagem ao cliente, pronta para o advogado revisar: de 3 a 6 frases curtas, sem cabeçalho nem assinatura."),
   recusa,
 });
 export type MensagemAoCliente = z.infer<typeof mensagemAoClienteSchema>;

@@ -39,6 +39,15 @@ describe("atualização por índice", () => {
     expect(daCitacao.total).toEqual({ valor: 1000, corrigido: 1025.05, juros: 20.5, total: 1045.55 });
   });
 
+  test("juros nunca correm antes de a parcela vencer, mesmo com o início pedido antes", () => {
+    // À mão: parcela vencida em 10/11/2023, juros pedidos desde 10/02/2023, cálculo em 05/01/2024, 1% ao mês sem
+    // correção: contam novembro e dezembro (2 meses) = R$ 20,00, e não os 11 meses desde fevereiro.
+    const pedido = { parcelas: [{ descricao: "Parcela", valor: 1000, vencimento: "2023-11-10" }], dataDoCalculo: "2024-01-05", jurosDesde: "2023-02-10", regime: { tipo: "contratual" as const, indice: "nenhum" as const, jurosAoMes: 1 } };
+    const r = atualizar(pedido, {});
+    expect(r.linhas[0]).toMatchObject({ corrigido: 1000, jurosPercentual: 2, juros: 20, total: 1020 });
+    expect(memoriaDaAtualizacao(pedido, r, { titulo: "Teste", fontes: [] })).toContain("Juros desde 10/02/2023, nunca antes do vencimento de cada parcela. Juros contados por mês cheio");
+  });
+
   test("débito civil: IPCA mais Taxa Legal, e a taxa negativa vira juro zero", () => {
     // À mão: 1.000 × 1,01 × 1,02 = 1.030,20. Taxa Legal 0,5% em setembro e −0,2% (vale 0) em outubro:
     // juros de 0,5% sobre 1.030,20 = 5,151 → 5,15. Total 1.035,35.

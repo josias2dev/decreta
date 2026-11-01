@@ -121,7 +121,9 @@ export function atualizar(pedido: PedidoDeAtualizacao, indices: Indices): Result
   const ressalvas = new Set<string>();
   const linhas = pedido.parcelas.map((p): LinhaDaAtualizacao => {
     const meses = mesesEntre(mesDe(p.vencimento), fimDoCalculo);
-    const mesesDeJuros = mesesEntre(mesDe(pedido.jurosDesde ?? p.vencimento), fimDoCalculo);
+    // Juros correm do início pedido (a citação, por exemplo), mas nunca antes de a parcela vencer.
+    const inicioDosJuros = pedido.jurosDesde && pedido.jurosDesde > p.vencimento ? pedido.jurosDesde : p.vencimento;
+    const mesesDeJuros = mesesEntre(mesDe(inicioDosJuros), fimDoCalculo);
     const linha = (fator: number, jurosPercentual: number, criterio: string): LinhaDaAtualizacao => {
       const corrigido = centavos(p.valor * fator);
       const juros = centavos((corrigido * jurosPercentual) / 100);
@@ -152,6 +154,8 @@ export function atualizar(pedido: PedidoDeAtualizacao, indices: Indices): Result
 
 /** A EC 113/2021 vale desde 09/12/2021: a SELIC começa em dezembro. */
 export const EC_113_DESDE: Mes = "2021-12";
+/** A EC 136/2025 foi promulgada em 25/09/2025: o IPCA + 2% do requisitório começa em outubro. */
+export const EC_136_DESDE: Mes = "2025-10";
 
 function linhaDaFazenda(p: Parcela, meses: Mes[], indices: Indices, expedicao: Mes | null, ressalvas: Set<string>): LinhaDaAtualizacao {
   const antesDaEc = meses.filter((m) => m < EC_113_DESDE);
@@ -171,6 +175,7 @@ function linhaDaFazenda(p: Parcela, meses: Mes[], indices: Indices, expedicao: M
     partes.push(`SELIC simples de ${periodo(ateExpedicao)} (${numeroBr(selic)}%, EC 113/2021)`);
   }
   if (requisitorio.length) {
+    if (expedicao! < EC_136_DESDE) ressalvas.add(`Requisitório expedido em ${periodo([expedicao!])}, antes da EC 136/2025 (25/09/2025): confira se o tribunal aplica a SELIC da EC 113/2021 até a emenda, e o IPCA + 2% só depois.`);
     const pelaSelic = valor * (1 + somaExata(valoresDosMeses(indices.selic, requisitorio, NOMES.selic)) / 100);
     const peloIpca = valor * fatorComposto(valoresDosMeses(indices.ipca, requisitorio, NOMES.ipca)) * (1 + (2 / 12 / 100) * requisitorio.length);
     const ipcaMenor = centavos(peloIpca) <= centavos(pelaSelic);
@@ -237,7 +242,7 @@ export function memoriaDaAtualizacao(pedido: PedidoDeAtualizacao, r: ResultadoDa
   const { total } = r;
   return [
     `## Memória de cálculo · ${extra.titulo}`,
-    `${extra.processo ? `Processo ${extra.processo}. ` : ""}Cálculo em ${diaBr(pedido.dataDoCalculo)}.${pedido.jurosDesde ? ` Juros desde ${diaBr(pedido.jurosDesde)}.` : ""}`,
+    `${extra.processo ? `Processo ${extra.processo}. ` : ""}Cálculo em ${diaBr(pedido.dataDoCalculo)}.${pedido.jurosDesde ? ` Juros desde ${diaBr(pedido.jurosDesde)}, nunca antes do vencimento de cada parcela.` : ""}${pedido.regime.tipo === "fazenda" ? "" : " Juros contados por mês cheio, do mês de início ao mês anterior ao do cálculo, sem pro rata de dias."}`,
     regimeEmTexto(pedido.regime),
     "### Parcelas",
     linhas.join("\n"),

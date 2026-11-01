@@ -35,6 +35,8 @@ import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
 import { corpo, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const dia = z.string().refine(ehDia, "data no formato AAAA-MM-DD");
+const PLANO_REAL = "1994-07-01";
+const EC_113_DIA = "2021-12-09";
 const mes = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "mês no formato AAAA-MM");
 
 const pedidoDeAtualizacao = z.object({
@@ -162,6 +164,11 @@ export function rotasDosCalculos(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.post("/calculos/atualizacao", async (c) => {
     const b = await corpo(c, pedidoDeAtualizacao);
     if (b.parcelas.some((p) => p.vencimento > b.dataDoCalculo)) falha(422, "vencimento_depois_do_calculo", "Há parcela que vence depois da data do cálculo.");
+    // A faixa de datas também protege o servidor: cada mês é uma volta da conta e, na TR, um pedido ao Banco Central.
+    if (b.dataDoCalculo > hojeEm(c.get("timezone"))) falha(422, "calculo_no_futuro", "A data do cálculo não pode ser depois de hoje: os índices ainda não existem.");
+    if (b.parcelas.some((p) => p.vencimento < PLANO_REAL) || (b.jurosDesde && b.jurosDesde < PLANO_REAL)) falha(422, "antes_do_real", "Datas anteriores a 01/07/1994 (Plano Real) não entram: as séries de índices começam ali.");
+    if (b.jurosDesde && b.jurosDesde > b.dataDoCalculo) falha(422, "juros_depois_do_calculo", "O início dos juros não pode ser depois da data do cálculo.");
+    if (b.regime.tipo === "fazenda" && b.regime.expedicao && (b.regime.expedicao < EC_113_DIA || b.regime.expedicao > b.dataDoCalculo)) falha(422, "expedicao_fora", "A expedição do requisitório precisa ficar entre 09/12/2021 (EC 113) e a data do cálculo.");
     const processo = await tenant(c, deps, (tx) => processoDoCalculo(tx, b.processoId));
     const pedido: PedidoDeAtualizacao = { parcelas: b.parcelas, dataDoCalculo: b.dataDoCalculo, jurosDesde: b.jurosDesde, regime: b.regime };
     let lidos: Awaited<ReturnType<typeof indicesDaAtualizacao>>;
