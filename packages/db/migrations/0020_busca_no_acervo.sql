@@ -1,0 +1,1 @@
+CREATE INDEX "acervo_documentos_busca_idx" ON "acervo_documentos" USING gin (to_tsvector('portuguese', coalesce("texto", '') || ' ' || coalesce("questao", '')));

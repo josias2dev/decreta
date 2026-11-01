@@ -141,6 +141,13 @@
       "when": 1793498970685,
       "tag": "0019_jeito_automacao_e_mcp",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793501067516,
+      "tag": "0020_busca_no_acervo",
+      "breakpoints": true
     }
   ]
 }

@@ -94,7 +94,7 @@ function noBnp(c: Citacao): { orgao: string; tipo: string; numero: number; rotul
 /** Situações do tema do STJ sem tese firmada ou com tese mudada. */
 const TEMA_SEM_TESE = /^(afetado|em julgamento|sem processo vinculado)/i;
 
-function seloDoDocumento(rotulo: string, d: typeof acervoDocumentos.$inferSelect): Pick<CitacaoVerificada, "selo" | "motivo"> {
+export function seloDoDocumento(rotulo: string, d: typeof acervoDocumentos.$inferSelect): Pick<CitacaoVerificada, "selo" | "motivo"> {
   const base = `${rotulo}: ${d.situacao}.`;
   if (d.cancelado) return { selo: "com_ressalva", motivo: `${base} Não use como precedente sem conferir.` };
   if (/^revisad/i.test(d.situacao)) return { selo: "com_ressalva", motivo: `${base} A tese mudou; confira a atual.` };
@@ -102,7 +102,7 @@ function seloDoDocumento(rotulo: string, d: typeof acervoDocumentos.$inferSelect
   return { selo: "verificada", motivo: base };
 }
 
-const fonteDo = (d: { fonte: string; url: string; capturadoEm: Date }) => ({ nome: FONTES[d.fonte as keyof typeof FONTES] ?? d.fonte, url: d.url, capturadoEm: d.capturadoEm.toISOString() });
+export const fonteDo = (d: { fonte: string; url: string; capturadoEm: Date }) => ({ nome: FONTES[d.fonte as keyof typeof FONTES] ?? d.fonte, url: d.url, capturadoEm: d.capturadoEm.toISOString() });
 
 interface Contexto extends DepsDoAcervo {
   /** A demonstração confere só no que já está guardado. */
