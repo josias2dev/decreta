@@ -83,3 +83,39 @@ describe("armazenamento", () => {
     expect(await extrairTexto(new Uint8Array([1]), "image/png")).toBeNull();
   });
 });
+
+/** PDF mínimo com uma página de texto por item, montado à mão (sem biblioteca de PDF). */
+function pdfDeTeste(paginas: string[]): Uint8Array {
+  const objs: string[] = [];
+  const kids = paginas.map((_, i) => `${4 + i * 2} 0 R`).join(" ");
+  objs.push("<< /Type /Catalog /Pages 2 0 R >>");
+  objs.push(`<< /Type /Pages /Kids [${kids}] /Count ${paginas.length} >>`);
+  objs.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  paginas.forEach((texto, i) => {
+    const conteudo = `BT /F1 12 Tf 72 720 Td (${texto}) Tj ET`;
+    objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${5 + i * 2} 0 R >>`);
+    objs.push(`<< /Length ${conteudo.length} >>\nstream\n${conteudo}\nendstream`);
+  });
+  let pdf = "%PDF-1.4\n";
+  const offsets: number[] = [];
+  objs.forEach((o, i) => {
+    offsets.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${o}\nendobj\n`;
+  });
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("")}`;
+  pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return new TextEncoder().encode(pdf);
+}
+
+describe("folhas do PDF", () => {
+  test("PDF de várias páginas leva a marca de cada folha, para a IA citar a folha", async () => {
+    const texto = await extrairTexto(pdfDeTeste(["Conclusao do perito", "Resposta aos quesitos"]), "application/pdf");
+    expect(texto).toContain("[fl. 1]\nConclusao do perito");
+    expect(texto).toContain("[fl. 2]\nResposta aos quesitos");
+  });
+
+  test("PDF de uma página fica sem marca", async () => {
+    expect(await extrairTexto(pdfDeTeste(["Procuracao"]), "application/pdf")).toBe("Procuracao");
+  });
+});

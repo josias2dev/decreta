@@ -132,7 +132,12 @@ const alvarasRoute = createRoute({ getParentRoute: () => appRoute, path: "/alvar
 const documentosRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/documentos",
-  validateSearch: (s: Record<string, unknown>): { doc?: string } => (texto(s.doc, 40) ? { doc: texto(s.doc, 40) } : {}),
+  // `pagina`: a folha que a fonte citada pela IA aponta ("evento 87, fl. 3").
+  validateSearch: (s: Record<string, unknown>): { doc?: string; pagina?: number } => {
+    const doc = texto(s.doc, 40);
+    const pagina = Number(s.pagina);
+    return doc ? { doc, ...(Number.isInteger(pagina) && pagina > 1 && pagina < 10_000 ? { pagina } : {}) } : {};
+  },
   component: DocumentosPage,
 });
 const modelosRoute = createRoute({ getParentRoute: () => appRoute, path: "/modelos", component: ModelosPage });

@@ -177,7 +177,7 @@ const RESUMOS: CasoDeResumo[] = [
           nome: "Laudo pericial",
           evento: 87,
           texto:
-            "Conclusão: a periciada apresenta incapacidade parcial e permanente de 30% para as atividades habituais, decorrente do acidente de 12/03/2025. Há nexo causal entre o acidente e as lesões. Não há sinais de doença preexistente.",
+            "[fl. 1]\nIdentificação da periciada, histórico do acidente e exames analisados.\n\n[fl. 2]\nConclusão: a periciada apresenta incapacidade parcial e permanente de 30% para as atividades habituais, decorrente do acidente de 12/03/2025. Há nexo causal entre o acidente e as lesões. Não há sinais de doença preexistente.",
         },
         {
           nome: "Impugnação ao laudo",
@@ -199,7 +199,7 @@ const RESUMOS: CasoDeResumo[] = [
     gabarito: {
       oQueFazer: ["Manifestar-se sobre o laudo até 24/11/2026, rebatendo a impugnação da ré (evento 89).", "Pedir que o perito responda aos esclarecimentos sobre doença preexistente, reforçando a conclusão do laudo (evento 87)."],
       pontosDeAtencao: ["A ré impugnou o laudo e alega doença preexistente (evento 89).", "O prazo para falar do laudo vence em 24/11/2026."],
-      estrategia: "Defender o laudo, que reconhece incapacidade parcial e permanente de 30% e nexo causal, e afasta doença preexistente (evento 87). Responder ponto a ponto à impugnação.",
+      estrategia: "Defender o laudo, que reconhece incapacidade parcial e permanente de 30% e nexo causal, e afasta doença preexistente (evento 87, fl. 2). Responder ponto a ponto à impugnação.",
       ultimoAto: "Evento 89 (28/10): a ré impugnou o laudo pericial.",
       recusa: null,
     },

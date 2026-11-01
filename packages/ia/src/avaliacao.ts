@@ -8,7 +8,7 @@
  * - Resumo: nota pela rubrica (o que precisa aparecer e o que não pode).
  * - Citações: todo evento, folha ou artigo citado precisa estar no material.
  */
-import { calendarioPara, contarPrazo, dataDaPublicacao, extrairCitacoes, formatarDia, type Dia, type Feriado } from "@decreta/core";
+import { calendarioPara, contarPrazo, dataDaPublicacao, extrairCitacoes, extrairFontes, formatarDia, MARCA_DA_FOLHA, type Dia, type Feriado } from "@decreta/core";
 import { IaRecusou, resumirAutos, sugerirPrazo, type ResumoDosAutos, type SugestaoDePrazo } from "./acoes.ts";
 import type { Ia } from "./gateway.ts";
 
@@ -86,6 +86,8 @@ export function citacoesForaDoMaterial(resposta: string, material: string, permi
   const eventos = new Set([...material.matchAll(/evento\s+(\d+)/gi)].map((m) => m[1]));
   const fora = new Set<string>();
   for (const m of resposta.matchAll(/evento\s+(\d+)/gi)) if (!eventos.has(m[1])) fora.add(`evento ${m[1]}`);
+  // A folha precisa existir no material (a marca [fl. N] da leitura do PDF).
+  for (const f of extrairFontes(resposta)) if (f.folha != null && !material.includes(MARCA_DA_FOLHA(f.folha)) && (f.evento == null || eventos.has(String(f.evento)))) fora.add(f.trecho);
   const leis = new Set([...extrairCitacoes(material).map((c) => c.chave), ...permitidas]);
   for (const c of extrairCitacoes(resposta)) if (!leis.has(c.chave)) fora.add(c.trecho);
   return [...fora];

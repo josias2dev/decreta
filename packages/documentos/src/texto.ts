@@ -3,6 +3,7 @@
  * PDF escaneado sem camada de texto volta vazio: a tela avisa que precisa de
  * OCR em vez de a IA tirar conclusão de um documento que não leu.
  */
+import { MARCA_DA_FOLHA } from "@decreta/core";
 import mammoth from "mammoth";
 import { extractText, getDocumentProxy } from "unpdf";
 
@@ -26,8 +27,12 @@ export async function lerDocumento(bytes: Uint8Array, mime: string): Promise<{ t
   if (mime === "application/pdf") {
     const pdf = await getDocumentProxy(bytes.slice());
     paginas = pdf.numPages;
-    const r = await extractText(pdf, { mergePages: true });
-    texto = Array.isArray(r.text) ? r.text.join("\n") : r.text;
+    const r = await extractText(pdf, { mergePages: false });
+    const folhas = Array.isArray(r.text) ? r.text : [r.text];
+    // Com mais de uma página, cada uma começa com "[fl. N]": a IA cita a folha e a tela abre nela.
+    // Escaneado (nenhuma folha com texto) continua vazio, para a leitura pela IA entrar.
+    const temTexto = folhas.some((t) => t.trim());
+    texto = !temTexto ? "" : folhas.length > 1 ? folhas.map((t, i) => `${MARCA_DA_FOLHA(i + 1)}\n${t.trim()}`).join("\n\n") : (folhas[0] ?? "");
   } else if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
     const r = await mammoth.extractRawText({ buffer: Buffer.from(bytes) });
     texto = r.value;

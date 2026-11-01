@@ -7,6 +7,7 @@ import { useAviso } from "@/componentes/avisos";
 import { Cancelada } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
+import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { Avatar, BlocoIa, Botao, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha } from "@/componentes/ui";
@@ -102,7 +103,11 @@ export function PrazoPage() {
       refazendo={refazer.isPending}
       avisoDesatualizada="Chegou novidade nos autos depois deste briefing."
     >
-      {b?.situacao === "pronto" ? <ConteudoDoBriefing c={b.conteudo} /> : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não leu este prazo. Gere o briefing para ver o que o juízo decidiu e o que fazer.</p>}
+      {b?.situacao === "pronto" ? (
+        <FontesDoProcesso processoId={p.processo.id}>
+          <ConteudoDoBriefing c={b.conteudo} />
+        </FontesDoProcesso>
+      ) : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não leu este prazo. Gere o briefing para ver o que o juízo decidiu e o que fazer.</p>}
     </BlocoIa>
   );
 
@@ -307,7 +312,9 @@ function ConteudoDoBriefing({ c }: { c: Briefing }) {
   return (
     <>
       <SecaoIa titulo="O que o juízo decidiu">
-        <p>{c.decidiu}</p>
+        <p>
+          <TextoComFontes texto={c.decidiu} />
+        </p>
       </SecaoIa>
       {c.fazer.length > 0 && (
         <SecaoIa titulo="O que fazer">

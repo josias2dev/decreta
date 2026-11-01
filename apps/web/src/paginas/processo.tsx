@@ -8,6 +8,7 @@ import { useAviso } from "@/componentes/avisos";
 import { DaReceita, documentoDigitado, useEmpresa, usePreencher } from "@/componentes/campos-cliente";
 import { Conversa } from "@/componentes/conversa";
 import { Dialogo } from "@/componentes/dialogo";
+import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { SeloDoAlerta } from "@/componentes/alerta-do-documento";
 import { SEM_IA, SeloSemIa } from "@/componentes/uso-de-ia";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
@@ -200,7 +201,11 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
       refazendo={refazer.isPending}
       avisoDesatualizada={n ? `${n === 1 ? "1 movimentação nova" : `${n} movimentações novas`} desde este resumo: ${p.novidades.slice(0, 3).join("; ")}.` : undefined}
     >
-      {r?.situacao === "pronto" ? <ConteudoDoResumo c={r.conteudo} /> : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não resumiu este processo. Gere o resumo para ver o que fazer, os pontos de atenção e a estratégia.</p>}
+      {r?.situacao === "pronto" ? (
+        <FontesDoProcesso processoId={p.id}>
+          <ConteudoDoResumo c={r.conteudo} />
+        </FontesDoProcesso>
+      ) : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não resumiu este processo. Gere o resumo para ver o que fazer, os pontos de atenção e a estratégia.</p>}
     </BlocoIa>
   );
 
@@ -374,13 +379,17 @@ function ConteudoDoResumo({ c }: { c: ResumoDosAutos }) {
       <div className="dc-ia__duas">
         <SecaoIa titulo="Pontos de atenção">{c.pontosDeAtencao.length ? <ListaIa itens={c.pontosDeAtencao} /> : <p>Nada de destaque.</p>}</SecaoIa>
         <SecaoIa titulo="Estratégia">
-          <p>{c.estrategia}</p>
+          <p>
+            <TextoComFontes texto={c.estrategia} />
+          </p>
         </SecaoIa>
       </div>
       {c.ultimoAto && (
         <div className="dc-ia__duas" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
           <SecaoIa titulo="Último ato do juízo">
-            <p>{c.ultimoAto}</p>
+            <p>
+              <TextoComFontes texto={c.ultimoAto} />
+            </p>
           </SecaoIa>
         </div>
       )}
@@ -911,10 +920,12 @@ function AbaChat({ p, celular }: { p: Processo; celular: boolean }) {
       fixo={celular}
     />
   );
-  if (celular) return corpo;
+  // A fonte de cada resposta ("evento 87, fl. 3") abre o documento na folha.
+  const comFontes = <FontesDoProcesso processoId={p.id}>{corpo}</FontesDoProcesso>;
+  if (celular) return comFontes;
   return (
-    <Painel titulo="Chat do processo" acao={<span className="dc-nota">Responde só com o que está nos autos, citando o evento.</span>}>
-      {corpo}
+    <Painel titulo="Chat do processo" acao={<span className="dc-nota">Responde só com o que está nos autos, citando o evento e a folha.</span>}>
+      {comFontes}
     </Painel>
   );
 }

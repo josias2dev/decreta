@@ -7,3 +7,4 @@ export * from "./documentos.ts";
 export * from "./peca.ts";
 export * from "./prazos.ts";
 export * from "./publicacao.ts";
+export * from "./fontes.ts";

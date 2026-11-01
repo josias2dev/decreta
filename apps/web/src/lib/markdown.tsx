@@ -8,6 +8,7 @@
  */
 import { useRouter } from "@tanstack/react-router";
 import { createContext, Fragment, useContext, type ReactNode } from "react";
+import { TextoComFontes } from "@/componentes/fontes";
 import { API_URL } from "./api";
 
 type Bloco =
@@ -187,7 +188,7 @@ export function Inline({ texto }: { texto: string }): ReactNode {
   let fim = 0;
   let n = 0;
   for (const m of texto.matchAll(INLINE)) {
-    if (m.index! > fim) saida.push(texto.slice(fim, m.index));
+    if (m.index! > fim) saida.push(<TextoComFontes key={`t${m.index}`} texto={texto.slice(fim, m.index)} />);
     const t = m[0];
     const k = n++;
     if (m[1]) saida.push(<code key={k}>{t.slice(1, -1)}</code>);
@@ -212,7 +213,7 @@ export function Inline({ texto }: { texto: string }): ReactNode {
       );
     fim = m.index! + t.length;
   }
-  if (fim < texto.length) saida.push(texto.slice(fim));
+  if (fim < texto.length) saida.push(<TextoComFontes key="fim" texto={texto.slice(fim)} />);
   return <>{saida}</>;
 }
 

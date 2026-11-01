@@ -74,6 +74,10 @@
 .dc-secao__titulo { margin: 0; font: 600 17px/24px var(--font-sans); color: var(--tinta); }
 .dc-link { font: 500 14px/20px var(--font-sans); color: var(--acento); text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; }
 .dc-link:hover { color: var(--tinta); }
+/* A fonte citada pela IA ("evento 87, fl. 3"): um toque abre o documento na folha. */
+.dc-fonte { color: var(--acento); text-decoration: underline dotted; text-underline-offset: 3px; border-radius: 4px; white-space: nowrap; }
+.dc-fonte:hover { color: var(--tinta); background: var(--acento-suave); text-decoration-style: solid; }
+.dc-fonte:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
 
 /* Listas no celular: um ponto menor que no computador, para caber mais sem apertar (Hoje, Prazos, Publicações e as outras). */
 .dc-celular .dc-item__titulo, .dc-celular .dc-cartao__titulo { font-size: 14px; line-height: 19px; }

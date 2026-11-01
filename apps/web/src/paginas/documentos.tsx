@@ -54,7 +54,7 @@ function De({ d }: { d: Documento }) {
 
 export function DocumentosPage() {
   const celular = useCelular();
-  const { doc } = useSearch({ from: "/app/documentos" });
+  const { doc, pagina } = useSearch({ from: "/app/documentos" });
   const navigate = useNavigate({ from: "/documentos" });
   const [texto, setTexto] = useState("");
   const busca = useDeferredValue(texto.trim());
@@ -66,7 +66,7 @@ export function DocumentosPage() {
   const sozinho = useQuery({ queryKey: ["documentos", "um", doc], queryFn: () => api<Documento>(`/documentos/${doc}`), enabled: !!doc && !!docs.data && !daLista, retry: false });
   const aberto = daLista ?? (sozinho.data?.id === doc ? sozinho.data : undefined);
   // No computador trocar de documento não empilha no histórico; no celular, o voltar fecha o aberto.
-  const abrir = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, doc: id }), replace: !celular || !id, resetScroll: false });
+  const abrir = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, doc: id, pagina: undefined }), replace: !celular || !id, resetScroll: false });
   useEffect(() => {
     if (sozinho.isError) void navigate({ search: (s) => ({ ...s, doc: undefined }), replace: true, resetScroll: false });
   }, [sozinho.isError, navigate]);
@@ -100,7 +100,7 @@ export function DocumentosPage() {
                 <LeituraDaIa d={aberto} reler />
               </div>
               <FaixaDoAlerta alertas={aberto.alertas} />
-              <VerDocumento d={aberto} naPagina className="dc-doc__ver" />
+              <VerDocumento d={aberto} naPagina pagina={pagina} className="dc-doc__ver" />
             </>
           ) : (
             <Carregando />
@@ -151,7 +151,7 @@ export function DocumentosPage() {
             vazio
           )}
         </section>
-        {doc && (aberto ? <DocumentoAberto d={aberto} aoFechar={() => abrir(undefined)} aoApagar={() => setApagando(aberto)} /> : <section className="dc-painel dc-doc" aria-busy />)}
+        {doc && (aberto ? <DocumentoAberto d={aberto} pagina={pagina} aoFechar={() => abrir(undefined)} aoApagar={() => setApagando(aberto)} /> : <section className="dc-painel dc-doc" aria-busy />)}
       </div>
       {dialogo}
     </Pagina>
@@ -253,7 +253,7 @@ function Lista({ itens, aberto, busca, abrir, apagar }: { itens: Documento[]; ab
 }
 
 /** O painel à direita: o nome e as ações em cima, de quem é e a leitura da IA, e o arquivo. */
-function DocumentoAberto({ d, aoFechar, aoApagar }: { d: Documento; aoFechar: () => void; aoApagar: () => void }) {
+function DocumentoAberto({ d, pagina, aoFechar, aoApagar }: { d: Documento; pagina?: number; aoFechar: () => void; aoApagar: () => void }) {
   return (
     <section className="dc-painel dc-doc" aria-label={`Documento aberto: ${d.nome}`}>
       <header className="dc-doc__topo">
@@ -293,7 +293,7 @@ function DocumentoAberto({ d, aoFechar, aoApagar }: { d: Documento; aoFechar: ()
         <LeituraDaIa d={d} reler />
       </div>
       <FaixaDoAlerta alertas={d.alertas} />
-      <VerDocumento d={d} className="dc-doc__ver" />
+      <VerDocumento d={d} pagina={pagina} className="dc-doc__ver" />
     </section>
   );
 }

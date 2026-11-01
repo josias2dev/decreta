@@ -12,6 +12,7 @@
 import { calendarioPara, diaDaSemana, ehDia, formatarDia, formatarDiaCurto, nomeDoDiaDaSemana, somarDias, type Calendario, type Dia } from "@decreta/core";
 import { generateText, jsonSchema, stepCountIs, streamText, tool, type JSONSchema7, type ModelMessage, type ToolSet } from "ai";
 import { z } from "zod";
+import { REGRA_DA_FONTE } from "./contexto.ts";
 import type { Ia } from "./gateway.ts";
 
 /* ------------------------------------------------------------------ */
@@ -761,7 +762,7 @@ ${foco}
 - Os resultados das ferramentas já aparecem na tela como cartões interativos, logo abaixo da sua resposta: a pessoa vê a lista inteira e tem botões para abrir, marcar cumprido e criar. Não repita a lista. Diga o que importa nela: o mais urgente, o que pede ação, o que chama atenção, quantos são. Uma ou duas frases quando a lista fala por si.
 - Ao mencionar um processo, prazo, publicação, audiência, cliente ou documento que veio das ferramentas, faça link com o caminho interno e o id que veio: [Marina Duarte × Seguradora Alfa](/processos/ID), [Manifestação sobre o laudo](/prazos/ID), [intimação de 28/10](/publicacoes/ID), [audiência de 06/11](/audiencias/ID), [Marina Duarte](/clientes/ID), [Laudo pericial](/documentos/ID). Só ids que vieram das ferramentas. Alvarás, novos negócios, tarefas e peças não têm página própria: não faça link para eles; quando houver, faça link para o processo.
 - Consulta de resposta antiga volta em forma curta (com uma "nota") e o que foi lido na hora (autos, texto de documento, teor inteiro) não fica guardado: para detalhes, consulte de novo, em vez de dizer que não consta.
-- Cite eventos e datas como aparecem nos autos ("evento 87", "28/10").
+${REGRA_DA_FONTE}
 - Fale do ponto de vista do escritório: "nosso cliente", "a parte contrária".
 - Português do Brasil, frases curtas, sem floreio, sem emoji, sem exclamação. Markdown simples: parágrafos curtos, listas, **negrito** só no essencial, tabela quando comparar coisas. Sem títulos grandes; no máximo ### em resposta longa.
 - Não termine com oferta genérica de ajuda ("posso ajudar em algo mais?").`;

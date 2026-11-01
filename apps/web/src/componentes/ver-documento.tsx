@@ -35,7 +35,7 @@ export const abreNoNavegador = (mime: string) => mime === "application/pdf" || m
  * `naPagina`: as folhas rolam com a página (celular) em vez de rolar dentro
  * do painel (computador).
  */
-export function VerDocumento({ d, naPagina, className }: { d: Documento; naPagina?: boolean; className?: string }) {
+export function VerDocumento({ d, naPagina, pagina, className }: { d: Documento; naPagina?: boolean; /** A folha a mostrar primeiro (a fonte citada pela IA). */ pagina?: number; className?: string }) {
   const forma = formaDoArquivo(d.mime);
   const arquivo = useQuery({
     queryKey: ["arquivo", d.id],
@@ -58,7 +58,7 @@ export function VerDocumento({ d, naPagina, className }: { d: Documento; naPagin
   else if (forma === "audio") corpo = <Audio d={d} />;
   else if (arquivo.isError || falhou) corpo = <SemPrevia d={d} erro />;
   else if (!arquivo.data) corpo = <Abrindo />;
-  else if (forma === "pdf") corpo = <Pdf blob={arquivo.data} naPagina={naPagina} aoFalhar={() => setFalhou(true)} />;
+  else if (forma === "pdf") corpo = <Pdf blob={arquivo.data} naPagina={naPagina} pagina={pagina} aoFalhar={() => setFalhou(true)} />;
   else if (forma === "imagem") corpo = <Imagem blob={arquivo.data} nome={d.nome} aoFalhar={() => setFalhou(true)} />;
   else if (forma === "word") corpo = <Word blob={arquivo.data} naPagina={naPagina} aoFalhar={() => setFalhou(true)} />;
   else corpo = <Texto blob={arquivo.data} />;
@@ -127,7 +127,7 @@ function useLargura(ref: React.RefObject<HTMLElement | null>) {
 /** Folha na largura do painel, sem passar do tamanho de leitura. */
 const LARGURA_MAXIMA = 880;
 
-function Pdf({ blob, naPagina, aoFalhar }: { blob: Blob; naPagina?: boolean; aoFalhar: () => void }) {
+function Pdf({ blob, naPagina, pagina, aoFalhar }: { blob: Blob; naPagina?: boolean; pagina?: number; aoFalhar: () => void }) {
   const area = useRef<HTMLDivElement>(null);
   const largura = Math.min(useLargura(area), LARGURA_MAXIMA);
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
@@ -154,6 +154,13 @@ function Pdf({ blob, naPagina, aoFalhar }: { blob: Blob; naPagina?: boolean; aoF
       void tarefa?.destroy();
     };
   }, [blob]);
+
+  // Aberto pela fonte da IA ("evento 87, fl. 3"): vai direto à folha citada.
+  const pronto = !!pdf && largura > 0;
+  useEffect(() => {
+    if (!pronto || !pagina) return;
+    area.current?.querySelector<HTMLElement>(`[data-pagina="${pagina}"]`)?.scrollIntoView({ block: "start" });
+  }, [pronto, pagina]);
 
   // O contador mostra a página que passa pelo primeiro terço da vista.
   useEffect(() => {

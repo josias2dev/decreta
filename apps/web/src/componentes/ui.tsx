@@ -7,6 +7,7 @@ import { useAviso } from "@/componentes/avisos";
 import { api, mensagemDoErro } from "@/lib/api";
 import type { Analise, Pessoa, Urgencia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
+import { TextoComFontes } from "./fontes";
 
 type Variante = "primaria" | "secundaria" | "fantasma" | "ia" | "perigo";
 
@@ -247,11 +248,18 @@ export function SecaoIa({ titulo, children }: { titulo: string; children: ReactN
 }
 
 export function ListaIa({ itens }: { itens: string[] }) {
-  if (itens.length === 1) return <p>{itens[0]}</p>;
+  if (itens.length === 1)
+    return (
+      <p>
+        <TextoComFontes texto={itens[0]!} />
+      </p>
+    );
   return (
     <ul>
       {itens.map((i) => (
-        <li key={i}>{i}</li>
+        <li key={i}>
+          <TextoComFontes texto={i} />
+        </li>
       ))}
     </ul>
   );
