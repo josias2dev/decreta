@@ -12,6 +12,7 @@ import { ehMembro, pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { rotasDaAgenda } from "./agenda.ts";
+import { rotasDosCalculos } from "./calculos.ts";
 import { rotasDosClientes } from "./clientes.ts";
 import { rotasDasConsultas } from "./consultas.ts";
 import { rotasDosDocumentos } from "./documentos.ts";
@@ -115,6 +116,7 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDosModelos(app, deps);
   rotasDosDocumentos(app, deps);
   rotasDaAgenda(app, deps);
+  rotasDosCalculos(app, deps);
   rotasDosNegocios(app, deps);
   rotasDoEscritorio(app, deps);
   return app;

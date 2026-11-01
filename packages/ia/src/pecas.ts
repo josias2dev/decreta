@@ -86,6 +86,8 @@ export interface PedidoDePeca {
   modelos?: ModeloParaIa[];
   /** Documento e endereço das partes, da ficha do cliente e da Receita Federal, uma por linha. */
   qualificacao?: string | null;
+  /** Cálculos do processo que a peça usa (a memória da atualização, o quadro da revisional), feitos pelo sistema. */
+  calculos?: { titulo: string; memoria: string }[];
 }
 
 export interface ModeloParaIa {
@@ -131,6 +133,8 @@ Estrutura usual: ${tipo.estrutura}`,
         `## Tempestividade\nSe a peça tiver tópico de tempestividade, use este parágrafo como está, sem mudar datas nem artigos: a conta é do sistema, conferida pelo advogado.\n${prazo.tempestividade}`,
       pedido.instrucoes.trim() && `## Instruções de quem pediu\n${pedido.instrucoes.trim()}`,
       pedido.modelos?.length && textoDosModelos(pedido.modelos),
+      pedido.calculos?.length &&
+        `## Cálculos do processo\nFeitos pelo sistema com os índices oficiais e conferidos pelo advogado. Use os valores, as datas e os critérios como estão, sem refazer a conta nem arredondar de outro jeito; o quadro e o tópico podem entrar na peça.\n\n${pedido.calculos.map((k) => k.memoria).join("\n\n")}`,
       pedido.qualificacao && `## Qualificação das partes\nUse na qualificação quando a peça pedir; o que não estiver aqui vira [COMPLETAR].\n${pedido.qualificacao}`,
       `## Quem assina\n${escritorio.advogado}${escritorio.oab ? `, ${escritorio.oab}` : ""}, ${escritorio.nome}${escritorio.cidade ? `, ${escritorio.cidade}` : ""}.`,
       pedido.contextoDoProcesso,
