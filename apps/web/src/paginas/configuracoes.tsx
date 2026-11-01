@@ -42,7 +42,7 @@ export function ConfiguracoesPage() {
       aoMudar={setAba}
       abas={[
         { id: "escritorio", rotulo: "Timbre" },
-        { id: "pecas", rotulo: "Jeito das peças" },
+        { id: "pecas", rotulo: "Peças" },
         { id: "avisos", rotulo: "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
         ...(socio ? [{ id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }] : []),
