@@ -7,6 +7,7 @@ import { useAviso } from "@/componentes/avisos";
 import { Cancelada } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
+import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { Avatar, BlocoIa, Botao, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha } from "@/componentes/ui";
@@ -104,6 +105,11 @@ export function PrazoPage() {
     >
       {b?.situacao === "pronto" ? <ConteudoDoBriefing c={b.conteudo} /> : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não leu este prazo. Gere o briefing para ver o que o juízo decidiu e o que fazer.</p>}
     </BlocoIa>
+  );
+
+  // "O que isso significa para você": a IA escreve a partir do briefing pronto; o advogado aprova antes de sair.
+  const paraOCliente = b?.situacao === "pronto" && (
+    <MensagensAoCliente filtro={{ prazo: p.id }} gerar={ia ? { rotulo: "Escrever ao cliente o que isso significa", caminho: `/prazos/${p.id}/mensagem-cliente` } : undefined} titulo="Para o cliente" />
   );
 
   const dados = (
@@ -221,6 +227,7 @@ export function PrazoPage() {
           </span>
         </div>
         {briefing}
+        {paraOCliente}
         <Painel titulo="Prazo" acao={aberto && p.confirmado ? <Botao variante="fantasma" pequeno onClick={() => setDialogo("ajustar")}>Ajustar</Botao> : undefined}>
           {dados}
         </Painel>
@@ -287,6 +294,7 @@ export function PrazoPage() {
       <div className="dc-colunas">
         <div className="dc-pilha">
           {briefing}
+          {paraOCliente}
           {p.publicacao && <Teor publicacao={p.publicacao} />}
         </div>
         <div className="dc-pilha">

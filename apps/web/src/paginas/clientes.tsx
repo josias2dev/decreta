@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { CamposDoCliente } from "@/componentes/campos-cliente";
 import { ConferenciaDaPasta } from "@/componentes/conferencia";
+import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
 import { Dialogo } from "@/componentes/dialogo";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
@@ -299,6 +300,11 @@ export function ClientePage() {
     />
   );
 
+  // Cobrar o que falta: a lista sai da conferência pronta; o advogado aprova antes de sair no WhatsApp.
+  const cobranca = c.conferencia?.situacao === "pronto" && (
+    <MensagensAoCliente filtro={{ cliente: c.id }} gerar={{ rotulo: "Cobrar do cliente os documentos que faltam", caminho: `/clientes/${c.id}/cobrar-documentos` }} titulo="Documentos que faltam" />
+  );
+
   const tempo = c.linhaDoTempo.length > 0 && (
     <Painel titulo="Linha do tempo">
       <LinhaDoTempo itens={c.linhaDoTempo.slice(0, 12).map((t, i) => ({ data: diaCurto(diaDoInstante(t.em)), titulo: t.titulo, detalhe: t.detalhe ?? undefined, novo: i === 0 }))} />
@@ -354,6 +360,7 @@ export function ClientePage() {
         {dados}
         {documentos}
         {conferencia}
+        {cobranca}
         <UsoDeIa c={c} />
         {tempo}
         {apagar}
@@ -398,6 +405,7 @@ export function ClientePage() {
           {dados}
           {documentos}
           {conferencia}
+          {cobranca}
           <UsoDeIa c={c} />
           {tempo}
           {apagar}
