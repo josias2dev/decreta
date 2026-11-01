@@ -38,7 +38,8 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .where(and(eq(documentos.processoId, processoId), isNotNull(documentos.texto)))
         .orderBy(desc(documentos.createdAt))
         .limit(6);
-      const [briefing] = prazo ? await tx.select({ id: analises.id }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.situacao, "pronto"))).limit(1) : [];
+      const [briefing] = prazo ? await tx.select({ id: analises.id }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.acao, "briefing-prazo"), eq(analises.situacao, "pronto"))).limit(1) : [];
+      const [contraria] = prazo ? await tx.select({ fonte: analises.fonte }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.acao, "ler-peca-contraria"), eq(analises.situacao, "pronto"))).orderBy(desc(analises.createdAt)).limit(1) : [];
       const sugerido = prazo ? pecaParaPrazo(prazo.tipo) : tipoDePeca("outro")!;
       const [rascunho] = await tx.select().from(pecas).where(prazo ? eq(pecas.prazoId, prazo.id) : eq(pecas.processoId, processoId)).orderBy(desc(pecas.updatedAt)).limit(1);
       const tipo = (tipoPedido && tipoDePeca(tipoPedido)) || (rascunho && tipoDePeca(rascunho.tipo)) || sugerido;
@@ -47,7 +48,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         processo: { id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, semIa: await semIa(tx, { processoId: p.id }) },
         prazo: prazo ? { id: prazo.id, tipo: prazo.tipo, fim: prazo.fim } : null,
         tipoSugerido: sugerido.id,
-        leu: [...docs.map((d) => (d.evento != null ? `${d.nome} · evento ${d.evento}` : d.nome)), ...(briefing ? ["Briefing do prazo"] : [])],
+        leu: [...docs.map((d) => (d.evento != null ? `${d.nome} · evento ${d.evento}` : d.nome)), ...(briefing ? ["Briefing do prazo"] : []), ...(contraria ? [`Pontos a rebater (${contraria.fonte})`] : [])],
         /** Os modelos do escritório que a IA vai seguir para o tipo escolhido. */
         modelos: doBanco.map((m) => ({ id: m.id, titulo: m.titulo })),
         ultima: rascunho ? { id: rascunho.id, titulo: rascunho.titulo, tipo: rascunho.tipo, instrucoes: rascunho.instrucoes, texto: rascunho.texto, situacao: rascunho.situacao, atualizadaEm: rascunho.updatedAt.toISOString() } : null,

@@ -38,6 +38,32 @@ test("5.3: o prazo confirmado já mostra o rascunho pronto, e o botão leva a el
   await expect(page).toHaveURL(new RegExp(`/pecas\\?id=${rascunho.id}$`));
 });
 
+test("5.5: a petição da ré vira pontos a rebater no prazo", async ({ page }) => {
+  const prazo = amostras.prazo!.corpo;
+  const peticao = (amostras.documentos!.corpo.itens as { id: string; evento: number | null }[]).find((d) => d.evento === 89)!;
+  const api = new ApiFalsa().responder("/eu", euComIa).responder(`/prazos/${ids.prazo}`, { ...prazo, pecaContraria: null });
+  await abrir(page, `/prazos/${ids.prazo}`, api);
+  const bloco = page.locator("section", { hasText: "Peça da outra parte" });
+  await bloco.getByRole("combobox", { name: "Peça da outra parte" }).selectOption(peticao.id);
+
+  const leitura = {
+    ...prazo.briefing,
+    acao: "ler-peca-contraria",
+    fonte: "Petição da ré · evento 89",
+    conteudo: {
+      peca: "Pedido de esclarecimentos da Seguradora Alfa (evento 89)",
+      pedidos: "Que o perito esclareça o percentual de 40%.",
+      pontos: [{ tese: "O laudo não explica a tabela usada.", rebater: "A tabela da SUSEP está citada no laudo.", fonte: "(evento 87, fl. 3)" }],
+      recusa: null,
+    },
+  };
+  api.responder(`/prazos/${ids.prazo}`, { ...prazo, pecaContraria: leitura });
+  await bloco.getByRole("button", { name: "Ler a peça" }).click();
+  await expect(page.getByRole("list", { name: "Pontos a rebater" }).getByRole("listitem")).toHaveCount(1);
+  await expect(bloco).toContainText("Como rebater: A tabela da SUSEP está citada no laudo.");
+  expect(api.mudancas(`/ia/peca-contraria/${ids.prazo}`).map((p) => p.corpo)).toEqual([{ documentoId: peticao.id }]);
+});
+
 test("5.2: a auditoria da carteira aparece no Hoje e cada achado leva aonde resolver", async ({ page }) => {
   const api = new ApiFalsa().responder("/hoje", { ...amostras.hoje!.corpo, auditoria });
   await abrir(page, "/hoje", api);

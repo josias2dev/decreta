@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { horaLocal, diaPorExtenso, diaDoInstante, ehDia, formatarDia, hojeEm } from "@decreta/core";
-import { analises, audiencias, clientes, conversas, equipe, mensagensIa, pecas, prazos, processos, publicacoes, retornosIa, tarefas, withTenant, type ParteDaMensagem, type Tx } from "@decreta/db";
+import { analises, audiencias, clientes, conversas, documentos, equipe, mensagensIa, pecas, prazos, processos, publicacoes, retornosIa, tarefas, withTenant, type ParteDaMensagem, type Tx } from "@decreta/db";
 import {
   briefingDoPrazo,
   conversar,
@@ -9,6 +9,7 @@ import {
   FalhaNaConsulta,
   FALHOU,
   itemDoChecklist,
+  lerPecaContraria,
   NaoAchou,
   PAROU_ANTES,
   PASSOS,
@@ -44,6 +45,7 @@ export const ROTULO_DA_ACAO: Record<string, string> = {
   "ler-sentenca": "Leitura da sentença",
   "conferir-pasta": "Conferência da pasta",
   "gerar-documento": "Peça gerada",
+  "ler-peca-contraria": "Leitura da peça contrária",
 };
 
 /** Uma linha da resposta do Perguntar. */
@@ -135,6 +137,38 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
         return { entrada: { prazo: { tipo: p.tipo, fim: p.fim, fundamento: p.fundamento }, publicacao: pub?.texto ?? null, contextoDoProcesso: ctx?.texto ?? "" }, base: ctx?.base ?? "", fonte };
       },
       executar: (e) => briefingDoPrazo(ia, e),
+    });
+    return a ? c.json(a) : falha(404, "nao_encontrado");
+  });
+
+  /** A peça da outra parte (contestação, recurso) vira pontos a rebater, guardados no prazo que responde a ela. */
+  app.post("/ia/peca-contraria/:id", comIa, async (c) => {
+    const ia = iaDaRota(c);
+    const prazoId = id(c);
+    const { documentoId } = await corpo(c, z.object({ documentoId: z.string().uuid() }));
+    const a = await analisar(db, {
+      organizationId: c.get("orgId"),
+      alvo: "prazo",
+      alvoId: prazoId,
+      acao: "ler-peca-contraria",
+      userId: c.get("userId"),
+      log: deps.log,
+      preparar: async (tx) => {
+        const [p] = await tx.select().from(prazos).where(eq(prazos.id, prazoId));
+        if (!p) return null;
+        const [doc] = await tx
+          .select({ nome: documentos.nome, evento: documentos.evento, texto: documentos.texto })
+          .from(documentos)
+          .where(and(eq(documentos.id, documentoId), eq(documentos.processoId, p.processoId)));
+        if (!doc) return null;
+        const ctx = await contextoParaIa(tx, p.processoId);
+        return {
+          entrada: { prazo: { tipo: p.tipo, fim: p.fim }, peca: { nome: doc.nome, evento: doc.evento, texto: doc.texto ?? "" }, contextoDoProcesso: ctx?.texto ?? "" },
+          base: ctx?.base ?? "",
+          fonte: doc.evento != null ? `${doc.nome} · evento ${doc.evento}` : doc.nome,
+        };
+      },
+      executar: (e) => lerPecaContraria(ia, e),
     });
     return a ? c.json(a) : falha(404, "nao_encontrado");
   });

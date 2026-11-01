@@ -1,7 +1,7 @@
 /** O pedido de peça que vai à IA: o mesmo na tela Gerar peça e no rascunho preparado sozinho. */
 import { formatarDia } from "@decreta/core";
 import { analises, escritorios, prazos, processos, type Database, type Tx } from "@decreta/db";
-import type { Briefing, PedidoDePeca, TipoDePeca } from "@decreta/ia";
+import { pontosEmTexto, type Briefing, type LeituraDaPecaContraria, type PedidoDePeca, type TipoDePeca } from "@decreta/ia";
 import { and, desc, eq } from "drizzle-orm";
 import { contextoParaIa } from "./contexto.ts";
 import { modelosParaPeca } from "./modelos.ts";
@@ -43,9 +43,18 @@ export async function montarPedidoDePeca(
   },
 ): Promise<PedidoMontado> {
   const { processo: p, prazo, tipo } = a;
-  const [briefing] = prazo
-    ? await tx.select({ conteudo: analises.conteudo }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.situacao, "pronto"))).orderBy(desc(analises.createdAt)).limit(1)
-    : [];
+  const pronta = async (acao: string) =>
+    prazo
+      ? (await tx.select({ conteudo: analises.conteudo }).from(analises).where(and(eq(analises.alvo, "prazo"), eq(analises.alvoId, prazo.id), eq(analises.acao, acao), eq(analises.situacao, "pronto"))).orderBy(desc(analises.createdAt)).limit(1))[0]
+      : undefined;
+  const briefing = await pronta("briefing-prazo");
+  const contraria = await pronta("ler-peca-contraria");
+  const textoDoBriefing = [
+    briefing && briefingEmTexto(briefing.conteudo as unknown as Briefing),
+    contraria && `Pontos da outra parte a rebater:\n${pontosEmTexto(contraria.conteudo as unknown as LeituraDaPecaContraria)}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const ctx = await contextoParaIa(tx, p.id, { documentos: true });
   const doBanco = await modelosParaPeca(tx, { tipo: tipo.id, sobre: [sobreOCaso(p, prazo?.tipo), a.instrucoes].join(" ") });
   const [esc] = await tx.select().from(escritorios).where(eq(escritorios.organizationId, a.organizationId));
@@ -63,7 +72,7 @@ export async function montarPedidoDePeca(
             tipo: prazo.tipo,
             fim: formatarDia(prazo.fim),
             fundamento: prazo.fundamento,
-            briefing: briefing ? briefingEmTexto(briefing.conteudo as unknown as Briefing) : undefined,
+            briefing: textoDoBriefing || undefined,
             tempestividade: (await contaDoPrazo(tx, a.organizationId, prazo)).tempestividade,
           }
         : undefined,

@@ -182,6 +182,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const contexto = await carregarContexto(tx, processo.id);
       const briefing = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "briefing-prazo"), contexto?.base);
       const sugestao = pub ? await ultimaAnalise(tx, "publicacao", pub.id, "sugerir-prazo") : null;
+      const pecaContraria = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "ler-peca-contraria"), contexto?.base);
       const pecasDoPrazo = await tx
         .select({ id: pecas.id, titulo: pecas.titulo, situacao: pecas.situacao, atualizadaEm: pecas.updatedAt, criadaPor: pecas.criadaPor, textoGerado: pecas.textoGerado })
         .from(pecas)
@@ -220,6 +221,8 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, tribunal: processo.tribunal, poloCliente: processo.poloCliente, semIa: contexto?.semIa ?? false },
         publicacao: pub ? { id: pub.id, fonte: pub.fonte, texto: pub.texto, disponibilizadaEm: pub.disponibilizadaEm, publicadaEm: pub.publicadaEm, tipoComunicacao: pub.tipoComunicacao, tipoDocumento: pub.tipoDocumento, link: pub.link, certidao: !!(pub.certidao || pub.hash), cancelada: pub.canceladaEm ? { em: pub.canceladaEm.toISOString(), motivo: pub.motivoCancelamento } : null } : null,
         briefing,
+        /** A peça da outra parte lida em pontos a rebater. */
+        pecaContraria,
         // Sem autor e com texto da IA: o rascunho que ficou pronto sozinho quando o prazo foi confirmado.
         pecas: pecasDoPrazo.map(({ criadaPor, textoGerado, ...p }) => ({ ...p, atualizadaEm: p.atualizadaEm.toISOString(), preparadaPelaIa: criadaPor === null && textoGerado !== null })),
         historico,

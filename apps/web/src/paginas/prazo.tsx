@@ -10,6 +10,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
+import { PecaContraria } from "@/componentes/peca-contraria";
 import { Avatar, BlocoIa, Botao, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -110,6 +111,8 @@ export function PrazoPage() {
       ) : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não leu este prazo. Gere o briefing para ver o que o juízo decidiu e o que fazer.</p>}
     </BlocoIa>
   );
+
+  const contraria = <PecaContraria prazoId={p.id} processoId={p.processo.id} analise={p.pecaContraria ?? null} comIa={ia && p.situacao === "aberto"} />;
 
   const dados = (
     <Dados
@@ -227,6 +230,7 @@ export function PrazoPage() {
           </span>
         </div>
         {briefing}
+        {contraria}
         <Painel titulo="Prazo" acao={aberto && p.confirmado ? <Botao variante="fantasma" pequeno onClick={() => setDialogo("ajustar")}>Ajustar</Botao> : undefined}>
           {dados}
         </Painel>
@@ -293,6 +297,7 @@ export function PrazoPage() {
       <div className="dc-colunas">
         <div className="dc-pilha">
           {briefing}
+          {contraria}
           {p.publicacao && <Teor publicacao={p.publicacao} />}
         </div>
         <div className="dc-pilha">

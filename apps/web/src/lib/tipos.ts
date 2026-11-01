@@ -112,6 +112,13 @@ export interface Briefing {
   recusa?: string | null;
 }
 
+export interface LeituraDaPecaContraria {
+  peca: string;
+  pedidos: string;
+  pontos: { tese: string; rebater: string; fonte: string }[];
+  recusa?: string | null;
+}
+
 export interface Prazo {
   id: string;
   tipo: string;
@@ -133,6 +140,8 @@ export interface Prazo {
   processo: ProcessoResumido & { poloCliente: "ativo" | "passivo" | "terceiro" };
   publicacao: ({ id: string; fonte: "djen" | "datajud" | "manual"; texto: string; disponibilizadaEm: string; publicadaEm: string; tipoComunicacao: string | null; tipoDocumento: string | null; link: string | null } & DoDjen) | null;
   briefing: Analise<Briefing> | null;
+  /** A peça da outra parte lida em pontos a rebater. */
+  pecaContraria?: Analise<LeituraDaPecaContraria> | null;
   /** `preparadaPelaIa`: o rascunho que ficou pronto sozinho quando o prazo foi confirmado. */
   pecas: { id: string; titulo: string; situacao: "rascunho" | "revisada"; atualizadaEm: string; preparadaPelaIa?: boolean }[];
   historico: { em: string; titulo: string; detalhe: string | null }[];

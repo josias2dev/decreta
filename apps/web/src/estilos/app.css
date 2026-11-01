@@ -88,6 +88,12 @@
 .dc-auditoria__motivo[data-motivo="alvara_parado"] { color: var(--hoje); }
 .dc-auditoria__titulo { font: 600 14px/20px var(--font-sans); color: var(--tinta); }
 .dc-auditoria__detalhe { font: 400 13px/18px var(--font-sans); color: var(--tinta-2); }
+/* Leitura da peça contrária: cada argumento e, abaixo, como rebatê-lo. */
+.dc-rebater { margin: 0; padding-left: 20px; display: grid; gap: var(--space-3); }
+.dc-rebater li { display: grid; gap: 2px; }
+.dc-rebater__tese { font: 600 14px/22px var(--font-sans); color: var(--tinta); }
+.dc-rebater__como { font: 400 14px/22px var(--font-sans); color: var(--tinta-2); }
+.dc-rebater__escolha { flex: 1; min-width: 200px; }
 
 /* Listas no celular: um ponto menor que no computador, para caber mais sem apertar (Hoje, Prazos, Publicações e as outras). */
 .dc-celular .dc-item__titulo, .dc-celular .dc-cartao__titulo { font-size: 14px; line-height: 19px; }

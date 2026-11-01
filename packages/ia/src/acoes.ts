@@ -248,6 +248,57 @@ export async function resumirAtendimento(ia: Ia, transcricao: string, signal?: A
 }
 
 /* ------------------------------------------------------------------ */
+/* Leitura da peça contrária                                           */
+/* ------------------------------------------------------------------ */
+
+export const leituraDaPecaContrariaSchema = z.object({
+  peca: z.string().describe('Que peça é, de quem e onde está nos autos, ex.: "Contestação da Seguradora Alfa (evento 52)".'),
+  pedidos: z.string().describe("O que a outra parte pede, em 1 a 3 frases."),
+  pontos: z
+    .array(
+      z.object({
+        tese: z.string().describe("O argumento da outra parte, em uma ou duas frases."),
+        rebater: z.string().describe("Como rebater, com o que os autos dão a nosso favor. Sem jurisprudência com número."),
+        fonte: z.string().describe('Onde o argumento está na peça, ex.: "(evento 52, fl. 4)".'),
+      }),
+    )
+    .describe("Os pontos a rebater, do mais perigoso para o nosso cliente ao menos."),
+  recusa,
+});
+export type LeituraDaPecaContraria = z.infer<typeof leituraDaPecaContrariaSchema>;
+
+export async function lerPecaContraria(
+  ia: Ia,
+  entrada: { prazo: { tipo: string; fim: string }; peca: { nome: string; evento: number | null; texto: string }; contextoDoProcesso: string },
+  signal?: AbortSignal,
+): Promise<LeituraDaPecaContraria> {
+  const { peca } = entrada;
+  if (semTeor(peca.texto)) throw new IaRecusou("A peça da outra parte está sem texto legível. Peça a leitura do documento e tente de novo.");
+  const prompt = [
+    `## Prazo\n${entrada.prazo.tipo}, vence em ${entrada.prazo.fim}.`,
+    `\n## Peça da outra parte: ${peca.nome}${peca.evento != null ? ` (evento ${peca.evento})` : ""}\n${peca.texto.trim()}`,
+    `\n${entrada.contextoDoProcesso}`,
+  ].join("\n");
+  return exigir(
+    await gerarObjeto(
+      ia,
+      "ler-peca-contraria",
+      leituraDaPecaContrariaSchema,
+      `Leia a peça da outra parte (contestação, recurso, impugnação) para quem vai responder a ela neste prazo.
+Liste cada argumento dela que precisa de resposta e como rebatê-lo com o que está nos autos. Cada ponto cita onde está na peça, com o evento e a folha.
+Não deixe de fora argumento preliminar (prescrição, ilegitimidade, incompetência): é o que mais derruba.`,
+      prompt,
+      signal,
+    ),
+  );
+}
+
+/** Os pontos a rebater em texto, para a peça que vai respondê-los. */
+export function pontosEmTexto(l: Pick<LeituraDaPecaContraria, "peca" | "pedidos" | "pontos">): string {
+  return [`Peça da outra parte: ${l.peca}. Pede: ${l.pedidos}`, ...l.pontos.map((p) => `- ${p.tese} ${p.fonte} Como rebater: ${p.rebater}`)].join("\n");
+}
+
+/* ------------------------------------------------------------------ */
 /* Conversa: chat do processo e Perguntar                              */
 /* ------------------------------------------------------------------ */
 
