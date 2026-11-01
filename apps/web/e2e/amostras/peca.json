@@ -1,19 +1,20 @@
 {
-  "path": "/pecas/5f531e21-9904-459d-aa25-128b438fdfe8",
+  "path": "/pecas/c6893e6a-a554-4018-a27a-92ef55eb9528",
   "corpo": {
-    "id": "5f531e21-9904-459d-aa25-128b438fdfe8",
-    "processoId": "23cb5bb0-f73e-461e-ad84-e453041e7bd7",
-    "prazoId": "13634313-8aac-45e4-9b2b-c7919b072588",
+    "id": "c6893e6a-a554-4018-a27a-92ef55eb9528",
+    "processoId": "7ef8cfa9-6b1a-4670-8895-976f3180009c",
+    "prazoId": "9a62a099-f2f3-46ff-90ee-816f90016bbc",
     "tipo": "alegacoes-finais",
     "titulo": "Alegações finais · Roberto Kühn",
     "instrucoes": null,
     "texto": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA 4ª VARA CÍVEL DA COMARCA DE JOINVILLE/SC\n\n**ROBERTO KÜHN**, já qualificado nos autos da ação que move em face de **TRANSPORTES SERRA AZUL LTDA.**, vem apresentar ALEGAÇÕES FINAIS POR MEMORIAIS.\n\n## 1. DOS FATOS PROVADOS\n\nA prova testemunhal confirmou que o caminhão da ré invadiu a preferencial e atingiu o veículo do autor. O boletim de ocorrência e as fotografias juntadas na inicial vão no mesmo sentido.\n\n## 2. DOS DANOS\n\nOs orçamentos de conserto não foram impugnados de forma específica. [COMPLETAR: valor atualizado dos lucros cessantes]\n\n## 3. DOS PEDIDOS\n\nRequer a procedência integral dos pedidos, com a condenação da ré nos termos da inicial. [JURISPRUDÊNCIA: responsabilidade objetiva da transportadora]",
     "situacao": "rascunho",
-    "atualizadaEm": "2026-10-31T22:58:12.845Z",
+    "atualizadaEm": "2026-11-01T00:18:02.043Z",
     "rodape": "Gerado por IA. Confira nos autos.",
     "revisao": null,
     "modelos": [],
     "revisoes": [],
-    "semIa": false
+    "semIa": false,
+    "verificacao": null
   }
 }

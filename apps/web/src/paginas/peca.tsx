@@ -12,6 +12,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { RegistroDeRevisao } from "@/componentes/revisao-da-peca";
+import { VerificacaoDaPeca } from "@/componentes/verificacao-da-peca";
 import { Botao, Campo, Carregando, Cnj, Faixa, MarcaIa, Painel, RetornoDaIa, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -240,6 +241,8 @@ export function PecaPage() {
     </Dialogo>
   );
 
+  // Confere o texto salvo: enquanto edita ou a IA escreve, não há o que conferir.
+  const citacoes = podeAvaliar && pecaSalva.data && <VerificacaoDaPeca pecaId={pecaId!} verificacao={pecaSalva.data.verificacao} hoje={eu.data?.hoje} />;
   const registro = pecaId && pecaSalva.data && !gerando && <RegistroDeRevisao pecaId={pecaId} revisoes={pecaSalva.data.revisoes} hoje={eu.data?.hoje} folha={(t) => <Folha texto={t} timbre={timbre} />} />;
   const guardar = peca && pecaId && <GuardarComoModelo pecaId={pecaId} titulo={peca.titulo} aberto={guardando} aoFechar={() => setGuardando(false)} />;
   const pe = (solto: boolean) => (
@@ -324,6 +327,7 @@ export function PecaPage() {
             )}
           </section>
         )}
+        {citacoes}
         <section className="dc-secao">
           <span className="dc-rotulo">Tipo de peça</span>
           <div className="dc-cartao" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -415,6 +419,7 @@ export function PecaPage() {
       {semIa}
       <div className="dc-colunas dc-colunas--esquerda dc-peca">
         <div className="dc-pilha dc-rola dc-peca__lado">
+          {citacoes}
           <Painel titulo="Tipo de peça" acao={catalogo.data && <span className="dc-nota">{catalogo.data.total} modelos</span>} corpo={false}>
             <EscolherTipo catalogo={catalogo.data} tipo={tipo} aoEscolher={setTipo} />
           </Painel>

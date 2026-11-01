@@ -126,7 +126,7 @@ export function lerNorma(json: unknown): NormaDoNormasLeg | null {
  * No portal, o texto do artigo fica no caput ("art12_cpt"), e o inciso do caput
  * passa por ele ("art246_cpt_inc1").
  */
-export function acharDispositivo(norma: NormaDoNormasLeg, id: string): DispositivoDaNorma | null {
+export function acharDispositivo(norma: Pick<NormaDoNormasLeg, "dispositivos">, id: string): DispositivoDaNorma | null {
   const [artigo, segundo, ...resto] = id.split("_");
   const peloCaput = segundo && segundo !== "cpt" && !segundo.startsWith("par") ? [artigo, "cpt", segundo, ...resto].join("_") : null;
   for (const candidato of [id, peloCaput, `${id}_cpt`]) {

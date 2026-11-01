@@ -22,6 +22,7 @@ import { eventType, Inngest, staticSchema } from "inngest";
 import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
+import { sincronizarTemasDoStj } from "./servicos/acervo.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
@@ -295,5 +296,12 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn];
+  // Os temas repetitivos do STJ, toda segunda de madrugada (o STJ troca o Temas.csv no mesmo endereço).
+  // Falhou, o acervo fica com a última versão e o erro vai para o Sentry.
+  const temasDoStjFn = inngest.createFunction(
+    { id: "acervo-temas-stj", triggers: [{ cron: "TZ=America/Sao_Paulo 15 3 * * 1" }], retries: 3, onFailure: async ({ error }) => reporter.error(error, { funcao: "acervo-temas-stj" }) },
+    async ({ step }) => step.run("temas", () => sincronizarTemasDoStj({ db, fetch: deps.captura.fetch, log })),
+  );
+
+  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn];
 }

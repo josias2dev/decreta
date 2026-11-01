@@ -1,11 +1,12 @@
 import { formatarDia } from "@decreta/core";
-import { analises, documentos, escritorios, modelos, pecas, prazos, processos, revisoesDePeca, withTenant } from "@decreta/db";
+import { analises, documentos, escritorios, modelos, pecas, prazos, processos, revisoesDePeca, withTenant, type VerificacaoDaPeca } from "@decreta/db";
 import { MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { CATALOGO, GRUPOS_DE_PECA, gerarPeca, pecaParaPrazo, RODAPE_IA, tipoDePeca, type Briefing, type Ia } from "@decreta/ia";
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
+import { hashDoTexto, resumoDaVerificacao, verificarCitacoes } from "../servicos/acervo.ts";
 import { paraQualificar, qualificacaoDasPartes } from "../servicos/cadastros.ts";
 import { contextoParaIa, semIa } from "../servicos/contexto.ts";
 import { modelosParaPeca } from "../servicos/modelos.ts";
@@ -97,8 +98,22 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
           };
         }),
         semIa: await semIa(tx, { processoId: p.processoId }),
+        /** A última verificação das citações; `atual` cai quando o texto muda depois dela. */
+        verificacao: p.verificacao ? { ...p.verificacao, atual: p.verificacao.hashDoTexto === hashDoTexto(p.texto) } : null,
       });
     });
+  });
+
+  /** "Verificar peça": cada citação do texto com o selo, conferida no acervo. Fica guardada na peça. */
+  app.post("/pecas/:id/verificar", async (c) => {
+    const pecaId = id(c);
+    const [peca] = await tenant(c, deps, (tx) => tx.select({ texto: pecas.texto }).from(pecas).where(eq(pecas.id, pecaId)));
+    if (!peca) falha(404, "nao_encontrado");
+    const citacoes = await verificarCitacoes({ db, fetch: deps.captura.fetch, log: deps.log }, c.get("orgId"), peca.texto);
+    const verificacao: VerificacaoDaPeca = { em: new Date().toISOString(), hashDoTexto: hashDoTexto(peca.texto), resumo: resumoDaVerificacao(citacoes), citacoes };
+    await tenant(c, deps, (tx) => tx.update(pecas).set({ verificacao }).where(eq(pecas.id, pecaId)));
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "peca.verificada", detalhes: { pecaId, ...verificacao.resumo }, ip: ip(c) }, deps.log);
+    return c.json({ verificadaEm: verificacao.em, resumo: verificacao.resumo, citacoes });
   });
 
   /** As duas versões de uma revisão: a que a IA entregou e a que a pessoa revisou. */

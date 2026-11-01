@@ -730,6 +730,28 @@ export interface Peca {
   /** Cada vez que alguém marcou como revisada, da mais nova à mais antiga. */
   revisoes: RevisaoDaPeca[];
   semIa: boolean;
+  /** A última verificação das citações; `atual` cai quando o texto muda depois dela. */
+  verificacao: (VerificacaoDaPeca & { atual: boolean }) | null;
+}
+
+export type SeloDaCitacao = "verificada" | "com_ressalva" | "nao_verificada";
+
+export interface CitacaoVerificada {
+  chave: string;
+  /** Como está escrito na peça. */
+  trecho: string;
+  inicio: number;
+  selo: SeloDaCitacao;
+  motivo: string;
+  /** A tese, o enunciado ou o texto do artigo na fonte. */
+  texto: string | null;
+  fonte: { nome: string; url: string; capturadoEm: string } | null;
+}
+
+export interface VerificacaoDaPeca {
+  em: string;
+  resumo: { verificadas: number; comRessalva: number; naoVerificadas: number };
+  citacoes: CitacaoVerificada[];
 }
 
 /** Quanto a pessoa ainda tem de IA hoje (o dia vira à meia-noite de Brasília). */
