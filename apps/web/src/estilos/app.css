@@ -37,6 +37,8 @@
 .dc-app[data-menu="recolhido"] .dc-menu__conta:hover, .dc-app[data-menu="recolhido"] .dc-menu__conta[data-state="open"] { background: var(--menu-hover); }
 .dc-app[data-menu="recolhido"] .dc-menu__conta > svg { display: none; }
 .dc-app > .dc-conteudo { box-sizing: border-box; height: calc(100dvh - 2 * var(--folga)); margin: var(--folga) var(--folga) var(--folga) 0; overflow-y: auto; overscroll-behavior: contain; background: var(--superficie); border: 1px solid var(--menu-borda); border-radius: var(--radius-lg); }
+/* O painel da plataforma não tem o menu do escritório: a folha usa a tela toda. */
+.dc-app--sozinho > .dc-conteudo { margin-left: var(--folga); }
 .dc-app .dc-pagina { padding: 0 var(--respiro-pagina) var(--respiro-pagina); gap: var(--vao-pagina); }
 .dc-app .dc-pagina > .dc-cabecalho, .dc-app .dc-topo-pagina { margin: 0 calc(-1 * var(--respiro-pagina)); padding: var(--space-3) var(--respiro-pagina); border-bottom: 1px solid var(--borda); }
 .dc-app .dc-pagina > .dc-cabecalho { box-sizing: border-box; min-height: var(--altura-cabecalho); padding-block: 0; }
@@ -133,6 +135,22 @@
 .dc-faixa--erro { background: var(--vencido-suave); color: var(--vencido); }
 .dc-faixa--ok { background: var(--cumprido-suave); color: var(--cumprido); }
 .dc-faixa--nota { background: var(--superficie-2); color: var(--tinta); }
+
+/* O aviso do plano, no alto de toda tela (componentes/faixa-do-plano.tsx): o teste que acaba, a fatura em atraso, o
+   escritório só para leitura. Fica à vista, com a data, porque a publicação do DJEN deixa de chegar. No computador
+   ela tem duas linhas de altura e a folha encolhe esse tanto, para as telas que ocupam a folha inteira não rolarem. */
+.dc-faixa-plano { --altura-faixa-do-plano: 56px; display: flex; align-items: center; gap: var(--space-2-half); box-sizing: border-box; min-height: var(--altura-faixa-do-plano); padding: var(--space-2) var(--respiro-pagina); background: var(--hoje-suave); color: var(--hoje); border-bottom: 1px solid var(--hoje); font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); }
+.dc-faixa-plano--grave { background: var(--vencido-suave); color: var(--vencido); border-bottom-color: var(--vencido); }
+.dc-faixa-plano svg { width: var(--icone-botao); height: var(--icone-botao); flex: none; }
+.dc-faixa-plano__texto { flex: 1; min-width: 0; }
+.dc-faixa-plano strong { font-weight: 700; }
+.dc-faixa-plano .dc-link { color: inherit; font-weight: 600; text-decoration: underline; }
+.dc-app > .dc-conteudo > .dc-faixa-plano { position: sticky; top: 0; z-index: 6; }
+.dc-app:has(> .dc-conteudo > .dc-faixa-plano) { --altura-folha: calc(100dvh - 2 * var(--folga) - 2px - 56px); }
+.dc-celular > .dc-faixa-plano { align-items: flex-start; padding-top: calc(var(--space-2) + env(safe-area-inset-top)); }
+/* O acesso bloqueado: só o Plano, os dados e sair, numa coluna. */
+.dc-bloqueado { min-height: 100dvh; display: flex; justify-content: center; padding: var(--space-6) var(--space-4); box-sizing: border-box; background: var(--papel); }
+.dc-bloqueado__caixa { width: min(100%, 720px); display: flex; flex-direction: column; gap: var(--space-4); }
 
 /* Uso de IA nos casos do cliente: a recusa (Recomendação CFOAB 001/2024) */
 .dc-uso-ia { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); }
@@ -373,6 +391,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 /* No celular as abas dividem a largura e cabem sem rolar. */
 .dc-celular .dc-abas, .dc-celular .dc-abas--pagina { gap: 0; }
 .dc-celular .dc-abas .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 var(--space-half); }
+.dc-celular .dc-abas--densas .dc-aba { font-size: var(--texto-meta); line-height: var(--linha-meta); }
 /* Na tela estreita, texto justificado abre buracos entre as palavras. */
 .dc-celular .dc-folha p { text-align: left; }
 

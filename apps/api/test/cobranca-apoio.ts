@@ -14,13 +14,13 @@ import { readEnv } from "../src/env.ts";
 import { criarEscritorio, type EscritorioNovo } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { rotasDaPlataforma } from "../src/rotas/plataforma.ts";
-import { criarClienteAsaas } from "../src/servicos/asaas.ts";
+import { criarClienteAsaas, type ConfigDaNfse } from "../src/servicos/asaas.ts";
 import { emailsDaPlataforma } from "../src/servicos/plataforma.ts";
 import { asaasFalso, CHAVE_DO_ASAAS, TOKEN_DO_ASAAS } from "./asaas-falso.ts";
 
 export const SENHA = "senha-bem-longa-123";
 
-export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; token?: string; asaas?: ReturnType<typeof asaasFalso> }) {
+export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; token?: string; asaas?: ReturnType<typeof asaasFalso>; nfse?: ConfigDaNfse }) {
   const env = readEnv({
     DATABASE_URL: "postgres://unused@localhost/unused",
     BETTER_AUTH_SECRET: randomBytes(32).toString("hex"),
@@ -55,7 +55,7 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
     rotas,
     plataforma: rotasDaPlataforma({ db: t.db, auth, emails: operadores, log: () => {} }),
     plataformaEmails: operadores,
-    cobranca: { ativa: opcoes.ativa, token: opcoes.token === undefined ? TOKEN_DO_ASAAS : opcoes.token, asaas: cliente, nfse: null },
+    cobranca: { ativa: opcoes.ativa, token: opcoes.token === undefined ? TOKEN_DO_ASAAS : opcoes.token, asaas: cliente, nfse: opcoes.nfse ?? null },
     log: () => {},
   });
 
@@ -74,8 +74,8 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
     return r.headers.get("set-cookie")?.split(";")[0] ?? "";
   };
   /** O aviso do Asaas, com o token certo (ou o que a chamada disser). */
-  const aviso = (corpo: unknown, token: string | null = opcoes.token === undefined ? TOKEN_DO_ASAAS : opcoes.token) =>
-    app.request("/api/cobranca/asaas", { method: "POST", headers: { "content-type": "application/json", ...(token ? { "asaas-access-token": token } : {}) }, body: JSON.stringify(corpo) });
+  const aviso = (corpo: unknown, token: string | null = opcoes.token === undefined ? TOKEN_DO_ASAAS : opcoes.token, ip?: string) =>
+    app.request("/api/cobranca/asaas", { method: "POST", headers: { "content-type": "application/json", ...(token ? { "asaas-access-token": token } : {}), ...(ip ? { "x-forwarded-for": ip } : {}) }, body: JSON.stringify(corpo) });
   const novo = (e: Omit<EscritorioNovo, "dono"> & { email: string; pessoa: string }) => criarEscritorio(t.db, auth, { nome: e.nome, slug: e.slug, cadastroAberto: e.cadastroAberto, assinatura: e.assinatura, dono: { email: e.email, nome: e.pessoa, senha: SENHA } });
 
   return { env, app, auth, mailer, asaas, enfileiradas, json, com, daPlataforma, entrar, aviso, novo };

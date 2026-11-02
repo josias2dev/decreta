@@ -13,7 +13,7 @@ import { AVISO_DO_ACEITE, type Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { criarEscritorio, slugUnico } from "./escritorio-novo.ts";
 import { registrarEvento, registrarEventoSemEscritorio } from "./eventos.ts";
-import { ipDoPedido, limitarPorIp } from "./limitador.ts";
+import { ipDoPedido, limitador, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
 import type { ClienteAsaas, ConfigDaNfse } from "./servicos/asaas.ts";
@@ -123,13 +123,18 @@ export function createApp(deps: AppDeps) {
     app.route("/api/plataforma", deps.plataforma);
   }
 
-  // Os avisos do Asaas: poucos por segundo, de um endereço só, com o token no cabeçalho.
-  app.use("/api/cobranca/*", limitarPorIp({ janelaMs: 60_000, maximo: 600 }, ipDoPedido));
+  // Os avisos do Asaas vêm com o token no cabeçalho. Só a tentativa com token errado é limitada por endereço: o aviso
+  // verdadeiro nunca disputa a vez com quem tenta adivinhar o token (o endereço de origem pode ser forjado).
+  const tentativasComTokenErrado = limitador({ janelaMs: 60_000, maximo: 20 });
   app.post("/api/cobranca/asaas", bodyLimit({ maxSize: TETO_DO_AVISO_BYTES, onError: (c) => c.json({ erro: "muito_grande" }, 413) }), async (c) => {
     const cobranca = deps.cobranca;
     // Sem token configurado a rota não existe: nunca aceita aviso de ninguém.
     if (!cobranca?.token) return c.json({ erro: "nao_encontrado" }, 404);
-    if (!tokenConfere(c.req.header("asaas-access-token"), cobranca.token)) return c.json({ erro: "nao_autorizado" }, 401);
+    if (!tokenConfere(c.req.header("asaas-access-token"), cobranca.token)) {
+      const origem = ipDoPedido(c);
+      if (origem && !tentativasComTokenErrado.permitir(origem)) return c.json({ erro: "muitas_tentativas" }, 429, { "retry-after": "60" });
+      return c.json({ erro: "nao_autorizado" }, 401);
+    }
     try {
       const resultado = await tratarAviso({ db, asaas: cobranca.asaas, nfse: cobranca.nfse, log }, await c.req.json().catch(() => null));
       return c.json({ ok: true, resultado });

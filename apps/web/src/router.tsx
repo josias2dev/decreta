@@ -9,7 +9,7 @@ import { AlvarasPage } from "./paginas/alvaras";
 import { CadastroPage } from "./paginas/cadastro";
 import { ClientePage, ClientesPage } from "./paginas/clientes";
 import { ComecarPage } from "./paginas/comecar";
-import { ConfiguracoesPage } from "./paginas/configuracoes";
+import { ABAS_DO_ENDERECO, ConfiguracoesPage, type Aba } from "./paginas/configuracoes";
 import { ContaPage } from "./paginas/conta";
 import { DocumentosPage } from "./paginas/documentos";
 import { ModelosPage } from "./paginas/modelos";
@@ -26,6 +26,7 @@ import { PrazoPage } from "./paginas/prazo";
 import { PrazosPage } from "./paginas/prazos";
 import { ProcessoPage, type AbaDoProcesso, ABAS_DO_PROCESSO } from "./paginas/processo";
 import { ProcessosPage } from "./paginas/processos";
+import { PlataformaPage } from "./paginas/plataforma";
 import { PrivacidadePage } from "./paginas/privacidade";
 import { PublicacaoPage, PublicacoesPage } from "./paginas/publicacoes";
 import { SegurancaPage } from "./paginas/seguranca";
@@ -66,6 +67,9 @@ const segurancaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/se
 // Termos de Uso e Política de Privacidade, abertos: o cadastro e o convite pedem o aceite deles.
 const termosRoute = createRoute({ getParentRoute: () => rootRoute, path: "/termos", component: TermosPage });
 const privacidadeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/privacidade", component: PrivacidadePage });
+
+// O painel da plataforma: só os operadores (PLATAFORMA_EMAILS), fora do menu do escritório. Os outros recebem 404.
+const plataformaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/plataforma", component: PlataformaPage });
 
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
@@ -160,7 +164,13 @@ const documentosRoute = createRoute({
 });
 const modelosRoute = createRoute({ getParentRoute: () => appRoute, path: "/modelos", component: ModelosPage });
 const equipeRoute = createRoute({ getParentRoute: () => appRoute, path: "/equipe", component: EquipePage });
-const configuracoesRoute = createRoute({ getParentRoute: () => appRoute, path: "/configuracoes", component: ConfiguracoesPage });
+const configuracoesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/configuracoes",
+  // `aba`: a aba que abre direto (o Asaas devolve a pessoa para ?aba=plano depois de pagar).
+  validateSearch: (s: Record<string, unknown>): { aba?: Aba } => (ABAS_DO_ENDERECO.includes(s.aba as Aba) ? { aba: s.aba as Aba } : {}),
+  component: ConfiguracoesPage,
+});
 const contaRoute = createRoute({ getParentRoute: () => appRoute, path: "/conta", component: ContaPage });
 const maisRoute = createRoute({ getParentRoute: () => appRoute, path: "/mais", component: MaisPage });
 
@@ -174,6 +184,7 @@ const routeTree = rootRoute.addChildren([
   conviteRoute,
   enviarRoute,
   redefinirRoute,
+  plataformaRoute,
   appRoute.addChildren([
     hojeRoute,
     comecarRoute,

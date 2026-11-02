@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { SLUG_DA_DEMONSTRACAO } from "../src/demonstracao/slug.ts";
 import { comoNasce } from "../src/servicos/assinatura.ts";
-import { asaasFalso, avisoDeAssinatura, avisoDePagamento, CHAVE_DO_ASAAS, pagamento } from "./asaas-falso.ts";
+import { asaasFalso, avisoDeAssinatura, avisoDePagamento, CHAVE_DO_ASAAS, pagamento, TOKEN_DO_ASAAS } from "./asaas-falso.ts";
 import { dia, faturasDe, montarApi, organizacao, porNaAssinatura } from "./cobranca-apoio.ts";
 
 const HOJE = hojeEm("America/Sao_Paulo");
@@ -51,6 +51,15 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas", () => {
       expect(await faturasDe(t, souza)).toEqual([]);
       expect(await eventosTratados(souza)).toBe(0);
       expect((await organizacao(t, souza)).situacao).toBe("teste");
+    });
+
+    test("quem tenta adivinhar o token é barrado depois de 20 tentativas, e o aviso verdadeiro do mesmo endereço continua passando", async () => {
+      const ip = "198.51.100.77";
+      const corpo = avisoDePagamento("PAYMENT_RECEIVED", pagamento({ id: "pay_limite", vencimento: HOJE, status: "RECEIVED", assinatura: "sub_limite", link: "link_limite", cliente: "cus_limite" }));
+      for (let i = 0; i < 20; i++) expect((await m.aviso(corpo, `palpite-${i}`, ip)).status).toBe(401);
+      expect((await m.aviso(corpo, "palpite-21", ip)).status).toBe(429);
+      // Com o token certo o aviso passa: o endereço (que pode ser forjado) não tira a vez do Asaas.
+      expect((await m.aviso(corpo, TOKEN_DO_ASAAS, ip)).status).toBe(200);
     });
 
     test("sem token configurado no servidor a rota não existe", async () => {
@@ -153,6 +162,22 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas", () => {
       const o = await organizacao(t, mendes);
       expect(o).toMatchObject({ situacao: "teste", inadimplente_desde: null, assinou_em: null });
       expect((await faturasDe(t, mendes))[0]!.situacao).toBe("atrasada");
+    });
+
+    test("a NFS-e fica preparada atrás de um interruptor desligado: nada é chamado no Asaas, e ligado configura a assinatura uma vez só", async () => {
+      // Desligado (o padrão): a assinatura nova do escritório Mendes não gerou nenhuma chamada de nota.
+      expect(m.asaas.de("POST", "/invoiceSettings")).toHaveLength(0);
+
+      const ligada = montarApi(t, { ativa: true, nfse: { servicoMunicipalId: "svc_1", servicoCodigo: "1.05", servicoNome: "Licenciamento de software", issPercentual: 2, issRetido: false } });
+      const org = await escritorioEmTeste("nfse", "Casa da Nota", "link_n");
+      const pedido = (id: string, evento: string, status: string) => avisoDePagamento(evento, pagamento({ id, vencimento: HOJE, status, assinatura: "sub_n", link: "link_n", cliente: "cus_n", pagaEm: HOJE }));
+      await ligada.aviso(pedido("pay_n1", "PAYMENT_CREATED", "PENDING"));
+      const [chamada] = ligada.asaas.de("POST", "/v3/subscriptions/sub_n/invoiceSettings");
+      expect(chamada!.corpo).toMatchObject({ municipalServiceId: "svc_1", municipalServiceCode: "1.05", effectiveDatePeriod: "ON_PAYMENT_CONFIRMATION", taxes: { iss: 2, retainIss: false, pis: 0, cofins: 0, csll: 0, inss: 0, ir: 0 } });
+      expect((await organizacao(t, org)).nfse_configurada_em).not.toBeNull();
+      // O pagamento da mesma assinatura não configura de novo.
+      await ligada.aviso(pedido("pay_n1", "PAYMENT_RECEIVED", "RECEIVED"));
+      expect(ligada.asaas.de("POST", "invoiceSettings")).toHaveLength(1);
     });
 
     test("escritório de cortesia não é mexido por pagamento nem por atraso, e o aviso acha o escritório pela referência", async () => {

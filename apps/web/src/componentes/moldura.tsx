@@ -40,8 +40,10 @@ import { cn } from "@/lib/util";
 import { comecarJaAberto, marcarComecarAberto } from "@/paginas/comecar";
 import { Avisos } from "./avisos";
 import { Busca } from "./busca";
+import { FaixaDoPlano } from "./faixa-do-plano";
 import { Marca } from "./marca";
 import { MenuDaConta } from "./menu-da-conta";
+import { TelaBloqueada } from "./tela-bloqueada";
 import { Botao, Carregando } from "./ui";
 
 type Destino = "/hoje" | "/prazos" | "/publicacoes" | "/agenda" | "/perguntar" | "/processos" | "/clientes" | "/negocios" | "/alvaras" | "/documentos" | "/modelos" | "/equipe" | "/configuracoes";
@@ -118,6 +120,14 @@ export function AppLayout() {
   if (eu.error instanceof ApiError && eu.error.status === 401) return <IrParaEntrar />;
   if (eu.error instanceof ApiError && eu.error.status === 403) return <SemEscritorio />;
   if (eu.error) return <ErroDeConexao aoTentar={() => void eu.refetch()} />;
+  // Acesso bloqueado (fatura com mais de 15 dias de atraso): só pagar, levar os dados e encerrar.
+  if (eu.data.assinatura?.acesso === "bloqueado") {
+    return (
+      <Avisos>
+        <TelaBloqueada eu={eu.data} />
+      </Avisos>
+    );
+  }
   // A configuração inicial fica sozinha na tela, sem o menu em volta.
   if (caminho === "/comecar") {
     return (
@@ -184,6 +194,7 @@ function Moldura({ eu }: { eu: Eu }) {
     const semNav = SEM_NAVEGACAO.some((r) => r.test(caminho)) || (aba === "chat" && !!doProcesso);
     return (
       <div className="dc dc-celular dc-tela">
+        <FaixaDoPlano aviso={eu.assinatura?.aviso} />
         <AbrirBusca.Provider value={() => setBuscando(true)}>
           <Outlet />
         </AbrirBusca.Provider>
@@ -259,6 +270,7 @@ function Moldura({ eu }: { eu: Eu }) {
         </div>
       </nav>
       <div className="dc-conteudo" data-scroll-restoration-id="folha">
+        <FaixaDoPlano aviso={eu.assinatura?.aviso} />
         <AbrirBusca.Provider value={() => setBuscando(true)}>
           <Outlet />
         </AbrirBusca.Provider>

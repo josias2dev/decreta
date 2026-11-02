@@ -21,7 +21,104 @@ export interface Eu {
   ia: boolean;
   equipe: (Pessoa & { cargo: string | null; papel: string })[];
   menu: { prazos: number; prazosHoje: number; publicacoes: number; processos: number; clientes: number; negocios: number; alvaras: number };
+  /** Só com a cobrança ligada: o que o escritório pode fazer e o aviso (com data) que a moldura mostra em toda tela. */
+  assinatura?: { situacao: SituacaoDoEscritorio; acesso: AcessoDoEscritorio; aviso: AvisoDoPlano | null };
+  /** Só para o operador da plataforma: o menu mostra o link do painel. */
+  plataforma?: true;
 }
+
+export type SituacaoDoEscritorio = "teste" | "ativo" | "inadimplente" | "so_leitura" | "bloqueado" | "cancelado" | "cortesia";
+export type AcessoDoEscritorio = "total" | "leitura" | "bloqueado";
+
+/** `info`: discreto (o teste em andamento). `atencao`: vai acontecer. `grave`: já está acontecendo. */
+export interface AvisoDoPlano {
+  nivel: "info" | "atencao" | "grave";
+  texto: string;
+  ate: string | null;
+}
+
+export interface FaturaDoPlano {
+  id: string;
+  vencimento: string;
+  valorCentavos: number;
+  situacao: "pendente" | "paga" | "atrasada" | "estornada" | "removida";
+  forma: string | null;
+  link: string | null;
+  pagaEm: string | null;
+}
+
+/** A tela do Plano (Configurações), para os sócios. */
+export interface Plano {
+  cobrancaAtiva: boolean;
+  plano: { nome: string; testeDias: number; valorMensalCentavos: number | null };
+  situacao: SituacaoDoEscritorio;
+  rotulo: string;
+  situacaoGravada: SituacaoDoEscritorio;
+  acesso: AcessoDoEscritorio;
+  motivo: "fim_do_teste" | "atraso" | "cancelada" | "manual" | null;
+  testeAte: string | null;
+  diasRestantesDoTeste: number | null;
+  diasDeAtraso: number | null;
+  viraSoLeituraEm: string | null;
+  bloqueiaEm: string | null;
+  acessoAte: string | null;
+  cancelamentoAgendado: boolean;
+  valorMensalCentavos: number | null;
+  assinante: boolean;
+  podeAssinar: boolean;
+  motivoSemAssinar: string | null;
+  podeCancelar: boolean;
+  faturas: FaturaDoPlano[];
+  /** A página da fatura aberta no Asaas, onde se escolhe Pix, boleto ou cartão. */
+  trocarFormaEm: string | null;
+  aviso: AvisoDoPlano | null;
+}
+
+/** Um escritório na lista da plataforma: a conta e os totais, nunca o que é dele. */
+export interface EscritorioDaPlataforma {
+  id: string;
+  nome: string;
+  slug: string;
+  demonstracao: boolean;
+  encerrado: boolean;
+  emAvaliacao: boolean;
+  situacao: SituacaoDoEscritorio;
+  situacaoGravada: SituacaoDoEscritorio;
+  criadoEm: string;
+  testeAte: string | null;
+  diasRestantesDoTeste: number | null;
+  diasDeAtraso: number | null;
+  acessoAte: string | null;
+  assinouEm: string | null;
+  cancelamentoPedidoEm: string | null;
+  valorMensalCentavos: number | null;
+  pessoas: number;
+  processos: number;
+  iaMesUsd: number;
+}
+
+export interface IndicadoresDaPlataforma {
+  periodo: { de: string; ate: string; dias: number };
+  mrrCentavos: number;
+  mrrEmAtrasoCentavos: number;
+  porSituacao: Record<SituacaoDoEscritorio, number>;
+  conversao: { cadastrados: number; terminaram: number; assinaram: number; taxa: number | null };
+  cancelamentos: { total: number; mrrPerdidoCentavos: number };
+  inadimplencia: { escritorios: number; mrrCentavos: number };
+  funil: { nome: string; rotulo: string; total: number; doAnterior: number | null }[];
+}
+
+export interface AcaoDaPlataforma {
+  id: string;
+  operador: string;
+  acao: string;
+  organizationId: string | null;
+  escritorio: string | null;
+  detalhes: Record<string, unknown>;
+  em: string;
+}
+
+export type NomeDaAcaoDaPlataforma = "liberar" | "estender_teste" | "so_leitura" | "bloquear" | "cortesia" | "reativar";
 
 export interface Analise<C = Record<string, unknown>> {
   id: string;
