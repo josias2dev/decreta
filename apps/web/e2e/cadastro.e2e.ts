@@ -56,7 +56,7 @@ test("começar: cada etapa grava pela rota que já existe, Pular segue sem grava
   // Etapa 1: você. A OAB vai com a UF; o WhatsApp é opcional.
   await expect(page.getByRole("heading", { name: "Olá, Beatriz" })).toBeVisible();
   await expect(page.getByText("Etapa 1 de 4")).toBeVisible();
-  await expect(page.getByText(/É por esta OAB que o Decreta busca/)).toBeVisible();
+  await expect(page.getByText(/Com ela, o Decreta já busca agora as suas publicações/)).toBeVisible();
   await page.getByLabel("Cargo").fill("Advogada");
   await page.getByLabel("OAB", { exact: true }).fill("41233");
   await page.getByLabel("UF da OAB").selectOption("SC");

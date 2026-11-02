@@ -49,7 +49,7 @@ export function normalizarTrecho(s: string): string {
 }
 
 /** O trecho está, letra por letra (depois de normalizar), no texto guardado. Aspas e reticências nas pontas não contam. */
-function ehLiteral(texto: string, trecho: string): boolean {
+export function ehLiteral(texto: string, trecho: string): boolean {
   const t = normalizarTrecho(trecho).replace(/^["'\s.…]+|["'\s.…]+$/g, "");
   return t.length > 0 && normalizarTrecho(texto).includes(t);
 }

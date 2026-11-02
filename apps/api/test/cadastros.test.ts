@@ -170,16 +170,29 @@ describe.skipIf(!hasTestDatabase)("preencher os cadastros", () => {
     await call(`/processos/${p.id}/partes`, { method: "POST", json: { nome: "Auto Peças Rota 101", polo: "passivo", documento: CNPJ_BAIXADO } });
     const dados = await withTenant(t.db, orgId, (tx) => paraQualificar(tx, p.id));
     expect(dados.empresas).toEqual([
-      { nome: "Lojas Pedra Branca", cnpj: "74061928000112" },
-      { nome: "Auto Peças Rota 101", cnpj: "85172639000107" },
+      { nome: "Lojas Pedra Branca", cnpj: "74061928000112", polo: "passivo" },
+      { nome: "Auto Peças Rota 101", cnpj: "85172639000107", polo: "passivo" },
     ]);
     const q = await qualificacaoDasPartes({ fetch: fetchFalso }, dados, false);
     expect(q).toBe(
       [
-        "- Helena Brandt Kühn (cliente): CPF 318.204.567-90; endereço: Rua Ipê Amarelo, 80, Glória, Joinville/SC.",
-        "- Lojas Pedra Branca: Lojas Pedra Branca Ltda, sociedade empresária limitada, inscrita no CNPJ sob o nº 74.061.928/0001-12, com sede em Rua das Araucarias, 455, America, Joinville/SC, CEP 89204-000 (dados da Receita Federal).",
-        "- Auto Peças Rota 101: Auto Pecas Rota 101 Ltda, sociedade empresária limitada, inscrita no CNPJ sob o nº 85.172.639/0001-07, com sede em Rua das Araucarias, 455, America, Joinville/SC, CEP 89204-000 (dados da Receita Federal). Atenção: na Receita a empresa está baixada desde 30/06/2025.",
+        "- Helena Brandt Kühn (cliente, pessoa física, polo ativo): CPF 318.204.567-90; endereço: Rua Ipê Amarelo, 80, Glória, Joinville/SC.",
+        "- Lojas Pedra Branca (pessoa jurídica, polo passivo): Lojas Pedra Branca Ltda, sociedade empresária limitada, inscrita no CNPJ sob o nº 74.061.928/0001-12, com sede em Rua das Araucarias, 455, America, Joinville/SC, CEP 89204-000 (dados da Receita Federal).",
+        "- Auto Peças Rota 101 (pessoa jurídica, polo passivo): Auto Pecas Rota 101 Ltda, sociedade empresária limitada, inscrita no CNPJ sob o nº 85.172.639/0001-07, com sede em Rua das Araucarias, 455, America, Joinville/SC, CEP 89204-000 (dados da Receita Federal). Atenção: na Receita a empresa está baixada desde 30/06/2025.",
       ].join("\n"),
+    );
+  });
+
+  test("o tipo e o polo saem do cadastro, mesmo sem documento nenhum na ficha", async () => {
+    const cliente = await json(call("/clientes", { method: "POST", json: { nome: "Comércio Ficticio", tipo: "pj" } }));
+    const p = await json(call("/processos", { method: "POST", json: { cnj: null, tipo: "extrajudicial", titulo: "Autor × Comércio", clienteId: cliente.id, poloCliente: "passivo", partes: [{ nome: "Autor Ficticio", polo: "ativo" }, { nome: "Comércio Ficticio", polo: "passivo", cliente: true }] } }));
+    const dados = await withTenant(t.db, orgId, (tx) => paraQualificar(tx, p.id));
+    expect(dados.partes).toEqual([
+      { nome: "Autor Ficticio", tipo: null, polo: "ativo", cliente: false },
+      { nome: "Comércio Ficticio", tipo: "pj", polo: "passivo", cliente: true },
+    ]);
+    expect(await qualificacaoDasPartes({ fetch: fetchFalso }, dados, false)).toBe(
+      ["- Comércio Ficticio (cliente, pessoa jurídica, polo passivo): sem documento nem endereço no cadastro.", "- Autor Ficticio (polo ativo): o cadastro não diz se é pessoa física ou jurídica; marque [COMPLETAR] em vez de deduzir."].join("\n"),
     );
   });
 });

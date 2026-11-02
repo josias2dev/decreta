@@ -4,7 +4,7 @@
  * demonstração, CNPJ e CEP respondem com exemplos inventados
  * (demonstracao/receita.ts) e a OAB só é conferida contra a própria equipe.
  */
-import { enderecoEmTexto, formatarDocumento, formatarTelefone, hojeEm, somarDias, type Endereco } from "@decreta/core";
+import { enderecoEmTexto, formatarDocumento, formatarTelefone, hojeEm, somarDias, type Endereco, type ParteDoCadastro } from "@decreta/core";
 import { clientes, equipe, partes, processos, type Tx } from "@decreta/db";
 import { buscarCep, buscarCnpj, buscarNoDjen, nomesDaOab, type EmpresaDaReceita } from "@decreta/tribunais";
 import { and, asc, eq, ne, sql } from "drizzle-orm";
@@ -118,46 +118,70 @@ export async function consultarOab(
 }
 
 export interface ParaQualificar {
-  cliente: { nome: string; tipo: "pf" | "pj"; documento: string | null; endereco: string | null } | null;
+  cliente: { nome: string; tipo: "pf" | "pj"; documento: string | null; endereco: string | null; polo: ParteDoCadastro["polo"] } | null;
   /** As outras partes com CNPJ na ficha. */
-  empresas: { nome: string; cnpj: string }[];
+  empresas: { nome: string; cnpj: string; polo: ParteDoCadastro["polo"] }[];
+  /** Todas as partes, com o tipo e o polo do cadastro. O tipo nunca sai da interpretação do texto. */
+  partes: ParteDoCadastro[];
+}
+
+/** Pessoa física ou jurídica: a ficha do cliente; das outras partes, o tamanho do documento. Sem isso, o cadastro não diz. */
+function tipoDaParte(x: { cliente: boolean; documento: string | null }, cliente: { tipo: "pf" | "pj" } | undefined): ParteDoCadastro["tipo"] {
+  if (x.cliente && cliente) return cliente.tipo;
+  if (x.documento?.length === 14) return "pj";
+  if (x.documento?.length === 11) return "pf";
+  return null;
 }
 
 /** O que a qualificação lê do banco. A Receita é consultada depois, fora da transação. */
 export async function paraQualificar(tx: Tx, processoId: string): Promise<ParaQualificar> {
-  const [p] = await tx.select({ clienteId: processos.clienteId }).from(processos).where(eq(processos.id, processoId));
+  const [p] = await tx.select({ clienteId: processos.clienteId, poloCliente: processos.poloCliente }).from(processos).where(eq(processos.id, processoId));
   const [cliente] = p?.clienteId ? await tx.select().from(clientes).where(eq(clientes.id, p.clienteId)) : [];
   const pts = await tx.select().from(partes).where(eq(partes.processoId, processoId)).orderBy(asc(partes.ordem));
   return {
-    cliente: cliente ? { nome: cliente.nome, tipo: cliente.tipo, documento: cliente.documento, endereco: cliente.endereco } : null,
-    empresas: pts.filter((x) => !x.cliente && x.documento?.length === 14).map((x) => ({ nome: x.nome, cnpj: x.documento! })),
+    cliente: cliente ? { nome: cliente.nome, tipo: cliente.tipo, documento: cliente.documento, endereco: cliente.endereco, polo: pts.find((x) => x.cliente)?.polo ?? p!.poloCliente } : null,
+    empresas: pts.filter((x) => !x.cliente && x.documento?.length === 14).map((x) => ({ nome: x.nome, cnpj: x.documento!, polo: x.polo })),
+    partes: pts.map((x) => ({ nome: x.nome, tipo: tipoDaParte(x, cliente), polo: x.polo, cliente: x.cliente })),
   };
 }
 
+const NOME_DO_TIPO = { pf: "pessoa física", pj: "pessoa jurídica" } as const;
+
 /**
- * A qualificação das partes para a peça: o cliente com o documento e o
- * endereço da ficha, e a empresa da outra parte com a razão social e a sede da
- * Receita. O que não se sabe fica de fora; a IA marca [COMPLETAR].
+ * A qualificação das partes para a peça: o cliente com o tipo, o documento e o
+ * endereço da ficha, a empresa da outra parte com a razão social e a sede da
+ * Receita, e cada uma com o polo do cadastro. O que não se sabe fica dito; a IA
+ * marca [COMPLETAR].
  */
 export async function qualificacaoDasPartes(deps: Pick<DepsDaCaptura, "fetch" | "log">, dados: ParaQualificar, demonstracao: boolean): Promise<string | null> {
   const linhas: string[] = [];
   const { cliente } = dados;
-  if (cliente && (cliente.documento || cliente.endereco)) {
+  const listados = new Set<string>();
+  if (cliente) {
     const doc = cliente.documento ? `${cliente.tipo === "pj" ? "CNPJ" : "CPF"} ${formatarDocumento(cliente.documento)}` : null;
-    linhas.push(`- ${cliente.nome} (cliente): ${[doc, cliente.endereco && `endereço: ${cliente.endereco}`].filter(Boolean).join("; ")}.`);
+    const ficha = [doc, cliente.endereco && `endereço: ${cliente.endereco}`].filter(Boolean).join("; ");
+    linhas.push(`- ${cliente.nome} (cliente, ${NOME_DO_TIPO[cliente.tipo]}, polo ${cliente.polo}): ${ficha || "sem documento nem endereço no cadastro"}.`);
+    listados.add(cliente.nome);
+    for (const x of dados.partes) if (x.cliente) listados.add(x.nome);
   }
   for (const x of dados.empresas.slice(0, 4)) {
+    listados.add(x.nome);
     const r = await empresaDoCnpj(deps, x.cnpj, demonstracao);
     // O exemplo inventado da demonstração leva o nome da própria parte.
     const empresa = r.empresa && demonstracao ? { ...r.empresa, razaoSocial: x.nome } : r.empresa;
+    const quem = `- ${x.nome} (pessoa jurídica, polo ${x.polo})`;
     if (!empresa) {
-      linhas.push(`- ${x.nome}: CNPJ ${formatarDocumento(x.cnpj)}.`);
+      linhas.push(`${quem}: CNPJ ${formatarDocumento(x.cnpj)}.`);
       continue;
     }
     const sede = empresa.endereco ? `, com sede em ${enderecoEmTexto(empresa.endereco)}` : "";
     const natureza = empresa.naturezaJuridica ? `${empresa.naturezaJuridica.toLocaleLowerCase("pt-BR")}, ` : "";
     const situacao = empresa.ativa ? "" : ` Atenção: na Receita a empresa está ${empresa.situacao.toLocaleLowerCase("pt-BR")}${empresa.situacaoDesde ? ` desde ${empresa.situacaoDesde.split("-").reverse().join("/")}` : ""}.`;
-    linhas.push(`- ${x.nome}: ${empresa.razaoSocial}, ${natureza}inscrita no CNPJ sob o nº ${formatarDocumento(empresa.cnpj)}${sede} (dados da Receita Federal).${situacao}`);
+    linhas.push(`${quem}: ${empresa.razaoSocial}, ${natureza}inscrita no CNPJ sob o nº ${formatarDocumento(empresa.cnpj)}${sede} (dados da Receita Federal).${situacao}`);
+  }
+  for (const x of dados.partes) {
+    if (listados.has(x.nome)) continue;
+    linhas.push(x.tipo ? `- ${x.nome} (${NOME_DO_TIPO[x.tipo]}, polo ${x.polo}).` : `- ${x.nome} (polo ${x.polo}): o cadastro não diz se é pessoa física ou jurídica; marque [COMPLETAR] em vez de deduzir.`);
   }
   return linhas.length ? linhas.join("\n") : null;
 }

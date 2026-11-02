@@ -33,12 +33,24 @@ DOMINIO {
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options nosniff
-		X-Frame-Options DENY
 		Referrer-Policy strict-origin-when-cross-origin
 		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
+		-Server
+	}
+
+	# A demonstração pública: dados fictícios, a API de mentira no próprio navegador e nada saindo para a rede
+	# (connect-src só data: e blob:, que a prévia usa para abrir os documentos embutidos). O app fica num iframe da mesma origem.
+	@demonstracao path /demonstracao /demonstracao/*
+	header @demonstracao {
+		X-Frame-Options SAMEORIGIN
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src data: blob:; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+	}
+
+	@telas not path /demonstracao /demonstracao/*
+	header @telas {
+		X-Frame-Options DENY
 		# 'wasm-unsafe-eval': o pdf.js decodifica as imagens dos PDFs escaneados (JBIG2, JPEG 2000) em WebAssembly.
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
-		-Server
 	}
 
 	log {

@@ -14,14 +14,13 @@ test("landing: sem sessão fica na página, mostra as seções e Entrar abre o l
   const api = new ApiFalsa();
   api.logado = false;
   await abrir(page, "/", api);
-  await expect(page.getByRole("heading", { name: /O escritório em dia/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Todo prazo com a conta à mostra." })).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
-  for (const titulo of ["Cada intimação já chega explicada", "Tudo o que o escritório usa, num lugar só", "Começa no primeiro dia"]) {
+  for (const titulo of ["Faça o teste do feriado.", "Da publicação à peça, em seis passos.", "O que vem, e o que ainda não vem."]) {
     await expect(page.getByRole("heading", { name: titulo })).toBeAttached();
   }
-  await expect(page.locator("#recursos .lp-bloco")).toHaveCount(8);
   await expect(page.locator("#acesso").getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro");
-  await expect(page.locator("#acesso").getByRole("link", { name: "Falar com a equipe" })).toHaveAttribute("href", /^https:\/\/wa\.me\/55\d+\?text=/);
+  await expect(page.locator("#acesso").getByRole("link", { name: "Ver um escritório de exemplo" })).toHaveAttribute("href", "/demonstracao");
   await expect(page.locator(".lp-hero").getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro");
   await page.locator(".lp-topo").getByRole("link", { name: "Entrar" }).click();
   await expect(page.getByRole("heading", { name: "Entrar no Decreta" })).toBeVisible();
@@ -33,7 +32,7 @@ test("segurança: a landing leva à página aberta, com a retenção de cada for
   api.logado = false;
   await abrir(page, "/", api);
   await expect(page.getByText("retenção zero")).toHaveCount(0);
-  await page.locator("#seguranca").getByRole("link", { name: "Os detalhes e os fornecedores" }).click();
+  await page.locator("#sigilo").getByRole("link", { name: "Os detalhes e os fornecedores" }).click();
   await expect(page).toHaveURL(/\/seguranca$/);
   await expect(page.getByRole("heading", { name: "Como o Decreta cuida dos dados do escritório" })).toBeVisible();
   await expect(page.getByText("Nenhum fornecedor de IA usa os textos do escritório para treinar modelos.")).toBeVisible();
@@ -41,19 +40,6 @@ test("segurança: a landing leva à página aberta, com a retenção de cada for
   const fornecedores = page.getByRole("table", { name: "Fornecedores que tratam dados" });
   await expect(fornecedores.getByRole("row")).toHaveCount(7);
   for (const nome of ["Anthropic", "OpenRouter", "Cloudflare R2", "Resend", "WhatsApp (Meta)", "Sentry"]) await expect(fornecedores.getByRole("cell", { name: nome, exact: true })).toBeVisible();
-});
-
-test("landing: a tela do produto no topo é imagem e a roda do mouse em cima dela rola a página", async ({ page }) => {
-  const api = new ApiFalsa();
-  api.logado = false;
-  await abrir(page, "/", api);
-  const vitrine = page.locator(".lp-hero .lp-vitrine__img");
-  await expect.poll(() => vitrine.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-  expect(await vitrine.evaluate((img: HTMLImageElement) => img.currentSrc)).toContain("vitrine-computador");
-  const caixa = (await vitrine.boundingBox())!;
-  await page.mouse.move(caixa.x + caixa.width / 2, Math.min(caixa.y + caixa.height / 2, 800));
-  await page.mouse.wheel(0, 600);
-  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(300);
 });
 
 test("landing: com sessão vai direto para Hoje", async ({ page }) => {

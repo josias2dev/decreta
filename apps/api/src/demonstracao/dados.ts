@@ -25,7 +25,7 @@ export const ESCRITORIO = {
     nome: "Souza & Freitas Advocacia",
     registro: "OAB/SC 9.876",
     endereco: "Rua das Palmeiras, 120, sala 804 · Centro · Joinville/SC · 89201-000",
-    contato: "(47) 3433-0000 · contato@souzafreitas.adv.br",
+    contato: "(47) 3433-0000 · contato@souzafreitas.exemplo.com.br",
     fonte: "Arial" as const,
     cor: "#3346C4",
   },

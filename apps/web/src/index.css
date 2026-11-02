@@ -3,8 +3,7 @@
 @import "./estilos/tokens.css";
 @import "./estilos/componentes.css";
 @import "./estilos/app.css";
-@import "./estilos/landing.css";
-@import "./estilos/landing-secoes.css";
+@import "./estilos/acesso.css";
 
 /*
  * O design system do Decreta está em estilos/tokens.css (tipo, espaço, cor e

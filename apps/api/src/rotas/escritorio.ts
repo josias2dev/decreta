@@ -2,15 +2,16 @@ import { automacaoValida, ehDia, feriadosForenses, feriadosNacionais, formatarTe
 import { documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
 import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { tipoDePeca } from "@decreta/ia";
-import { and, asc, eq, gte } from "drizzle-orm";
+import { and, asc, eq, gte, isNotNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { listarRegistro, registrar } from "../auditoria.ts";
 import { enviarWhatsapp, resumoDaManha } from "../servicos/avisos.ts";
-import { AVISO_DO_WHATSAPP, WHATSAPP_EM_AVALIACAO } from "../servicos/em-avaliacao.ts";
+import { AVISO_DAS_BUSCAS, AVISO_DO_WHATSAPP, BUSCAS_EM_AVALIACAO, WHATSAPP_EM_AVALIACAO } from "../servicos/em-avaliacao.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { textoDaPolitica, TITULO_DA_POLITICA } from "../servicos/politica-ia.ts";
+import { DIAS_DA_PRIMEIRA_BUSCA, progressoDaBusca } from "../servicos/primeira-busca.ts";
 import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
 import { corpo, ehSocio, falha, ip, marcarEvento, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
@@ -173,6 +174,29 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
       });
     }),
   );
+
+  /** O primeiro minuto: a OAB acabou de entrar, e o Decreta busca os últimos dias no DJEN agora. A rotina roda em segundo plano; a tela acompanha pelo GET. */
+  app.post("/escritorio/primeira-busca", async (c) => {
+    soSocios(c);
+    if (c.get("demonstracao")) falha(409, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");
+    const { oabs, ligada } = await tenant(c, deps, async (tx) => {
+      const [e] = await tx.select({ ligada: escritorios.capturaDjen }).from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
+      return { ligada: e?.ligada ?? true, oabs: await tx.select({ numero: equipe.oabNumero }).from(equipe).where(isNotNull(equipe.oabNumero)) };
+    });
+    if (!oabs.length) falha(422, "sem_oab", "Informe uma OAB para o Decreta buscar as publicações.");
+    if (!ligada) falha(409, "captura_desligada", "A busca no DJEN está desligada nas configurações do escritório.");
+    if (c.get("emAvaliacao") && !BUSCAS_EM_AVALIACAO.permitir(c.get("orgId"))) falha(429, "teto_em_avaliacao", AVISO_DAS_BUSCAS);
+    const pedidaEm = new Date().toISOString();
+    await deps.enfileirar({ nome: "captura.primeira", organizationId: c.get("orgId") });
+    return c.json({ ok: true, pedidaEm, dias: DIAS_DA_PRIMEIRA_BUSCA });
+  });
+
+  /** O andamento da busca pedida em `desde`: o que achou, quantas têm prazo e a leitura da IA. */
+  app.get("/escritorio/primeira-busca", async (c) => {
+    const desde = new Date(c.req.query("desde") ?? "");
+    if (Number.isNaN(desde.getTime())) falha(400, "desde_invalido", "Faltou o momento em que a busca foi pedida.");
+    return c.json(await tenant(c, deps, (tx) => progressoDaBusca(tx, desde, !!deps.ia)));
+  });
 
   /** Perfil de uma pessoa: ela mesma muda o próprio; os sócios mudam o de todos. */
   app.put("/equipe/:userId", async (c) => {

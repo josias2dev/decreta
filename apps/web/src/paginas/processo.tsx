@@ -23,10 +23,9 @@ import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, diaMes, diasDesde, dinheiro, hora, numero, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, tamanho, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { Conversa as ConversaDaApi, Documento, ListaDePrazos, Movimentacao, Movimentacoes, Parte, Processo, ResumoDosAutos } from "@/lib/tipos";
+import type { AbaDoProcesso } from "@/lib/rotas";
 import { Situacao } from "./prazos";
 
-export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos" | "calculos" | "chat";
-export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "calculos", "chat"];
 
 const POLO = { ativo: "Polo ativo", passivo: "Polo passivo", terceiro: "Terceiro" } as const;
 const SITUACAO = { ativo: "Ativo", suspenso: "Suspenso", arquivado: "Arquivado", encerrado: "Encerrado" } as const;

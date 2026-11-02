@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /enviar/
+Disallow: /convite/
+Disallow: /redefinir-senha
+
+Sitemap: https://decreta.site/sitemap.xml

@@ -91,7 +91,10 @@ compilar() {
 }
 
 ativar() {
-  [ -f apps/web/dist/index.html ] || falha "falta apps/web/dist (o CI manda; ou rode: sudo deploy/decreta.sh compilar)"
+  # As telas, a landing estática e a demonstração saem todas do mesmo build.
+  for pagina in index.html landing.html demonstracao/index.html; do
+    [ -f "apps/web/dist/$pagina" ] || falha "falta apps/web/dist/$pagina (o CI manda; ou rode: sudo deploy/decreta.sh compilar)"
+  done
   chown -R "$USUARIO:$USUARIO" "$APP"
   chmod 600 "$APP/.env"
 
