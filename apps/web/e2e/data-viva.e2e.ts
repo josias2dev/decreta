@@ -261,6 +261,17 @@ test.describe("no celular", () => {
     });
   }
 
+  test("Abrir o prazo pela folha leva à ficha, e a tela continua respondendo", async ({ page }) => {
+    await abrir(page, "/prazos");
+    const cartao = page.locator(".dc-item").filter({ hasText: "Manifestação sobre laudo pericial" }).filter({ hasText: "Marina" });
+    await viva(cartao).tap();
+    await conta(page).getByRole("link", { name: "Abrir o prazo" }).tap();
+    await expect(page).toHaveURL(new RegExp(`/prazos/${ids.prazo}`));
+    await expect(conta(page)).toHaveCount(0);
+    await page.getByRole("button", { name: "Ajustar" }).first().tap();
+    await expect(page.getByRole("dialog", { name: "Ajustar prazo" })).toBeVisible();
+  });
+
   test("o toque na data tem pelo menos 44 px de altura", async ({ page }) => {
     await abrir(page, "/prazos");
     const altura = await viva(page.locator(".dc-item").first()).evaluate((e) => {
