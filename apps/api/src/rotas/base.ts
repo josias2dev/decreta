@@ -1,5 +1,5 @@
 /** O que toda rota das telas tem: a sessão, o escritório ativo e os serviços. */
-import type { NomeDeEvento } from "@decreta/core";
+import type { EstadoDaAssinatura, NomeDeEvento } from "@decreta/core";
 import type { Database, Tx } from "@decreta/db";
 import { equipe, withTenant } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
@@ -13,6 +13,7 @@ import type { Cofre } from "../cofre.ts";
 import type { Mailer } from "../email.ts";
 import { registrarEvento } from "../eventos.ts";
 import { ipDoPedido } from "../limitador.ts";
+import type { ClienteAsaas } from "../servicos/asaas.ts";
 import type { DepsDaCaptura } from "../servicos/captura.ts";
 import type { Wameow } from "../servicos/avisos.ts";
 import { AVISOS, iaMedida, LimiteDaIa, motivoParaBarrar, registrarMensagem, reservarVez, SEM_LIMITES, usoDoDia, type LimitesDaIa } from "../servicos/uso-ia.ts";
@@ -24,9 +25,13 @@ export type Vars = {
   demonstracao: boolean;
   /** Nasceu pelo cadastro aberto e ainda não foi liberado (ver `servicos/em-avaliacao.ts`). */
   emAvaliacao: boolean;
+  /** A assinatura de hoje (ver `servicos/assinatura.ts`). Com a cobrança desligada, o acesso é sempre total. */
+  assinatura: EstadoDaAssinatura;
   timezone: string;
   userId: string;
   userNome: string;
+  /** Para saber se a pessoa é operador da plataforma. */
+  userEmail: string;
   papel: string;
   /** A IA da rota, medida em nome da pessoa. Só existe nas rotas com `comLimiteDaIa`. */
   ia?: Ia;
@@ -65,11 +70,15 @@ export interface DepsDasRotas {
   log: (msg: string, extra?: Record<string, unknown>) => void;
   /** Limites da IA nas telas. Sem eles (testes), só mede. */
   limites?: LimitesDaIa;
-  /** O cofre das chaves do Asaas e da ZapSign dos escritórios. Sem ele, a cobrança e a assinatura ficam desligadas. */
+  /** A cobrança da assinatura do Decreta (o plano). Sem isto, ou com `ativa: false`, ninguém é cobrado nem travado. */
+  cobranca?: { ativa: boolean; asaas: ClienteAsaas | null };
+  /** Os operadores da plataforma (`PLATAFORMA_EMAILS`). */
+  plataformaEmails?: ReadonlySet<string>;
+  /** O cofre das chaves do Asaas e da ZapSign dos escritórios (os honorários e a assinatura eletrônica). Sem ele, as duas ficam desligadas. */
   cofre?: Cofre;
-  /** O `fetch` dos pedidos ao Asaas e à ZapSign (os testes põem um servidor de mentira no lugar). */
+  /** O `fetch` dos pedidos ao Asaas e à ZapSign dos escritórios (os testes põem um servidor de mentira no lugar). */
   fetchDosProvedores?: typeof fetch;
-  /** O endereço público da API, de onde o Asaas manda os avisos de pagamento (BETTER_AUTH_URL). */
+  /** O endereço público da API, de onde o Asaas manda os avisos de pagamento dos honorários (BETTER_AUTH_URL). */
   enderecoDaApi?: string;
 }
 

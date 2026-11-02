@@ -19,6 +19,7 @@ import { bodyLimit } from "hono/body-limit";
 import { registrar } from "../auditoria.ts";
 import { ipDoPedido } from "../limitador.ts";
 import { semIa } from "../servicos/contexto.ts";
+import { temAcessoTotal } from "../servicos/assinatura.ts";
 import { escritorioEncerrado } from "../servicos/encerramento.ts";
 import { precisaDeLeitura } from "../servicos/leitura.ts";
 import { falha, type Pedido } from "./base.ts";
@@ -43,6 +44,8 @@ export interface DepsDoEnvio {
   enfileirar: (p: Pedido) => Promise<void>;
   log: (msg: string, extra?: Record<string, unknown>) => void;
   aoMesmoTempo?: number;
+  /** Com a cobrança ligada, o escritório sem acesso total não recebe envio. */
+  cobrancaAtiva?: boolean;
 }
 
 const ORG = /^[A-Za-z0-9_-]{1,64}$/;
@@ -69,6 +72,8 @@ async function cobrancaDoLink(deps: DepsDoEnvio, c: Context) {
   if (!ORG.test(org) || !SEGREDO.test(segredo)) falha(404, "nao_encontrado", "Este link não existe.");
   // Escritório encerrado: o link de envio deixa de abrir.
   if (await escritorioEncerrado(deps.db, org)) falha(404, "nao_encontrado", "Este link não existe.");
+  // Escritório só leitura ou bloqueado não recebe nada novo: o envio é escrita.
+  if (!(await temAcessoTotal(deps.db, org, deps.cobrancaAtiva))) falha(404, "nao_encontrado", "Este link não está disponível agora. Fale com o escritório.");
   const achada = await withTenant(deps.db, org, async (tx) => {
     const [l] = await tx
       .select({ id: mensagensCliente.id, itens: mensagensCliente.itens, expira: mensagensCliente.linkExpiraEm, recebidos: mensagensCliente.recebidos, clienteId: clientes.id, nome: clientes.nome })

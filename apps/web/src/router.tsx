@@ -2,7 +2,7 @@ import { createHashHistory, createRootRoute, createRoute, createRouter, lazyRout
 import { useEffect } from "react";
 import { FOLHA, VOLTAM_AO_TOPO } from "./componentes/rolagem";
 import { ErroNaTela, NaoEncontrada } from "./componentes/nao-encontrada";
-import { ABAS_DO_PROCESSO, SITUACOES_DO_FINANCEIRO, VISTAS_DA_AGENDA, type AbaDoProcesso, type SituacaoDoFinanceiro, type VistaDaAgenda } from "./lib/rotas";
+import { ABAS_DO_ENDERECO, ABAS_DO_PROCESSO, SITUACOES_DO_FINANCEIRO, VISTAS_DA_AGENDA, type AbaDaConfiguracao, type AbaDoProcesso, type SituacaoDoFinanceiro, type VistaDaAgenda } from "./lib/rotas";
 import type { Quando, SituacaoPublicacao } from "./lib/tipos";
 
 const NA_PREVIA = import.meta.env.MODE === "previa";
@@ -35,6 +35,7 @@ const ModelosPage = lazyRouteComponent(() => import("./paginas/modelos"), "Model
 const NegociosPage = lazyRouteComponent(() => import("./paginas/negocios"), "NegociosPage");
 const PecaPage = lazyRouteComponent(() => import("./paginas/peca"), "PecaPage");
 const PerguntarPage = lazyRouteComponent(() => import("./paginas/perguntar"), "PerguntarPage");
+const PlataformaPage = lazyRouteComponent(() => import("./paginas/plataforma"), "PlataformaPage");
 const PrazoPage = lazyRouteComponent(() => import("./paginas/prazo"), "PrazoPage");
 const PrazosPage = lazyRouteComponent(() => import("./paginas/prazos"), "PrazosPage");
 const ProcessoPage = lazyRouteComponent(() => import("./paginas/processo"), "ProcessoPage");
@@ -90,6 +91,9 @@ const termosRoute = createRoute({ getParentRoute: () => rootRoute, path: "/termo
 const privacidadeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/privacidade", component: PrivacidadePage });
 // A cobertura por tribunal, aberta: a última leitura do DJEN e o calendário que a conta usa.
 const coberturaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/cobertura", component: CoberturaPage });
+
+// O painel da plataforma: só os operadores (PLATAFORMA_EMAILS), fora do menu do escritório. Os outros recebem 404.
+const plataformaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/plataforma", component: PlataformaPage });
 
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
@@ -194,7 +198,13 @@ const documentosRoute = createRoute({
 });
 const modelosRoute = createRoute({ getParentRoute: () => appRoute, path: "/modelos", component: ModelosPage });
 const equipeRoute = createRoute({ getParentRoute: () => appRoute, path: "/equipe", component: EquipePage });
-const configuracoesRoute = createRoute({ getParentRoute: () => appRoute, path: "/configuracoes", component: ConfiguracoesPage });
+const configuracoesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/configuracoes",
+  // `aba`: a aba que abre direto (o Asaas devolve a pessoa para ?aba=plano depois de pagar).
+  validateSearch: (s: Record<string, unknown>): { aba?: AbaDaConfiguracao } => (ABAS_DO_ENDERECO.includes(s.aba as AbaDaConfiguracao) ? { aba: s.aba as AbaDaConfiguracao } : {}),
+  component: ConfiguracoesPage,
+});
 const contaRoute = createRoute({ getParentRoute: () => appRoute, path: "/conta", component: ContaPage });
 const maisRoute = createRoute({ getParentRoute: () => appRoute, path: "/mais", component: MaisPage });
 
@@ -209,6 +219,7 @@ const routeTree = rootRoute.addChildren([
   conviteRoute,
   enviarRoute,
   redefinirRoute,
+  plataformaRoute,
   appRoute.addChildren([
     hojeRoute,
     comecarRoute,

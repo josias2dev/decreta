@@ -13,9 +13,12 @@ import { AVISO_DO_ACEITE, type Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { criarEscritorio, slugUnico } from "./escritorio-novo.ts";
 import { registrarEvento, registrarEventoSemEscritorio } from "./eventos.ts";
-import { ipDoPedido, limitarPorIp } from "./limitador.ts";
+import { ipDoPedido, limitador, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
+import type { ClienteAsaas, ConfigDaNfse } from "./servicos/asaas.ts";
+import { comoNasce } from "./servicos/assinatura.ts";
+import { AvisoInvalido, tokenConfere, tratarAviso } from "./servicos/cobranca.ts";
 import { montarCobertura, type Cobertura } from "./servicos/cobertura.ts";
 
 export interface AppDeps {
@@ -28,8 +31,17 @@ export interface AppDeps {
   envio?: Hono;
   /** O conector MCP somente leitura (`/api/mcp`), com token pessoal no lugar da sessão. */
   mcp?: Hono;
-  /** O aviso de pagamento do Asaas de cada escritório (`/api/cobranca/asaas/<escritório>`), com o segredo do aviso no lugar da sessão. */
+  /** O aviso de pagamento do Asaas de cada escritório (`/api/cobranca/asaas/<escritório>`), com o segredo do aviso no lugar da sessão: são os honorários, na conta de cada escritório. */
   avisoDoAsaas?: Hono;
+  /** O painel da plataforma (`/api/plataforma`), só para operadores (ver `rotas/plataforma.ts`). */
+  plataforma?: Hono<any>;
+  /** Os e-mails dos operadores: o cadastro aberto recusa esses e-mails, para ninguém abrir uma conta com o e-mail de um operador. */
+  plataformaEmails?: ReadonlySet<string>;
+  /**
+   * A cobrança do Decreta (o plano de cada escritório): os avisos (webhooks) do Asaas em `/api/cobranca/asaas`, com o token que o Asaas manda. Sem token, a rota
+   * responde 404. `ativa` liga o teste de 14 dias para os escritórios que se cadastram daqui em diante.
+   */
+  cobranca?: { ativa: boolean; token: string; asaas: ClienteAsaas | null; nfse: ConfigDaNfse | null };
   /** Endpoint que o Inngest chama para rodar as funções (`inngest/hono`). */
   inngestHandler?: (c: Context) => Promise<Response>;
   log?: (msg: string, extra?: Record<string, unknown>) => void;
@@ -71,7 +83,7 @@ export function createApp(deps: AppDeps) {
     app.use("/api/cadastro", csrf({ origin: env.WEB_ORIGIN }));
     // Cadastro aberto: poucos escritórios por hora de cada endereço, contra quem cria contas em série.
     app.use("/api/cadastro", limitarPorIp({ janelaMs: 60 * 60_000, maximo: 10 }, ipDoPedido));
-    app.post("/api/cadastro", bodyLimit({ maxSize: TETO_DO_CADASTRO_BYTES, onError: (c) => c.json({ erro: "muito_grande", detalhe: "Os dados passaram do tamanho aceito." }, 413) }), (c) => cadastrar(c, db, auth, env, log));
+    app.post("/api/cadastro", bodyLimit({ maxSize: TETO_DO_CADASTRO_BYTES, onError: (c) => c.json({ erro: "muito_grande", detalhe: "Os dados passaram do tamanho aceito." }, 413) }), (c) => cadastrar(c, db, auth, env, log, { ativa: !!deps.cobranca?.ativa, operadores: deps.plataformaEmails ?? new Set() }));
   }
 
   // Rotas sem login: poucos pedidos por minuto de cada endereço, contra quem tenta adivinhar um segredo ou token.
@@ -123,6 +135,34 @@ export function createApp(deps: AppDeps) {
     app.route("/api/cobranca/asaas", deps.avisoDoAsaas);
   }
 
+  if (deps.plataforma) {
+    app.use("/api/plataforma/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "OPTIONS"] }));
+    app.use("/api/plataforma/*", csrf({ origin: env.WEB_ORIGIN }));
+    app.use("/api/plataforma/*", limitarPorIp({ janelaMs: 60_000, maximo: 120 }, ipDoPedido));
+    app.route("/api/plataforma", deps.plataforma);
+  }
+
+  // Os avisos do Asaas vêm com o token no cabeçalho. Só a tentativa com token errado é limitada por endereço: o aviso
+  // verdadeiro nunca disputa a vez com quem tenta adivinhar o token (o endereço de origem pode ser forjado).
+  const tentativasComTokenErrado = limitador({ janelaMs: 60_000, maximo: 20 });
+  app.post("/api/cobranca/asaas", bodyLimit({ maxSize: TETO_DO_AVISO_BYTES, onError: (c) => c.json({ erro: "muito_grande" }, 413) }), async (c) => {
+    const cobranca = deps.cobranca;
+    // Sem token configurado a rota não existe: nunca aceita aviso de ninguém.
+    if (!cobranca?.token) return c.json({ erro: "nao_encontrado" }, 404);
+    if (!tokenConfere(c.req.header("asaas-access-token"), cobranca.token)) {
+      const origem = ipDoPedido(c);
+      if (origem && !tentativasComTokenErrado.permitir(origem)) return c.json({ erro: "muitas_tentativas" }, 429, { "retry-after": "60" });
+      return c.json({ erro: "nao_autorizado" }, 401);
+    }
+    try {
+      const resultado = await tratarAviso({ db, asaas: cobranca.asaas, nfse: cobranca.nfse, log }, await c.req.json().catch(() => null));
+      return c.json({ ok: true, resultado });
+    } catch (err) {
+      if (err instanceof AvisoInvalido) return c.json({ erro: "aviso_invalido", detalhe: err.message }, 400);
+      throw err;
+    }
+  });
+
   if (deps.rotas) {
     app.use("/api/app/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], exposeHeaders: ["x-peca-id"] }));
     app.route("/api/app", deps.rotas);
@@ -143,6 +183,8 @@ export function createApp(deps: AppDeps) {
 
 const COBERTURA_EM_CACHE_MS = 15 * 60_000;
 const TETO_DO_CADASTRO_BYTES = 16 * 1024;
+/** Um aviso do Asaas (a cobrança e o cliente) tem poucos KB. */
+const TETO_DO_AVISO_BYTES = 64 * 1024;
 /** Um evento do site é `{"nome":"visita"}`: acima disto nem é lido. */
 const TETO_DO_EVENTO_BYTES = 1024;
 
@@ -161,15 +203,18 @@ const CADASTRO = z.object({
  * conta nasce pelo `criarEscritorio`, não pelo sign-up do Better Auth, que
  * continua fechado a quem não tem convite.
  */
-async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: NonNullable<AppDeps["log"]>) {
+async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: NonNullable<AppDeps["log"]>, cobranca: { ativa: boolean; operadores: ReadonlySet<string> }) {
   const r = CADASTRO.safeParse(await c.req.json().catch(() => null));
   if (!r.success) return c.json({ erro: "dados_invalidos", detalhe: r.error.issues.map((i) => i.message).join(" ") }, 400);
   const b = r.data;
   const [jaTem] = await db.select({ id: user.id }).from(user).where(eq(user.email, b.email));
-  if (jaTem) return c.json({ erro: "email_em_uso", detalhe: "Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova." }, 409);
+  // O e-mail de um operador da plataforma não abre conta pelo cadastro aberto (que não confirma o e-mail): a conta dele é criada pela equipe.
+  if (jaTem || cobranca.operadores.has(b.email)) return c.json({ erro: "email_em_uso", detalhe: "Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova." }, 409);
 
   const slug = await slugUnico(db, b.escritorio);
-  const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, dono: { email: b.email, nome: b.nome, senha: b.senha, termosVersao: b.termos } });
+  // Com a cobrança ligada, o escritório novo começa um teste de 14 dias, sem cartão; desligada, nasce cortesia e nunca é travado.
+  const assinatura = comoNasce(cobranca.ativa, true);
+  const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, assinatura, dono: { email: b.email, nome: b.nome, senha: b.senha, termosVersao: b.termos } });
   await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug, termos: b.termos }, ip: ipDoPedido(c) }, log);
   await registrarEvento(db, "cadastro_concluido", organizationId, log);
 

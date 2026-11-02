@@ -26,6 +26,7 @@ import {
   equipe,
   escritorios,
   exportacoes,
+  faturas,
   lembretesDeCobranca,
   member,
   mensagensCliente,
@@ -122,6 +123,7 @@ const PLANILHAS: Planilha[] = [
   { arquivo: "radar_de_precedentes", tabela: radarPrecedentes },
   { arquivo: "calculos", tabela: calculos },
   { arquivo: "suspensoes_do_calendario", tabela: suspensoes },
+  { arquivo: "faturas_do_plano", tabela: faturas },
   { arquivo: "registro_de_atividades", tabela: auditoria },
 ];
 
@@ -139,6 +141,8 @@ export const NAO_EXPORTADAS: Record<string, string> = {
   observacoes_da_ia: "comparação interna de modelos de IA",
   exportacoes: "as próprias cópias",
   eventos: "contagem do funil do Decreta, sem dado do escritório",
+  eventos_de_cobranca: "registro técnico dos avisos do Asaas já tratados",
+  auditoria_da_plataforma: "o que a equipe do Decreta fez na conta, para a segurança da plataforma; só ela lê",
   member: "a equipe sai na planilha equipe",
   invitation: "convites pendentes, que o escritório pode refazer",
 };

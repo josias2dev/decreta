@@ -11,8 +11,9 @@ import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Botao, Campo, Faixa } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
+import { escritorioQuery } from "@/lib/consultas";
 import { diaCompleto, diaDoInstante } from "@/lib/formato";
-import type { AssinaturaDoDocumento, Documento, Escritorio } from "@/lib/tipos";
+import type { AssinaturaDoDocumento, Documento } from "@/lib/tipos";
 
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const MAXIMO_DE_PESSOAS = 6;
@@ -24,7 +25,7 @@ type Pessoa = { nome: string; email: string; telefone: string };
 const vazia = (nome = ""): Pessoa => ({ nome, email: "", telefone: "" });
 
 export function AssinaturaNoDocumento({ d }: { d: Documento }) {
-  const escritorio = useQuery({ queryKey: ["escritorio"], queryFn: () => api<Escritorio>("/escritorio") });
+  const escritorio = useQuery(escritorioQuery);
   const ligada = !!escritorio.data?.assinaturaLigada;
   const lista = useQuery({ queryKey: ["assinaturas", d.id], queryFn: () => api<{ itens: AssinaturaDoDocumento[] }>(`/documentos/${d.id}/assinaturas`), enabled: ligada });
   const [enviando, setEnviando] = useState(false);

@@ -105,6 +105,13 @@ export class ApiFalsa {
       this.logado = true;
       return json(201, { ok: true, sessao: true, escritorio: { id: amostras.eu!.corpo.escritorio.id, slug: "souza-mendes" } });
     }
+    // O painel da plataforma (só operadores): cada teste diz o que ele responde, com `responder("GET /plataforma/escritorios", ...)`. Sem resposta, 404, como para quem não é operador.
+    if (url.pathname.startsWith("/api/plataforma/")) {
+      const caminho = url.pathname.slice("/api".length);
+      this.pedidos.push({ metodo, caminho, corpo });
+      const troca = this.trocas.get(`${metodo} ${caminho}`) ?? this.trocas.get(caminho) ?? this.trocas.get(caminho + url.search) ?? this.trocas.get(`${metodo} ${caminho}${url.search}`);
+      return troca ? json(troca.status ?? 200, troca.corpo) : json(404, { erro: "nao_encontrado" });
+    }
     if (!url.pathname.startsWith("/api/app/")) return json(404, { erro: "nao_encontrado" });
 
     const caminho = url.pathname.slice("/api/app".length);

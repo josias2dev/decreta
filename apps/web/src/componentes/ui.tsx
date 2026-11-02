@@ -301,9 +301,10 @@ export function Carregando({ linhas = 4 }: { linhas?: number }) {
   );
 }
 
-export function Abas<T extends string>({ abas, ativa, aoMudar, pagina }: { abas: { id: T; rotulo: string; n?: number }[]; ativa: T; aoMudar: (id: T) => void; pagina?: boolean }) {
+/** `densas`: muitas abas para a largura (as oito dos sócios em Configurações, no celular): a letra desce um degrau da escala para todas caberem sem rolar. */
+export function Abas<T extends string>({ abas, ativa, aoMudar, pagina, densas }: { abas: { id: T; rotulo: string; n?: number }[]; ativa: T; aoMudar: (id: T) => void; pagina?: boolean; densas?: boolean }) {
   return (
-    <div className={cn("dc-abas", pagina && "dc-abas--pagina")} role="tablist">
+    <div className={cn("dc-abas", pagina && "dc-abas--pagina", densas && "dc-abas--densas")} role="tablist">
       {abas.map((a) => (
         <button key={a.id} type="button" role="tab" aria-selected={a.id === ativa} className={cn("dc-aba", a.id === ativa && "is-on")} onClick={() => aoMudar(a.id)}>
           {a.rotulo}

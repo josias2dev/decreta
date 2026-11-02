@@ -5,6 +5,7 @@
  * Usado pelo cadastro aberto (POST /api/cadastro), pelo script
  * `escritorio:criar`, pela demonstração e pelos testes.
  */
+import type { Dia, SituacaoDoEscritorio } from "@decreta/core";
 import { equipe, escritorios, member, organization, user, withTenant, type Database } from "@decreta/db";
 import { eq } from "drizzle-orm";
 import type { Auth } from "./auth.ts";
@@ -18,6 +19,8 @@ export interface EscritorioNovo {
   timezone?: string;
   /** Pelo cadastro aberto: o escritório nasce em avaliação e a configuração inicial das telas fica pendente (`onboarding_concluido_em` nulo). */
   cadastroAberto?: boolean;
+  /** Como o escritório começa na assinatura (ver `comoNasce`). Sem isto nasce cortesia: o que a equipe cria nunca é travado. */
+  assinatura?: { situacao: SituacaoDoEscritorio; testeAte: Dia | null };
   /** `termosVersao`: a versão dos Termos de Uso que a pessoa aceitou (só o cadastro aberto pede o aceite). */
   dono: { email: string; nome: string; senha: string; apelido?: string; cargo?: string; oabNumero?: string; oabUf?: string; whatsapp?: string; termosVersao?: string };
 }
@@ -62,7 +65,15 @@ export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNov
 
   const organizationId = crypto.randomUUID();
   await db.transaction(async (tx) => {
-    await tx.insert(organization).values({ id: organizationId, name: e.nome, slug: e.slug, timezone: e.timezone ?? "America/Sao_Paulo", emAvaliacao: !!e.cadastroAberto });
+    await tx.insert(organization).values({
+      id: organizationId,
+      name: e.nome,
+      slug: e.slug,
+      timezone: e.timezone ?? "America/Sao_Paulo",
+      emAvaliacao: !!e.cadastroAberto,
+      situacao: e.assinatura?.situacao ?? "cortesia",
+      testeAte: e.assinatura?.testeAte ?? null,
+    });
     await tx.insert(member).values({ id: crypto.randomUUID(), organizationId, userId: pessoa.id, role: "owner" });
   });
   await withTenant(db, organizationId, async (tx) => {

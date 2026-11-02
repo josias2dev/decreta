@@ -1,366 +1,543 @@
 /**
- * Cobrança pelo Asaas do próprio escritório: a chave dele (cifrada no cofre), o aviso de pagamento
- * (webhook) que dá a baixa sozinha, a cobrança de cada parcela e o Pix Automático da mensalidade.
- * Sem chave, o Financeiro funciona só com a baixa manual.
+ * A cobrança da assinatura, do lado do Decreta.
  *
- * Os pedidos ao Asaas ficam fora da transação do banco (levam segundos e podem falhar): lê, fala
- * com o Asaas e grava, conferindo de novo na gravação.
+ *   assinar ──► link de pagamento do Asaas ──► o escritório paga lá (Pix, boleto ou cartão)
+ *   Asaas ──► webhook ──► `tratarAviso`: grava a fatura e atualiza a situação do escritório
+ *
+ * O aviso do Asaas chega com um token e pode chegar mais de uma vez: cada id de aviso é tratado
+ * uma única vez (`eventos_de_cobranca`), na mesma transação que muda a fatura e a situação, então
+ * um aviso que falha no meio não deixa nada pela metade e o Asaas tenta de novo.
+ *
+ * A situação do escritório acompanha as faturas: pagou, está ativo; a fatura venceu sem pagamento,
+ * está inadimplente desde o vencimento (e a régua de 7 e 15 dias corre a partir daí, em
+ * `estadoDaAssinatura`). Atraso só conta de quem já pagou ao menos uma vez: quem nunca pagou segue o fim do teste.
+ * Cortesia, só leitura e bloqueio são decisões da equipe do Decreta: o pagamento não as desfaz.
  */
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { vencimentoDaCobranca, type Dia } from "@decreta/core";
-import { clientes, cobrancaConfig, contratosHonorarios, eventosCobranca, pagamentosHonorarios, parcelasHonorarios, withTenant, type AmbienteDoProvedor, type Database, type ReguaDeLembretes } from "@decreta/db";
-import { and, eq, isNull } from "drizzle-orm";
-import type { Cofre } from "../cofre.ts";
-import { falha } from "../rotas/base.ts";
-import { AsaasErro, buscarOuCriarCliente, conferirChave, criarAutorizacaoPix, criarCobranca, criarWebhook, removerCobranca, removerWebhook, type ContaAsaas } from "./asaas.ts";
-import { estornarPagamento, parcelasNaTela, registrarPagamento } from "./honorarios.ts";
+import { avisoDaAssinatura, fimDoPeriodoPago, formatarDia, hojeEm, janelaDoAvisoDoAtraso, janelaDoAvisoDoTeste, PLANO, ROTULO_DA_SITUACAO, somarDias, type AvisoDaAssinatura, type Dia, type EstadoDaAssinatura, type SituacaoDoEscritorio, type TipoDeAvisoDaAssinatura } from "@decreta/core";
+import { avisosEnviados, eventosDeCobranca, faturas, member, organization, user, withTenant, type Database, type Tx } from "@decreta/db";
+import { and, desc, eq, inArray, isNotNull, isNull, ne, or } from "drizzle-orm";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
+import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
+import type { Mailer } from "../email.ts";
+import { ErroDoAsaas, type ClienteAsaas, type ConfigDaNfse } from "./asaas.ts";
+import { estadoDoEscritorio } from "./assinatura.ts";
 
-export type ConfigDeCobranca = typeof cobrancaConfig.$inferSelect;
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
-export interface DepsDaCobranca {
-  db: Database;
-  cofre?: Cofre;
-  fetch?: typeof fetch;
-  log: Log;
-  /** O endereço público da API, de onde o Asaas manda os avisos. */
-  enderecoDaApi?: string;
+/** O token do aviso confere com o configurado? Compara os hashes, em tempo constante. */
+export function tokenConfere(recebido: string | undefined, esperado: string): boolean {
+  if (!recebido || !esperado) return false;
+  const h = (s: string) => createHash("sha256").update(s).digest();
+  return timingSafeEqual(h(recebido), h(esperado));
 }
 
-export const hashDoSegredo = (segredo: string) => createHash("sha256").update(segredo).digest("hex");
+/* ---------------- O aviso do Asaas ---------------- */
 
-/** Compara o segredo do aviso com o hash guardado, em tempo constante. */
-export function segredoConfere(recebido: string | undefined | null, hashGuardado: string | null | undefined): boolean {
-  if (!recebido || !hashGuardado) return false;
-  const a = Buffer.from(hashDoSegredo(recebido), "hex");
-  const b = Buffer.from(hashGuardado, "hex");
-  return a.length === b.length && timingSafeEqual(a, b);
-}
+const texto = z
+  .union([z.string(), z.number()])
+  .transform(String)
+  .nullish();
 
-export async function configDoEscritorio(db: Database, organizationId: string): Promise<ConfigDeCobranca | null> {
-  const [c] = await withTenant(db, organizationId, (tx) => tx.select().from(cobrancaConfig).where(eq(cobrancaConfig.organizationId, organizationId)));
-  return c ?? null;
-}
+const PAGAMENTO = z
+  .object({
+    id: z.string().min(1).max(100),
+    customer: texto,
+    subscription: texto,
+    paymentLink: texto,
+    status: z.string().nullish(),
+    value: z.number().nullish(),
+    dueDate: z.string().nullish(),
+    paymentDate: z.string().nullish(),
+    invoiceUrl: z.string().nullish(),
+    billingType: z.string().nullish(),
+    externalReference: texto,
+  })
+  .passthrough();
 
-function exigirCofre(deps: DepsDaCobranca): Cofre {
-  return deps.cofre ?? falha(503, "cofre_desligado", "O cofre das chaves não está ligado neste servidor. Fale com o suporte do Decreta.");
-}
+const ASSINATURA = z.object({ id: z.string().min(1).max(100), customer: texto, externalReference: texto }).passthrough();
 
-/** A conta do Asaas do escritório, com a chave aberta só aqui, em memória. `null`: sem chave guardada. */
-export function contaAsaas(deps: DepsDaCobranca, organizationId: string, cfg: ConfigDeCobranca | null): ContaAsaas | null {
-  if (!cfg?.asaasChave) return null;
-  try {
-    return { chave: exigirCofre(deps).decifrar(cfg.asaasChave, organizationId), ambiente: cfg.asaasAmbiente, fetch: deps.fetch };
-  } catch {
-    // A chave guardada não abre (o segredo do servidor mudou): o escritório informa a chave de novo.
-    return falha(409, "chave_ilegivel", "A chave do Asaas guardada não abre mais. Informe a chave de novo nas Configurações.");
-  }
-}
+const AVISO = z.object({ id: z.string().min(1).max(200), event: z.string().min(1).max(100), payment: PAGAMENTO.optional(), subscription: ASSINATURA.optional() }).passthrough();
 
-const PREFIXO_DA_CHAVE = { producao: "$aact_prod_", sandbox: "$aact_hmlg_" } as const;
+export class AvisoInvalido extends Error {}
 
-export interface EstadoDaCobranca {
-  asaas: { configurado: boolean; ambiente: AmbienteDoProvedor | null; avisoLigado: boolean; conferidaEm: string | null; urlDoAviso: string | null };
-  pixAutomatico: boolean;
-  regua: ReguaDeLembretes;
-  zapsign: { configurado: boolean; ligada: boolean; ambiente: AmbienteDoProvedor | null };
-  /** A NFS-e pelo Asaas depende dos dados fiscais do escritório e ainda não é emitida pelo Decreta. */
-  nfse: { disponivel: false };
-}
+export type ResultadoDoAviso = "tratado" | "repetido" | "sem_escritorio";
 
-export function estadoDaCobranca(cfg: ConfigDeCobranca | null, organizationId: string, enderecoDaApi?: string): EstadoDaCobranca {
-  return {
-    asaas: {
-      configurado: !!cfg?.asaasChave,
-      ambiente: cfg?.asaasChave ? cfg.asaasAmbiente : null,
-      avisoLigado: !!cfg?.asaasWebhookId,
-      conferidaEm: cfg?.asaasConferidaEm?.toISOString() ?? null,
-      urlDoAviso: enderecoDaApi ? `${enderecoDaApi.replace(/\/$/, "")}/api/cobranca/asaas/${organizationId}` : null,
-    },
-    pixAutomatico: cfg?.pixAutomatico ?? false,
-    regua: cfg?.regua ?? { ligada: false, passos: [] },
-    zapsign: { configurado: !!cfg?.zapsignChave, ligada: !!cfg?.zapsignChave && !!cfg.zapsignLigada, ambiente: cfg?.zapsignChave ? cfg.zapsignAmbiente : null },
-    nfse: { disponivel: false },
-  };
-}
+const SITUACAO_POR_STATUS: Record<string, "pendente" | "paga" | "atrasada" | "estornada"> = {
+  PENDING: "pendente",
+  AWAITING_RISK_ANALYSIS: "pendente",
+  OVERDUE: "atrasada",
+  RECEIVED: "paga",
+  CONFIRMED: "paga",
+  RECEIVED_IN_CASH: "paga",
+  DUNNING_RECEIVED: "paga",
+  REFUNDED: "estornada",
+  REFUND_REQUESTED: "estornada",
+  REFUND_IN_PROGRESS: "estornada",
+  CHARGEBACK_REQUESTED: "estornada",
+  CHARGEBACK_DISPUTE: "estornada",
+  AWAITING_CHARGEBACK_REVERSAL: "estornada",
+};
 
-async function guardar(db: Database, organizationId: string, valores: Partial<typeof cobrancaConfig.$inferInsert>) {
-  await withTenant(db, organizationId, (tx) => tx.insert(cobrancaConfig).values({ organizationId, ...valores }).onConflictDoUpdate({ target: cobrancaConfig.organizationId, set: valores }));
+type SituacaoDaFatura = "pendente" | "paga" | "atrasada" | "estornada" | "removida";
+
+/** Avisos que mudam a fatura por si, mesmo contra o que ela já era. */
+const MUDAM_O_RUMO = new Set(["PAYMENT_DELETED", "PAYMENT_REFUNDED", "PAYMENT_RESTORED", "PAYMENT_RECEIVED_IN_CASH_UNDONE", "PAYMENT_CHARGEBACK_REQUESTED"]);
+
+function situacaoDaFatura(evento: string, status: string | null | undefined): SituacaoDaFatura | null {
+  if (evento === "PAYMENT_DELETED") return "removida";
+  if (evento === "PAYMENT_REFUNDED") return "estornada";
+  return (status && SITUACAO_POR_STATUS[status]) || null;
 }
 
 /**
- * Guarda a chave do Asaas do escritório (cifrada), confere que ela presta e cria, na conta dele, o
- * aviso de pagamento que dá a baixa sozinha. Se o aviso não nascer, a chave fica guardada e o escritório
- * tenta de novo: sem o aviso, a cobrança sai, mas a baixa é manual.
+ * O Asaas pode entregar os avisos fora de ordem (um "venceu" depois do "pagou"). A fatura que já foi paga, estornada
+ * ou removida não volta para pendente ou atrasada por um aviso atrasado; só os avisos que mudam o rumo fazem isso.
  */
-export async function salvarChaveDoAsaas(deps: DepsDaCobranca, organizationId: string, quem: { email: string }, p: { chave: string; ambiente: AmbienteDoProvedor }): Promise<{ avisoLigado: boolean; erroDoAviso: string | null }> {
-  const cofre = exigirCofre(deps);
-  const chave = p.chave.trim();
-  if (!chave.startsWith("$aact_")) falha(422, "chave_invalida", "Isto não parece uma chave do Asaas: ela começa com $aact_.");
-  if (!chave.startsWith(PREFIXO_DA_CHAVE[p.ambiente])) falha(422, "ambiente_errado", p.ambiente === "producao" ? "Esta é uma chave de sandbox (testes). Escolha o ambiente sandbox ou informe a chave de produção." : "Esta é uma chave de produção. Escolha o ambiente de produção ou informe a chave de sandbox.");
-  const conta: ContaAsaas = { chave, ambiente: p.ambiente, fetch: deps.fetch };
-  try {
-    await conferirChave(conta);
-  } catch (err) {
-    if (err instanceof AsaasErro) falha(422, "asaas_recusou", err.message);
-    throw err;
+function aceitar(atual: SituacaoDaFatura | undefined, nova: SituacaoDaFatura, evento: string): boolean {
+  if (!atual || MUDAM_O_RUMO.has(evento)) return true;
+  if (atual === "paga") return nova === "estornada";
+  if (atual === "estornada" || atual === "removida") return false;
+  return true;
+}
+
+const FORMA: Record<string, string> = { BOLETO: "boleto", PIX: "pix", CREDIT_CARD: "cartao", DEBIT_CARD: "cartao", UNDEFINED: "indefinida" };
+
+type LinhaDoEscritorio = typeof organization.$inferSelect;
+
+/** O escritório do aviso: pela assinatura, pelo link de pagamento, pela referência que mandamos (o id dele) e, por último, pelo cliente do Asaas. */
+async function acharEscritorio(db: Database, ids: { assinatura?: string | null; link?: string | null; referencia?: string | null; cliente?: string | null }): Promise<LinhaDoEscritorio | null> {
+  const tentativas = [
+    ids.assinatura ? eq(organization.asaasAssinaturaId, ids.assinatura) : null,
+    ids.link ? eq(organization.asaasLinkId, ids.link) : null,
+    ids.referencia ? eq(organization.id, ids.referencia) : null,
+    ids.cliente ? eq(organization.asaasClienteId, ids.cliente) : null,
+  ];
+  for (const filtro of tentativas) {
+    if (!filtro) continue;
+    const [o] = await db.select().from(organization).where(filtro).limit(1);
+    if (o) return o;
   }
-  // O aviso da chave anterior sai da conta de quem a tinha, para não ficar mandando para o Decreta à toa.
-  const antes = await configDoEscritorio(deps.db, organizationId);
-  const antiga = contaAsaas({ ...deps, cofre }, organizationId, antes);
-  if (antiga && antes?.asaasWebhookId) await removerWebhook(antiga, antes.asaasWebhookId).catch(() => {});
-
-  const base = { asaasChave: cofre.cifrar(chave, organizationId), asaasAmbiente: p.ambiente, asaasConferidaEm: new Date(), asaasWebhookId: null, asaasWebhookTokenHash: null };
-  await guardar(deps.db, organizationId, base);
-  return ligarOAviso(deps, organizationId, quem, conta, antes?.pixAutomatico ?? false);
+  return null;
 }
 
-/** Cria o aviso de pagamento na conta do Asaas do escritório, com um segredo novo. */
-export async function ligarOAviso(deps: DepsDaCobranca, organizationId: string, quem: { email: string }, conta: ContaAsaas, pixAutomatico: boolean): Promise<{ avisoLigado: boolean; erroDoAviso: string | null }> {
-  if (!deps.enderecoDaApi) return { avisoLigado: false, erroDoAviso: "O endereço público da API não está configurado neste servidor." };
-  const segredo = randomBytes(32).toString("base64url");
-  const url = `${deps.enderecoDaApi.replace(/\/$/, "")}/api/cobranca/asaas/${organizationId}`;
+export interface DepsDoAviso {
+  db: Database;
+  asaas: ClienteAsaas | null;
+  nfse: ConfigDaNfse | null;
+  log: Log;
+  agora?: () => Date;
+}
+
+/** O que sobra para fazer depois que a transação acaba: chamadas de rede, que não ficam dentro dela. */
+interface Depois {
+  configurarNfse?: string;
+  removerLink?: string;
+}
+
+/** O link da fatura só vale se for https e do Asaas: é o que vira `href` na tela de quem paga. */
+export function linkDoAsaas(url: string | null | undefined): string | null {
+  if (!url) return null;
   try {
-    const id = await criarWebhook(conta, { url, email: quem.email, token: segredo, pixAutomatico });
-    await guardar(deps.db, organizationId, { asaasWebhookId: id, asaasWebhookTokenHash: hashDoSegredo(segredo) });
-    return { avisoLigado: true, erroDoAviso: null };
-  } catch (err) {
-    const erro = err instanceof AsaasErro ? err.message : "Não deu para criar o aviso de pagamento no Asaas.";
-    deps.log("aviso de pagamento do Asaas não nasceu", { organizationId, status: err instanceof AsaasErro ? err.status : null });
-    return { avisoLigado: false, erroDoAviso: erro };
-  }
-}
-
-/** Tira a chave do Decreta e o aviso da conta do Asaas. As cobranças já emitidas seguem valendo no Asaas, sem baixa automática. */
-export async function removerChaveDoAsaas(deps: DepsDaCobranca, organizationId: string): Promise<void> {
-  const cfg = await configDoEscritorio(deps.db, organizationId);
-  if (!cfg?.asaasChave) return;
-  const conta = deps.cofre ? contaAsaasSemErro(deps, organizationId, cfg) : null;
-  if (conta && cfg.asaasWebhookId) await removerWebhook(conta, cfg.asaasWebhookId).catch(() => {});
-  await guardar(deps.db, organizationId, { asaasChave: null, asaasWebhookId: null, asaasWebhookTokenHash: null, asaasConferidaEm: null, pixAutomatico: false });
-}
-
-function contaAsaasSemErro(deps: DepsDaCobranca, organizationId: string, cfg: ConfigDeCobranca): ContaAsaas | null {
-  try {
-    return contaAsaas(deps, organizationId, cfg);
+    const u = new URL(url);
+    return u.protocol === "https:" && (u.hostname === "asaas.com" || u.hostname.endsWith(".asaas.com")) ? url : null;
   } catch {
     return null;
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Emitir e cancelar a cobrança de uma parcela                          */
-/* ------------------------------------------------------------------ */
+/**
+ * Trata um aviso do Asaas. Devolve `repetido` se o id já foi tratado (nada muda), `sem_escritorio` se
+ * o aviso não é de nenhum escritório (um teste do painel do Asaas, por exemplo) e `tratado` quando mexeu.
+ */
+export async function tratarAviso(deps: DepsDoAviso, corpo: unknown): Promise<ResultadoDoAviso> {
+  const r = AVISO.safeParse(corpo);
+  if (!r.success) throw new AvisoInvalido(r.error.issues.map((i) => `${i.path.join(".") || "corpo"}: ${i.message}`).join("; "));
+  const aviso = r.data;
+  const p = aviso.payment;
+  const s = aviso.subscription;
+  const achado = await acharEscritorio(deps.db, {
+    assinatura: p?.subscription ?? s?.id,
+    link: p?.paymentLink,
+    referencia: p?.externalReference ?? s?.externalReference,
+    cliente: p?.customer ?? s?.customer,
+  });
+  if (!achado) {
+    deps.log("aviso do Asaas de um escritório que não existe", { evento: aviso.event, id: aviso.id });
+    return "sem_escritorio";
+  }
+  const agora = (deps.agora ?? (() => new Date()))();
+  const depois = await withTenant(deps.db, achado.id, async (tx): Promise<Depois | "repetido"> => {
+    // Um aviso de cada vez por escritório: a linha fica trancada até o fim da transação, e o aviso seguinte lê o que o anterior deixou.
+    // A tranca vem ANTES de gravar o aviso: gravar já pega, pela chave estrangeira, uma tranca fraca na mesma linha, e dois avisos
+    // com a tranca fraca na mão, esperando a forte um do outro, travariam os dois (deadlock).
+    const [org] = await tx.select().from(organization).where(eq(organization.id, achado.id)).for("update");
+    if (!org) return {};
+    const [novo] = await tx.insert(eventosDeCobranca).values({ id: aviso.id, organizationId: achado.id, evento: aviso.event }).onConflictDoNothing().returning({ id: eventosDeCobranca.id });
+    if (!novo) return "repetido";
+    if (p && aviso.event.startsWith("PAYMENT_")) return aplicarFatura(tx, org, aviso.event, p, agora, deps.log);
+    if (s && (aviso.event === "SUBSCRIPTION_DELETED" || aviso.event === "SUBSCRIPTION_INACTIVATED")) await aplicarAssinaturaEncerrada(tx, org, s.id, agora);
+    return {};
+  });
+  if (depois === "repetido") return "repetido";
+  // A nota fiscal sai da assinatura do Asaas, e o link de pagamento que já virou assinatura deixa de existir lá (outra pessoa não o preenche de novo).
+  // Chamadas de rede, fora da transação: se falharem, o log diz e a nota é tentada no aviso seguinte.
+  if (depois.configurarNfse && deps.asaas && deps.nfse) {
+    try {
+      await deps.asaas.configurarNotasFiscais(depois.configurarNfse, deps.nfse);
+      await deps.db.update(organization).set({ nfseConfiguradaEm: agora }).where(eq(organization.id, achado.id));
+    } catch (err) {
+      deps.log("NFS-e não foi configurada na assinatura", { organizationId: achado.id, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+  if (depois.removerLink && deps.asaas) {
+    await deps.asaas.removerLink(depois.removerLink).catch((err: unknown) => deps.log("o link de pagamento não foi removido no Asaas", { organizationId: achado.id, error: err instanceof Error ? err.message : String(err) }));
+  }
+  return "tratado";
+}
 
-export interface CobrancaDaParcela {
-  link: string;
-  vencimento: Dia;
-  id: string;
+type CobrancaParaConta = { situacao: SituacaoDaFatura; vencimento: Dia; valorCentavos: number };
+
+/**
+ * A situação do escritório a partir das faturas da assinatura viva. Fatura em aberto que já passou do vencimento conta como
+ * atrasada, mesmo que o aviso de atraso do Asaas ainda não tenha chegado (ou nunca chegue). Atraso só conta de quem já pagou
+ * ao menos uma vez: quem nunca pagou segue o fim do teste. Cortesia, só leitura e bloqueio são decisões da equipe: o pagamento não as desfaz.
+ */
+export function mudancasPelasFaturas(o: { situacao: SituacaoDoEscritorio; assinouEm: Date | null }, lista: CobrancaParaConta[], hoje: Dia, agora: Date): Partial<typeof organization.$inferInsert> {
+  const atrasadas = lista.filter((f) => f.situacao === "atrasada" || (f.situacao === "pendente" && f.vencimento < hoje));
+  const pagas = lista.filter((f) => f.situacao === "paga").sort((a, b) => b.vencimento.localeCompare(a.vencimento));
+  const m: Partial<typeof organization.$inferInsert> = {};
+  if (pagas[0]) m.valorMensalCentavos = pagas[0].valorCentavos;
+  // A primeira mensalidade paga: o escritório está identificado e deixa de ser "em avaliação".
+  const primeiraVez = pagas.length > 0 && !o.assinouEm;
+  if (primeiraVez) {
+    m.assinouEm = agora;
+    m.emAvaliacao = false;
+  }
+  if (o.situacao === "cortesia" || o.situacao === "so_leitura" || o.situacao === "bloqueado") return m;
+  if (atrasadas.length && (o.assinouEm || primeiraVez)) {
+    m.situacao = "inadimplente";
+    m.inadimplenteDesde = atrasadas.map((f) => f.vencimento).sort()[0]!;
+  } else if (pagas.length) {
+    m.situacao = "ativo";
+    m.inadimplenteDesde = null;
+  } else if (o.situacao === "inadimplente") {
+    // Sem nada em atraso e sem nada pago (a cobrança foi apagada ou estornada): não há o que pagar, e o atraso deixa de correr.
+    m.situacao = "ativo";
+    m.inadimplenteDesde = null;
+  }
+  return m;
+}
+
+/** Grava a fatura do aviso e acerta a situação do escritório. `org` vem trancado, lido dentro da transação. */
+async function aplicarFatura(tx: Tx, org: LinhaDoEscritorio, evento: string, p: z.infer<typeof PAGAMENTO>, agora: Date, log: Log): Promise<Depois> {
+  const hoje = hojeEm(org.timezone, agora);
+  const [atual] = await tx.select().from(faturas).where(and(eq(faturas.id, p.id), eq(faturas.organizationId, org.id)));
+  const nova = situacaoDaFatura(evento, p.status);
+  const situacao: SituacaoDaFatura = nova && aceitar(atual?.situacao, nova, evento) ? nova : (atual?.situacao ?? "pendente");
+  const guardaPagamento = situacao === "paga" || situacao === "estornada";
+  const valores = {
+    assinaturaId: p.subscription ?? atual?.assinaturaId ?? null,
+    vencimento: p.dueDate ?? atual?.vencimento ?? hoje,
+    valorCentavos: p.value != null ? Math.round(p.value * 100) : (atual?.valorCentavos ?? 0),
+    situacao,
+    forma: (p.billingType && FORMA[p.billingType]) || atual?.forma || null,
+    link: linkDoAsaas(p.invoiceUrl) ?? atual?.link ?? null,
+    pagaEm: guardaPagamento ? (p.paymentDate ?? atual?.pagaEm ?? (situacao === "paga" ? hoje : null)) : null,
+  };
+  await tx.insert(faturas).values({ id: p.id, organizationId: org.id, ...valores }).onConflictDoUpdate({ target: faturas.id, set: valores });
+
+  // De qual assinatura é a cobrança. A que já acabou (cancelada) fica no histórico e não mexe em mais nada: o aviso dela que chega
+  // atrasado (o cartão avisa o recebimento 30 dias depois) não reabre o escritório nem desfaz o cancelamento.
+  const encerrada = !!p.subscription && org.asaasAssinaturasEncerradas.includes(p.subscription);
+  if (encerrada) return {};
+  // Uma segunda assinatura viva (o link de pagamento foi preenchido duas vezes): fica registrada, não toma o lugar da primeira nem mexe na situação.
+  if (p.subscription && org.asaasAssinaturaId && org.asaasAssinaturaId !== p.subscription) {
+    log("assinatura duplicada no Asaas: o escritório já tem outra viva", { organizationId: org.id, viva: org.asaasAssinaturaId, nova: p.subscription });
+    return {};
+  }
+  const adota = !!p.subscription && !org.asaasAssinaturaId && situacao !== "removida" && situacao !== "estornada";
+  const assinaturaAtual = adota ? p.subscription! : org.asaasAssinaturaId;
+
+  const mudancas: Partial<typeof organization.$inferInsert> = {};
+  if (adota) {
+    mudancas.asaasAssinaturaId = p.subscription;
+    // O link já virou assinatura: o escritório assina de novo com um link novo.
+    if (org.asaasLinkId) Object.assign(mudancas, { asaasLinkId: null, asaasLinkUrl: null, asaasLinkValorCentavos: null });
+  }
+  if (p.customer && p.customer !== org.asaasClienteId) mudancas.asaasClienteId = p.customer;
+
+  const todas = await tx
+    .select({ situacao: faturas.situacao, vencimento: faturas.vencimento, valorCentavos: faturas.valorCentavos, assinaturaId: faturas.assinaturaId })
+    .from(faturas)
+    .where(eq(faturas.organizationId, org.id));
+  const dela = todas.filter((f) => !assinaturaAtual || f.assinaturaId === assinaturaAtual || f.assinaturaId === null);
+  Object.assign(mudancas, mudancasPelasFaturas(org, dela, hoje, agora));
+  // Pagou uma assinatura nova depois de cancelar: o cancelamento anterior deixa de valer.
+  if (situacao === "paga" && org.cancelamentoPedidoEm && p.subscription && p.subscription === assinaturaAtual && mudancas.situacao === "ativo") {
+    mudancas.cancelamentoPedidoEm = null;
+    mudancas.acessoAte = null;
+  }
+  if (Object.keys(mudancas).length) await tx.update(organization).set(mudancas).where(eq(organization.id, org.id));
+  return {
+    // A nota é configurada na assinatura viva, e tentada de novo a cada aviso enquanto não der certo.
+    configurarNfse: assinaturaAtual && !org.nfseConfiguradaEm ? assinaturaAtual : undefined,
+    removerLink: adota && org.asaasLinkId ? org.asaasLinkId : undefined,
+  };
+}
+
+/** A assinatura acabou no Asaas (cancelada lá, ou por nós): vale o que já foi pago, e mais nada é cobrado. */
+async function aplicarAssinaturaEncerrada(tx: Tx, org: LinhaDoEscritorio, assinaturaId: string, agora: Date): Promise<void> {
+  // Só a assinatura viva: o eco de uma antiga, já cancelada, não mexe em nada.
+  if (assinaturaId !== org.asaasAssinaturaId) return;
+  await registrarCancelamento(tx, org.id, agora);
 }
 
 /**
- * A cobrança da parcela no Asaas do escritório, pelo link de pagamento (Pix, boleto e cartão). O vencimento sugerido é o
- * da parcela, nunca o dia de hoje; parcela que já venceu pede uma data nova, que a pessoa escolhe.
+ * Cancelar vale até o fim do período já pago: o último vencimento pago mais um mês. As cobranças
+ * ainda abertas somem (o Asaas também as apaga) e o atraso, se havia, deixa de correr. A assinatura
+ * cancelada vai para a lista das encerradas: nenhum aviso dela, mesmo atrasado, volta a mexer no escritório.
  */
-export async function emitirCobranca(deps: DepsDaCobranca, organizationId: string, userId: string, parcelaId: string, hoje: Dia, vencimentoPedido?: Dia | null): Promise<CobrancaDaParcela> {
-  const dados = await withTenant(deps.db, organizationId, async (tx) => {
-    const [l] = await tx
-      .select({ p: parcelasHonorarios, c: contratosHonorarios, cliente: clientes })
-      .from(parcelasHonorarios)
-      .innerJoin(contratosHonorarios, eq(contratosHonorarios.id, parcelasHonorarios.contratoId))
-      .leftJoin(clientes, eq(clientes.id, contratosHonorarios.clienteId))
-      .where(eq(parcelasHonorarios.id, parcelaId));
-    if (!l) falha(404, "nao_encontrado");
-    const [parcela] = await parcelasNaTela(tx, hoje, { contratoId: l.c.id, comCanceladas: true }).then((ps) => ps.filter((x) => x.id === parcelaId));
-    return { ...l, falta: parcela?.falta ?? null, situacao: parcela?.situacao };
-  });
-  const { p, c, cliente } = dados;
-  if (p.canceladaEm) falha(409, "parcela_cancelada", "Esta parcela foi cancelada.");
-  if (p.valor === null) falha(422, "sem_valor", "Esta parcela ainda não tem valor: informe o valor antes de cobrar.");
-  if (!dados.falta) falha(409, "ja_paga", "Esta parcela já está paga.");
-  if (p.cobrancaId) falha(409, "ja_cobrada", "Esta parcela já tem uma cobrança emitida. Cancele a cobrança antes de emitir outra.");
-  if (!cliente) falha(422, "sem_cliente", "O contrato não tem cliente: a cobrança precisa de um cliente com CPF ou CNPJ.");
-  if (!cliente.documento) falha(422, "cliente_sem_documento", "O cliente não tem CPF ou CNPJ cadastrado: o Asaas exige o documento de quem paga.");
-
-  let vencimento: Dia;
-  if (vencimentoPedido) {
-    if (vencimentoPedido < hoje) falha(422, "vencimento_no_passado", "A cobrança precisa de uma data de hoje em diante.");
-    vencimento = vencimentoPedido;
-  } else {
-    const v = vencimentoDaCobranca(p.vencimento, hoje);
-    if (v.precisaEscolher) falha(422, "escolher_vencimento", v.motivo ?? "Escolha a data da cobrança.");
-    vencimento = v.sugerido!;
+async function registrarCancelamento(tx: Tx, organizationId: string, agora: Date): Promise<Dia | null> {
+  const [org] = await tx.select().from(organization).where(eq(organization.id, organizationId)).for("update");
+  if (!org?.asaasAssinaturaId) return null;
+  const hoje = hojeEm(org.timezone, agora);
+  const encerradas = [...org.asaasAssinaturasEncerradas, org.asaasAssinaturaId];
+  if (!org.assinouEm) {
+    // Nunca pagou: não há período pago nem cancelamento, só uma assinatura que não foi para a frente.
+    await tx.update(faturas).set({ situacao: "removida" }).where(and(eq(faturas.organizationId, org.id), inArray(faturas.situacao, ["pendente", "atrasada"])));
+    await tx.update(organization).set({ asaasAssinaturaId: null, asaasAssinaturasEncerradas: encerradas, nfseConfiguradaEm: null }).where(eq(organization.id, org.id));
+    return null;
   }
-
-  const cfg = await configDoEscritorio(deps.db, organizationId);
-  const conta = contaAsaas(deps, organizationId, cfg);
-  if (!conta) falha(409, "sem_asaas", "O escritório ainda não ligou o Asaas. Informe a chave nas Configurações, ou dê a baixa à mão.");
-  const comPixAutomatico = p.tipo === "mensal" && c.pixAutomaticoSituacao === "ACTIVE" && !!c.pixAutomaticoId;
-
-  let emitida;
-  try {
-    const clienteAsaas = await buscarOuCriarCliente(conta, { id: cliente.id, nome: cliente.nome, cpfCnpj: cliente.documento, email: cliente.email, telefone: cliente.telefone });
-    emitida = await criarCobranca(conta, { clienteAsaas, valorCentavos: dados.falta, vencimento, descricao: p.descricao, referencia: p.id, pixAutomaticoId: comPixAutomatico ? c.pixAutomaticoId! : undefined });
-  } catch (err) {
-    if (err instanceof AsaasErro) falha(err.status === 0 ? 504 : 422, "asaas_recusou", err.message);
-    throw err;
-  }
-
-  const gravou = await withTenant(deps.db, organizationId, (tx) =>
-    tx
-      .update(parcelasHonorarios)
-      .set({ cobrancaProvedor: "asaas", cobrancaId: emitida.id, cobrancaLink: emitida.link, cobrancaVencimento: emitida.vencimento, cobrancaEmitidaEm: new Date(), cobrancaEmitidaPor: userId })
-      .where(and(eq(parcelasHonorarios.id, parcelaId), isNull(parcelasHonorarios.cobrancaId)))
-      .returning({ id: parcelasHonorarios.id }),
-  );
-  if (!gravou.length) {
-    // Duas pessoas cobraram a mesma parcela ao mesmo tempo: a segunda desfaz a que criou no Asaas.
-    await removerCobranca(conta, emitida.id).catch(() => {});
-    falha(409, "ja_cobrada", "Esta parcela já tem uma cobrança emitida.");
-  }
-  return emitida;
+  const [ultima] = await tx.select({ vencimento: faturas.vencimento }).from(faturas).where(and(eq(faturas.organizationId, org.id), eq(faturas.situacao, "paga"))).orderBy(desc(faturas.vencimento)).limit(1);
+  const acessoAte = ultima ? fimDoPeriodoPago(ultima.vencimento) : somarDias(hoje, -1);
+  await tx.update(faturas).set({ situacao: "removida" }).where(and(eq(faturas.organizationId, org.id), inArray(faturas.situacao, ["pendente", "atrasada"])));
+  await tx
+    .update(organization)
+    .set({
+      cancelamentoPedidoEm: agora,
+      acessoAte,
+      inadimplenteDesde: null,
+      // A assinatura cancelada não existe mais: qualquer assinatura que aparecer depois é nova.
+      asaasAssinaturaId: null,
+      asaasAssinaturasEncerradas: encerradas,
+      nfseConfiguradaEm: null,
+      ...(org.situacao === "inadimplente" ? { situacao: "ativo" as const } : {}),
+    })
+    .where(eq(organization.id, org.id));
+  return acessoAte;
 }
 
-/** Cancela a cobrança no Asaas (se ela ainda existe lá) e solta a parcela. Cobrança paga não se cancela: estorne o pagamento. */
-export async function cancelarCobranca(deps: DepsDaCobranca, organizationId: string, parcelaId: string): Promise<void> {
-  const parcela = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(parcelasHonorarios).where(eq(parcelasHonorarios.id, parcelaId)))[0]);
-  if (!parcela) falha(404, "nao_encontrado");
-  if (!parcela.cobrancaId) falha(409, "sem_cobranca", "Esta parcela não tem cobrança emitida.");
-  const pagos = await withTenant(deps.db, organizationId, (tx) => tx.select({ id: pagamentosHonorarios.id }).from(pagamentosHonorarios).where(and(eq(pagamentosHonorarios.parcelaId, parcelaId), isNull(pagamentosHonorarios.estornadoEm), eq(pagamentosHonorarios.origem, "asaas"))));
-  if (pagos.length) falha(409, "cobranca_paga", "Esta cobrança já foi paga. Estorne o pagamento se foi engano.");
-  const conta = contaAsaasSemErro(deps, organizationId, (await configDoEscritorio(deps.db, organizationId))!);
-  if (conta) {
+/**
+ * Toda manhã, antes dos avisos: acerta a situação de quem assina pelas faturas e pela data. Sem isto, uma fatura vencida
+ * cujo aviso de atraso não chegou deixaria o escritório com acesso total para sempre.
+ */
+export async function reconciliarAssinaturas(deps: { db: Database; log: Log }, agora = new Date()): Promise<{ acertados: number }> {
+  const escritorios = await deps.db
+    .select({ id: organization.id })
+    .from(organization)
+    .where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm), isNotNull(organization.assinouEm), isNotNull(organization.asaasAssinaturaId), inArray(organization.situacao, ["ativo", "inadimplente"])));
+  let acertados = 0;
+  for (const { id } of escritorios) {
     try {
-      await removerCobranca(conta, parcela.cobrancaId);
+      acertados += await withTenant(deps.db, id, async (tx) => {
+        const [org] = await tx.select().from(organization).where(eq(organization.id, id)).for("update");
+        if (!org?.asaasAssinaturaId) return 0;
+        const todas = await tx
+          .select({ situacao: faturas.situacao, vencimento: faturas.vencimento, valorCentavos: faturas.valorCentavos, assinaturaId: faturas.assinaturaId })
+          .from(faturas)
+          .where(eq(faturas.organizationId, id));
+        const dela = todas.filter((f) => f.assinaturaId === org.asaasAssinaturaId || f.assinaturaId === null);
+        const m = mudancasPelasFaturas(org, dela, hojeEm(org.timezone, agora), agora);
+        const mudou = (m.situacao !== undefined && m.situacao !== org.situacao) || (m.inadimplenteDesde !== undefined && m.inadimplenteDesde !== org.inadimplenteDesde);
+        if (!mudou) return 0;
+        await tx.update(organization).set({ situacao: m.situacao, inadimplenteDesde: m.inadimplenteDesde }).where(eq(organization.id, id));
+        deps.log("situação do escritório acertada pelas faturas", { organizationId: id, de: org.situacao, para: m.situacao, inadimplenteDesde: m.inadimplenteDesde ?? null });
+        return 1;
+      });
     } catch (err) {
-      // O Asaas já não tem a cobrança: segue. Qualquer outro erro, a cobrança continua e a pessoa tenta de novo.
-      if (!(err instanceof AsaasErro && err.status === 404)) falha(err instanceof AsaasErro && err.status !== 0 ? 422 : 504, "asaas_recusou", err instanceof AsaasErro ? err.message : "O Asaas não respondeu.");
+      deps.log("não deu para acertar a situação do escritório", { organizationId: id, error: err instanceof Error ? err.message : String(err) });
     }
   }
-  await soltarCobranca(deps.db, organizationId, parcelaId);
+  return { acertados };
 }
 
-export async function soltarCobranca(db: Database, organizationId: string, parcelaId: string): Promise<void> {
-  await withTenant(db, organizationId, (tx) =>
-    tx.update(parcelasHonorarios).set({ cobrancaProvedor: null, cobrancaId: null, cobrancaLink: null, cobrancaVencimento: null, cobrancaEmitidaEm: null, cobrancaEmitidaPor: null }).where(eq(parcelasHonorarios.id, parcelaId)),
-  );
-}
+/* ---------------- Assinar e cancelar ---------------- */
 
-/** Pix Automático da mensalidade: o QR Code de autorização que o cliente usa uma vez; as cobranças dos meses seguintes saem ligadas a ele. */
-export async function autorizarPixAutomatico(deps: DepsDaCobranca, organizationId: string, contratoId: string, hoje: Dia): Promise<{ id: string; situacao: string; payload: string; imagem: string | null }> {
-  const cfg = await configDoEscritorio(deps.db, organizationId);
-  if (!cfg?.pixAutomatico) falha(409, "pix_automatico_desligado", "O Pix Automático não está ligado para este escritório. Ligue nas Configurações (o Asaas exige CNPJ ativo há mais de 6 meses).");
-  const conta = contaAsaas(deps, organizationId, cfg);
-  if (!conta) falha(409, "sem_asaas", "O escritório ainda não ligou o Asaas.");
-  const { contrato, cliente, primeira } = await withTenant(deps.db, organizationId, async (tx) => {
-    const [l] = await tx.select({ c: contratosHonorarios, cliente: clientes }).from(contratosHonorarios).leftJoin(clientes, eq(clientes.id, contratosHonorarios.clienteId)).where(eq(contratosHonorarios.id, contratoId));
-    if (!l) falha(404, "nao_encontrado");
-    const abertas = (await parcelasNaTela(tx, hoje, { contratoId })).filter((p) => p.tipo === "mensal" && p.situacao !== "paga" && p.vencimento && p.vencimento >= hoje);
-    return { contrato: l.c, cliente: l.cliente, primeira: abertas[0] };
-  });
-  if (!contrato.mensalidade) falha(422, "sem_mensalidade", "Só o contrato com mensalidade usa Pix Automático.");
-  if (contrato.pixAutomaticoSituacao === "ACTIVE" || contrato.pixAutomaticoSituacao === "CREATED") falha(409, "ja_autorizado", "Este contrato já tem uma autorização de Pix Automático em andamento.");
-  if (!cliente?.documento) falha(422, "cliente_sem_documento", "O cliente não tem CPF ou CNPJ cadastrado: o Asaas exige o documento de quem paga.");
-  if (!primeira?.vencimento) falha(422, "sem_mensalidade_a_vencer", "Não há mensalidade a vencer neste contrato para começar a autorização.");
-  let a;
-  try {
-    const clienteAsaas = await buscarOuCriarCliente(conta, { id: cliente.id, nome: cliente.nome, cpfCnpj: cliente.documento, email: cliente.email, telefone: cliente.telefone });
-    a = await criarAutorizacaoPix(conta, { clienteAsaas, contrato: contrato.id.replaceAll("-", ""), inicio: primeira.vencimento, valorCentavos: contrato.mensalidade, descricao: "Honorários mensais", primeiraCobrancaCentavos: primeira.falta ?? contrato.mensalidade });
-  } catch (err) {
-    if (err instanceof AsaasErro) falha(err.status === 0 ? 504 : 422, "asaas_recusou", err.message);
-    throw err;
+/** Uma recusa com a frase que a tela mostra. */
+export class RecusaDaCobranca extends Error {
+  constructor(
+    readonly status: 409 | 503,
+    readonly codigo: string,
+    mensagem: string,
+  ) {
+    super(mensagem);
   }
-  await withTenant(deps.db, organizationId, (tx) => tx.update(contratosHonorarios).set({ pixAutomaticoId: a.id, pixAutomaticoSituacao: a.situacao, pixAutomaticoQr: { payload: a.payload, imagem: a.imagem } }).where(eq(contratosHonorarios.id, contratoId)));
-  return a;
 }
 
-/* ------------------------------------------------------------------ */
-/* O aviso de pagamento (webhook)                                       */
-/* ------------------------------------------------------------------ */
-
-/** O aviso do Asaas, só com o que o Decreta lê. Campo desconhecido é ignorado: o Asaas acrescenta campos sem avisar. */
-export interface AvisoDoAsaas {
-  id?: unknown;
-  event?: unknown;
-  dateCreated?: unknown;
-  payment?: { id?: unknown; value?: unknown; billingType?: unknown; paymentDate?: unknown; clientPaymentDate?: unknown; confirmedDate?: unknown; deleted?: unknown; externalReference?: unknown };
-  authorization?: { id?: unknown; status?: unknown };
+export interface DepsDoPlano {
+  db: Database;
+  asaas: ClienteAsaas | null;
+  cobrancaAtiva: boolean;
+  telas: string;
+  log: Log;
 }
 
-const FORMA_PELO_TIPO: Record<string, "pix" | "boleto" | "cartao" | "transferencia" | "outro"> = { PIX: "pix", BOLETO: "boleto", CREDIT_CARD: "cartao", DEBIT_CARD: "cartao", TRANSFER: "transferencia", DEPOSIT: "transferencia" };
-const EVENTOS_DE_PAGAMENTO = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
-const EVENTOS_DE_ESTORNO = new Set(["PAYMENT_REFUNDED", "PAYMENT_RECEIVED_IN_CASH_UNDONE", "PAYMENT_CHARGEBACK_REQUESTED"]);
-const EVENTOS_DA_AUTORIZACAO = new Set(["PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED", "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED", "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED", "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED"]);
+function motivoDeNaoPoderAssinar(deps: Pick<DepsDoPlano, "asaas" | "cobrancaAtiva">, o: LinhaDoEscritorio, e: EstadoDaAssinatura): { codigo: string; mensagem: string } | null {
+  if (!deps.cobrancaAtiva) return { codigo: "cobranca_desligada", mensagem: "A cobrança ainda não foi aberta. Por enquanto nada é cobrado." };
+  if (o.situacao === "cortesia") return { codigo: "cortesia", mensagem: "Este escritório tem acesso por cortesia, sem cobrança. Se quiser assinar, fale com a equipe do Decreta." };
+  if (e.motivo === "manual") return { codigo: "restricao_da_equipe", mensagem: "O escritório está com uma restrição da equipe do Decreta. Fale com a equipe para resolver." };
+  if (PLANO.valorMensalCentavos === null) return { codigo: "valor_nao_definido", mensagem: "O valor do plano ainda não foi definido. Fale com a equipe do Decreta para assinar." };
+  if (!deps.asaas) return { codigo: "cobranca_nao_configurada", mensagem: "A cobrança ainda não está configurada neste servidor. Fale com a equipe do Decreta." };
+  if (o.asaasAssinaturaId) return { codigo: "ja_assina", mensagem: "O escritório já tem uma assinatura em andamento. Para pagar, abra a fatura na lista de faturas; para começar de novo, cancele a assinatura." };
+  return null;
+}
 
-const texto = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
-/** O valor do aviso vem em reais, como número JSON: vira centavos inteiros, arredondando o que o ponto flutuante sujou (19,99 × 100 = 1998,9999…). */
-export const centavosDoAviso = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.round(v * 100) : null);
-const diaDoTexto = (v: unknown): Dia | null => {
-  const t = texto(v);
-  return t && /^\d{4}-\d{2}-\d{2}/.test(t) ? t.slice(0, 10) : null;
+/** O link do Asaas onde o escritório assina. Reaproveita o que já foi criado, se o valor é o mesmo. */
+export async function iniciarAssinatura(deps: DepsDoPlano, organizationId: string, agora = new Date()): Promise<{ url: string }> {
+  const [o] = await deps.db.select().from(organization).where(eq(organization.id, organizationId));
+  if (!o) throw new RecusaDaCobranca(409, "nao_encontrado", "Escritório não encontrado.");
+  const motivo = motivoDeNaoPoderAssinar(deps, o, estadoDoEscritorio(o, deps.cobrancaAtiva, agora));
+  if (motivo) throw new RecusaDaCobranca(motivo.codigo === "cobranca_nao_configurada" ? 503 : 409, motivo.codigo, motivo.mensagem);
+  const valor = PLANO.valorMensalCentavos!;
+  if (o.asaasLinkId && o.asaasLinkUrl && o.asaasLinkValorCentavos === valor) return { url: o.asaasLinkUrl };
+  try {
+    const link = await deps.asaas!.criarLinkDeAssinatura({
+      nome: `${PLANO.nome} · Decreta`,
+      descricao: `Mensalidade do Decreta para ${o.name}. Cancele quando quiser, no próprio app.`,
+      valorCentavos: valor,
+      referencia: o.id,
+      voltarPara: `${deps.telas}/configuracoes?aba=plano`,
+    });
+    await deps.db.update(organization).set({ asaasLinkId: link.id, asaasLinkUrl: link.url, asaasLinkValorCentavos: valor }).where(eq(organization.id, o.id));
+    return { url: link.url };
+  } catch (err) {
+    deps.log("link de assinatura do Asaas falhou", { organizationId, error: err instanceof Error ? err.message : String(err) });
+    throw new RecusaDaCobranca(503, "asaas_fora", err instanceof ErroDoAsaas && err.status < 500 ? "O Asaas recusou o pedido. Fale com a equipe do Decreta." : "Não deu para falar com o Asaas agora. Tente de novo em instantes.");
+  }
+}
+
+/** Cancela a assinatura: vale até o fim do período pago. Devolve o último dia de acesso completo. */
+export async function cancelarAssinatura(deps: DepsDoPlano, organizationId: string, agora = new Date()): Promise<{ acessoAte: Dia | null }> {
+  const [o] = await deps.db.select().from(organization).where(eq(organization.id, organizationId));
+  // Cancela a assinatura viva, tenha ela já cobrado ou não (quem abriu o link e desistiu cancela para recomeçar).
+  if (!o?.asaasAssinaturaId || (o.situacao !== "teste" && o.situacao !== "ativo" && o.situacao !== "inadimplente")) throw new RecusaDaCobranca(409, "sem_assinatura", "O escritório não tem uma assinatura para cancelar.");
+  if (o.cancelamentoPedidoEm && o.acessoAte) throw new RecusaDaCobranca(409, "ja_cancelada", "A assinatura já foi cancelada.");
+  if (!deps.asaas) throw new RecusaDaCobranca(503, "cobranca_nao_configurada", "A cobrança ainda não está configurada neste servidor. Fale com a equipe do Decreta.");
+  try {
+    await deps.asaas.cancelarAssinatura(o.asaasAssinaturaId);
+  } catch (err) {
+    deps.log("cancelamento no Asaas falhou", { organizationId, error: err instanceof Error ? err.message : String(err) });
+    throw new RecusaDaCobranca(503, "asaas_fora", "Não deu para cancelar no Asaas agora. Nada mudou: tente de novo em instantes.");
+  }
+  const acessoAte = await withTenant(deps.db, organizationId, (tx) => registrarCancelamento(tx, organizationId, agora));
+  return { acessoAte };
+}
+
+/* ---------------- A tela do Plano ---------------- */
+
+export interface FaturaDaTela {
+  id: string;
+  vencimento: Dia;
+  valorCentavos: number;
+  situacao: SituacaoDaFatura;
+  forma: string | null;
+  link: string | null;
+  pagaEm: Dia | null;
+}
+
+export async function planoDoEscritorio(deps: Pick<DepsDoPlano, "db" | "asaas" | "cobrancaAtiva">, organizationId: string, agora = new Date()) {
+  const [o] = await deps.db.select().from(organization).where(eq(organization.id, organizationId));
+  if (!o) return null;
+  const hoje = hojeEm(o.timezone, agora);
+  const estado = estadoDoEscritorio(o, deps.cobrancaAtiva, agora);
+  const lista = await withTenant(deps.db, organizationId, (tx) => tx.select().from(faturas).where(ne(faturas.situacao, "removida")).orderBy(desc(faturas.vencimento)).limit(24));
+  const aberta = [...lista].filter((f) => f.situacao === "atrasada" || f.situacao === "pendente").sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0];
+  const naoPodeAssinar = motivoDeNaoPoderAssinar(deps, o, estado);
+  /** Tem uma assinatura viva no Asaas, tenha ela já cobrado ou não. */
+  const assinante = !!o.asaasAssinaturaId;
+  const aviso: AvisoDaAssinatura | null = deps.cobrancaAtiva ? avisoDaAssinatura(estado, hoje) : null;
+  return {
+    cobrancaAtiva: deps.cobrancaAtiva,
+    plano: { nome: PLANO.nome, testeDias: PLANO.testeDias, valorMensalCentavos: PLANO.valorMensalCentavos },
+    situacao: estado.situacao,
+    rotulo: ROTULO_DA_SITUACAO[estado.situacao],
+    situacaoGravada: o.situacao,
+    acesso: estado.acesso,
+    motivo: estado.motivo,
+    testeAte: estado.testeAte,
+    diasRestantesDoTeste: estado.diasRestantesDoTeste,
+    diasDeAtraso: estado.diasDeAtraso,
+    viraSoLeituraEm: estado.viraSoLeituraEm,
+    bloqueiaEm: estado.bloqueiaEm,
+    acessoAte: estado.acessoAte,
+    cancelamentoAgendado: estado.cancelamentoAgendado,
+    valorMensalCentavos: o.valorMensalCentavos,
+    assinante,
+    podeAssinar: !naoPodeAssinar,
+    motivoSemAssinar: naoPodeAssinar?.mensagem ?? null,
+    podeCancelar: deps.cobrancaAtiva && assinante && (o.situacao === "teste" || o.situacao === "ativo" || o.situacao === "inadimplente") && !estado.cancelamentoAgendado,
+    faturas: lista.map((f): FaturaDaTela => ({ id: f.id, vencimento: f.vencimento, valorCentavos: f.valorCentavos, situacao: f.situacao, forma: f.forma, link: f.link, pagaEm: f.pagaEm })),
+    /** A página da fatura aberta no Asaas: é onde se escolhe Pix, boleto ou cartão, sem passar dado nenhum pelo Decreta. */
+    trocarFormaEm: aberta?.link ?? null,
+    aviso,
+  };
+}
+
+/* ---------------- Avisos por e-mail ---------------- */
+
+const ASSUNTO: Record<TipoDeAvisoDaAssinatura, (escritorio: string, e: EstadoDaAssinatura) => string> = {
+  teste_3: (o, e) => `O teste do ${o} no Decreta termina em ${e.diasRestantesDoTeste} dias`,
+  teste_1: (o, e) => `O teste do ${o} no Decreta termina ${e.diasRestantesDoTeste === 0 ? "hoje" : "amanhã"}`,
+  teste_acabou: (o) => `O teste do ${o} acabou: o escritório está só para leitura`,
+  atraso_1: (o) => `Fatura em atraso no Decreta (${o})`,
+  atraso_5: (o) => `O ${o} fica só para leitura em 2 dias`,
+  atraso_7: (o) => `O ${o} está só para leitura por falta de pagamento`,
+  atraso_13: (o) => `O acesso do ${o} será bloqueado em 2 dias`,
+  atraso_15: (o) => `O acesso do ${o} foi bloqueado por falta de pagamento`,
 };
 
-export interface ResultadoDoAviso {
-  /** O aviso já tinha sido tratado: nada foi feito de novo. */
-  duplicado: boolean;
-  resultado: string;
-}
-
 /**
- * Trata um aviso do Asaas, uma vez por evento: o id do evento é gravado antes de qualquer coisa, na mesma
- * transação da baixa. Se algo falhar, a transação volta inteira (o evento também) e o Asaas manda de novo.
- * A baixa só nasce de um pagamento confirmado pelo Asaas, e o mesmo pagamento nunca é baixado duas vezes.
+ * O aviso do dia por e-mail, para os sócios: o teste a 3 e a 1 dia do fim e ao acabar, e a fatura em atraso na régua
+ * de 1, 5, 7, 13 e 15 dias. Cada aviso sai uma vez por sócio (a rotina pode rodar de novo): um e-mail que falhou
+ * fica sem registro e sai na próxima rodada.
  */
-export async function tratarAvisoDoAsaas(db: Database, organizationId: string, aviso: AvisoDoAsaas, hoje: Dia): Promise<ResultadoDoAviso & { parcelaId?: string }> {
-  const idDoEvento = texto(aviso.id);
-  const tipo = texto(aviso.event);
-  if (!idDoEvento || !tipo) falha(400, "aviso_invalido", "Aviso sem id ou sem evento.");
-  const pagamentoId = texto(aviso.payment?.id);
-  return withTenant(db, organizationId, async (tx) => {
-    const [novo] = await tx
-      .insert(eventosCobranca)
-      .values({ organizationId, provedor: "asaas", externoId: idDoEvento, tipo, recurso: pagamentoId ?? texto(aviso.authorization?.id) })
-      .onConflictDoNothing()
-      .returning({ id: eventosCobranca.id });
-    if (!novo) return { duplicado: true, resultado: "duplicado" };
-    const fim = async (resultado: string, parcelaId?: string) => {
-      await tx.update(eventosCobranca).set({ resultado }).where(eq(eventosCobranca.id, novo.id));
-      return { duplicado: false, resultado, parcelaId };
-    };
-
-    if (EVENTOS_DA_AUTORIZACAO.has(tipo)) {
-      const autorizacao = texto(aviso.authorization?.id);
-      const situacao = texto(aviso.authorization?.status);
-      if (!autorizacao || !situacao) return fim("autorizacao_sem_dados");
-      const r = await tx.update(contratosHonorarios).set({ pixAutomaticoSituacao: situacao }).where(eq(contratosHonorarios.pixAutomaticoId, autorizacao)).returning({ id: contratosHonorarios.id });
-      return fim(r.length ? "autorizacao_atualizada" : "autorizacao_desconhecida");
+export async function enviarAvisosDaAssinatura(deps: { db: Database; mailer: Mailer; telas: string; log: Log }, agora = new Date()): Promise<{ enviados: number }> {
+  const escritorios = await deps.db
+    .select()
+    .from(organization)
+    .where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm), or(eq(organization.situacao, "teste"), eq(organization.situacao, "inadimplente"))));
+  let enviados = 0;
+  for (const o of escritorios) {
+    const hoje = hojeEm(o.timezone, agora);
+    const estado = estadoDoEscritorio(o, true, agora);
+    const tipo = janelaDoAvisoDoTeste(estado) ?? janelaDoAvisoDoAtraso(estado);
+    const aviso = avisoDaAssinatura(estado, hoje);
+    if (!tipo || !aviso) continue;
+    // O aviso vale uma vez por teste ou por atraso: a data de referência o distingue do próximo.
+    const chave = `assinatura:${tipo}:${tipo.startsWith("teste") ? o.testeAte : o.inadimplenteDesde}`;
+    const socios = await deps.db
+      .select({ id: user.id, nome: user.name, email: user.email })
+      .from(member)
+      .innerJoin(user, eq(user.id, member.userId))
+      .where(and(eq(member.organizationId, o.id), inArray(member.role, ["owner", "admin"])));
+    for (const s of socios) {
+      const ja = await withTenant(deps.db, o.id, (tx) => tx.select({ id: avisosEnviados.id }).from(avisosEnviados).where(and(eq(avisosEnviados.userId, s.id), eq(avisosEnviados.tipo, chave))).limit(1));
+      if (ja.length) continue;
+      try {
+        await deps.mailer.send({
+          to: s.email,
+          subject: ASSUNTO[tipo](o.name, estado),
+          paragraphs: [`Olá, ${s.nome.split(" ")[0] || s.nome}.`, aviso.texto, ...(aviso.ate ? [`Data: ${formatarDia(aviso.ate)}.`] : [])],
+          action: { label: "Ver o plano", url: `${deps.telas}/configuracoes?aba=plano` },
+        });
+      } catch (err) {
+        deps.log("e-mail do plano não saiu", { organizationId: o.id, tipo, error: err instanceof Error ? err.message : String(err) });
+        continue;
+      }
+      await withTenant(deps.db, o.id, (tx) => tx.insert(avisosEnviados).values({ organizationId: o.id, userId: s.id, tipo: chave, dia: hoje, ok: true }).onConflictDoNothing());
+      enviados++;
     }
-    if (!pagamentoId) return fim("sem_cobranca");
-    const [parcela] = await tx.select().from(parcelasHonorarios).where(eq(parcelasHonorarios.cobrancaId, pagamentoId)).for("update");
-    if (!parcela) return fim("parcela_nao_encontrada");
-
-    if (EVENTOS_DE_PAGAMENTO.has(tipo)) {
-      if (aviso.payment?.deleted === true) return fim("cobranca_apagada", parcela.id);
-      const valor = centavosDoAviso(aviso.payment?.value);
-      if (!valor) return fim("valor_invalido", parcela.id);
-      const pagoEm = diaDoTexto(aviso.payment?.paymentDate) ?? diaDoTexto(aviso.payment?.clientPaymentDate) ?? diaDoTexto(aviso.payment?.confirmedDate) ?? diaDoTexto(aviso.dateCreated) ?? hoje;
-      const forma = FORMA_PELO_TIPO[texto(aviso.payment?.billingType) ?? ""] ?? "outro";
-      const g = await registrarPagamento(tx, organizationId, { parcelaId: parcela.id, valor, pagoEm: pagoEm > hoje ? hoje : pagoEm, forma, origem: "asaas", externoId: `asaas:${pagamentoId}`, observacao: "Baixa automática pelo aviso de pagamento do Asaas." });
-      // O Asaas manda "confirmado" e depois "recebido" do mesmo pagamento: o segundo não baixa de novo.
-      return fim(g ? "baixa_feita" : "ja_baixado", parcela.id);
-    }
-    if (EVENTOS_DE_ESTORNO.has(tipo)) {
-      const [g] = await tx.select({ id: pagamentosHonorarios.id }).from(pagamentosHonorarios).where(and(eq(pagamentosHonorarios.externoId, `asaas:${pagamentoId}`), isNull(pagamentosHonorarios.estornadoEm)));
-      if (!g) return fim("nada_a_estornar", parcela.id);
-      await estornarPagamento(tx, g.id, { userId: null, motivo: `Estorno avisado pelo Asaas (${tipo}).` });
-      return fim("estornado", parcela.id);
-    }
-    if (tipo === "PAYMENT_DELETED") {
-      const pagos = await tx.select({ id: pagamentosHonorarios.id }).from(pagamentosHonorarios).where(and(eq(pagamentosHonorarios.parcelaId, parcela.id), isNull(pagamentosHonorarios.estornadoEm)));
-      if (pagos.length) return fim("apagada_com_pagamento", parcela.id);
-      await tx.update(parcelasHonorarios).set({ cobrancaProvedor: null, cobrancaId: null, cobrancaLink: null, cobrancaVencimento: null, cobrancaEmitidaEm: null, cobrancaEmitidaPor: null }).where(eq(parcelasHonorarios.id, parcela.id));
-      return fim("cobranca_solta", parcela.id);
-    }
-    return fim("ignorado", parcela.id);
-  });
+  }
+  return { enviados };
 }

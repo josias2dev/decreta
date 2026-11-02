@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { registrar } from "../auditoria.ts";
-import { configDoEscritorio, segredoConfere, tratarAvisoDoAsaas, type AvisoDoAsaas } from "../servicos/cobranca.ts";
+import { configDoEscritorio, segredoConfere, tratarAvisoDoAsaas, type AvisoDoAsaas } from "../servicos/cobranca-de-honorarios.ts";
 
 const ORG = /^[A-Za-z0-9_-]{1,64}$/;
 /** Um aviso do Asaas tem alguns centenas de bytes; acima disto nem é lido. */

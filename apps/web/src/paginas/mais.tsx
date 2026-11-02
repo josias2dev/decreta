@@ -1,7 +1,7 @@
 /** "Mais" do celular: o resto do menu, o escritório e a conta. */
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, UserRound } from "lucide-react";
+import { ChevronRight, LayoutDashboard, UserRound } from "lucide-react";
 import { itensVisiveis, MENU, TelaCelular } from "@/componentes/moldura";
 import { Avatar } from "@/componentes/ui";
 import { euQuery } from "@/lib/consultas";
@@ -42,6 +42,13 @@ export function MaisPage() {
       <section className="dc-secao">
         <span className="dc-rotulo">Conta</span>
         <div className="dc-painel">
+          {e?.plataforma && (
+            <Link to="/plataforma" className="dc-linhas__item dc-linhas__item--toque items-center">
+              <LayoutDashboard className="size-5 flex-none text-[var(--tinta-2)]" />
+              <span className="flex-1 dc-t-titulo">Plataforma</span>
+              <ChevronRight className="size-4 text-[var(--tinta-3)]" />
+            </Link>
+          )}
           <Link to="/conta" className="dc-linhas__item dc-linhas__item--toque items-center">
             {e ? <Avatar pessoa={e.usuario} grande /> : <UserRound className="size-5" />}
             <span className="dc-celula min-w-0 flex-1">

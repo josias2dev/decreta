@@ -95,7 +95,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const orgId = c.get("orgId");
     const [pub] = await tenant(c, deps, (tx) => tx.select({ idExterno: publicacoes.idExterno }).from(publicacoes).where(eq(publicacoes.id, pubId)));
     if (!pub) falha(404, "nao_encontrado");
-    const bytes = await certidaoDaPublicacao({ db, arquivos: deps.arquivos, fetch: deps.captura.fetch }, orgId, pubId).catch((err: unknown) => {
+    const bytes = await certidaoDaPublicacao({ db, arquivos: deps.arquivos, fetch: deps.captura.fetch, cobrancaAtiva: deps.cobranca?.ativa }, orgId, pubId).catch((err: unknown) => {
       deps.log("certidão do DJEN falhou", { organizationId: orgId, publicacaoId: pubId, error: err instanceof Error ? err.message : String(err) });
       return falha(503, "djen_fora", "O DJEN não entregou a certidão agora. Tente de novo em alguns minutos.");
     });

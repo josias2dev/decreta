@@ -4,6 +4,7 @@ import { ChevronRight, CircleAlert, FolderPlus, MessageSquarePlus, UserPlus } fr
 import { useState } from "react";
 import { AuditoriaDaCarteira } from "@/componentes/auditoria";
 import { AvisoDaCaptura } from "@/componentes/captura-do-djen";
+import { AvisoDoTeste } from "@/componentes/faixa-do-plano";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
 import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, Faixa, MarcaIa, Painel, Responsavel, Selo, Vazio } from "@/componentes/ui";
@@ -101,6 +102,7 @@ export function HojePage() {
           <Carregando />
         ) : (
           <>
+            <AvisoDoTeste aviso={eu.data?.assinatura?.aviso} />
             <TerminarDeConfigurar eu={eu.data} />
             <Numeros painel={p} celular />
             <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
@@ -148,6 +150,7 @@ export function HojePage() {
         <Carregando />
       ) : (
         <>
+          <AvisoDoTeste aviso={eu.data?.assinatura?.aviso} />
           <TerminarDeConfigurar eu={eu.data} />
           <Numeros painel={p} />
           <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />

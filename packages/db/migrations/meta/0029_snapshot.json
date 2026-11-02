@@ -1,5 +1,5 @@
 {
-  "id": "9328c6aa-39e7-4c51-acf0-7766a76f0dbb",
+  "id": "8ebe508c-3c7c-43cd-ac90-5084e64b5b7c",
   "prevId": "fa971ba3-8225-4def-8442-c081640f394f",
   "version": "7",
   "dialect": "postgresql",
@@ -649,9 +649,142 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "situacao": {
+          "name": "situacao",
+          "type": "situacao_do_escritorio",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'cortesia'"
+        },
+        "teste_ate": {
+          "name": "teste_ate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "inadimplente_desde": {
+          "name": "inadimplente_desde",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "acesso_ate": {
+          "name": "acesso_ate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelamento_pedido_em": {
+          "name": "cancelamento_pedido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "assinou_em": {
+          "name": "assinou_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valor_mensal_centavos": {
+          "name": "valor_mensal_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_link_id": {
+          "name": "asaas_link_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_link_url": {
+          "name": "asaas_link_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_link_valor_centavos": {
+          "name": "asaas_link_valor_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_cliente_id": {
+          "name": "asaas_cliente_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_assinatura_id": {
+          "name": "asaas_assinatura_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_assinaturas_encerradas": {
+          "name": "asaas_assinaturas_encerradas",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "nfse_configurada_em": {
+          "name": "nfse_configurada_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "organization_asaas_assinatura_idx": {
+          "name": "organization_asaas_assinatura_idx",
+          "columns": [
+            {
+              "expression": "asaas_assinatura_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "organization_asaas_link_idx": {
+          "name": "organization_asaas_link_idx",
+          "columns": [
+            {
+              "expression": "asaas_link_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "organization_asaas_cliente_idx": {
+          "name": "organization_asaas_cliente_idx",
+          "columns": [
+            {
+              "expression": "asaas_cliente_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -1191,6 +1324,313 @@
       "policies": {
         "calculos_tenant_isolation": {
           "name": "calculos_tenant_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "app_user"
+          ],
+          "using": "organization_id = current_setting('app.org_id', true)",
+          "withCheck": "organization_id = current_setting('app.org_id', true)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.auditoria_da_plataforma": {
+      "name": "auditoria_da_plataforma",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "operador": {
+          "name": "operador",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acao": {
+          "name": "acao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "detalhes": {
+          "name": "detalhes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "em": {
+          "name": "em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "auditoria_da_plataforma_em_idx": {
+          "name": "auditoria_da_plataforma_em_idx",
+          "columns": [
+            {
+              "expression": "em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "auditoria_da_plataforma_organization_id_organization_id_fk": {
+          "name": "auditoria_da_plataforma_organization_id_organization_id_fk",
+          "tableFrom": "auditoria_da_plataforma",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "auditoria_da_plataforma_insercao": {
+          "name": "auditoria_da_plataforma_insercao",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "app_user"
+          ],
+          "withCheck": "true"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.eventos_de_cobranca": {
+      "name": "eventos_de_cobranca",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evento": {
+          "name": "evento",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recebido_em": {
+          "name": "recebido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "eventos_de_cobranca_org_idx": {
+          "name": "eventos_de_cobranca_org_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "recebido_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "eventos_de_cobranca_organization_id_organization_id_fk": {
+          "name": "eventos_de_cobranca_organization_id_organization_id_fk",
+          "tableFrom": "eventos_de_cobranca",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "eventos_de_cobranca_tenant_isolation": {
+          "name": "eventos_de_cobranca_tenant_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "app_user"
+          ],
+          "using": "organization_id = current_setting('app.org_id', true)",
+          "withCheck": "organization_id = current_setting('app.org_id', true)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.faturas": {
+      "name": "faturas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assinatura_id": {
+          "name": "assinatura_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vencimento": {
+          "name": "vencimento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "valor_centavos": {
+          "name": "valor_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "situacao": {
+          "name": "situacao",
+          "type": "situacao_da_fatura",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pendente'"
+        },
+        "forma": {
+          "name": "forma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paga_em": {
+          "name": "paga_em",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "faturas_org_idx": {
+          "name": "faturas_org_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vencimento",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "faturas_organization_id_organization_id_fk": {
+          "name": "faturas_organization_id_organization_id_fk",
+          "tableFrom": "faturas",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "faturas_tenant_isolation": {
+          "name": "faturas_tenant_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
           "to": [
@@ -3081,13 +3521,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
-        },
-        "financeiro": {
-          "name": "financeiro",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -5216,12 +5649,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "honorario_dispensado_em": {
-          "name": "honorario_dispensado_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -7269,1849 +7696,6 @@
       "checkConstraints": {},
       "isRLSEnabled": true
     },
-    "public.assinaturas": {
-      "name": "assinaturas",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "documento_id": {
-          "name": "documento_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "cliente_id": {
-          "name": "cliente_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "provedor": {
-          "name": "provedor",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'zapsign'"
-        },
-        "token": {
-          "name": "token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "situacao": {
-          "name": "situacao",
-          "type": "situacao_assinatura",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'enviada'"
-        },
-        "signatarios": {
-          "name": "signatarios",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
-        },
-        "enviada_por": {
-          "name": "enviada_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "enviada_em": {
-          "name": "enviada_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "assinada_em": {
-          "name": "assinada_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "documento_assinado_id": {
-          "name": "documento_assinado_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "assinaturas_token_uq": {
-          "name": "assinaturas_token_uq",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "provedor",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "token",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "assinaturas_documento_idx": {
-          "name": "assinaturas_documento_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "documento_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "assinaturas_organization_id_organization_id_fk": {
-          "name": "assinaturas_organization_id_organization_id_fk",
-          "tableFrom": "assinaturas",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "assinaturas_documento_id_documentos_id_fk": {
-          "name": "assinaturas_documento_id_documentos_id_fk",
-          "tableFrom": "assinaturas",
-          "tableTo": "documentos",
-          "columnsFrom": [
-            "documento_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "assinaturas_cliente_id_clientes_id_fk": {
-          "name": "assinaturas_cliente_id_clientes_id_fk",
-          "tableFrom": "assinaturas",
-          "tableTo": "clientes",
-          "columnsFrom": [
-            "cliente_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "assinaturas_enviada_por_user_id_fk": {
-          "name": "assinaturas_enviada_por_user_id_fk",
-          "tableFrom": "assinaturas",
-          "tableTo": "user",
-          "columnsFrom": [
-            "enviada_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "assinaturas_documento_assinado_id_documentos_id_fk": {
-          "name": "assinaturas_documento_assinado_id_documentos_id_fk",
-          "tableFrom": "assinaturas",
-          "tableTo": "documentos",
-          "columnsFrom": [
-            "documento_assinado_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "assinaturas_tenant_isolation": {
-          "name": "assinaturas_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.cobranca_config": {
-      "name": "cobranca_config",
-      "schema": "",
-      "columns": {
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "asaas_chave": {
-          "name": "asaas_chave",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "asaas_ambiente": {
-          "name": "asaas_ambiente",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'producao'"
-        },
-        "asaas_webhook_id": {
-          "name": "asaas_webhook_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "asaas_webhook_token_hash": {
-          "name": "asaas_webhook_token_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "asaas_conferida_em": {
-          "name": "asaas_conferida_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "pix_automatico": {
-          "name": "pix_automatico",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "regua": {
-          "name": "regua",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{\"ligada\":false,\"passos\":[]}'::jsonb"
-        },
-        "zapsign_chave": {
-          "name": "zapsign_chave",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "zapsign_ambiente": {
-          "name": "zapsign_ambiente",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'producao'"
-        },
-        "zapsign_ligada": {
-          "name": "zapsign_ligada",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "cobranca_config_organization_id_organization_id_fk": {
-          "name": "cobranca_config_organization_id_organization_id_fk",
-          "tableFrom": "cobranca_config",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "cobranca_config_tenant_isolation": {
-          "name": "cobranca_config_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.contratos_honorarios": {
-      "name": "contratos_honorarios",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "cliente_id": {
-          "name": "cliente_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "processo_id": {
-          "name": "processo_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "titulo": {
-          "name": "titulo",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tipo": {
-          "name": "tipo",
-          "type": "tipo_contrato_honorarios",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "situacao": {
-          "name": "situacao",
-          "type": "situacao_contrato_honorarios",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'ativo'"
-        },
-        "valor_fixo": {
-          "name": "valor_fixo",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "mensalidade": {
-          "name": "mensalidade",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "exito_bp": {
-          "name": "exito_bp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "inicio": {
-          "name": "inicio",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "observacoes": {
-          "name": "observacoes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "documento_id": {
-          "name": "documento_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "pix_automatico_id": {
-          "name": "pix_automatico_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "pix_automatico_situacao": {
-          "name": "pix_automatico_situacao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "pix_automatico_qr": {
-          "name": "pix_automatico_qr",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "criado_por": {
-          "name": "criado_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "contratos_honorarios_cliente_idx": {
-          "name": "contratos_honorarios_cliente_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "cliente_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "contratos_honorarios_processo_idx": {
-          "name": "contratos_honorarios_processo_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "processo_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "contratos_honorarios_organization_id_organization_id_fk": {
-          "name": "contratos_honorarios_organization_id_organization_id_fk",
-          "tableFrom": "contratos_honorarios",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "contratos_honorarios_cliente_id_clientes_id_fk": {
-          "name": "contratos_honorarios_cliente_id_clientes_id_fk",
-          "tableFrom": "contratos_honorarios",
-          "tableTo": "clientes",
-          "columnsFrom": [
-            "cliente_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "contratos_honorarios_processo_id_processos_id_fk": {
-          "name": "contratos_honorarios_processo_id_processos_id_fk",
-          "tableFrom": "contratos_honorarios",
-          "tableTo": "processos",
-          "columnsFrom": [
-            "processo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "contratos_honorarios_documento_id_documentos_id_fk": {
-          "name": "contratos_honorarios_documento_id_documentos_id_fk",
-          "tableFrom": "contratos_honorarios",
-          "tableTo": "documentos",
-          "columnsFrom": [
-            "documento_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "contratos_honorarios_criado_por_user_id_fk": {
-          "name": "contratos_honorarios_criado_por_user_id_fk",
-          "tableFrom": "contratos_honorarios",
-          "tableTo": "user",
-          "columnsFrom": [
-            "criado_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "contratos_honorarios_tenant_isolation": {
-          "name": "contratos_honorarios_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.eventos_cobranca": {
-      "name": "eventos_cobranca",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "provedor": {
-          "name": "provedor",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "externo_id": {
-          "name": "externo_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tipo": {
-          "name": "tipo",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "recurso": {
-          "name": "recurso",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "resultado": {
-          "name": "resultado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "recebido_em": {
-          "name": "recebido_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "eventos_cobranca_uq": {
-          "name": "eventos_cobranca_uq",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "provedor",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "externo_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "eventos_cobranca_recurso_idx": {
-          "name": "eventos_cobranca_recurso_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "recurso",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "eventos_cobranca_organization_id_organization_id_fk": {
-          "name": "eventos_cobranca_organization_id_organization_id_fk",
-          "tableFrom": "eventos_cobranca",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "eventos_cobranca_tenant_isolation": {
-          "name": "eventos_cobranca_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.lembretes_de_cobranca": {
-      "name": "lembretes_de_cobranca",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parcela_id": {
-          "name": "parcela_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "mensagem_id": {
-          "name": "mensagem_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "passo": {
-          "name": "passo",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "lembretes_de_cobranca_passo_uq": {
-          "name": "lembretes_de_cobranca_passo_uq",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parcela_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "passo",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"lembretes_de_cobranca\".\"passo\" is not null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "lembretes_de_cobranca_parcela_idx": {
-          "name": "lembretes_de_cobranca_parcela_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parcela_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "lembretes_de_cobranca_organization_id_organization_id_fk": {
-          "name": "lembretes_de_cobranca_organization_id_organization_id_fk",
-          "tableFrom": "lembretes_de_cobranca",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "lembretes_de_cobranca_parcela_id_parcelas_honorarios_id_fk": {
-          "name": "lembretes_de_cobranca_parcela_id_parcelas_honorarios_id_fk",
-          "tableFrom": "lembretes_de_cobranca",
-          "tableTo": "parcelas_honorarios",
-          "columnsFrom": [
-            "parcela_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "lembretes_de_cobranca_mensagem_id_mensagens_cliente_id_fk": {
-          "name": "lembretes_de_cobranca_mensagem_id_mensagens_cliente_id_fk",
-          "tableFrom": "lembretes_de_cobranca",
-          "tableTo": "mensagens_cliente",
-          "columnsFrom": [
-            "mensagem_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "lembretes_de_cobranca_tenant_isolation": {
-          "name": "lembretes_de_cobranca_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.pagamentos_honorarios": {
-      "name": "pagamentos_honorarios",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parcela_id": {
-          "name": "parcela_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "valor": {
-          "name": "valor",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "pago_em": {
-          "name": "pago_em",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "forma": {
-          "name": "forma",
-          "type": "forma_pagamento_honorarios",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'outro'"
-        },
-        "origem": {
-          "name": "origem",
-          "type": "origem_pagamento_honorarios",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'manual'"
-        },
-        "externo_id": {
-          "name": "externo_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "observacao": {
-          "name": "observacao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "registrado_por": {
-          "name": "registrado_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "estornado_em": {
-          "name": "estornado_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "estornado_por": {
-          "name": "estornado_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "motivo_estorno": {
-          "name": "motivo_estorno",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "pagamentos_honorarios_parcela_idx": {
-          "name": "pagamentos_honorarios_parcela_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parcela_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "pagamentos_honorarios_externo_uq": {
-          "name": "pagamentos_honorarios_externo_uq",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "externo_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"pagamentos_honorarios\".\"externo_id\" is not null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "pagamentos_honorarios_organization_id_organization_id_fk": {
-          "name": "pagamentos_honorarios_organization_id_organization_id_fk",
-          "tableFrom": "pagamentos_honorarios",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "pagamentos_honorarios_parcela_id_parcelas_honorarios_id_fk": {
-          "name": "pagamentos_honorarios_parcela_id_parcelas_honorarios_id_fk",
-          "tableFrom": "pagamentos_honorarios",
-          "tableTo": "parcelas_honorarios",
-          "columnsFrom": [
-            "parcela_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "pagamentos_honorarios_registrado_por_user_id_fk": {
-          "name": "pagamentos_honorarios_registrado_por_user_id_fk",
-          "tableFrom": "pagamentos_honorarios",
-          "tableTo": "user",
-          "columnsFrom": [
-            "registrado_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "pagamentos_honorarios_estornado_por_user_id_fk": {
-          "name": "pagamentos_honorarios_estornado_por_user_id_fk",
-          "tableFrom": "pagamentos_honorarios",
-          "tableTo": "user",
-          "columnsFrom": [
-            "estornado_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "pagamentos_honorarios_tenant_isolation": {
-          "name": "pagamentos_honorarios_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.parcelas_honorarios": {
-      "name": "parcelas_honorarios",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "contrato_id": {
-          "name": "contrato_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tipo": {
-          "name": "tipo",
-          "type": "tipo_parcela_honorarios",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "numero": {
-          "name": "numero",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "descricao": {
-          "name": "descricao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "valor": {
-          "name": "valor",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "vencimento": {
-          "name": "vencimento",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cancelada_em": {
-          "name": "cancelada_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "motivo_cancelamento": {
-          "name": "motivo_cancelamento",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cobranca_provedor": {
-          "name": "cobranca_provedor",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cobranca_id": {
-          "name": "cobranca_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cobranca_link": {
-          "name": "cobranca_link",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cobranca_vencimento": {
-          "name": "cobranca_vencimento",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cobranca_emitida_em": {
-          "name": "cobranca_emitida_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cobranca_emitida_por": {
-          "name": "cobranca_emitida_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "alvara_id": {
-          "name": "alvara_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "prestacao_id": {
-          "name": "prestacao_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "parcelas_honorarios_contrato_idx": {
-          "name": "parcelas_honorarios_contrato_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "contrato_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "parcelas_honorarios_vencimento_idx": {
-          "name": "parcelas_honorarios_vencimento_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "vencimento",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "parcelas_honorarios_cobranca_uq": {
-          "name": "parcelas_honorarios_cobranca_uq",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "cobranca_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"parcelas_honorarios\".\"cobranca_id\" is not null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "parcelas_honorarios_organization_id_organization_id_fk": {
-          "name": "parcelas_honorarios_organization_id_organization_id_fk",
-          "tableFrom": "parcelas_honorarios",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "parcelas_honorarios_contrato_id_contratos_honorarios_id_fk": {
-          "name": "parcelas_honorarios_contrato_id_contratos_honorarios_id_fk",
-          "tableFrom": "parcelas_honorarios",
-          "tableTo": "contratos_honorarios",
-          "columnsFrom": [
-            "contrato_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "parcelas_honorarios_cobranca_emitida_por_user_id_fk": {
-          "name": "parcelas_honorarios_cobranca_emitida_por_user_id_fk",
-          "tableFrom": "parcelas_honorarios",
-          "tableTo": "user",
-          "columnsFrom": [
-            "cobranca_emitida_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "parcelas_honorarios_alvara_id_alvaras_id_fk": {
-          "name": "parcelas_honorarios_alvara_id_alvaras_id_fk",
-          "tableFrom": "parcelas_honorarios",
-          "tableTo": "alvaras",
-          "columnsFrom": [
-            "alvara_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "parcelas_honorarios_prestacao_id_prestacoes_de_contas_id_fk": {
-          "name": "parcelas_honorarios_prestacao_id_prestacoes_de_contas_id_fk",
-          "tableFrom": "parcelas_honorarios",
-          "tableTo": "prestacoes_de_contas",
-          "columnsFrom": [
-            "prestacao_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "parcelas_honorarios_tenant_isolation": {
-          "name": "parcelas_honorarios_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.prestacoes_de_contas": {
-      "name": "prestacoes_de_contas",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "alvara_id": {
-          "name": "alvara_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "contrato_id": {
-          "name": "contrato_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parcela_id": {
-          "name": "parcela_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "valor_alvara": {
-          "name": "valor_alvara",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "valor_recebido": {
-          "name": "valor_recebido",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "exito_bp": {
-          "name": "exito_bp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "honorario": {
-          "name": "honorario",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "cliente": {
-          "name": "cliente",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sem_contrato": {
-          "name": "sem_contrato",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "retido_no_saque": {
-          "name": "retido_no_saque",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "observacao": {
-          "name": "observacao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "confirmada_por": {
-          "name": "confirmada_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "confirmada_em": {
-          "name": "confirmada_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "cancelada_em": {
-          "name": "cancelada_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cancelada_por": {
-          "name": "cancelada_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "motivo_cancelamento": {
-          "name": "motivo_cancelamento",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "documento_id": {
-          "name": "documento_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "prestacoes_de_contas_alvara_uq": {
-          "name": "prestacoes_de_contas_alvara_uq",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "alvara_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"prestacoes_de_contas\".\"cancelada_em\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "prestacoes_de_contas_org_idx": {
-          "name": "prestacoes_de_contas_org_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "confirmada_em",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "prestacoes_de_contas_organization_id_organization_id_fk": {
-          "name": "prestacoes_de_contas_organization_id_organization_id_fk",
-          "tableFrom": "prestacoes_de_contas",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "prestacoes_de_contas_alvara_id_alvaras_id_fk": {
-          "name": "prestacoes_de_contas_alvara_id_alvaras_id_fk",
-          "tableFrom": "prestacoes_de_contas",
-          "tableTo": "alvaras",
-          "columnsFrom": [
-            "alvara_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "prestacoes_de_contas_contrato_id_contratos_honorarios_id_fk": {
-          "name": "prestacoes_de_contas_contrato_id_contratos_honorarios_id_fk",
-          "tableFrom": "prestacoes_de_contas",
-          "tableTo": "contratos_honorarios",
-          "columnsFrom": [
-            "contrato_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "prestacoes_de_contas_parcela_id_parcelas_honorarios_id_fk": {
-          "name": "prestacoes_de_contas_parcela_id_parcelas_honorarios_id_fk",
-          "tableFrom": "prestacoes_de_contas",
-          "tableTo": "parcelas_honorarios",
-          "columnsFrom": [
-            "parcela_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "prestacoes_de_contas_confirmada_por_user_id_fk": {
-          "name": "prestacoes_de_contas_confirmada_por_user_id_fk",
-          "tableFrom": "prestacoes_de_contas",
-          "tableTo": "user",
-          "columnsFrom": [
-            "confirmada_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "prestacoes_de_contas_cancelada_por_user_id_fk": {
-          "name": "prestacoes_de_contas_cancelada_por_user_id_fk",
-          "tableFrom": "prestacoes_de_contas",
-          "tableTo": "user",
-          "columnsFrom": [
-            "cancelada_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "prestacoes_de_contas_documento_id_documentos_id_fk": {
-          "name": "prestacoes_de_contas_documento_id_documentos_id_fk",
-          "tableFrom": "prestacoes_de_contas",
-          "tableTo": "documentos",
-          "columnsFrom": [
-            "documento_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "prestacoes_de_contas_tenant_isolation": {
-          "name": "prestacoes_de_contas_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.repasses_de_alvara": {
-      "name": "repasses_de_alvara",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "prestacao_id": {
-          "name": "prestacao_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "favorecido": {
-          "name": "favorecido",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "favorecido_documento": {
-          "name": "favorecido_documento",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "conta": {
-          "name": "conta",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "valor": {
-          "name": "valor",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "repassado_em": {
-          "name": "repassado_em",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "observacao": {
-          "name": "observacao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "registrado_por": {
-          "name": "registrado_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "estornado_em": {
-          "name": "estornado_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "estornado_por": {
-          "name": "estornado_por",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "motivo_estorno": {
-          "name": "motivo_estorno",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "repasses_de_alvara_prestacao_idx": {
-          "name": "repasses_de_alvara_prestacao_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "prestacao_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "repasses_de_alvara_organization_id_organization_id_fk": {
-          "name": "repasses_de_alvara_organization_id_organization_id_fk",
-          "tableFrom": "repasses_de_alvara",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "repasses_de_alvara_prestacao_id_prestacoes_de_contas_id_fk": {
-          "name": "repasses_de_alvara_prestacao_id_prestacoes_de_contas_id_fk",
-          "tableFrom": "repasses_de_alvara",
-          "tableTo": "prestacoes_de_contas",
-          "columnsFrom": [
-            "prestacao_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "repasses_de_alvara_registrado_por_user_id_fk": {
-          "name": "repasses_de_alvara_registrado_por_user_id_fk",
-          "tableFrom": "repasses_de_alvara",
-          "tableTo": "user",
-          "columnsFrom": [
-            "registrado_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "repasses_de_alvara_estornado_por_user_id_fk": {
-          "name": "repasses_de_alvara_estornado_por_user_id_fk",
-          "tableFrom": "repasses_de_alvara",
-          "tableTo": "user",
-          "columnsFrom": [
-            "estornado_por"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "repasses_de_alvara_tenant_isolation": {
-          "name": "repasses_de_alvara_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_user"
-          ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
     "public.observacoes_da_ia": {
       "name": "observacoes_da_ia",
       "schema": "",
@@ -9265,6 +7849,19 @@
     }
   },
   "enums": {
+    "public.situacao_do_escritorio": {
+      "name": "situacao_do_escritorio",
+      "schema": "public",
+      "values": [
+        "teste",
+        "ativo",
+        "inadimplente",
+        "so_leitura",
+        "bloqueado",
+        "cancelado",
+        "cortesia"
+      ]
+    },
     "public.tipo_calculo": {
       "name": "tipo_calculo",
       "schema": "public",
@@ -9272,6 +7869,17 @@
         "atualizacao",
         "revisional",
         "pjecalc"
+      ]
+    },
+    "public.situacao_da_fatura": {
+      "name": "situacao_da_fatura",
+      "schema": "public",
+      "values": [
+        "pendente",
+        "paga",
+        "atrasada",
+        "estornada",
+        "removida"
       ]
     },
     "public.alvo_ia": {
@@ -9522,8 +8130,7 @@
       "schema": "public",
       "values": [
         "decisao",
-        "documentos",
-        "cobranca"
+        "documentos"
       ]
     },
     "public.tipo_pessoa": {
@@ -9551,65 +8158,6 @@
         "pedida",
         "pronta",
         "falhou"
-      ]
-    },
-    "public.forma_pagamento_honorarios": {
-      "name": "forma_pagamento_honorarios",
-      "schema": "public",
-      "values": [
-        "pix",
-        "boleto",
-        "cartao",
-        "transferencia",
-        "dinheiro",
-        "retido_no_alvara",
-        "outro"
-      ]
-    },
-    "public.origem_pagamento_honorarios": {
-      "name": "origem_pagamento_honorarios",
-      "schema": "public",
-      "values": [
-        "manual",
-        "asaas"
-      ]
-    },
-    "public.situacao_assinatura": {
-      "name": "situacao_assinatura",
-      "schema": "public",
-      "values": [
-        "enviada",
-        "assinada",
-        "cancelada"
-      ]
-    },
-    "public.situacao_contrato_honorarios": {
-      "name": "situacao_contrato_honorarios",
-      "schema": "public",
-      "values": [
-        "ativo",
-        "encerrado",
-        "cancelado"
-      ]
-    },
-    "public.tipo_contrato_honorarios": {
-      "name": "tipo_contrato_honorarios",
-      "schema": "public",
-      "values": [
-        "fixo",
-        "mensal",
-        "exito",
-        "hibrido"
-      ]
-    },
-    "public.tipo_parcela_honorarios": {
-      "name": "tipo_parcela_honorarios",
-      "schema": "public",
-      "values": [
-        "fixo",
-        "mensal",
-        "exito",
-        "avulso"
       ]
     }
   },

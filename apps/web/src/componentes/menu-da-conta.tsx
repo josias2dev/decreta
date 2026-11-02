@@ -7,7 +7,7 @@
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, ChevronsUpDown, LogOut, Moon, Settings, ShieldCheck, UserRound } from "lucide-react";
+import { Check, ChevronsUpDown, LayoutDashboard, LogOut, Moon, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { authCall, authClient } from "@/lib/auth";
 import { DENSIDADES, useDensidade, type Densidade } from "@/lib/densidade";
 import { useTema } from "@/lib/tema";
@@ -92,6 +92,14 @@ export function MenuDaConta({ eu, recolhido }: { eu: Eu; recolhido: boolean }) {
               <ShieldCheck aria-hidden /> Segurança e LGPD
             </Link>
           </Menu.Item>
+          {/* Só o operador da plataforma vê o link; para os outros o endereço nem existe. */}
+          {eu.plataforma && (
+            <Menu.Item asChild className="dc-menu-flutuante__item">
+              <Link to="/plataforma">
+                <LayoutDashboard aria-hidden /> Plataforma
+              </Link>
+            </Menu.Item>
+          )}
           <Menu.Separator className="dc-menu-flutuante__sep" />
           <Menu.Item className="dc-menu-flutuante__item" onSelect={() => sair.mutate()} disabled={sair.isPending}>
             <LogOut aria-hidden /> Sair

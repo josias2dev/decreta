@@ -3,13 +3,15 @@
  * escritório ativo do qual a pessoa é membro; esse escritório é o tenant de
  * tudo que a rota lê ou grava.
  */
-import { hojeEm, somarDias } from "@decreta/core";
+import { avisoDaAssinatura, hojeEm, somarDias } from "@decreta/core";
 import { alvaras, clientes, equipe, escritorios, negocios, organization, prazos, processos, publicacoes } from "@decreta/db";
 import { and, eq, ilike, inArray, like, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
+import { acessoLiberado, colunasDaAssinatura, estadoDoEscritorio, recusaDeAcesso } from "../servicos/assinatura.ts";
 import { AVISO_DO_ENCERRAMENTO } from "../servicos/encerramento.ts";
 import { contarParcelasEmAtraso } from "../servicos/honorarios.ts";
+import { ehOperador } from "../servicos/plataforma.ts";
 import { ehMembro, pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { ehSocio, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
@@ -33,10 +35,12 @@ import { rotasDasPecas } from "./pecas.ts";
 import { rotasDosPrazos } from "./prazos.ts";
 import { rotasDosProcessos } from "./processos.ts";
 import { rotasDasPublicacoes } from "./publicacoes.ts";
+import { rotasDoPlano } from "./plano.ts";
 import { rotasDoRadar } from "./radar.ts";
 
 export function createRotas(deps: DepsDasRotas) {
   const { db, auth } = deps;
+  const cobrancaAtiva = !!deps.cobranca?.ativa;
   const app = new Hono<Ambiente>();
 
   app.use("*", async (c, next) => {
@@ -47,15 +51,23 @@ export function createRotas(deps: DepsDasRotas) {
     // O escritório ativo fica gravado na sessão; confere que o vínculo ainda existe.
     const papel = await ehMembro(db, orgId, sessao.user.id);
     if (!papel) return c.json({ erro: "sem_escritorio" }, 403);
-    const [org] = await db.select({ nome: organization.name, slug: organization.slug, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao, encerradoEm: organization.encerradoEm }).from(organization).where(eq(organization.id, orgId));
+    const [org] = await db.select({ nome: organization.name, slug: organization.slug, emAvaliacao: organization.emAvaliacao, encerradoEm: organization.encerradoEm, ...colunasDaAssinatura }).from(organization).where(eq(organization.id, orgId));
     // Escritório encerrado: ninguém mais usa, mesmo com a sessão ainda de pé.
     if (org?.encerradoEm) return c.json({ erro: "escritorio_encerrado", detalhe: AVISO_DO_ENCERRAMENTO }, 403);
+    // Sem a cobrança ligada, o acesso é sempre total. Com ela, o escritório sem acesso total só lê (e paga, leva os dados e encerra) ou, bloqueado, só paga e leva os dados.
+    const assinatura = estadoDoEscritorio(org ?? { situacao: "cortesia", testeAte: null, inadimplenteDesde: null, acessoAte: null, timezone: "America/Sao_Paulo" }, cobrancaAtiva);
+    if (!acessoLiberado(assinatura.acesso, c.req.method, c.req.path.replace(/^\/api\/app/, ""))) {
+      const recusa = recusaDeAcesso(assinatura);
+      return c.json({ erro: recusa.erro, detalhe: recusa.detalhe }, recusa.status);
+    }
     c.set("orgId", orgId);
     c.set("orgNome", org?.nome ?? "");
     c.set("demonstracao", org?.slug === SLUG_DA_DEMONSTRACAO);
     c.set("emAvaliacao", org?.emAvaliacao ?? false);
+    c.set("assinatura", assinatura);
     c.set("timezone", org?.timezone ?? "America/Sao_Paulo");
     c.set("userId", sessao.user.id);
+    c.set("userEmail", sessao.user.email);
     c.set("userNome", sessao.user.name || sessao.user.email);
     c.set("papel", papel);
     await next();
@@ -88,6 +100,10 @@ export function createRotas(deps: DepsDasRotas) {
         // O logo do timbre aparece no menu; ele sai de GET /escritorio/logo.
         // `onboarding`: a configuração inicial ainda está pendente, e esta pessoa (sócia) pode fazê-la.
         escritorio: { id: c.get("orgId"), nome: c.get("orgNome"), pessoas: pessoas.size, timezone: c.get("timezone"), logo: !!esc?.timbre?.logoDocumentoId, demonstracao: c.get("demonstracao"), onboarding: !!esc && !esc.onboardingConcluidoEm && ehSocio(c.get("papel")) },
+        // A assinatura só aparece com a cobrança ligada: o aviso (com data) que a moldura mostra em toda tela e o que o escritório pode fazer.
+        ...(cobrancaAtiva ? { assinatura: { situacao: c.get("assinatura").situacao, acesso: c.get("assinatura").acesso, aviso: avisoDaAssinatura(c.get("assinatura"), hoje) } } : {}),
+        // Só o operador da plataforma vê o link do painel.
+        ...(ehOperador(deps.plataformaEmails ?? new Set(), c.get("userEmail")) ? { plataforma: true } : {}),
         hoje,
         ia: deps.ia !== null,
         equipe: [...pessoas.values()].map((p) => ({ id: p.id, nome: p.nome, apelido: p.apelido, iniciais: p.iniciais, foto: p.foto, cargo: p.cargo, papel: p.papel })),
@@ -145,5 +161,6 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDaCobranca(app, deps);
   rotasDaPrestacao(app, deps);
   rotasDasAssinaturas(app, deps);
+  rotasDoPlano(app, deps);
   return app;
 }

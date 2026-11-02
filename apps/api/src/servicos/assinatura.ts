@@ -1,124 +1,105 @@
 /**
- * Assinatura eletrônica pela ZapSign do próprio escritório: o contrato de honorários, a procuração e o
- * termo de IA saem da pasta do cliente para assinatura e o arquivo assinado volta para a mesma pasta.
- * Sem chave da ZapSign (ou com o interruptor desligado), o fluxo de baixar e anexar o documento
- * assinado continua como sempre.
+ * A assinatura do escritório vista pelo servidor: de qual situação ele está hoje e o
+ * que pode fazer. A conta (as datas, o que é teste, atraso e cancelamento) mora em
+ * `estadoDaAssinatura`, em @decreta/core; aqui ficam a leitura do banco, o que a API
+ * recusa em cada acesso e a situação com que um escritório novo nasce.
+ *
+ * Tudo isto só vale com `COBRANCA_ATIVA`. Desligada, o acesso é sempre total e nenhum
+ * aviso aparece: o Decreta age como agia antes da cobrança.
  */
-import { assinaturas, cobrancaConfig, documentos, withTenant, type Database } from "@decreta/db";
-import { chaveDoDocumento, MIME_DOCX, type Armazenamento } from "@decreta/documentos";
-import { desc, eq } from "drizzle-orm";
-import type { Cofre } from "../cofre.ts";
-import { falha } from "../rotas/base.ts";
-import { baixarArquivoAssinado, consultarDocumento, criarDocumentoParaAssinar, ZapSignErro, type ContaZapSign } from "./zapsign.ts";
+import { estadoDaAssinatura, hojeEm, PLANO, somarDias, type Acesso, type Dia, type EstadoDaAssinatura, type FichaDaAssinatura, type SituacaoDoEscritorio } from "@decreta/core";
+import { organization, type Database } from "@decreta/db";
+import { eq } from "drizzle-orm";
 
-export type Assinatura = typeof assinaturas.$inferSelect;
-
-export interface DepsDaAssinatura {
-  db: Database;
-  arquivos: Armazenamento;
-  cofre?: Cofre;
-  fetch?: typeof fetch;
-  log: (msg: string, extra?: Record<string, unknown>) => void;
-}
-
-/** A conta da ZapSign do escritório, com a chave aberta só aqui. `null`: sem chave, ou o interruptor está desligado. */
-export async function contaZapSign(deps: Pick<DepsDaAssinatura, "db" | "cofre" | "fetch">, organizationId: string): Promise<ContaZapSign | null> {
-  const [c] = await withTenant(deps.db, organizationId, (tx) => tx.select().from(cobrancaConfig).where(eq(cobrancaConfig.organizationId, organizationId)));
-  if (!c?.zapsignChave || !c.zapsignLigada) return null;
-  if (!deps.cofre) return falha(503, "cofre_desligado", "O cofre das chaves não está ligado neste servidor. Fale com o suporte do Decreta.");
-  try {
-    return { chave: deps.cofre.decifrar(c.zapsignChave, organizationId), ambiente: c.zapsignAmbiente, fetch: deps.fetch };
-  } catch {
-    return falha(409, "chave_ilegivel", "A chave da ZapSign guardada não abre mais. Informe a chave de novo nas Configurações.");
-  }
-}
-
-export interface PedidoDeEnvio {
-  documentoId: string;
-  signatarios: { nome: string; email?: string; telefone?: string }[];
-}
-
-const falhaDaZapSign = (err: unknown): never => {
-  if (err instanceof ZapSignErro) return falha(err.status === 0 ? 504 : 422, "zapsign_recusou", err.message);
-  throw err;
+/** As colunas da `organization` que dizem a situação na assinatura. */
+export const colunasDaAssinatura = {
+  situacao: organization.situacao,
+  testeAte: organization.testeAte,
+  inadimplenteDesde: organization.inadimplenteDesde,
+  acessoAte: organization.acessoAte,
+  timezone: organization.timezone,
 };
 
-/** Manda o documento da pasta do cliente para assinar. Só PDF e DOCX. */
-export async function enviarParaAssinatura(deps: DepsDaAssinatura, organizationId: string, userId: string, p: PedidoDeEnvio): Promise<Assinatura> {
-  const doc = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(documentos).where(eq(documentos.id, p.documentoId)))[0]);
-  if (!doc) falha(404, "nao_encontrado");
-  const conta = await contaZapSign(deps, organizationId);
-  if (!conta) falha(409, "sem_zapsign", "A assinatura eletrônica não está ligada. Informe a chave da ZapSign nas Configurações, ou baixe o documento e anexe o assinado à pasta.");
-  const tipo = doc.mime === "application/pdf" ? "pdf" : doc.mime === MIME_DOCX ? "docx" : null;
-  if (!tipo) falha(422, "formato_nao_aceito", "Só PDF e DOCX vão para assinatura.");
-  const bytes = await deps.arquivos.read(doc.chave).catch(() => null);
-  if (!bytes) falha(404, "arquivo_sumiu", "O arquivo deste documento não está mais guardado.");
+export type LinhaDaAssinatura = { situacao: SituacaoDoEscritorio; testeAte: Dia | null; inadimplenteDesde: Dia | null; acessoAte: Dia | null; timezone: string };
 
-  let enviado;
-  try {
-    enviado = await criarDocumentoParaAssinar(conta, { nome: doc.nome.replace(/\.[a-z0-9]+$/i, ""), arquivo: { tipo, bytes }, referencia: doc.id, signatarios: p.signatarios });
-  } catch (err) {
-    return falhaDaZapSign(err);
-  }
-  const [a] = await withTenant(deps.db, organizationId, (tx) =>
-    tx
-      .insert(assinaturas)
-      .values({ organizationId, documentoId: doc.id, clienteId: doc.clienteId, token: enviado.token, signatarios: enviado.signatarios, enviadaPor: userId })
-      .returning(),
-  );
-  return a!;
+export const fichaDaLinha = (l: Pick<LinhaDaAssinatura, "situacao" | "testeAte" | "inadimplenteDesde" | "acessoAte">): FichaDaAssinatura => ({
+  situacao: l.situacao,
+  testeAte: l.testeAte,
+  inadimplenteDesde: l.inadimplenteDesde,
+  acessoAte: l.acessoAte,
+});
+
+/**
+ * O estado de hoje. Com a cobrança desligada o acesso é total, sempre: as datas continuam
+ * valendo para a tela do Plano, mas nada trava e nenhum aviso sai.
+ */
+export function estadoDoEscritorio(l: LinhaDaAssinatura, cobrancaAtiva: boolean, agora = new Date()): EstadoDaAssinatura {
+  const e = estadoDaAssinatura(fichaDaLinha(l), hojeEm(l.timezone, agora));
+  return cobrancaAtiva ? e : { ...e, acesso: "total", motivo: null };
 }
 
-export async function assinaturasDoDocumento(db: Database, organizationId: string, documentoId: string): Promise<Assinatura[]> {
-  return withTenant(db, organizationId, (tx) => tx.select().from(assinaturas).where(eq(assinaturas.documentoId, documentoId)).orderBy(desc(assinaturas.enviadaEm)));
+export async function carregarEstado(db: Database, organizationId: string, cobrancaAtiva: boolean, agora = new Date()): Promise<EstadoDaAssinatura | null> {
+  const [l] = await db.select(colunasDaAssinatura).from(organization).where(eq(organization.id, organizationId));
+  return l ? estadoDoEscritorio(l, cobrancaAtiva, agora) : null;
+}
+
+/** O escritório que não tem acesso total não busca no DJEN, não manda WhatsApp e não usa a IA. Sem escritório, também não. */
+export async function temAcessoTotal(db: Database, organizationId: string, cobrancaAtiva: boolean | undefined, agora = new Date()): Promise<boolean> {
+  if (!cobrancaAtiva) return true;
+  const e = await carregarEstado(db, organizationId, true, agora);
+  return !!e && e.acesso === "total";
 }
 
 /**
- * Pergunta à ZapSign como está a assinatura. Assinada por todos, o arquivo assinado é baixado e fica na mesma pasta do
- * documento original (uma vez só: perguntar de novo não guarda de novo).
+ * Como um escritório novo começa. Com a cobrança ligada, o cadastro aberto abre um teste de
+ * `PLANO.testeDias` dias, sem cartão. Sem a cobrança, e em tudo que a equipe cria (o script,
+ * a demonstração), nasce cortesia: nunca é travado por uma regra que ainda não existia.
  */
-export async function atualizarAssinatura(deps: DepsDaAssinatura, organizationId: string, assinaturaId: string): Promise<{ assinatura: Assinatura; concluidaAgora: boolean }> {
-  const a = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(assinaturas).where(eq(assinaturas.id, assinaturaId)))[0]);
-  if (!a) falha(404, "nao_encontrado");
-  if (a.situacao === "assinada" && a.documentoAssinadoId) return { assinatura: a, concluidaAgora: false };
-  const conta = await contaZapSign(deps, organizationId);
-  if (!conta) falha(409, "sem_zapsign", "A assinatura eletrônica não está ligada neste escritório.");
-  let atual;
-  try {
-    atual = await consultarDocumento(conta, a.token);
-  } catch (err) {
-    return falhaDaZapSign(err);
+export function comoNasce(cobrancaAtiva: boolean, cadastroAberto: boolean, hoje: Dia = hojeEm()): { situacao: SituacaoDoEscritorio; testeAte: Dia | null } {
+  if (cobrancaAtiva && cadastroAberto) return { situacao: "teste", testeAte: somarDias(hoje, PLANO.testeDias) };
+  return { situacao: "cortesia", testeAte: null };
+}
+
+/* ---------------- O que a API recusa ---------------- */
+
+/** Permitido mesmo sem acesso total: pagar (a tela do Plano), levar os dados e encerrar. Sair da conta é do Better Auth, fora destas rotas. */
+const SEMPRE_PERMITIDO: RegExp[] = [
+  /^GET \/eu$/,
+  /^GET \/plano$/,
+  /^POST \/plano\/(assinar|cancelar)$/,
+  /^(GET|POST) \/escritorio\/exportacoes$/,
+  /^GET \/escritorio\/exportacoes\/[^/]+\/partes\/\d+$/,
+  /^POST \/escritorio\/encerrar$/,
+];
+
+/** Só estes métodos não escrevem: qualquer outro (inclusive um que ainda não existe) é recusado sem acesso total. */
+const LEITURA = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/** `caminho` é o das rotas das telas, sem o `/api/app` na frente. */
+export function acessoLiberado(acesso: Acesso, metodo: string, caminho: string): boolean {
+  if (acesso === "total") return true;
+  if (SEMPRE_PERMITIDO.some((r) => r.test(`${metodo} ${caminho}`))) return true;
+  return acesso === "leitura" && LEITURA.has(metodo);
+}
+
+const ONDE_PAGAR = "Em Configurações, na aba Plano, dá para assinar ou pagar; ver os dados, levar uma cópia deles e encerrar a conta continuam abertos.";
+
+/** A recusa que a API devolve (e a tela mostra) quando o acesso não é total. Nada é apagado por falta de pagamento. */
+export function recusaDeAcesso(e: EstadoDaAssinatura): { status: 403; erro: "so_leitura" | "escritorio_bloqueado"; detalhe: string } {
+  if (e.acesso === "bloqueado") {
+    return {
+      status: 403,
+      erro: "escritorio_bloqueado",
+      detalhe: `O acesso do escritório está bloqueado${e.motivo === "atraso" ? " por falta de pagamento" : ""}. Os dados continuam guardados. ${ONDE_PAGAR}`,
+    };
   }
-  const signatarios = a.signatarios.map((s) => ({ ...s, situacao: atual.signatarios.find((x) => x.nome === s.nome)?.situacao ?? s.situacao }));
-  if (atual.situacao !== "signed") {
-    const [r] = await withTenant(deps.db, organizationId, (tx) => tx.update(assinaturas).set({ signatarios }).where(eq(assinaturas.id, assinaturaId)).returning());
-    return { assinatura: r!, concluidaAgora: false };
-  }
-  let guardado: { id: string } | null = null;
-  if (atual.arquivoAssinado) {
-    try {
-      const bytes = await baixarArquivoAssinado(atual.arquivoAssinado, deps.fetch);
-      const original = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(documentos).where(eq(documentos.id, a.documentoId)))[0]);
-      if (original) {
-        const id = crypto.randomUUID();
-        const chave = chaveDoDocumento(organizationId, id);
-        await deps.arquivos.put(chave, bytes, "application/pdf");
-        await withTenant(deps.db, organizationId, (tx) =>
-          tx.insert(documentos).values({ id, organizationId, processoId: original.processoId, clienteId: original.clienteId, negocioId: original.negocioId, nome: `${original.nome.replace(/\.[a-z0-9]+$/i, "")} (assinado).pdf`, mime: "application/pdf", tamanho: bytes.length, chave, origem: "upload", enviadoPor: a.enviadaPor }),
-        );
-        guardado = { id };
-      }
-    } catch (err) {
-      // A assinatura saiu, mas o arquivo não baixou agora: fica "assinada" sem a cópia, e a próxima consulta tenta de novo.
-      deps.log("arquivo assinado não baixou", { organizationId, assinaturaId, error: err instanceof Error ? err.message : String(err) });
-    }
-  }
-  const [r] = await withTenant(deps.db, organizationId, (tx) =>
-    tx
-      .update(assinaturas)
-      .set({ situacao: "assinada", assinadaEm: a.assinadaEm ?? new Date(), signatarios, ...(guardado ? { documentoAssinadoId: guardado.id } : {}) })
-      .where(eq(assinaturas.id, assinaturaId))
-      .returning(),
-  );
-  return { assinatura: r!, concluidaAgora: a.situacao !== "assinada" };
+  const porque =
+    e.motivo === "fim_do_teste"
+      ? "O teste grátis acabou"
+      : e.motivo === "atraso"
+        ? "Há uma fatura em atraso"
+        : e.motivo === "cancelada"
+          ? "A assinatura foi cancelada"
+          : "O escritório foi colocado só para leitura pela equipe do Decreta";
+  return { status: 403, erro: "so_leitura", detalhe: `${porque} e o escritório está só para leitura: dá para ver tudo, mas não para salvar nada novo. Nada foi apagado. ${ONDE_PAGAR}` };
 }

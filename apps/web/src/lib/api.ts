@@ -20,6 +20,8 @@ export class ApiError extends Error {
 type Pedido = { method?: string; json?: unknown; form?: FormData; signal?: AbortSignal };
 
 export const api = <T>(path: string, init: Pedido = {}) => request<T>(`/api/app${path}`, init);
+/** O painel da plataforma: só os operadores, os outros recebem 404. */
+export const apiPlataforma = <T>(path: string, init: Pedido = {}) => request<T>(`/api/plataforma${path}`, init);
 
 function opcoes(init: Pedido): RequestInit {
   return {
@@ -88,6 +90,8 @@ export function mensagemDoErro(err: unknown): string {
       whatsapp_invalido: "Confira o número do WhatsApp, com DDD.",
       arquivo_grande: "O arquivo passa do tamanho máximo.",
       tipo_nao_aceito: "Este tipo de arquivo não é aceito. Envie PDF, DOCX, imagem ou texto.",
+      so_leitura: "O escritório está só para leitura: dá para ver tudo, mas não salvar nada novo.",
+      escritorio_bloqueado: "O acesso do escritório está bloqueado.",
       logo_png: "O logo precisa ser um PNG.",
       logo_grande: "O logo passa de 1 MB.",
     };

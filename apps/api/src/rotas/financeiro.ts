@@ -9,7 +9,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
-import { cancelarCobranca } from "../servicos/cobranca.ts";
+import { cancelarCobranca } from "../servicos/cobranca-de-honorarios.ts";
 import {
   cancelarParcela,
   contratoDoEscritorio,

@@ -1,3 +1,4 @@
+export * from "./assinatura.ts";
 export * from "./calculos.ts";
 export * from "./calendario.ts";
 export * from "./citacoes.ts";

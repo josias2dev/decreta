@@ -1,8 +1,8 @@
 /** Configurações do escritório: timbre das peças, o jeito de cada peça, avisos e captura, calendário forense, a IA (política e retorno), o registro e os dados (levar tudo e encerrar). */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NiveisDeAutomacao } from "@/componentes/automacao";
 import { useAviso } from "@/componentes/avisos";
 import { ConfigDoFinanceiro } from "@/componentes/cobranca-config";
@@ -12,16 +12,18 @@ import { Dialogo } from "@/componentes/dialogo";
 import { JeitoDasPecas } from "@/componentes/jeito-das-pecas";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { OpcoesDeTribunal } from "@/componentes/opcoes-de-tribunal";
+import { PlanoDoEscritorio } from "@/componentes/plano";
 import { Abas, Botao, Cabecalho, Campo, Carregando, Faixa, Interruptor, Painel, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { escritorioQuery, euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora } from "@/lib/formato";
+import type { AbaDaConfiguracao } from "@/lib/rotas";
 import type { Escritorio, Feriados, Registro, RetornosDaIa, Timbre } from "@/lib/tipos";
 import { Folha } from "./peca";
 
-type Aba = "escritorio" | "pecas" | "avisos" | "calendario" | "financeiro" | "ia" | "registro" | "dados";
+type Aba = AbaDaConfiguracao;
 const FONTES = ["Arial", "Times New Roman", "Calibri", "Garamond"] as const;
 const TIPO_DE_SUSPENSAO = { local: "Feriado municipal", forense: "Sem expediente forense", recesso: "Recesso ou suspensão de prazos", reduzido: "Expediente reduzido" } as const;
 const EXEMPLO = "# Excelentíssimo Senhor Doutor Juiz de Direito da 2ª Vara Cível da Comarca de Joinville/SC\n\nProcesso nº 0000000-00.2026.8.24.0038\n\n**FULANA DE TAL**, já qualificada nos autos, vem, por seus procuradores, manifestar-se sobre o laudo pericial.\n\n## 1. Da concordância com o laudo\n\nO perito confirmou o nexo causal e a incapacidade parcial.";
@@ -30,21 +32,35 @@ export function ConfiguracoesPage() {
   const celular = useCelular();
   const eu = useQuery(euQuery);
   const q = useQuery(escritorioQuery);
-  const [aba, setAba] = useState<Aba>("escritorio");
+  const { aba: abaDoEndereco } = useSearch({ from: "/app/configuracoes" });
+  const [abaEscolhida, setAba] = useState<Aba>(abaDoEndereco ?? "escritorio");
   const socio = ehSocio(eu.data?.usuario.papel);
+  // O "Ver o plano" da faixa de aviso chega aqui com a aba no endereço, mesmo com esta tela já aberta.
+  useEffect(() => {
+    if (abaDoEndereco) setAba(abaDoEndereco);
+  }, [abaDoEndereco]);
+  // As abas só dos sócios não abrem para quem não é: cai no Timbre.
+  const aba = !socio && (abaEscolhida === "plano" || abaEscolhida === "dados" || abaEscolhida === "financeiro") ? "escritorio" : abaEscolhida;
   const abas = (
     <Abas
       pagina={!celular}
+      densas={celular && socio}
       ativa={aba}
       aoMudar={setAba}
       abas={[
         { id: "escritorio", rotulo: "Timbre" },
-        // No celular, rótulos curtos: as sete abas do sócio cabem sem rolar. A cobrança do Financeiro, que não cabe como oitava, vem no fim de Avisos.
+        // No celular, rótulos curtos (e letra menor para quem é sócio): as oito abas cabem sem rolar. A cobrança do Financeiro, que não cabe como nona, vem no fim de Avisos.
         { id: "pecas", rotulo: celular ? "Peças" : "Jeito das peças" },
         { id: "avisos", rotulo: celular ? "Avisos" : "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
         ...(socio
-          ? [...(celular ? [] : [{ id: "financeiro" as const, rotulo: "Financeiro" }]), { id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }, { id: "dados" as const, rotulo: "Dados" }]
+          ? [
+              ...(celular ? [] : [{ id: "financeiro" as const, rotulo: "Financeiro" }]),
+              { id: "ia" as const, rotulo: "IA" },
+              { id: "plano" as const, rotulo: "Plano" },
+              { id: "registro" as const, rotulo: "Registro" },
+              { id: "dados" as const, rotulo: "Dados" },
+            ]
           : []),
       ]}
     />
@@ -75,6 +91,8 @@ export function ConfiguracoesPage() {
       <PoliticaDeIa />
       <AbaRetorno celular={celular} />
     </div>
+  ) : aba === "plano" ? (
+    <PlanoDoEscritorio celular={celular} />
   ) : aba === "dados" ? (
     <DadosDoEscritorio nome={e.nome} demonstracao={e.demonstracao} />
   ) : (

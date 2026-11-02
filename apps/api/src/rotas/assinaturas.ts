@@ -6,7 +6,7 @@
 import { z } from "zod";
 import type { Hono } from "hono";
 import { registrar } from "../auditoria.ts";
-import { assinaturasDoDocumento, atualizarAssinatura, enviarParaAssinatura, type Assinatura } from "../servicos/assinatura.ts";
+import { assinaturasDoDocumento, atualizarAssinatura, enviarParaAssinatura, type Assinatura } from "../servicos/assinatura-eletronica.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { corpo, ehSocio, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 

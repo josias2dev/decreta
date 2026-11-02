@@ -167,6 +167,31 @@ sistema, e volta a senha para `DEMONSTRACAO_SENHA`. Como a conta é de todos, el
 não troca senha nem e-mail e não liga a verificação em duas etapas. A busca no DJEN
 e no DataJud não roda para esse escritório. Os documentos dele ocupam uns 3 MB.
 
+### Cobrança da assinatura (opcional, desligada por padrão)
+
+Com `COBRANCA_ATIVA=0` (o padrão) o Decreta age como sempre: ninguém é cobrado e nenhum escritório é travado. Todo
+escritório que já existia é "cortesia" e nunca é travado, ligada ou não a cobrança. Para ligar:
+
+1. Decida o valor mensal em `packages/core/src/plano.ts` (`valorMensalCentavos`; com `null` ninguém consegue assinar) e faça o deploy.
+2. No Asaas, crie a chave de API e cadastre o aviso (webhook) em `https://decreta.site/api/cobranca/asaas`, versão v3,
+   com os eventos de cobrança (`PAYMENT_*`) e de assinatura (`SUBSCRIPTION_*`) e um token novo (`openssl rand -hex 32`).
+   Preencha `ASAAS_API_KEY`, `ASAAS_AMBIENTE` e `ASAAS_WEBHOOK_TOKEN` no `.env` (ver `env.producao.example`).
+3. Teste primeiro no sandbox (`ASAAS_AMBIENTE=sandbox`): assine, pague com os meios de teste do Asaas e confira que o aviso
+   chega (a fatura aparece em Configurações > Plano e o escritório fica ativo). O código foi escrito pela documentação
+   do Asaas e testado só contra um Asaas de mentira; o que conferir no sandbox: que o `paymentLink` do aviso é o `id` do
+   link criado (senão o aviso acha o escritório pela referência que o link leva), que o domínio da página de retorno
+   (`callback.successUrl`) é aceito pela conta e que o link recorrente cria a assinatura com a cobrança no ciclo mensal.
+4. Ligue com `COBRANCA_ATIVA=1` e reinicie a API. Escritório que se cadastrou antes de ligar ficou de cortesia: abra o
+   teste dele em /plataforma > Agir > Reativar.
+
+A nota fiscal (NFS-e) sai do Asaas e fica desligada (`NFSE_ATIVA=0`) até haver os dados fiscais da empresa.
+
+### Painel da plataforma
+
+`/plataforma` só abre para os e-mails de `PLATAFORMA_EMAILS` (os outros recebem 404). Cada operador precisa de uma conta
+criada pela equipe (o passo acima, `criar-escritorio.ts`): o cadastro aberto e o convite recusam esses e-mails, e o
+e-mail da conta precisa estar confirmado.
+
 ## Conferir
 
 ```sh

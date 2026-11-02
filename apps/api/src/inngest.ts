@@ -15,6 +15,10 @@
  *   04:20 (todo dia) ── limpar-copias-dos-dados (as cópias de mais de 7 dias saem)
  *   03:45 (todo dia) ── apagar-escritorios-encerrados (o escritório encerrado há 30 dias é apagado de vez)
  *   08:00 (todo dia) ── lembretes-de-cobranca (rascunhos de lembrete das parcelas que chegaram num passo da régua)
+ *   09:00 (todo dia, com a cobrança ligada) ── avisos-da-assinatura (e-mail ao sócio: o teste que acaba, a fatura em atraso)
+ *
+ * Com a cobrança ligada, o escritório sem acesso total (teste acabado, fatura com 7 dias de atraso, só leitura ou
+ * bloqueado) sai de todas as rotinas que buscam, mandam WhatsApp ou usam a IA. Nada é apagado.
  *
  * A captura de um escritório roda uma por vez; a sugestão da IA, duas por vez
  * por escritório. Repetir uma rodada é inócuo: publicação e movimentação
@@ -31,6 +35,8 @@ import type { Mailer } from "./email.ts";
 import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
 import { sincronizarTemasDoStj } from "./servicos/acervo.ts";
+import { colunasDaAssinatura, estadoDoEscritorio, temAcessoTotal } from "./servicos/assinatura.ts";
+import { enviarAvisosDaAssinatura, reconciliarAssinaturas } from "./servicos/cobranca.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { WHATSAPP_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
 import { apagarEscritoriosEncerrados } from "./servicos/encerramento.ts";
@@ -96,25 +102,29 @@ export interface DepsDasRotinas {
   limites?: LimitesDaIa;
   /** O modelo ou prompt candidato que lê as publicações em paralelo. */
   observacao?: Observacao;
-  /** O e-mail que avisa o sócio de que a cópia dos dados ficou pronta. */
+  /** O e-mail que avisa o sócio de que a cópia dos dados ficou pronta e do teste que acaba ou da fatura em atraso. */
   mailer?: Mailer;
+  /** Com a cobrança ligada, o escritório sem acesso total para de receber a captura, o WhatsApp e a IA, e os sócios recebem os avisos do plano. */
+  cobrancaAtiva?: boolean;
 }
 
 /**
  * Os escritórios das rotinas. A demonstração fica de fora (nada dela sai para o DJEN, o DataJud
  * ou o WhatsApp), e o escritório encerrado também: não busca, não lê e não manda mais nada.
  */
-export async function escritoriosAtivos(db: Database) {
-  return db
-    .select({ id: organization.id, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao })
+export async function escritoriosAtivos(db: Database, cobrancaAtiva = false) {
+  const todos = await db
+    .select({ id: organization.id, emAvaliacao: organization.emAvaliacao, ...colunasDaAssinatura })
     .from(organization)
     .where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm)));
+  // Com a cobrança ligada, o escritório sem acesso total (o teste acabou, a fatura passou de 7 dias, só leitura ou bloqueado) não é buscado, não recebe WhatsApp e não usa a IA.
+  return todos.filter((o) => estadoDoEscritorio(o, cobrancaAtiva).acesso === "total").map((o) => ({ id: o.id, timezone: o.timezone, emAvaliacao: o.emAvaliacao }));
 }
 
 /** O que a IA deve ler de novo em cada escritório (a demonstração fica de fora, como nas outras rotinas). */
-export async function releiturasPendentes(db: Database) {
+export async function releiturasPendentes(db: Database, cobrancaAtiva = false) {
   const pendentes: { organizationId: string; publicacaoId: string; nuncaLida: boolean }[] = [];
-  for (const o of await escritoriosAtivos(db)) {
+  for (const o of await escritoriosAtivos(db, cobrancaAtiva)) {
     const dele = await withTenant(db, o.id, publicacoesParaReler);
     pendentes.push(...dele.map((p) => ({ organizationId: o.id, ...p })));
   }
@@ -127,6 +137,9 @@ export function createFunctions(deps: DepsDasRotinas) {
   const iaDo = (organizationId: string, origem: QuemUsa["origem"]) => (deps.ia ? iaMedida(deps, deps.ia, { organizationId, userId: null, origem }, limites.preco) : null);
   const { db, log } = deps;
   const reporter = deps.reporter ?? silentReporter;
+  const cobrancaAtiva = !!deps.cobrancaAtiva;
+  /** O que a leitura da IA no fundo diz quando o escritório não tem acesso total; nulo quando tem. */
+  const semAcesso = async (organizationId: string) => ((await temAcessoTotal(db, organizationId, cobrancaAtiva)) ? null : "O escritório está só para leitura: a IA fica parada até ele voltar ao normal.");
 
   // O caderno do dia sai a partir das 03:00: uma leitura por tribunal serve a todos os escritórios.
   const capturarCadernosFn = inngest.createFunction(
@@ -141,7 +154,7 @@ export function createFunctions(deps: DepsDasRotinas) {
   const agendarCaptura = inngest.createFunction(
     { id: "agendar-captura-djen", triggers: [{ cron: "TZ=America/Sao_Paulo 40 12,18 * * 1-5" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "agendar-captura-djen" }) },
     async ({ step }) => {
-      const orgs = await step.run("escritorios", () => escritoriosAtivos(db));
+      const orgs = await step.run("escritorios", () => escritoriosAtivos(db, cobrancaAtiva));
       if (orgs.length) await step.sendEvent("capturar", orgs.map((o) => capturaPedida.create({ organizationId: o.id })));
       return { escritorios: orgs.length };
     },
@@ -201,6 +214,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
     async ({ event, step }) => {
       const situacao = await step.run("ler", async () => {
+        if (await semAcesso(event.data.organizationId)) return "sem-acesso";
         try {
           const a = await sugerirPrazoDaPublicacao({ ...deps, ia: iaDo(event.data.organizationId, "fundo") }, event.data.organizationId, event.data.publicacaoId);
           return a?.situacao ?? "sem-publicacao";
@@ -223,7 +237,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     { id: "reler-publicacoes", triggers: [{ cron: "TZ=America/Sao_Paulo 20 * * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "reler-publicacoes" }) },
     async ({ step }) => {
       if (!deps.ia) return { desligado: true };
-      const pendentes = await step.run("publicacoes", () => releiturasPendentes(db));
+      const pendentes = await step.run("publicacoes", () => releiturasPendentes(db, cobrancaAtiva));
       // Nunca lida: o evento da chegada se perdeu, e a certidão e a sentença também ficaram para trás. Quem falhou só relê o prazo.
       const eventos = pendentes.map(({ organizationId, publicacaoId, nuncaLida }) => (nuncaLida ? publicacaoNova.create({ organizationId, publicacaoId }) : publicacaoParaReler.create({ organizationId, publicacaoId })));
       if (eventos.length) await step.sendEvent("reler", eventos);
@@ -242,7 +256,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
     async ({ event, step }) =>
       step.run("guardar", async () => {
-        const bytes = await certidaoDaPublicacao({ db, arquivos: deps.arquivos, fetch: deps.captura.fetch }, event.data.organizationId, event.data.publicacaoId);
+        const bytes = await certidaoDaPublicacao({ db, arquivos: deps.arquivos, fetch: deps.captura.fetch, cobrancaAtiva }, event.data.organizationId, event.data.publicacaoId);
         return bytes ? "guardada" : "sem-certidao";
       }),
   );
@@ -257,6 +271,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
     async ({ event, step }) =>
       step.run("ler", async () => {
+        if (await semAcesso(event.data.organizationId)) return "sem-acesso";
         try {
           // Só lê o que parece sentença ou acórdão; o resto passa direto.
           // No nível de sugestão (Configurações > Automação), a pessoa pede a leitura pela tela.
@@ -283,7 +298,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     async ({ event, step }) =>
       step.run("ler", () =>
         lerDocumentoComIa(
-          { db, ia: iaDo(event.data.organizationId, "tela"), arquivos: deps.arquivos, log, barrar: () => motivoNoFundo(db, limites, event.data.organizationId) },
+          { db, ia: iaDo(event.data.organizationId, "tela"), arquivos: deps.arquivos, log, barrar: async () => (await semAcesso(event.data.organizationId)) ?? motivoNoFundo(db, limites, event.data.organizationId) },
           event.data.organizationId,
           event.data.documentoId,
         ),
@@ -294,7 +309,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     { id: "agendar-datajud", triggers: [{ cron: "TZ=America/Sao_Paulo 0 5 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "agendar-datajud" }) },
     async ({ step }) => {
       if (!deps.captura.datajudKey) return { desligado: true };
-      const orgs = await step.run("escritorios", () => escritoriosAtivos(db));
+      const orgs = await step.run("escritorios", () => escritoriosAtivos(db, cobrancaAtiva));
       if (orgs.length) await step.sendEvent("escritorios", orgs.map((o) => datajudDoEscritorio.create({ organizationId: o.id })));
       return { escritorios: orgs.length };
     },
@@ -344,7 +359,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     async ({ step }) => {
       const wameow = deps.wameow;
       if (!wameow) return { desligado: true };
-      const orgs = await step.run("escritorios", () => escritoriosAtivos(db));
+      const orgs = await step.run("escritorios", () => escritoriosAtivos(db, cobrancaAtiva));
       let enviados = 0;
       for (const org of orgs) {
         enviados += await step.run(`escritorio-${org.id}`, async () => {
@@ -406,7 +421,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
     async ({ event, step }) =>
       step.run("preparar", async () => {
-        if (await motivoNoFundo(db, limites, event.data.organizationId)) return "limite";
+        if ((await semAcesso(event.data.organizationId)) || (await motivoNoFundo(db, limites, event.data.organizationId))) return "limite";
         try {
           return (await rascunhoDoPrazo({ db, ia: iaDo(event.data.organizationId, "fundo"), log }, event.data.organizationId, event.data.prazoId)).situacao;
         } catch (err) {
@@ -472,11 +487,11 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  // A régua de cobrança: toda manhã, cada parcela que chegou num passo ganha um rascunho de lembrete. Nada sai sozinho: o advogado aprova e envia pela tela de mensagens.
+  // A régua de cobrança dos honorários: toda manhã, cada parcela que chegou num passo ganha um rascunho de lembrete. Nada sai sozinho: o advogado aprova e envia pela tela de mensagens.
   const lembretesFn = inngest.createFunction(
     { id: "lembretes-de-cobranca", triggers: [{ cron: "TZ=America/Sao_Paulo 0 8 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "lembretes-de-cobranca" }) },
     async ({ step }) => {
-      const orgs = await step.run("escritorios", () => escritoriosAtivos(db));
+      const orgs = await step.run("escritorios", () => escritoriosAtivos(db, cobrancaAtiva));
       let rascunhos = 0;
       for (const org of orgs) {
         rascunhos += await step.run(`escritorio-${org.id}`, async () => {
@@ -494,5 +509,19 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn];
+  // Toda manhã: acerta a situação de quem assina pelas faturas e pela data (o aviso de atraso do Asaas pode não ter chegado) e manda os avisos
+  // do plano por e-mail aos sócios: o teste a 3 e a 1 dia do fim e ao acabar, e a fatura em atraso. Só com a cobrança ligada.
+  const avisosDoPlanoFn = inngest.createFunction(
+    { id: "avisos-da-assinatura", triggers: [{ cron: "TZ=America/Sao_Paulo 0 9 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "avisos-da-assinatura" }) },
+    async ({ step }) => {
+      if (!cobrancaAtiva) return { desligado: true };
+      const { acertados } = await step.run("acertar", () => reconciliarAssinaturas({ db, log }));
+      if (!deps.mailer) return { acertados, emails: "desligado" };
+      const mailer = deps.mailer;
+      const { enviados } = await step.run("avisar", () => enviarAvisosDaAssinatura({ db, mailer, telas: deps.telas, log }));
+      return { acertados, enviados };
+    },
+  );
+
+  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn, avisosDoPlanoFn];
 }

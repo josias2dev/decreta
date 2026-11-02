@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 const vazioIndefinido = (v: unknown) => (v === "" ? undefined : v);
+/** Interruptor: "1", "true" ou "sim" liga; vazio ou qualquer outra coisa desliga. */
+const interruptor = z.string().default("").transform((v) => ["1", "true", "sim"].includes(v.trim().toLowerCase()));
 
 const schema = z.object({
   PORT: z.coerce.number().int().positive().default(8787),
@@ -70,6 +72,31 @@ const schema = z.object({
   /** Resend (e-mail transacional). Vazio: os e-mails só vão para o log e a tela mostra o link para copiar. */
   RESEND_API_KEY: z.string().default(""),
   EMAIL_FROM: z.string().default("Decreta <nao-responda@decreta.app>"),
+  /**
+   * Cobrança da assinatura. Desligada (o padrão), o Decreta age como antes: ninguém é cobrado, nenhum escritório
+   * vira só leitura e nenhum aviso de plano aparece. Ligar só depois de definir o valor (`PLANO` em @decreta/core)
+   * e de configurar o Asaas e o aviso (webhook) dele.
+   */
+  COBRANCA_ATIVA: interruptor,
+  /** Chave de API do Asaas (a de sandbox e a de produção são diferentes). Sem ela, "Assinar" responde que a cobrança não está configurada. */
+  ASAAS_API_KEY: z.string().default(""),
+  ASAAS_AMBIENTE: z.enum(["sandbox", "producao"]).default("sandbox"),
+  /** O token que o Asaas manda no cabeçalho `asaas-access-token` de cada aviso. Vazio: a rota dos avisos responde 404. Não pode ser a chave de API. */
+  ASAAS_WEBHOOK_TOKEN: z.string().default(""),
+  /** Emissão automática de NFS-e pela assinatura do Asaas. Desligada: depende dos dados fiscais da empresa (município, código do serviço, alíquotas). */
+  NFSE_ATIVA: interruptor,
+  /** O serviço municipal cadastrado no Asaas e as alíquotas (em %) que a nota leva. Só entram com `NFSE_ATIVA`. */
+  NFSE_SERVICO_MUNICIPAL_ID: z.string().default(""),
+  NFSE_SERVICO_CODIGO: z.string().default(""),
+  NFSE_SERVICO_NOME: z.string().default(""),
+  NFSE_ISS_PERCENTUAL: z.coerce.number().min(0).default(0),
+  NFSE_ISS_RETIDO: interruptor,
+  /** E-mails dos operadores da plataforma (o painel /plataforma), separados por vírgula. Cada um precisa ter a conta criada pela equipe: o cadastro aberto e o convite recusam esses e-mails. */
+  PLATAFORMA_EMAILS: z.string().default(""),
+}).superRefine((env, ctx) => {
+  // O token do aviso do Asaas é o que separa um pagamento de uma mentira: longo, e nunca a própria chave de API.
+  if (env.ASAAS_WEBHOOK_TOKEN && env.ASAAS_WEBHOOK_TOKEN.length < 24) ctx.addIssue({ code: "custom", path: ["ASAAS_WEBHOOK_TOKEN"], message: "use um token de pelo menos 24 caracteres (openssl rand -hex 32)" });
+  if (env.ASAAS_WEBHOOK_TOKEN && env.ASAAS_WEBHOOK_TOKEN === env.ASAAS_API_KEY) ctx.addIssue({ code: "custom", path: ["ASAAS_WEBHOOK_TOKEN"], message: "não use a chave de API como token do aviso" });
 });
 
 export type Env = z.infer<typeof schema>;
