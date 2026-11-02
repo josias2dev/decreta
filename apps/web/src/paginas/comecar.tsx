@@ -9,6 +9,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, FolderPlus, Sparkles, Sun, UserPlus, X } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Marca } from "@/componentes/marca";
+import { OpcoesDeTribunal } from "@/componentes/opcoes-de-tribunal";
 import { Botao, Campo, Carregando, Faixa } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { euQuery } from "@/lib/consultas";
@@ -24,11 +25,6 @@ const ETAPAS = [
 ] as const;
 type Etapa = (typeof ETAPAS)[number]["id"];
 
-const TRIBUNAIS = [
-  { id: "TJSC", nome: "TJSC · Justiça estadual de Santa Catarina" },
-  { id: "TRT12", nome: "TRT12 · Justiça do Trabalho em SC" },
-  { id: "TRF4", nome: "TRF4 · Justiça Federal da 4ª Região" },
-];
 const UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SE", "SP", "TO"];
 
 /** O app abre em /comecar uma vez por sessão do navegador enquanto a configuração está pendente. */
@@ -254,11 +250,7 @@ function EtapaEscritorio({ eu, e, n, aoVoltar, aoSeguir }: { eu: Eu; e: Escritor
         </Campo>
         <Campo rotulo="Tribunal padrão" htmlFor="co-tribunal" ajuda="O calendário forense que conta os prazos quando o processo não diz outro.">
           <select id="co-tribunal" value={f.tribunal} onChange={(ev) => setF({ ...f, tribunal: ev.target.value })}>
-            {TRIBUNAIS.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.nome}
-              </option>
-            ))}
+            <OpcoesDeTribunal />
           </select>
         </Campo>
         <Campo rotulo="WhatsApp oficial do escritório (opcional)" htmlFor="co-oficial" ajuda="Vai no rodapé de toda mensagem ao cliente, para ele saber de que número o escritório fala. Contra o golpe do falso advogado.">

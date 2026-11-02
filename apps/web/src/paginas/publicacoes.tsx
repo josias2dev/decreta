@@ -3,13 +3,13 @@
  * a selecionada à direita; no celular, a lista e uma tela por publicação.
  */
 import { lerPublicacaoColada, TIPOS_DE_COMUNICACAO } from "@decreta/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery } from "@/componentes/captura-do-djen";
-import { CampoIntimacaoNoSistema, ConferenciaDaSugestao, MotivosParaConferir, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
+import { CampoIntimacaoNoSistema, ConferenciaDaSugestao, diaDigitadoCompleto, MotivosParaConferir, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -870,10 +870,14 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
   }
   const dias = Number(f.dias);
   const intimadoNoSistemaEm = /^\d{4}-\d{2}-\d{2}$/.test(f.intimadoNoSistemaEm) ? f.intimadoNoSistemaEm : null;
+  // Com a data final digitada, a prévia também confere se ela cai em dia sem expediente no calendário do processo.
+  const diaDigitado = f.sabeData ? diaDigitadoCompleto(f.fimManual) : null;
   const conta = useQuery({
-    queryKey: ["calcular", pub.processo?.id, pub.publicadaEm, intimadoNoSistemaEm, dias, f.contagem],
-    queryFn: () => api<PreviaDaConta>("/prazos/calcular", { json: { processoId: pub.processo?.id ?? null, publicadoEm: pub.publicadaEm, intimadoNoSistemaEm, dias, contagem: f.contagem } }),
+    queryKey: ["calcular", pub.processo?.id, pub.publicadaEm, intimadoNoSistemaEm, dias, f.contagem, diaDigitado],
+    queryFn: () => api<PreviaDaConta>("/prazos/calcular", { json: { processoId: pub.processo?.id ?? null, publicadoEm: pub.publicadaEm, intimadoNoSistemaEm, dias, contagem: f.contagem, diaDigitado } }),
     enabled: aberto && dias >= 1,
+    // Digitando a data, o aviso do tribunal não pisca a cada tecla; o aviso do dia só vale para o dia de que fala.
+    placeholderData: f.sabeData ? keepPreviousData : undefined,
   });
   const salvar = useMutation({
     mutationFn: () =>

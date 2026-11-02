@@ -1,4 +1,4 @@
-import { diaPorExtensoCurto, ehDia, formatarDia, formatarDiaCurto, hojeEm, somarDias, urgenciaDoPrazo } from "@decreta/core";
+import { avisoDoDiaSemExpediente, diaPorExtensoCurto, ehDia, formatarDia, formatarDiaCurto, hojeEm, somarDias, urgenciaDoPrazo } from "@decreta/core";
 import { pecas, prazos, processos, publicacoes } from "@decreta/db";
 import { and, asc, desc, eq, inArray, isNull, lt, lte, sql, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
@@ -155,14 +155,31 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     });
   });
 
-  /** Prévia da contagem enquanto a pessoa preenche ou ajusta. */
+  /**
+   * Prévia da contagem enquanto a pessoa preenche ou ajusta. Diz se o tribunal
+   * tem calendário próprio e, com a data final digitada (`diaDigitado`), avisa
+   * se ela cai em dia sem expediente no calendário do processo.
+   */
   app.post("/prazos/calcular", async (c) => {
     const b = await corpo(
       c,
-      z.object({ processoId: z.string().uuid().nullable().optional(), publicadoEm: dia, intimadoNoSistemaEm: dia.nullable().optional(), dias: z.number().int().min(1).max(3650), contagem: z.enum(["uteis", "corridos"]) }),
+      z.object({
+        processoId: z.string().uuid().nullable().optional(),
+        publicadoEm: dia,
+        intimadoNoSistemaEm: dia.nullable().optional(),
+        dias: z.number().int().min(1).max(3650),
+        contagem: z.enum(["uteis", "corridos"]),
+        diaDigitado: dia.nullable().optional(),
+      }),
     );
     const r = await tenant(c, deps, (tx) => contarParaProcesso(tx, c.get("orgId"), b.processoId ?? null, { publicacao: b.publicadoEm, intimacaoNoSistema: b.intimadoNoSistemaEm, dias: b.dias, contagem: b.contagem }));
-    return c.json({ ...contagemNaTela(r), pelo: r.pelo, outra: r.outra && { inicio: r.outra.inicio, fim: r.outra.fim } });
+    return c.json({
+      ...contagemNaTela(r),
+      pelo: r.pelo,
+      outra: r.outra && { inicio: r.outra.inicio, fim: r.outra.fim },
+      calendarioCompleto: r.regras.cal.proprio,
+      diaDigitado: b.diaDigitado ? avisoDoDiaSemExpediente(b.diaDigitado, r.regras.cal) : null,
+    });
   });
 
   app.get("/prazos/:id", async (c) => {

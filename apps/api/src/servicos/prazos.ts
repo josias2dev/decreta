@@ -112,6 +112,8 @@ export async function contaDoPrazo(tx: Tx, organizationId: string, prazo: typeof
     documento: pub?.tipoDocumento ?? null,
     regra: regraDaContagem(regras.rito, prazo.contagem),
     calendario: regras.calendario,
+    /** Falso: o tribunal não tem calendário próprio, e a conta usou só os feriados nacionais e o recesso. */
+    calendarioCompleto: regras.cal.proprio,
     disponibilizadaEm,
     publicadoEm: prazo.publicadoEm,
     intimadoNoSistemaEm: prazo.intimadoNoSistemaEm,

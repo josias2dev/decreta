@@ -202,4 +202,47 @@ describe.skipIf(!hasTestDatabase)("prazo à prova de auditoria", () => {
     const { sugestao } = await publicar("900006", "Despacho", { tipo: "Manifestação sobre documentos", dias: 5 });
     expect(sugestao.conferencia).toEqual({ confianca: "baixa", motivos: ["A equipe descartou 3 sugestões de manifestação sobre documentos e não confirmou nenhuma."] });
   });
+
+  test("a data digitada cai em dia sem expediente: a prévia avisa o motivo e o próximo dia útil, pelo calendário do processo", async () => {
+    const base = { processoId, publicadoEm: "2026-10-29", dias: 15, contagem: "uteis" };
+    const previa = (diaDigitado?: string) => json(call("/prazos/calcular", { method: "POST", json: { ...base, diaDigitado } }));
+    // Sem data digitada, nada a avisar.
+    expect((await previa()).diaDigitado).toBeNull();
+    expect((await previa("2026-11-15")).diaDigitado).toEqual({
+      dia: "2026-11-15",
+      aviso: "15/11/2026 é domingo e feriado (Proclamação da República). O próximo dia útil é 16/11/2026.",
+      proximoDiaUtil: "2026-11-16",
+    });
+    expect((await previa("2026-11-20")).diaDigitado.aviso).toBe("20/11/2026 é feriado (Consciência Negra). O próximo dia útil é 23/11/2026.");
+    // O feriado municipal que o escritório cadastrou para Joinville entra: o calendário é o do processo, não o nacional.
+    expect((await previa("2026-11-10")).diaDigitado.aviso).toBe("10/11/2026 é feriado local (Feriado municipal). O próximo dia útil é 11/11/2026.");
+    expect((await previa("2026-11-25")).diaDigitado).toBeNull();
+    expect((await json(call("/prazos/calcular", { method: "POST", json: { ...base, processoId: null, diaDigitado: "2026-11-10" } }))).diaDigitado).toBeNull();
+  });
+
+  test("a conta diz quando o tribunal não tem calendário próprio, na prévia e na ficha do prazo", async () => {
+    const base = { processoId, publicadoEm: "2026-10-29", dias: 15, contagem: "uteis" };
+    const calcular = (corpo: object = base) => json(call("/prazos/calcular", { method: "POST", json: corpo }));
+    expect((await calcular()).calendarioCompleto).toBe(true);
+    expect((await json(call(`/prazos/${prazoId}`))).conta.calendarioCompleto).toBe(true);
+
+    // O processo é de um tribunal que o Decreta ainda não tem: a conta usa os feriados nacionais e o recesso, e diz isso.
+    await t.owner`update processos set tribunal = 'TJPR' where id = ${processoId}`;
+    expect((await calcular()).calendarioCompleto).toBe(false);
+    const ficha = await json(call(`/prazos/${prazoId}`));
+    expect(ficha.conta).toMatchObject({ calendarioCompleto: false, calendario: "TJPR, com os feriados cadastrados para a comarca de Joinville" });
+
+    // Um tribunal novo, com calendário próprio: sem aviso. Sem processo, vale o tribunal padrão do escritório.
+    await t.owner`update processos set tribunal = 'TRF4' where id = ${processoId}`;
+    expect((await calcular()).calendarioCompleto).toBe(true);
+    expect((await calcular({ ...base, processoId: null })).calendarioCompleto).toBe(true);
+    expect((await call("/escritorio", { method: "PUT", json: { tribunal: "TJRS" } })).status).toBe(200);
+    expect((await calcular({ ...base, processoId: null })).calendarioCompleto).toBe(false);
+    // A tela de feriados diz o mesmo: sem calendário próprio, só o nacional.
+    expect(await json(call("/feriados?ano=2026"))).toMatchObject({ tribunal: "TJRS", calendarioCompleto: false });
+    expect((await json(call("/feriados?ano=2026"))).dias.some((d: { origem: string }) => d.origem === "TJRS")).toBe(false);
+    await call("/escritorio", { method: "PUT", json: { tribunal: "TJSC" } });
+    expect(await json(call("/feriados?ano=2026"))).toMatchObject({ tribunal: "TJSC", calendarioCompleto: true });
+    await t.owner`update processos set tribunal = 'TJSC' where id = ${processoId}`;
+  });
 });

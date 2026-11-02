@@ -1,11 +1,11 @@
 /** Prazo e briefing: o que o juízo decidiu, o que fazer, a contagem e o histórico. */
-import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ExternalLink, FileText, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Cancelada } from "@/componentes/captura-do-djen";
-import { CampoIntimacaoNoSistema, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
+import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
@@ -402,10 +402,14 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
   }
   const dias = Number(f.dias);
   const intimadoNoSistemaEm = /^\d{4}-\d{2}-\d{2}$/.test(f.intimadoNoSistemaEm) ? f.intimadoNoSistemaEm : null;
+  // Com a data final digitada, a prévia também confere se ela cai em dia sem expediente no calendário do processo.
+  const diaDigitado = f.sabeData ? diaDigitadoCompleto(f.fimManual) : null;
   const conta = useQuery({
-    queryKey: ["calcular", prazo.processo.id, f.publicadoEm, intimadoNoSistemaEm, dias, f.contagem],
-    queryFn: () => api<PreviaDaConta>("/prazos/calcular", { json: { processoId: prazo.processo.id, publicadoEm: f.publicadoEm, intimadoNoSistemaEm, dias, contagem: f.contagem } }),
+    queryKey: ["calcular", prazo.processo.id, f.publicadoEm, intimadoNoSistemaEm, dias, f.contagem, diaDigitado],
+    queryFn: () => api<PreviaDaConta>("/prazos/calcular", { json: { processoId: prazo.processo.id, publicadoEm: f.publicadoEm, intimadoNoSistemaEm, dias, contagem: f.contagem, diaDigitado } }),
     enabled: aberto && /^\d{4}-\d{2}-\d{2}$/.test(f.publicadoEm) && dias >= 1,
+    // Digitando a data, o aviso do tribunal não pisca a cada tecla; o aviso do dia só vale para o dia de que fala.
+    placeholderData: f.sabeData ? keepPreviousData : undefined,
   });
   const salvar = useMutation({
     mutationFn: () =>
