@@ -1,0 +1,1 @@
+ALTER TABLE "escritorios" ADD COLUMN "prazo_interno_dias" integer DEFAULT 0 NOT NULL;

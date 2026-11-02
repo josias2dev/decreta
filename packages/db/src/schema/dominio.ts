@@ -108,6 +108,8 @@ export const escritorios = pgTable(
     jeito: jsonb("jeito").$type<JeitoDoEscritorio>().notNull().default({}),
     /** O nível de automação escolhido por ação ("rascunho-da-peca" → "sugestao"); o que falta vale o padrão. */
     automacao: jsonb("automacao").$type<Record<string, string>>().notNull().default({}),
+    /** Prazo interno: dias úteis antes do fatal em que o escritório quer terminar. Zero: não usa. */
+    prazoInternoDias: integer("prazo_interno_dias").notNull().default(0),
     /**
      * Quando o escritório terminou (ou pulou de vez) a configuração inicial das telas.
      * Nulo = pendente. Nasce preenchido por padrão: só o cadastro aberto zera, para

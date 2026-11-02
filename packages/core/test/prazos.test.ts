@@ -58,6 +58,13 @@ describe("contagem em dias úteis", () => {
     );
   });
 
+  test("um dia só fora da conta: a frase junta com \"e\", sem vírgula", () => {
+    // De 16/11 a 24/11, o único feriado é a Consciência Negra.
+    const r = contarPrazo({ publicacao: "2026-11-13", dias: 7, contagem: "uteis", calendario: tjsc });
+    expect(r.desconsiderados.map((f) => f.dia)).toEqual(["2026-11-20"]);
+    expect(explicarContagem(r)).toBe("Começa em 16/11, primeiro dia útil depois da publicação. Fora da conta: fins de semana e 20/11 (Consciência Negra).");
+  });
+
   test("disponibilizada na sexta, publicada na segunda", () => {
     expect(dataDaPublicacao("2026-10-23", tjsc)).toBe("2026-10-26");
     // Disponibilizada na sexta antes de Finados: publicada na terça.

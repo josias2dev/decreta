@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/5aae1fa1-c664-4d9a-9a27-74b8f782cbe3",
+  "path": "/publicacoes/2860b08e-e69e-49b0-acba-416524e36103",
   "corpo": {
-    "id": "5aae1fa1-c664-4d9a-9a27-74b8f782cbe3",
+    "id": "2860b08e-e69e-49b0-acba-416524e36103",
     "situacao": "nova",
     "fonte": "djen",
     "disponibilizadaEm": "2026-10-28",
@@ -30,14 +30,15 @@
       }
     ],
     "processo": {
-      "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+      "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
+      "tipo": "judicial",
       "classe": "Procedimento comum cível",
       "orgao": "2ª Vara Cível",
       "comarca": "Joinville",
       "responsavel": {
-        "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+        "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -46,7 +47,7 @@
       "semIa": false
     },
     "sugestao": {
-      "id": "850f21b2-d3c9-4550-a0a4-28dffa7d6777",
+      "id": "1178959b-9f93-4880-8293-93d020af9512",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -67,7 +68,7 @@
           ],
           "confianca": "alta"
         },
-        "responsavelId": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+        "responsavelId": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
         "trechoConfere": true,
         "contagemCalculada": {
           "fim": "2026-11-23",
@@ -96,7 +97,7 @@
       "desatualizada": false,
       "erro": null,
       "responsavel": {
-        "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+        "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -104,7 +105,7 @@
       }
     },
     "prazo": {
-      "id": "e9108bb3-f762-4639-b950-7882c05cc1be",
+      "id": "e6a478a3-e302-4a9c-9362-2b1dd342565c",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Manifestação sobre laudo pericial"

@@ -3,8 +3,10 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { DataViva } from "@/componentes/data-viva";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoProcesso } from "@/componentes/novos";
+import { SeloDeIncompleto } from "@/componentes/numero-do-processo";
 import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Responsavel, Selo, Vazio } from "@/componentes/ui";
 import { api, SO_LEITURA } from "@/lib/api";
@@ -20,11 +22,11 @@ const SITUACAO: Record<ProcessoNaLista["situacao"], string> = { ativo: "Ativo", 
 /** O tribunal (TJSC, TRT12, TRF4), o número e onde tramita, numa linha: TJSC · 5004321-25.2026.8.24.0038 · 2ª Vara Cível de Joinville. */
 function Onde({ p }: { p: ProcessoNaLista }) {
   const tribunal = (p.cnj && tribunalDoCnj(p.cnj)) || (p.tipo === "extrajudicial" ? "Extrajudicial" : null);
-  const resto = [p.cnj ? ondeTramita(p) : p.classe, p.situacao !== "ativo" && SITUACAO[p.situacao]].filter(Boolean).join(" · ");
+  const resto = [p.tipo === "judicial" ? ondeTramita(p) : p.classe, p.situacao !== "ativo" && SITUACAO[p.situacao]].filter(Boolean).join(" · ");
   return (
     <span className="dc-onde">
       {tribunal && <span className="dc-onde__tribunal">{tribunal}</span>}
-      {p.cnj && <span className="dc-num dc-onde__cnj">{p.cnj}</span>}
+      {(p.cnj || p.tipo === "judicial") && <span className="dc-num dc-onde__cnj">{p.cnj ?? "Sem número"}</span>}
       {resto && <span className="dc-onde__resto">{resto}</span>}
     </span>
   );
@@ -43,6 +45,7 @@ export function ProcessosPage() {
   const lista = useInfiniteQuery({ ...processosQuery(situacao, search.busca), placeholderData: (a) => a });
   const itens = lista.data?.pages.flatMap((p) => p.itens) ?? [];
   const total = lista.data?.pages[0]?.total ?? 0;
+  const incompletos = lista.data?.pages[0]?.incompletos ?? 0;
   const ir = (s: Situacao) => void navigate({ search: (x) => ({ ...x, situacao: s === "ativos" ? undefined : s }) });
 
   const filtros = (
@@ -58,6 +61,11 @@ export function ProcessosPage() {
         <Chip ligado={situacao === "todos"} onClick={() => ir("todos")}>
           Todos
         </Chip>
+        {(incompletos > 0 || situacao === "incompletos") && (
+          <Chip ligado={situacao === "incompletos"} alerta n={incompletos} onClick={() => ir("incompletos")}>
+            Incompletos
+          </Chip>
+        )}
       </div>
     </div>
   );
@@ -74,6 +82,17 @@ export function ProcessosPage() {
       }
     >
       Confira o número ou tente o nome de uma das partes.{situacao === "todos" ? "" : ` A busca olhou só os ${situacao}.`}
+    </Vazio>
+  ) : situacao === "incompletos" ? (
+    <Vazio
+      titulo="Nenhum processo incompleto"
+      acao={
+        <Botao pequeno onClick={() => ir("ativos")}>
+          Ver os ativos
+        </Botao>
+      }
+    >
+      O processo salvo sem o número fica aqui até ser completado, porque sem número o Decreta não acompanha o tribunal.
     </Vazio>
   ) : situacao === "arquivados" ? (
     <Vazio
@@ -118,7 +137,7 @@ export function ProcessosPage() {
     </Botao>
   );
   const fim = <AoChegarNoFim ativo={!!lista.hasNextPage && !lista.isFetchingNextPage} aoChegar={() => void lista.fetchNextPage()} />;
-  const sub = lista.data ? `${numero(total)} ${total === 1 ? "processo" : "processos"}${situacao === "ativos" ? " ativos" : situacao === "arquivados" ? " arquivados" : ""}` : " ";
+  const sub = lista.data ? `${numero(total)} ${total === 1 ? "processo" : "processos"}${situacao === "ativos" ? " ativos" : situacao === "arquivados" ? " arquivados" : situacao === "incompletos" ? " sem o número" : ""}` : " ";
 
   if (celular) {
     return (
@@ -139,12 +158,25 @@ export function ProcessosPage() {
         ) : itens.length ? (
           <div className="dc-lista">
             {itens.map((p) => (
-              <Link key={p.id} to="/processos/$id" params={{ id: p.id }} className="dc-item">
-                <span className="dc-item__titulo">{p.titulo}</span>
-                {p.proximoPrazo ? <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo> : <span />}
+              <div key={p.id} className="dc-item dc-com-esticado">
+                <Link to="/processos/$id" params={{ id: p.id }} className="dc-item__titulo dc-esticado">
+                  {p.titulo}
+                </Link>
+                {p.proximoPrazo ? (
+                  <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+                    <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                  </DataViva>
+                ) : (
+                  <span />
+                )}
                 <span className="dc-item__meta">
                   <Onde p={p} />
                 </span>
+                {p.incompleto && (
+                  <span className="dc-item__meta">
+                    <SeloDeIncompleto />
+                  </span>
+                )}
                 <span className="dc-item__pe">
                   <Avatar pessoa={p.responsavel} />
                   <span className="min-w-0 truncate">
@@ -152,7 +184,7 @@ export function ProcessosPage() {
                     {p.proximoPrazo && <> · {p.proximoPrazo.tipo}</>}
                   </span>
                 </span>
-              </Link>
+              </div>
             ))}
             {fim}
             {mais}
@@ -205,6 +237,7 @@ export function ProcessosPage() {
                             <Link to="/processos/$id" params={{ id: p.id }} onClick={(e) => e.stopPropagation()}>
                               {p.titulo}
                             </Link>
+                            {p.incompleto && <SeloDeIncompleto />}
                           </span>
                           <span className="dc-celula__2">
                             <Onde p={p} />
@@ -217,7 +250,9 @@ export function ProcessosPage() {
                       <td>
                         {p.proximoPrazo ? (
                           <span className="dc-prazo-linha" title={`${p.proximoPrazo.tipo} · ${diaCompleto(p.proximoPrazo.fim)}`}>
-                            <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                            <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+                              <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                            </DataViva>
                             <span className="truncate">{p.proximoPrazo.tipo}</span>
                           </span>
                         ) : (

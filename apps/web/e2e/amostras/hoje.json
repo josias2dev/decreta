@@ -15,15 +15,15 @@
     "itens": [
       {
         "tipo": "prazo",
-        "id": "c72cdd5a-aa17-4af3-bf9b-27b71a327fe0",
+        "id": "0cd36387-cd7f-4c68-b284-8bfda6fcd1f3",
         "urgencia": "vencido",
         "quando": "Vencido · 28 out",
         "titulo": "Contestação trabalhista",
         "detalhe": "Padaria Bom Grão Ltda. × Rodrigo Alves · 1ª Vara do Trabalho de Itajaí",
         "cnj": "0000812-61.2026.5.12.0005",
-        "processoId": "1fce7353-7d99-43b4-a543-0211262b3f24",
+        "processoId": "fdb4bfc3-e0fd-41fd-9b83-fd75a1ccc1aa",
         "responsavel": {
-          "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+          "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM",
@@ -33,15 +33,27 @@
       },
       {
         "tipo": "prazo",
-        "id": "c9cd5292-9aa7-4f14-8f8e-3a5fdd1dfbd2",
+        "id": "88db028f-6939-4e96-abbb-89e6f5012f27",
+        "urgencia": "hoje",
+        "quando": "Hoje",
+        "titulo": "Juntar procuração atualizada",
+        "detalhe": "Eduardo Lima × Saúde Litoral Planos · 1ª Vara Cível de Balneário Camboriú",
+        "cnj": "5003390-24.2026.8.24.0005",
+        "processoId": "9b08b102-00d5-426b-a9c7-192d95727993",
+        "responsavel": null,
+        "aConfirmar": true
+      },
+      {
+        "tipo": "prazo",
+        "id": "3e43e8dc-37bd-4057-9b46-a3385974afda",
         "urgencia": "hoje",
         "quando": "Hoje",
         "titulo": "Alegações finais",
         "detalhe": "Roberto Kühn × Transportes Serra Azul Ltda. · 4ª Vara Cível de Joinville",
         "cnj": "5009876-57.2025.8.24.0038",
-        "processoId": "a024a7b9-4132-4c6a-8225-930c2544b89b",
+        "processoId": "1d0958c8-7354-4fe9-b5ce-b8275e6abd96",
         "responsavel": {
-          "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+          "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -51,27 +63,15 @@
       },
       {
         "tipo": "prazo",
-        "id": "7593af3c-51af-488a-b3c5-2b24f5759704",
-        "urgencia": "hoje",
-        "quando": "Hoje",
-        "titulo": "Juntar procuração atualizada",
-        "detalhe": "Eduardo Lima × Saúde Litoral Planos · 1ª Vara Cível de Balneário Camboriú",
-        "cnj": "5003390-24.2026.8.24.0005",
-        "processoId": "5bdd8ca2-8b52-4a0b-ba26-a690090643d0",
-        "responsavel": null,
-        "aConfirmar": true
-      },
-      {
-        "tipo": "prazo",
-        "id": "474546be-6b6f-4eba-8eb9-85bcba715907",
+        "id": "dba28f33-d6bf-4914-9e7b-954c2a07f3c9",
         "urgencia": "hoje",
         "quando": "Hoje",
         "titulo": "Réplica à contestação",
         "detalhe": "Ana Lúcia Ferraz × Banco Horizonte S.A. · 3ª Vara Cível de Florianópolis",
         "cnj": "5011873-86.2026.8.24.0023",
-        "processoId": "74ac578b-268c-4774-abeb-cf8f66eaae33",
+        "processoId": "ddc0e6b1-8866-41e0-a656-1a7291aa9c0d",
         "responsavel": {
-          "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+          "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -81,15 +81,15 @@
       },
       {
         "tipo": "audiencia",
-        "id": "0752aa4f-97e0-4f47-8b49-34fe9ffb8627",
+        "id": "34c5be46-c7cb-4f6b-a12d-c7d1c3581160",
         "urgencia": "audiencia",
         "quando": "14:30",
         "titulo": "Audiência de conciliação · por vídeo",
         "detalhe": "Carlos Henrique Prado × Construtora Vale Norte · Juizado Especial Cível de Blumenau",
         "cnj": "5007745-68.2026.8.24.0008",
-        "processoId": "c5288f5e-f98d-4e96-9283-0a40c99d326c",
+        "processoId": "8e168924-e048-487f-ba41-ff788fd35819",
         "responsavel": {
-          "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+          "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF",
@@ -98,15 +98,15 @@
       },
       {
         "tipo": "audiencia",
-        "id": "3179213b-ca61-42b1-a8ab-87f93e2a1652",
+        "id": "3ff8a912-5767-4871-b1a3-805178dd4fb5",
         "urgencia": "audiencia",
         "quando": "16:00",
         "titulo": "Audiência de instrução e julgamento",
         "detalhe": "Antônio Reis × Transportadora Vale Verde · Vara do Trabalho de Rio do Sul",
         "cnj": "0000533-40.2025.5.12.0028",
-        "processoId": "0f0b5f59-f253-4c9b-b4a0-2c5652ad2b4b",
+        "processoId": "ac930a84-745b-4314-8e5c-5d9f6e850cbe",
         "responsavel": {
-          "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+          "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM",
@@ -115,7 +115,7 @@
       },
       {
         "tipo": "tarefa",
-        "id": "48a469ac-f2d2-4c75-95ec-58df72145b9b",
+        "id": "428532fd-effe-4b51-b9c5-a3353a8cd4fc",
         "urgencia": "tarefa",
         "quando": "Tarefa",
         "titulo": "Cobrar documentos do cliente novo",
@@ -123,7 +123,7 @@
         "cnj": null,
         "processoId": null,
         "responsavel": {
-          "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+          "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF",
@@ -133,25 +133,28 @@
     ],
     "publicacoes": [
       {
-        "id": "5aae1fa1-c664-4d9a-9a27-74b8f782cbe3",
+        "id": "2860b08e-e69e-49b0-acba-416524e36103",
         "titulo": "Manifestação sobre laudo pericial",
-        "detalhe": "Marina Duarte · prazo sugerido 23/11"
+        "detalhe": "Marina Duarte · prazo sugerido 23/11",
+        "fimSugerido": "2026-11-23"
       },
       {
-        "id": "2e002833-102f-4751-b6c1-4d50153c8144",
+        "id": "e1cb62bd-830a-4bb5-b9b9-4f8965145954",
         "titulo": "Apelação",
-        "detalhe": "Lúcia Matos · prazo sugerido 23/11"
+        "detalhe": "Lúcia Matos · prazo sugerido 23/11",
+        "fimSugerido": "2026-11-23"
       },
       {
-        "id": "3db81769-3f63-4df6-9193-e6bbb126f025",
+        "id": "21b5f7d7-a686-401f-9400-de330d54a8bd",
         "titulo": "Intimação · cumpra-se",
-        "detalhe": "Eduardo Lima · não gera prazo"
+        "detalhe": "Eduardo Lima · não gera prazo",
+        "fimSugerido": null
       }
     ],
     "porResponsavel": [
       {
         "pessoa": {
-          "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+          "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM",
@@ -162,7 +165,7 @@
       },
       {
         "pessoa": {
-          "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+          "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -173,7 +176,7 @@
       },
       {
         "pessoa": {
-          "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+          "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
           "nome": "Camila Azevedo",
           "apelido": "Camila",
           "iniciais": "CA",
@@ -184,7 +187,7 @@
       },
       {
         "pessoa": {
-          "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+          "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
           "nome": "Rafael Freitas",
           "apelido": "Rafael",
           "iniciais": "RF",
@@ -204,28 +207,28 @@
       "itens": [
         {
           "motivo": "prazo_sem_dono",
-          "id": "4da28638-ab4f-4b45-9d6b-9c0976a2e8cd",
+          "id": "e174e04e-833e-4950-a421-76efc15a4011",
           "titulo": "Impugnação aos embargos · Nelson Schmitt Reinert × Logística Colina Verde S.A.",
           "detalhe": "Vence em 11/11 e ninguém responde por ele.",
-          "caminho": "/prazos/4da28638-ab4f-4b45-9d6b-9c0976a2e8cd",
+          "caminho": "/prazos/e174e04e-833e-4950-a421-76efc15a4011",
           "dias": 9,
           "responsavelId": null
         },
         {
           "motivo": "prazo_sem_dono",
-          "id": "2e99cddc-51e7-4446-95ed-b2f69551d321",
+          "id": "ae0c7bad-ee9a-4959-9744-72a62ace71dc",
           "titulo": "Impugnação aos embargos · Logística Ribeirão Verde Ltda. × Bruna Dalmolin Bittencourt",
           "detalhe": "Vence em 12/11 e ninguém responde por ele.",
-          "caminho": "/prazos/2e99cddc-51e7-4446-95ed-b2f69551d321",
+          "caminho": "/prazos/ae0c7bad-ee9a-4959-9744-72a62ace71dc",
           "dias": 8,
           "responsavelId": null
         },
         {
           "motivo": "prazo_sem_dono",
-          "id": "7593af3c-51af-488a-b3c5-2b24f5759704",
+          "id": "88db028f-6939-4e96-abbb-89e6f5012f27",
           "titulo": "Juntar procuração atualizada · Eduardo Lima × Saúde Litoral Planos",
           "detalhe": "Vence em 29/10 e ninguém responde por ele.",
-          "caminho": "/prazos/7593af3c-51af-488a-b3c5-2b24f5759704",
+          "caminho": "/prazos/88db028f-6939-4e96-abbb-89e6f5012f27",
           "dias": 0,
           "responsavelId": null
         }

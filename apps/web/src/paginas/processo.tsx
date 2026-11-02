@@ -8,6 +8,7 @@ import { useAviso } from "@/componentes/avisos";
 import { AbaCalculos } from "@/componentes/calculos";
 import { DaReceita, documentoDigitado, useEmpresa, usePreencher } from "@/componentes/campos-cliente";
 import { Conversa } from "@/componentes/conversa";
+import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { AvisoSemHonorario, FinanceiroDoCasoPainel, useFinanceiroLiberado } from "@/componentes/honorarios";
@@ -17,6 +18,7 @@ import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoPrazo } from "@/componentes/novo-prazo";
+import { AvisoDeIncompleto } from "@/componentes/numero-do-processo";
 import { RadarDoProcesso } from "@/componentes/radar-do-processo";
 import { Abas, Avatar, BlocoIa, Botao, Campo, Carregando, Chip, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
@@ -109,7 +111,7 @@ export function ProcessoPage() {
       <TelaCelular titulo="Processos" voltar>
         <div className="flex flex-col gap-1">
           <h1 className="dc-h1">{p.titulo}</h1>
-          <Cnj cnj={p.cnj} className="dc-t-corpo font-medium text-[var(--tinta-2)]" />
+          <Cnj cnj={p.cnj} tipo={p.tipo} className="dc-t-corpo font-medium text-[var(--tinta-2)]" />
           <span className="dc-t-corpo text-[var(--tinta-2)]">{[p.classe, onde, p.tribunal].filter(Boolean).join(" · ")}</span>
           {p.cliente?.semIa && (
             <span className="mt-1">
@@ -121,6 +123,7 @@ export function ProcessoPage() {
             {p.valorCausa && <> · Valor da causa {dinheiro(p.valorCausa)}</>}
           </span>
         </div>
+        <AvisoDeIncompleto processo={p} />
         <AvisoSemHonorario processo={{ id: p.id, titulo: p.titulo, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
         <div className="dc-sangria">{abas}</div>
         {conteudo}
@@ -140,7 +143,7 @@ export function ProcessoPage() {
           titulo={p.titulo}
           sobre={
             <>
-              <Cnj cnj={p.cnj} />
+              <Cnj cnj={p.cnj} tipo={p.tipo} />
               {[p.classe, onde].filter(Boolean).map((x) => ` · ${x}`)}
               {p.situacao !== "ativo" && ` · ${SITUACAO[p.situacao]}`}
               {p.cliente?.semIa && (
@@ -166,6 +169,7 @@ export function ProcessoPage() {
             </>
           }
         />
+        <AvisoDeIncompleto processo={p} />
         <AvisoSemHonorario processo={{ id: p.id, titulo: p.titulo, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
         {abas}
       </div>
@@ -222,7 +226,14 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
   );
 
   const proximo = p.proximoPrazo && (
-    <Painel titulo="Próximo prazo" acao={<Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>}>
+    <Painel
+      titulo="Próximo prazo"
+      acao={
+        <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+          <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+        </DataViva>
+      }
+    >
       <div className="flex flex-col gap-0.5">
         <Link to="/prazos/$id" params={{ id: p.proximoPrazo.id }} className="font-semibold text-[var(--tinta)] no-underline hover:underline">
           {p.proximoPrazo.tipo}
@@ -640,15 +651,19 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
         ) : celular ? (
           <div className="dc-linhas">
             {itens.map((i) => (
-              <Link key={i.id} to="/prazos/$id" params={{ id: i.id }} className="dc-linhas__item">
+              <div key={i.id} className="dc-linhas__item dc-com-esticado">
                 <span className="dc-celula min-w-0 flex-1">
-                  <span className="dc-celula__1">{i.tipo}</span>
+                  <Link to="/prazos/$id" params={{ id: i.id }} className="dc-celula__1 dc-esticado">
+                    {i.tipo}
+                  </Link>
                   <span className="dc-celula__2">
                     {prazoEmDias(i.dias, i.contagem)} · {i.responsavel?.apelido ?? "sem responsável"}
                   </span>
                 </span>
-                <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
-              </Link>
+                <DataViva alvo={{ prazo: i.id }}>
+                  <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
+                </DataViva>
+              </div>
             ))}
           </div>
         ) : (
@@ -666,7 +681,9 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
                 {itens.map((i) => (
                   <tr key={i.id} data-link="" onClick={() => void navigate({ to: "/prazos/$id", params: { id: i.id } })}>
                     <td>
-                      <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
+                      <DataViva alvo={{ prazo: i.id }}>
+                        <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
+                      </DataViva>
                     </td>
                     <td>
                       <span className="dc-celula">

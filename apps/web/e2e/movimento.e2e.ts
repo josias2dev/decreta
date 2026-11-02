@@ -161,7 +161,7 @@ test.describe("no celular", () => {
       };
       olhar();
     });
-    await page.locator(`a.dc-item[href="/prazos/${ids.prazo}"]`).tap();
+    await page.locator(`.dc-item a[href="/prazos/${ids.prazo}"]`).tap();
     await expect(page.getByRole("button", { name: "Voltar" })).toBeVisible();
     await expect.poll(() => movimentos(page).then((m) => m.length)).toBe(1);
     explica((await movimentos(page))[0]!, "dc-entra-detalhe");

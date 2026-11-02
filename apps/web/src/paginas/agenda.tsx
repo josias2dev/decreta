@@ -8,6 +8,7 @@ import { useAviso } from "@/componentes/avisos";
 import {
   DiasNoCelular,
   emOrdem,
+  fatalDoInterno,
   fimDoMes,
   gradeDoMes,
   inicioDaSemana,
@@ -22,6 +23,7 @@ import {
   somarMeses,
   type FeriadosDoPeriodo,
 } from "@/componentes/calendario";
+import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -152,10 +154,11 @@ export function AgendaPage() {
   const porDia = useMemo(() => new Map((a?.dias ?? []).map((d) => [d.dia, d.itens])), [a]);
   const titulo = !p ? " " : vista === "mes" ? nomeDoMes(p.de) : intervalo(p.de, p.ate, hoje);
   const noPeriodo = p ? (a?.dias ?? []).filter((d) => d.dia >= p.de && d.dia <= p.ate).flatMap((d) => d.itens) : [];
-  const n = (tipo: ItemDaAgenda["tipo"]) => noPeriodo.filter((i) => i.tipo === tipo).length;
+  // O dia do interno é o mesmo prazo de novo: não conta como mais um.
+  const n = (tipo: ItemDaAgenda["tipo"]) => noPeriodo.filter((i) => i.tipo === tipo && !i.interno).length;
   const resumo = !a
     ? " "
-    : noPeriodo.length
+    : noPeriodo.some((i) => !i.interno)
       ? juntar([n("audiencia") && contar(n("audiencia"), "audiência", "audiências"), n("prazo") && contar(n("prazo"), "prazo", "prazos"), n("tarefa") && contar(n("tarefa"), "tarefa", "tarefas")].filter(Boolean) as string[])
       : "Nada marcado neste período";
   const calendario = vista !== "lista";
@@ -366,12 +369,13 @@ export function AgendaPage() {
 
 function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; compacta?: boolean; aoMarcar: (feita: boolean) => void }) {
   const processo = i.processo ? (
-    <span className={cn("dc-celula__2", compacta && "truncate")}>
+    <span className={cn("dc-celula__2", compacta && "truncate")} title={i.interno ? [i.interno.regra, i.interno.aviso].filter(Boolean).join(". ") : undefined}>
+      {fatalDoInterno(i)}
       {i.processo.titulo}
       {!compacta && (
         <>
           {" · "}
-          <Cnj cnj={i.processo.cnj} className="whitespace-nowrap" />
+          <Cnj cnj={i.processo.cnj} tipo={i.processo.tipo} className="whitespace-nowrap" />
         </>
       )}
     </span>
@@ -401,23 +405,39 @@ function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; co
       </label>
     );
   }
-  const destino = i.tipo === "audiencia" ? ({ to: "/audiencias/$id", params: { id: i.id } } as const) : ({ to: "/prazos/$id", params: { id: i.id } } as const);
-  return (
-    <Link {...destino} className="dc-linhas__item items-center">
-      <span className={marcador}>
-        {i.tipo === "audiencia" ? (
-          <span className="dc-selo dc-selo--prazo dc-num">
-            {i.porVideo && <Video />}
-            {i.hora}
+  // O prazo tem a data viva por cima: o link cobre a linha sem envolver o botão.
+  if (i.tipo === "prazo") {
+    return (
+      <div className="dc-linhas__item items-center dc-com-esticado">
+        <span className={marcador}>
+          <DataViva alvo={{ prazo: i.id }}>
+            <Selo urgencia={i.urgencia ?? "prazo"}>{i.interno ? "Interno" : "Prazo"}</Selo>
+          </DataViva>
+        </span>
+        <span className="dc-celula min-w-0 flex-1">
+          <span className="dc-celula__1">
+            <Link to="/prazos/$id" params={{ id: i.id }} className="dc-esticado">
+              {i.titulo}
+            </Link>
+            {i.aConfirmar && <span className="dc-selo dc-selo--ia ml-2">a confirmar</span>}
           </span>
-        ) : (
-          <Selo urgencia={i.urgencia ?? "prazo"}>Prazo</Selo>
-        )}
+          {processo}
+        </span>
+        {pessoa}
+      </div>
+    );
+  }
+  return (
+    <Link to="/audiencias/$id" params={{ id: i.id }} className="dc-linhas__item items-center">
+      <span className={marcador}>
+        <span className="dc-selo dc-selo--prazo dc-num">
+          {i.porVideo && <Video />}
+          {i.hora}
+        </span>
       </span>
       <span className="dc-celula min-w-0 flex-1">
         <span className="dc-celula__1">
           {i.titulo}
-          {i.aConfirmar && <span className="dc-selo dc-selo--ia ml-2">a confirmar</span>}
           {i.situacao && i.situacao !== "marcada" && <span className="ml-2 dc-t-meta font-normal text-[var(--tinta-2)]">{SITUACAO[i.situacao as keyof typeof SITUACAO]}</span>}
         </span>
         {processo}
@@ -651,7 +671,7 @@ export function AudienciaPage() {
       <Link to="/processos/$id" params={{ id: a.processo.id }} className="text-inherit no-underline hover:underline">
         <strong>{a.processo.titulo}</strong>
       </Link>
-      {celular ? [ondeTramita(a.processo), a.processo.cnj].filter(Boolean).join(" · ") : <> · <Cnj cnj={a.processo.cnj} /> {ondeTramita(a.processo) && `· ${ondeTramita(a.processo)}`}</>}
+      {celular ? [ondeTramita(a.processo), a.processo.cnj].filter(Boolean).join(" · ") : <> · <Cnj cnj={a.processo.cnj} tipo={a.processo.tipo} /> {ondeTramita(a.processo) && `· ${ondeTramita(a.processo)}`}</>}
     </>
   );
   const editar = <EditarAudiencia a={a} aberto={editando} aoFechar={() => setEditando(false)} aoSalvar={atualizar} />;

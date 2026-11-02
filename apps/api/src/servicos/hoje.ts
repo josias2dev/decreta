@@ -3,14 +3,15 @@
  * tarefas, num lugar só. A tela Hoje e o resumo da manhã no WhatsApp leem
  * daqui.
  */
-import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, nomeDaAudiencia, somarDias, urgenciaDoPrazo, type AchadoDaAuditoria, type Calendario, type Dia, type Urgencia } from "@decreta/core";
+import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, nomeDaAudiencia, prazoInterno, somarDias, urgenciaDoPrazo, type AchadoDaAuditoria, type Calendario, type Dia, type Urgencia } from "@decreta/core";
 import { alvaras, analises, audiencias, negocios, prazos, processos, publicacoes, tarefas, type Database, type Tx } from "@decreta/db";
 import { semTeor } from "@decreta/ia";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { auditarCarteira } from "./auditoria-carteira.ts";
-import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
+import { calendarioDoEscritorio, calendariosDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { saudeDaCaptura } from "./captura.ts";
 import { pessoasDoEscritorio, resumir, type PessoaResumida } from "./pessoas.ts";
+import { antecedenciaDoInterno, FOLGA_DO_INTERNO } from "./prazos.ts";
 import { leituraParada, tituloDaPublicacao } from "./publicacoes.ts";
 
 export interface ItemDoDia {
@@ -27,12 +28,16 @@ export interface ItemDoDia {
   responsavel: PessoaResumida | null;
   /** Prazo ainda não confirmado por uma pessoa. */
   aConfirmar?: boolean;
+  /** O item é o prazo interno, não o vencimento: o fatal é outro dia. */
+  interno?: { fatal: Dia; regra: string; aviso: string | null };
 }
 
 export interface PublicacaoDoDia {
   id: string;
   titulo: string;
   detalhe: string;
+  /** A data do prazo sugerido, que também está no detalhe: a tela abre a conta dela. */
+  fimSugerido: Dia | null;
 }
 
 export interface PainelDoDia {
@@ -76,15 +81,17 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
   const cal = opcoes.calendario ?? (await calendarioDoEscritorio(tx, await tribunalPadrao(tx, organizationId)));
   const pessoas = await pessoasDoEscritorio(db, tx, organizationId);
   const semana = somarDias(hoje, 7);
+  const antecedencia = await antecedenciaDoInterno(tx, organizationId);
+  const calendarioDe = antecedencia ? await calendariosDoEscritorio(tx, organizationId) : null;
   const inicio = instanteLocal(hoje, "00:00", timeZone);
   const fim = instanteLocal(somarDias(hoje, 1), "00:00", timeZone);
 
   const [prazosAbertos, auds, tars, pubs, [alv]] = await Promise.all([
     tx
-      .select({ prazo: prazos, processo: { titulo: processos.titulo, cnj: processos.cnj, orgao: processos.orgao, comarca: processos.comarca } })
+      .select({ prazo: prazos, processo: { titulo: processos.titulo, cnj: processos.cnj, orgao: processos.orgao, comarca: processos.comarca, tribunal: processos.tribunal } })
       .from(prazos)
       .innerJoin(processos, eq(processos.id, prazos.processoId))
-      .where(and(eq(prazos.situacao, "aberto"), lte(prazos.fim, semana)))
+      .where(and(eq(prazos.situacao, "aberto"), lte(prazos.fim, antecedencia ? somarDias(semana, FOLGA_DO_INTERNO) : semana)))
       .orderBy(asc(prazos.fim)),
     tx
       .select({ a: audiencias, processo: { titulo: processos.titulo, cnj: processos.cnj, orgao: processos.orgao, comarca: processos.comarca } })
@@ -130,6 +137,24 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
   const contagem = new Map<string, { hoje: number; semana: number }>();
   for (const { prazo, processo } of prazosAbertos) {
     const u = urgenciaDoPrazo(prazo, hoje, cal);
+    // O interno chegou (ou já passou) e o fatal ainda não: entra no dia, sem contar como prazo que vence.
+    const interno = calendarioDe && u !== "vencido" && u !== "hoje" ? prazoInterno({ fatal: prazo.fim, antecedencia, hoje, calendario: calendarioDe(processo) }) : null;
+    if (interno && interno.dia <= hoje) {
+      itens.push({
+        tipo: "prazo",
+        id: prazo.id,
+        urgencia: "breve",
+        quando: interno.dia === hoje ? "Interno hoje" : `Interno · ${diaPorExtensoCurto(interno.dia, hoje)}`,
+        titulo: prazo.tipo,
+        detalhe: detalheDoProcesso(processo),
+        cnj: processo.cnj,
+        processoId: prazo.processoId,
+        responsavel: resumir(pessoas, prazo.responsavelId),
+        aConfirmar: !prazo.confirmadoEm,
+        interno: { fatal: prazo.fim, regra: interno.regra, aviso: interno.aviso },
+      });
+    }
+    if (prazo.fim > semana) continue;
     const chave = prazo.responsavelId ?? "";
     const c = contagem.get(chave) ?? { hoje: 0, semana: 0 };
     c.semana++;
@@ -201,10 +226,10 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
     itens,
     publicacoes: pubs.slice(0, 3).map((p) => {
       const s = ultimaSugestao.get(p.id);
-      const lida = s?.situacao === "pronto" ? (s.conteudo as { geraPrazo?: boolean; tipo?: string; assunto?: string }) : null;
+      const lida = s?.situacao === "pronto" ? (s.conteudo as { geraPrazo?: boolean; tipo?: string; assunto?: string; audiencia?: unknown; contagemCalculada?: { fim: string } | null }) : null;
       const quem = p.processo?.split(" × ")[0] ?? p.destinatarios[0]?.nome ?? "Sem processo";
       const titulo = lida?.geraPrazo && lida.tipo ? lida.tipo : tituloDaPublicacao(p.tipoComunicacao, lida?.assunto ?? p.tipoDocumento?.toLocaleLowerCase("pt-BR") ?? null);
-      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s, p.texto, semLeitura(p))}` };
+      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s, p.texto, semLeitura(p))}`, fimSugerido: lida?.geraPrazo && !lida.audiencia ? (lida.contagemCalculada?.fim ?? null) : null };
     }),
     porResponsavel,
     alertasDaCaptura: (await saudeDaCaptura(tx, hoje)).alertas,

@@ -131,7 +131,7 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         /** O termo de uso de IA assinado, na pasta do cliente. */
         termoIa: termo && cl.termoIaEm ? { em: cl.termoIaEm.toISOString(), documento: { id: termo.id, nome: termo.nome } } : null,
         criadoEm: cl.createdAt.toISOString(),
-        processos: ps.map((p) => ({ id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, situacao: p.situacao, responsavel: resumir(pessoas, p.responsavelId) })),
+        processos: ps.map((p) => ({ id: p.id, titulo: p.titulo, cnj: p.cnj, tipo: p.tipo, orgao: p.orgao, situacao: p.situacao, responsavel: resumir(pessoas, p.responsavelId) })),
         atendimentos: ats.map((a) => ({ id: a.id, em: a.em.toISOString(), canal: a.canal, resumo: a.resumo, autor: resumir(pessoas, a.autorId), processoId: a.processoId })),
         documentos: docs.map((d) => ({ ...d, em: d.em.toISOString() })),
         conferencia,

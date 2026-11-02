@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Download, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { DataViva } from "@/componentes/data-viva";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoPrazo } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
@@ -239,15 +240,19 @@ export function PrazosPage() {
                   </h2>
                   <div className="dc-lista">
                     {g.itens.map((i) => (
-                      <Link key={i.id} className="dc-item" to="/prazos/$id" params={{ id: i.id }}>
-                        <span className="dc-item__titulo">{i.tipo}</span>
-                        <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.quando}</Selo>
+                      <div key={i.id} className="dc-item dc-com-esticado">
+                        <Link className="dc-item__titulo dc-esticado" to="/prazos/$id" params={{ id: i.id }}>
+                          {i.tipo}
+                        </Link>
+                        <DataViva alvo={{ prazo: i.id }}>
+                          <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.quando}</Selo>
+                        </DataViva>
                         <span className="dc-item__meta">{[i.processo.titulo, i.processo.orgao].filter(Boolean).join(" · ")}</span>
                         <span className="dc-item__pe">
                           <Avatar pessoa={i.responsavel} /> {i.responsavel?.apelido ?? "Sem responsável"} ·{" "}
                           {i.situacao === "a_confirmar" ? <span className="dc-acento">Confirmar sugestão</span> : i.situacao === "peca_em_revisao" ? <span className="text-[var(--hoje)]">Peça em revisão</span> : <span>{i.origem}</span>}
                         </span>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 </section>
@@ -335,7 +340,9 @@ export function PrazosPage() {
                             />
                           </td>
                           <td>
-                            <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.quando}</Selo>
+                            <DataViva alvo={{ prazo: i.id }}>
+                              <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.quando}</Selo>
+                            </DataViva>
                           </td>
                           <td>
                             <span className="dc-celula">
@@ -344,10 +351,9 @@ export function PrazosPage() {
                                   {i.tipo}
                                 </Link>
                               </span>
-                              <span className="dc-celula__2 dc-celula__2--uma">
-                                {[i.processo.titulo, i.processo.orgao && i.processo.comarca ? `${i.processo.orgao} de ${i.processo.comarca}` : i.processo.orgao].filter(Boolean).join(" · ")}
-                                {" · "}
-                                <Cnj cnj={i.processo.cnj} />
+                              <span className="dc-celula__2 dc-celula__2--cnj">
+                                <span className="dc-corta">{[i.processo.titulo, i.processo.orgao && i.processo.comarca ? `${i.processo.orgao} de ${i.processo.comarca}` : i.processo.orgao].filter(Boolean).join(" · ")}</span>
+                                <Cnj cnj={i.processo.cnj} tipo={i.processo.tipo} />
                               </span>
                             </span>
                           </td>

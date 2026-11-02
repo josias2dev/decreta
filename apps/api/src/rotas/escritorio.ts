@@ -1,4 +1,4 @@
-import { automacaoValida, ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, nivelDaAcao, REGRAS_DE_AUTOMACAO, telefoneWhatsapp, temCalendarioProprio } from "@decreta/core";
+import { automacaoValida, ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, MAX_DIAS_DO_INTERNO, nivelDaAcao, REGRAS_DE_AUTOMACAO, telefoneWhatsapp, temCalendarioProprio } from "@decreta/core";
 import { cobrancaConfig, documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
 import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { tipoDePeca } from "@decreta/ia";
@@ -53,6 +53,8 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         jeito: e?.jeito ?? {},
         /** O nível que vale em cada ação, já com o padrão e as travas. */
         automacao: Object.fromEntries(REGRAS_DE_AUTOMACAO.map((r) => [r.id, nivelDaAcao(e?.automacao ?? {}, r.id)])),
+        /** Dias úteis antes do fatal do prazo interno. Zero: o escritório não usa. */
+        prazoInternoDias: e?.prazoInternoDias ?? 0,
         datajudLigado: !!deps.captura.datajudKey,
         iaLigada: !!deps.ia,
         suspensoes: susp.map((s) => ({ id: s.id, dia: s.dia, motivo: s.motivo, tipo: s.tipo, tribunal: s.tribunal, comarca: s.comarca })),
@@ -85,6 +87,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
           .optional(),
         /** O nível de automação por ação. Prazo, mensagem ao cliente e valores não mudam: sempre exigem confirmação. */
         automacao: z.record(z.string(), z.string()).refine(automacaoValida, "Nível de automação que esta ação não aceita.").optional(),
+        prazoInternoDias: z.number().int().min(0).max(MAX_DIAS_DO_INTERNO).optional(),
       }),
     );
     if (c.get("demonstracao") && (b.capturaDjen || b.capturaDatajud)) falha(403, "demonstracao", "Na demonstração a busca no DJEN e no DataJud fica desligada: as OABs e os números de processo são inventados e trariam dados de gente de verdade.");

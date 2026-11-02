@@ -7,29 +7,42 @@
  * motor de prazos (ou a que a pessoa digitou), nunca a da IA.
  */
 import {
+  abrirConta,
   chaveDoAto,
   conferirSugestao,
   contarComDoisMarcos,
   contarPrazo,
   explicarContagem,
   MOTIVO_DO_TRECHO,
+  prazoInterno,
   regraDaContagem,
   ritoDoProcesso,
   textoDaTempestividade,
   trechoNaFonte,
   type Calendario,
   type Conferencia,
+  type ContaAberta,
   type Contagem,
   type Dia,
+  type PrazoInterno,
   type ResultadoDaContagem,
   type Rito,
 } from "@decreta/core";
-import { analises, prazos, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
+import { analises, escritorios, prazos, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
 import { impressao, sugerirPrazo, type Ia, type SugestaoDePrazo } from "@decreta/ia";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
-import { analisar, type AnaliseNaTela } from "./analises.ts";
+import { analisar, ultimaAnalise, type AnaliseNaTela } from "./analises.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { contextoParaIa } from "./contexto.ts";
+
+/** Quantos dias depois do fim do período ainda pode haver um fatal cujo interno cai nele: os 15 dias úteis do máximo, com feriados e o recesso no meio. */
+export const FOLGA_DO_INTERNO = 45;
+
+/** Os dias úteis de antecedência do prazo interno que o escritório escolheu. Zero: não usa. */
+export async function antecedenciaDoInterno(tx: Tx, organizationId: string): Promise<number> {
+  const [e] = await tx.select({ dias: escritorios.prazoInternoDias }).from(escritorios).where(eq(escritorios.organizationId, organizationId));
+  return e?.dias ?? 0;
+}
 
 export interface ContagemNaTela {
   publicacao: string;
@@ -131,6 +144,95 @@ export async function contaDoPrazo(tx: Tx, organizationId: string, prazo: typeof
     // A peça argumenta pelo DJEN (Res. CNJ 455/2022, art. 11, § 3º). Data digitada ou conta que mudou: a pessoa confere antes.
     tempestividade: prazo.fimDigitado || pelaConta ? null : textoDaTempestividade(c.pelo === "publicacao" ? c.conta : c.outra!, { rito: regras.rito, disponibilizacao: disponibilizadaEm, certidao: comCertidao }),
   };
+}
+
+/** A conta atrás de uma data de prazo, para abrir de qualquer tela. */
+export interface ContaParaAbrir {
+  /** O prazo gravado. Nulo: é só a sugestão da IA, numa publicação ainda sem processo. */
+  prazo: { id: string; tipo: string; situacao: string; confirmado: boolean; processo: { id: string; titulo: string } } | null;
+  tipo: string;
+  fim: Dia;
+  dias: number;
+  contagem: Contagem;
+  /** A data foi digitada à mão: não há conta por trás dela. */
+  digitada: boolean;
+  /** A conta dia a dia. Nula quando a data foi digitada. */
+  aberta: ContaAberta | null;
+  regra: string;
+  calendario: string;
+  calendarioCompleto: boolean;
+  fora: { dia: Dia; nome: string; tipo: string }[];
+  prorrogadoDe: Dia | null;
+  /** A conta de hoje dá outra data: a digitada à mão, ou o calendário mudou depois da confirmação. */
+  pelaConta: Dia | null;
+  pelo: "publicacao" | "sistema";
+  outra: { inicio: Dia; fim: Dia } | null;
+  interno: PrazoInterno | null;
+  /** A segunda conferência, enquanto a sugestão da IA espera alguém confirmar. */
+  conferencia: Conferencia | null;
+}
+
+/** A conta do prazo gravado: o motor conta de novo no calendário de hoje e a linha sai dia a dia, só quando a data não foi digitada. */
+export async function contaParaAbrir(tx: Tx, organizationId: string, prazo: typeof prazos.$inferSelect, processo: { id: string; titulo: string }, hoje: Dia): Promise<ContaParaAbrir> {
+  const regras = await regrasDoProcesso(tx, organizationId, prazo.processoId);
+  const { rito, documento, ...conta } = await contaDoPrazo(tx, organizationId, prazo);
+  const aberto = prazo.situacao === "aberto";
+  return {
+    prazo: { id: prazo.id, tipo: prazo.tipo, situacao: prazo.situacao, confirmado: !!prazo.confirmadoEm, processo },
+    tipo: prazo.tipo,
+    fim: prazo.fim,
+    dias: prazo.dias,
+    contagem: prazo.contagem,
+    digitada: prazo.fimDigitado,
+    aberta: prazo.fimDigitado ? null : abrirConta({ publicacao: conta.pelo === "sistema" ? prazo.intimadoNoSistemaEm! : prazo.publicadoEm, dias: prazo.dias, contagem: prazo.contagem, tribunal: regras.cal.tribunal, calendario: regras.cal }),
+    regra: conta.regra,
+    calendario: conta.calendario,
+    calendarioCompleto: conta.calendarioCompleto,
+    fora: conta.desconsiderados,
+    prorrogadoDe: conta.prorrogadoDe,
+    pelaConta: conta.pelaConta,
+    pelo: conta.pelo,
+    outra: conta.outra,
+    interno: aberto ? prazoInterno({ fatal: prazo.fim, antecedencia: await antecedenciaDoInterno(tx, organizationId), hoje, calendario: regras.cal }) : null,
+    conferencia: await conferenciaDoPrazo(tx, prazo, rito, documento),
+  };
+}
+
+/** A conta da publicação: a do prazo, se já há um; senão, a da sugestão da IA, no calendário da publicação. Sem sugestão de prazo: `null`. */
+export async function contaDaPublicacao(tx: Tx, organizationId: string, pub: typeof publicacoes.$inferSelect, hoje: Dia): Promise<ContaParaAbrir | null> {
+  const [comPrazo] = await tx.select({ prazo: prazos, processo: { id: processos.id, titulo: processos.titulo } }).from(prazos).innerJoin(processos, eq(processos.id, prazos.processoId)).where(eq(prazos.publicacaoId, pub.id));
+  if (comPrazo) return contaParaAbrir(tx, organizationId, comPrazo.prazo, comPrazo.processo, hoje);
+  const s = (await ultimaAnalise(tx, "publicacao", pub.id, "sugerir-prazo"))?.conteudo as Partial<SugestaoNaTela> | undefined;
+  const c = s?.contagemCalculada;
+  if (!s?.geraPrazo || !c) return null;
+  const regras = await regrasDoProcesso(tx, organizationId, pub.processoId, pub.tribunal);
+  const r = contarPrazo({ publicacao: c.publicacao, dias: c.dias, contagem: c.contagem, calendario: regras.cal });
+  return {
+    prazo: null,
+    tipo: s.tipo ?? "Prazo",
+    fim: r.fim,
+    dias: r.dias,
+    contagem: r.contagem,
+    digitada: false,
+    aberta: abrirConta({ publicacao: c.publicacao, dias: c.dias, contagem: c.contagem, tribunal: regras.cal.tribunal, calendario: regras.cal }),
+    regra: regraDaContagem(regras.rito, r.contagem),
+    calendario: regras.calendario,
+    calendarioCompleto: regras.cal.proprio,
+    fora: r.desconsiderados.map((f) => ({ dia: f.dia, nome: f.nome, tipo: f.tipo })),
+    prorrogadoDe: r.prorrogadoDe,
+    pelaConta: null,
+    pelo: "publicacao",
+    outra: null,
+    interno: prazoInterno({ fatal: r.fim, antecedencia: await antecedenciaDoInterno(tx, organizationId), hoje, calendario: regras.cal }),
+    conferencia: s.conferencia ?? null,
+  };
+}
+
+/** A segunda conferência vale enquanto a sugestão da IA espera alguém confirmar. */
+export async function conferenciaDoPrazo(tx: Tx, prazo: typeof prazos.$inferSelect, rito: Rito, documento: string | null): Promise<Conferencia | null> {
+  if (prazo.origem !== "ia" || prazo.confirmadoEm || prazo.situacao !== "aberto") return null;
+  const sugestao = prazo.publicacaoId ? await ultimaAnalise(tx, "publicacao", prazo.publicacaoId, "sugerir-prazo") : null;
+  return conferir({ tipo: prazo.tipo, dias: prazo.dias, contagem: prazo.contagem, rito, documento, trechoNaFonte: (sugestao?.conteudo as { trechoConfere?: boolean } | undefined)?.trechoConfere }, await historicoDasSugestoes(tx));
 }
 
 /** O que a equipe fez com as sugestões da IA: prazos confirmados ou descartados e publicações marcadas "Não gera prazo" quando a IA dizia que gerava. */

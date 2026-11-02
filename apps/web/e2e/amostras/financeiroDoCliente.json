@@ -1,8 +1,8 @@
 {
-  "path": "/financeiro/clientes/dd61d628-a7dc-43fa-a916-e673543a5fd5",
+  "path": "/financeiro/clientes/b8f4b2f6-d855-47c5-b669-d56142de59c0",
   "corpo": {
     "cliente": {
-      "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
+      "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
       "nome": "Marina Duarte"
     },
     "resumo": {
@@ -20,7 +20,7 @@
       ],
       "porCliente": [
         {
-          "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
+          "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
           "aReceber": 100000,
           "emAtraso": 100000,
           "recebido": 200000
@@ -28,7 +28,7 @@
       ],
       "porProcesso": [
         {
-          "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+          "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
           "aReceber": 100000,
           "emAtraso": 100000,
           "recebido": 200000
@@ -37,7 +37,7 @@
     },
     "contratos": [
       {
-        "id": "b203f0f0-28e5-48fc-9d8c-67cae015c7d1",
+        "id": "678982e2-0650-499a-a909-b5a5110ed25a",
         "titulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
         "tipo": "hibrido",
         "situacao": "ativo",
@@ -49,11 +49,11 @@
         "observacoes": null,
         "documentoId": null,
         "cliente": {
-          "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
+          "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
           "nome": "Marina Duarte"
         },
         "processo": {
-          "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+          "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
           "titulo": "Marina Duarte × Seguradora Alfa S.A.",
           "cnj": "5004321-25.2026.8.24.0038"
         },
@@ -65,8 +65,8 @@
         },
         "parcelas": [
           {
-            "id": "edcabd74-c3f8-4743-b05a-ec00b792dcac",
-            "contratoId": "b203f0f0-28e5-48fc-9d8c-67cae015c7d1",
+            "id": "1c443611-bd56-4409-b345-d56e23ef433f",
+            "contratoId": "678982e2-0650-499a-a909-b5a5110ed25a",
             "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
             "contratoTipo": "hibrido",
             "contratoSituacao": "ativo",
@@ -80,11 +80,11 @@
             "situacao": "paga",
             "diasEmAtraso": 0,
             "cliente": {
-              "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
+              "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
               "nome": "Marina Duarte"
             },
             "processo": {
-              "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+              "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
               "titulo": "Marina Duarte × Seguradora Alfa S.A.",
               "cnj": "5004321-25.2026.8.24.0038"
             },
@@ -95,7 +95,7 @@
             "criadaEm": "2026-07-11T13:00:00.000Z",
             "pagamentos": [
               {
-                "id": "5b330d92-70e8-4295-a990-6c800856812f",
+                "id": "ef44462f-c943-4347-8424-12c22f01518b",
                 "valor": 100000,
                 "pagoEm": "2026-08-26",
                 "forma": "pix",
@@ -103,13 +103,13 @@
                 "observacao": null,
                 "estornado": false,
                 "motivoEstorno": null,
-                "registradoPor": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey"
+                "registradoPor": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM"
               }
             ]
           },
           {
-            "id": "cff64cd3-5a64-4c5b-bccb-aafa4a71a42d",
-            "contratoId": "b203f0f0-28e5-48fc-9d8c-67cae015c7d1",
+            "id": "52c03c70-feeb-485b-9eee-caac777a7c91",
+            "contratoId": "678982e2-0650-499a-a909-b5a5110ed25a",
             "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
             "contratoTipo": "hibrido",
             "contratoSituacao": "ativo",
@@ -123,11 +123,11 @@
             "situacao": "paga",
             "diasEmAtraso": 0,
             "cliente": {
-              "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
+              "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
               "nome": "Marina Duarte"
             },
             "processo": {
-              "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+              "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
               "titulo": "Marina Duarte × Seguradora Alfa S.A.",
               "cnj": "5004321-25.2026.8.24.0038"
             },
@@ -138,7 +138,7 @@
             "criadaEm": "2026-07-11T13:00:00.000Z",
             "pagamentos": [
               {
-                "id": "748f3ba4-aebc-45aa-b08d-fcc1be64e719",
+                "id": "5ba37df1-8e78-44a0-95ab-95f1e87281d8",
                 "valor": 100000,
                 "pagoEm": "2026-09-26",
                 "forma": "transferencia",
@@ -146,13 +146,13 @@
                 "observacao": null,
                 "estornado": false,
                 "motivoEstorno": null,
-                "registradoPor": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey"
+                "registradoPor": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM"
               }
             ]
           },
           {
-            "id": "132bac80-7718-4950-a692-da5956df16ac",
-            "contratoId": "b203f0f0-28e5-48fc-9d8c-67cae015c7d1",
+            "id": "74b415ff-6008-4602-bca5-626db92157d2",
+            "contratoId": "678982e2-0650-499a-a909-b5a5110ed25a",
             "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
             "contratoTipo": "hibrido",
             "contratoSituacao": "ativo",
@@ -166,11 +166,11 @@
             "situacao": "em_atraso",
             "diasEmAtraso": 3,
             "cliente": {
-              "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
+              "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
               "nome": "Marina Duarte"
             },
             "processo": {
-              "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+              "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
               "titulo": "Marina Duarte × Seguradora Alfa S.A.",
               "cnj": "5004321-25.2026.8.24.0038"
             },
@@ -186,8 +186,8 @@
             "pagamentos": []
           },
           {
-            "id": "c39f4999-c4ea-49fa-ba52-cc6e685b27df",
-            "contratoId": "b203f0f0-28e5-48fc-9d8c-67cae015c7d1",
+            "id": "3bba805a-ac7a-456e-a422-b21418e56ea5",
+            "contratoId": "678982e2-0650-499a-a909-b5a5110ed25a",
             "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
             "contratoTipo": "hibrido",
             "contratoSituacao": "ativo",
@@ -201,11 +201,11 @@
             "situacao": "sem_valor",
             "diasEmAtraso": 0,
             "cliente": {
-              "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
+              "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
               "nome": "Marina Duarte"
             },
             "processo": {
-              "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+              "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
               "titulo": "Marina Duarte × Seguradora Alfa S.A.",
               "cnj": "5004321-25.2026.8.24.0038"
             },

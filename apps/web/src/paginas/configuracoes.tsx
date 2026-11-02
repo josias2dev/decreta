@@ -1,4 +1,5 @@
 /** Configurações do escritório: timbre das peças, o jeito de cada peça, avisos e captura, calendário forense, a IA (política e retorno), o registro e os dados (levar tudo e encerrar). */
+import { calendarioPara, MAX_DIAS_DO_INTERNO, prazoInterno, proximoDiaUtil, somarDias } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearch } from "@tanstack/react-router";
 import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
@@ -124,7 +125,7 @@ function useSalvarEscritorio() {
   const qc = useQueryClient();
   const avisar = useAviso();
   return useMutation({
-    mutationFn: (corpo: Partial<Pick<Escritorio, "tribunal" | "timbre" | "avisos" | "capturaDjen" | "capturaDatajud" | "whatsappOficial">>) => api("/escritorio", { method: "PUT", json: corpo }),
+    mutationFn: (corpo: Partial<Pick<Escritorio, "tribunal" | "timbre" | "avisos" | "capturaDjen" | "capturaDatajud" | "whatsappOficial" | "prazoInternoDias">>) => api("/escritorio", { method: "PUT", json: corpo }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["escritorio"] });
       avisar("Configuração salva.");
@@ -286,6 +287,35 @@ function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
   );
 }
 
+/** Quantos dias úteis antes do fatal o escritório quer terminar, com a regra e um exemplo contado no calendário do tribunal. */
+function PrazoInternoConfig({ e, socio, hoje }: { e: Escritorio; socio: boolean; hoje: string }) {
+  const qc = useQueryClient();
+  const salvar = useSalvarEscritorio();
+  const dias = e.prazoInternoDias ?? 0;
+  const cal = calendarioPara({ tribunal: e.tribunal });
+  const exemplo = dias ? prazoInterno({ fatal: proximoDiaUtil(somarDias(hoje, 19), cal), antecedencia: dias, hoje, calendario: cal }) : null;
+  const mudar = (novo: number) => salvar.mutate({ prazoInternoDias: novo }, { onSuccess: () => { for (const k of ["hoje", "agenda", "prazo"]) void qc.invalidateQueries({ queryKey: [k] }); } });
+  return (
+    <Painel titulo="Prazo interno">
+      <div className="dc-form">
+        <Campo rotulo="Antecedência" htmlFor="pi-dias" ajuda="Sempre em dia útil e antes do fatal. Se cairia em dia sem expediente, recua para o dia útil anterior.">
+          <select id="pi-dias" value={dias} onChange={(ev) => mudar(Number(ev.target.value))} disabled={!socio || salvar.isPending}>
+            <option value={0}>Sem prazo interno</option>
+            {Array.from({ length: MAX_DIAS_DO_INTERNO }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                {n === 1 ? "1 dia útil antes do fatal" : `${n} dias úteis antes do fatal`}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <p className="dc-nota m-0">
+          {exemplo ? `Um prazo que vence em ${diaCompleto(exemplo.fatal)} fica com o interno em ${diaCompleto(exemplo.dia)}.` : "Sem prazo interno: só a data fatal aparece."}
+        </p>
+      </div>
+    </Painel>
+  );
+}
+
 function AbaCalendario({ e, socio, celular }: { e: Escritorio; socio: boolean; celular: boolean }) {
   const qc = useQueryClient();
   const avisar = useAviso();
@@ -348,6 +378,8 @@ function AbaCalendario({ e, socio, celular }: { e: Escritorio; socio: boolean; c
           </>
         )}
       </Painel>
+      <div className="dc-pilha">
+      <PrazoInternoConfig e={e} socio={socio} hoje={eu.data?.hoje ?? ""} />
       <Painel
         titulo="Dias que o escritório marcou"
         acao={
@@ -380,6 +412,7 @@ function AbaCalendario({ e, socio, celular }: { e: Escritorio; socio: boolean; c
           <Vazio titulo="Nenhum dia marcado">Feriado municipal, falha no sistema do tribunal ou suspensão por portaria: {socio ? "marque aqui e a contagem já desconta." : "um sócio marca aqui, e a contagem já desconta."}</Vazio>
         )}
       </Painel>
+      </div>
       <NovaSuspensao aberto={nova} aoFechar={() => setNova(false)} />
     </div>
   );

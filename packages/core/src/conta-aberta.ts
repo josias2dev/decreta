@@ -3,7 +3,7 @@
  * ao vencimento, com o motivo de cada dia ter contado ou ficado de fora. É o que
  * a landing desenha no calendário, sem servidor e sem login.
  */
-import { calendarioPara, type Tribunal } from "./calendario.ts";
+import { calendarioPara, type Calendario, type Tribunal } from "./calendario.ts";
 import { fimDeSemana, somarDias, type Dia } from "./datas.ts";
 import { contarPrazo, ehDiaUtil, type Contagem } from "./prazos.ts";
 
@@ -32,6 +32,8 @@ export interface PedidoDaContaAberta {
   dias: number;
   contagem: Contagem;
   tribunal: Tribunal;
+  /** O calendário já montado, com os dias que o escritório cadastrou. Sem ele, o do tribunal. */
+  calendario?: Calendario;
 }
 
 export interface ContaAberta {
@@ -49,8 +51,7 @@ export interface ContaAberta {
   linha: DiaDaConta[];
 }
 
-export function abrirConta({ publicacao, dias, contagem, tribunal }: PedidoDaContaAberta): ContaAberta {
-  const calendario = calendarioPara({ tribunal });
+export function abrirConta({ publicacao, dias, contagem, tribunal, calendario = calendarioPara({ tribunal }) }: PedidoDaContaAberta): ContaAberta {
   const r = contarPrazo({ publicacao, dias, contagem, calendario });
   const linha: DiaDaConta[] = [{ dia: publicacao, tipo: "publicacao" }];
   /** O último dia da contagem: `fim`, ou o dia de onde o vencimento foi empurrado. */

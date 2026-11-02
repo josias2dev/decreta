@@ -178,6 +178,23 @@ test.describe("publicações", () => {
 test.describe("publicações em sequência", () => {
   test.use({ viewport: { width: 1366, height: 768 } });
 
+  test("a última da fila: a caixa diz que zerou; se o servidor recusar, a publicação volta e o aviso de zerada some", async ({ page }) => {
+    const caixa = amostras.publicacoes!.corpo;
+    const so = { ...caixa, itens: caixa.itens.filter((i: { id: string }) => i.id === ids.publicacao), contagens: { ...caixa.contagens, nova: 1 } };
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`, new ApiFalsa().responder("GET /publicacoes", so));
+    const lista = page.locator(".dc-caixa__lista .dc-pub");
+    await expect(lista).toHaveCount(1);
+    const soltar = await portao(page, CAMINHO_DA_PUBLICACAO);
+    await page.locator(".dc-caixa__botoes").getByRole("button", { name: "Confirmar prazo" }).click();
+    await expect(page.getByText("Caixa zerada")).toBeVisible();
+    await expect(lista).toHaveCount(0);
+
+    soltar(RECUSA);
+    await expect(page.getByRole("alert").filter({ hasText: "O prazo não foi confirmado." })).toBeVisible();
+    await expect(lista).toHaveCount(1);
+    await expect(page.getByText("Caixa zerada")).toHaveCount(0);
+  });
+
   test("a resposta da primeira não traz de volta a segunda, que ainda está a caminho", async ({ page }) => {
     await abrir(page, `/publicacoes?id=${ids.publicacao}`, new ApiFalsa().responder(`GET /publicacoes/${SEGUNDA.id}`, { ...amostras.publicacaoMarina!.corpo, id: SEGUNDA.id }));
     const lista = page.locator(".dc-caixa__lista .dc-pub");

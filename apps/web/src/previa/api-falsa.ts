@@ -35,6 +35,9 @@ function comFotos(corpo: unknown): unknown {
 }
 
 function achar(caminho: string, busca: URLSearchParams): unknown {
+  // A conta atrás de uma data de prazo: uma amostra por prazo e por publicação.
+  const conta = /^\/(prazos|publicacoes)\/([0-9a-f-]{36})\/conta$/.exec(caminho);
+  if (conta) return (amostras.find((x) => x.path === `/${conta[1]}/contas?amostra`)?.corpo as Record<string, unknown> | undefined)?.[conta[2]!];
   const completo = caminho + (busca.size ? `?${busca}` : "");
   const a =
     amostras.find((x) => x.path === completo) ??

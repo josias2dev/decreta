@@ -1,11 +1,12 @@
 /** Prazo e briefing: o que o juízo decidiu, o que fazer, a contagem e o histórico. */
-import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ExternalLink, FileText, LoaderCircle, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Cancelada } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
+import { DataDoInterno, DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
@@ -15,14 +16,9 @@ import { PecaContraria } from "@/componentes/peca-contraria";
 import { Avatar, BlocoIa, Botao, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery, prazoQuery } from "@/lib/consultas";
+import { atualizarPrazos, euQuery, prazoQuery } from "@/lib/consultas";
 import { POLO_DO_CLIENTE, diaCompleto, diaCurto, diaDaSemana, diaDoInstante, diaMes, hora, ondeTramita, prazoEmDias } from "@/lib/formato";
 import type { Briefing, Contagem, Prazo, PreviaDaConta } from "@/lib/tipos";
-
-/** Tudo que mostra prazo muda junto: a lista, o Hoje, os números do menu e a caixa de publicações. */
-export function atualizarPrazos(qc: QueryClient) {
-  return Promise.all(["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda"].map((k) => qc.invalidateQueries({ queryKey: [k] })));
-}
 
 const FONTE = { djen: "DJEN", datajud: "DataJud", manual: "Publicação digitada" } as const;
 
@@ -90,9 +86,11 @@ export function PrazoPage() {
       ) : situacao === "descartado" ? (
         <Selo urgencia="prazo">Descartado</Selo>
       ) : (
-        <Selo urgencia={p.urgencia}>
-          Vence {diaMes(p.fim)} · {prazoEmDias(p.dias, p.contagem)}
-        </Selo>
+        <DataViva alvo={{ prazo: p.id }}>
+          <Selo urgencia={p.urgencia}>
+            Vence {diaMes(p.fim)} · {prazoEmDias(p.dias, p.contagem)}
+          </Selo>
+        </DataViva>
       )}
       {p.confirmado ? (
         <span className="dc-selo dc-selo--ok">
@@ -142,9 +140,13 @@ export function PrazoPage() {
         [
           "Data final",
           <span key="fim">
-            <strong className="dc-num">{diaCompleto(p.fim)}</strong> <span className="text-[var(--tinta-2)]">{diaDaSemana(p.fim)}</span>
+            <DataViva alvo={{ prazo: p.id }} texto>
+              <strong className="dc-num">{diaCompleto(p.fim)}</strong>
+            </DataViva>{" "}
+            <span className="text-[var(--tinta-2)]">{diaDaSemana(p.fim)}</span>
           </span>,
         ],
+        ...(p.interno ? ([["Prazo interno", <DataDoInterno key="interno" interno={p.interno} alvo={{ prazo: p.id }} />]] as [string, ReactNode][]) : []),
         ["Responsável", <Responsavel pessoa={p.responsavel} />],
         ["Origem", p.origem === "ia" ? `${p.publicacao ? FONTE[p.publicacao.fonte] : "Publicação"} · sugerido pela IA` : p.publicacao ? `${FONTE[p.publicacao.fonte]} · criado à mão` : "Criado à mão"],
         ...(p.observacoes ? ([["Observações", p.observacoes]] as [string, string][]) : []),
@@ -239,7 +241,7 @@ export function PrazoPage() {
                   <strong>{p.processo.titulo}</strong>
                 </Link>
                 {onde && `${onde} · `}
-                <Cnj cnj={p.processo.cnj} />
+                <Cnj cnj={p.processo.cnj} tipo={p.processo.tipo} />
               </>
             }
           />
@@ -279,7 +281,7 @@ export function PrazoPage() {
                 <strong>{p.processo.titulo}</strong>
               </Link>
               {" · "}
-              <Cnj cnj={p.processo.cnj} />
+              <Cnj cnj={p.processo.cnj} tipo={p.processo.tipo} />
               {onde && ` · ${onde}`}
             </>
           }

@@ -103,6 +103,10 @@ try {
   const pecaId = (await get(`/prazos/${alegacoes.id}`)).pecas[0].id;
   await guardar("peca", `/pecas/${pecaId}`);
   await guardar("busca", "/busca?q=Marina");
+  // A conta de cada prazo em aberto e de cada publicação com prazo: o que a data viva abre em qualquer tela.
+  const contas = async (lista: { id: string }[], caminho: (id: string) => string) => Object.fromEntries(await Promise.all(lista.map(async (i) => [i.id, await get(caminho(i.id))])));
+  amostras["contasDosPrazos"] = { path: "/prazos/contas?amostra", corpo: await contas(prazos.itens, (id) => `/prazos/${id}/conta`) };
+  amostras["contasDasPublicacoes"] = { path: "/publicacoes/contas?amostra", corpo: await contas(pubs.itens.filter((i: { selo: { tipo: string } }) => i.selo.tipo === "prazo"), (id) => `/publicacoes/${id}/conta`) };
   const agenda = await get("/agenda");
   const aud = agenda.dias?.flatMap((d: { itens: { tipo: string; id: string }[] }) => d.itens).find((i: { tipo: string }) => i.tipo === "audiencia");
   if (aud) await guardar("audiencia", `/audiencias/${aud.id}`);

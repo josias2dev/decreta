@@ -2,7 +2,7 @@
  * As consultas que mais de um lugar precisa conhecer: as telas e o roteador, que as dispara ao passar o mouse num link
  * (router.tsx). Fica fora das telas para o roteador não carregar o código delas.
  */
-import { infiniteQueryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, type QueryClient } from "@tanstack/react-query";
 import { api } from "./api";
 import type { CaixaDePublicacoes, Cliente, ClienteNaLista, Equipe, Escritorio, Eu, ListaDePrazos, Pagina, PainelDoDia, Prazo, Processo, ProcessoNaLista, Publicacao, Quando, SituacaoPublicacao } from "./tipos";
 
@@ -37,11 +37,11 @@ export const publicacaoQuery = (id: string) => ({
   },
 });
 
-export type SituacaoDosProcessos = "ativos" | "arquivados" | "todos";
+export type SituacaoDosProcessos = "ativos" | "arquivados" | "todos" | "incompletos";
 export const processosQuery = (situacao: SituacaoDosProcessos, busca: string | undefined) =>
   infiniteQueryOptions({
     queryKey: ["processos", situacao, busca ?? ""],
-    queryFn: ({ pageParam }) => api<Pagina<ProcessoNaLista>>(`/processos?${new URLSearchParams({ situacao, pagina: String(pageParam), ...(busca ? { busca } : {}) })}`),
+    queryFn: ({ pageParam }) => api<Pagina<ProcessoNaLista> & { incompletos?: number }>(`/processos?${new URLSearchParams({ situacao, pagina: String(pageParam), ...(busca ? { busca } : {}) })}`),
     initialPageParam: 1,
     getNextPageParam: (ultima) => (ultima.pagina * ultima.porPagina < ultima.total ? ultima.pagina + 1 : undefined),
   });
@@ -55,3 +55,8 @@ export const clientesQuery = (busca: string | undefined) =>
     getNextPageParam: (u) => (u.pagina * u.porPagina < u.total ? u.pagina + 1 : undefined),
   });
 export const clienteQuery = (id: string) => ({ queryKey: ["cliente", id], queryFn: () => api<Cliente>(`/clientes/${id}`) });
+
+/** Tudo que mostra prazo muda junto: a lista, o Hoje, os números do menu, a caixa de publicações, a conta e a busca. Termina quando as telas abertas tiverem os dados novos. */
+export function atualizarPrazos(qc: QueryClient) {
+  return Promise.all(["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda", "conta", "busca"].map((k) => qc.invalidateQueries({ queryKey: [k] })));
+}
