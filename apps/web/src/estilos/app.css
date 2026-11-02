@@ -43,7 +43,6 @@
 .dc-topo-pagina { display: flex; flex-direction: column; gap: var(--space-1); }
 .dc-app .dc-topo-pagina:has(> .dc-abas) { padding-bottom: 0; }
 .dc-app .dc-topo-pagina > .dc-abas { border-bottom: 0; }
-/* Busca, botões, segmentos e chips dos filtros com a mesma altura (32px) no computador. */
 /* Na folha branca, os cartões se separam pela borda, sem sombra. */
 .dc-app .dc-pagina--cheia { height: var(--altura-folha); min-height: 480px; padding-bottom: var(--respiro-pagina); }
 .dc-app .dc-chat { height: var(--altura-folha); }
@@ -1141,8 +1140,7 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-arquivo--pequeno { width: var(--space-3-half); height: var(--space-4); }
 
 /* ---------- Lista de processos ----------
-   Uma linha por processo, todas da mesma altura: as partes em 14px e, embaixo, em 13px, o tribunal,
-   o número e a vara. As outras colunas ficam em 14px numa linha só. */
+   Uma linha por processo, todas da mesma altura: as partes em cima e, embaixo, o tribunal, o número e a vara. */
 .dc-onde { display: flex; align-items: baseline; gap: var(--space-1); min-width: 0; white-space: nowrap; }
 .dc-onde > * + *::before { content: "·"; margin-right: var(--space-1); font-family: var(--font-sans); }
 .dc-onde__tribunal { flex: none; font-weight: 600; }
@@ -1171,7 +1169,6 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 /* No celular, o mesmo ponto em cada etapa das pílulas. */
 .dc-etapa-ponto { flex: none; box-sizing: border-box; width: var(--space-2); height: var(--space-2); border: 1px solid var(--etapa-borda, var(--etapa)); border-radius: 50%; background: var(--etapa); }
 .dc-quadro__sub { grid-column: 1 / -1; padding-left: var(--space-3-half); font: 400 var(--texto-meta)/var(--linha-meta) var(--font-mono); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--tinta-2); }
-/* As cinco etapas cabem a partir de 1280px de tela; abaixo disso o quadro rola para o lado. */
 
 /* O cartão: em cima o dado (valor e tempo, ou a situação da pasta), no meio quem e embaixo o quê. */
 .dc-cartao-quadro { container-type: inline-size; gap: var(--space-half); box-sizing: border-box; width: 100%; padding: var(--space-1-half) var(--space-2); border-radius: var(--radius-md); text-align: left; cursor: pointer; transition: border-color var(--transicao); }
