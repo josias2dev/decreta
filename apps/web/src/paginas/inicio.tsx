@@ -4,17 +4,19 @@
  * o fundo em ASCII, os links para as telas, o contato, as imagens da tela do produto e o atalho
  * para quem já tem sessão.
  */
+import { EMPRESA, ehEventoDoSite } from "@decreta/core";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, type MouseEvent } from "react";
 import { ligarFundoAscii, useCorDaBarra } from "@/componentes/fundo-ascii";
 import { euQuery } from "@/lib/consultas";
+import { registrarEventoDoSite } from "@/lib/eventos";
 import pagina from "@/landing/pagina.html?raw";
 import vitrineCelular from "@/landing/vitrine-celular.webp";
 import vitrineComputador from "@/landing/vitrine-computador.webp";
 
 /** Para onde vão "Falar com a equipe", "Fale com a gente" e o contato do rodapé: o WhatsApp da equipe, com a mensagem pronta. "Criar conta" vai para /cadastro. */
-const CONTATO = `https://wa.me/5546999074372?text=${encodeURIComponent("Olá! Quero conhecer o Decreta para o meu escritório.")}`;
+const CONTATO = `https://wa.me/${EMPRESA.contato.whatsapp}?text=${encodeURIComponent("Olá! Quero conhecer o Decreta para o meu escritório.")}`;
 
 const html = pagina
   .replaceAll("__CONTATO__", CONTATO)
@@ -31,6 +33,14 @@ export function InicioPage() {
   useEffect(() => {
     if (eu.data) router.history.replace("/hoje");
   }, [eu.data, router]);
+
+  // A visita conta quando já se sabe que não há sessão (quem volta ao site logado não é visita nova), uma vez por abertura da página.
+  const contou = useRef(false);
+  useEffect(() => {
+    if (contou.current || eu.isPending || eu.data) return;
+    contou.current = true;
+    registrarEventoDoSite("visita");
+  }, [eu.isPending, eu.data]);
 
   // O fundo em ASCII, nos canvas que vêm no HTML da landing: o do topo e o da chamada final.
   useEffect(() => {
@@ -52,6 +62,9 @@ export function InicioPage() {
   }, []);
 
   const clicar = (e: MouseEvent<HTMLDivElement>) => {
+    // O que tem `data-evento` com um nome da lista conta o clique ("Criar conta" é clicou_criar_conta).
+    const marca = (e.target as HTMLElement).closest<HTMLElement>("[data-evento]")?.dataset.evento;
+    if (ehEventoDoSite(marca)) registrarEventoDoSite(marca);
     // Links para as telas do app (/entrar) navegam sem recarregar a página.
     const link = (e.target as HTMLElement).closest<HTMLAnchorElement>("a[href^='/']");
     if (link && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {

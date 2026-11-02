@@ -10,7 +10,7 @@ import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { conferir, contaDoPrazo, contagemNaTela, contarParaProcesso, historicoDasSugestoes } from "../servicos/prazos.ts";
-import { corpo, falha, id, ip, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const QUANDO = ["hoje", "semana", "vencidos", "abertos", "cumpridos"] as const;
 type Quando = (typeof QUANDO)[number];
@@ -318,7 +318,10 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         if (caminho === "confirmar" && p.publicacaoId) await tx.update(publicacoes).set({ situacao: "vinculada", tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, p.publicacaoId));
       });
       await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao, detalhes: { prazoId, motivo }, ip: ip(c) }, deps.log);
-      if (caminho === "confirmar") await pedirRascunho(c, deps, prazoId);
+      if (caminho === "confirmar") {
+        await marcarEvento(c, deps, "primeiro_prazo_confirmado");
+        await pedirRascunho(c, deps, prazoId);
+      }
       return c.json({ ok: true });
     });
 

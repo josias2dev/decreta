@@ -12,7 +12,7 @@ import { semIa } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
-import { comLimiteDaIa, corpo, falha, id, ip, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { leituraParada, tituloDaPublicacao } from "../servicos/publicacoes.ts";
 
 const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
@@ -246,6 +246,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
       return { prazoId, fim: valores.fim };
     });
     await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "prazo.confirmado", detalhes: { prazoId: r.prazoId, publicacaoId: pubId, fim: r.fim }, ip: ip(c) }, deps.log);
+    await marcarEvento(c, deps, "primeiro_prazo_confirmado");
     await pedirRascunho(c, deps, r.prazoId);
     return c.json(r);
   });
@@ -359,6 +360,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .returning({ id: publicacoes.id });
       return pub!;
     });
+    await marcarEvento(c, deps, "primeira_publicacao");
     await deps.enfileirar({ nome: "publicacao.nova", organizationId: c.get("orgId"), publicacaoId: novo.id });
     return c.json(novo, 201);
   });

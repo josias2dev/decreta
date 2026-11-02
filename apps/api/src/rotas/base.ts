@@ -1,4 +1,5 @@
 /** O que toda rota das telas tem: a sessão, o escritório ativo e os serviços. */
+import type { NomeDeEvento } from "@decreta/core";
 import type { Database, Tx } from "@decreta/db";
 import { withTenant } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
@@ -9,6 +10,7 @@ import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
 import type { Auth } from "../auth.ts";
 import type { Mailer } from "../email.ts";
+import { registrarEvento } from "../eventos.ts";
 import { ipDoPedido } from "../limitador.ts";
 import type { DepsDaCaptura } from "../servicos/captura.ts";
 import type { Wameow } from "../servicos/avisos.ts";
@@ -64,6 +66,12 @@ export interface DepsDasRotas {
 
 export function tenant<T>(c: C, deps: { db: Database }, fn: (tx: Tx) => Promise<T>): Promise<T> {
   return withTenant(deps.db, c.get("orgId"), fn);
+}
+
+/** Um marco do funil do escritório (a primeira OAB, a primeira publicação, o primeiro prazo confirmado), gravado uma vez só. A demonstração não entra. */
+export async function marcarEvento(c: C, deps: Pick<DepsDasRotas, "db" | "log">, nome: NomeDeEvento): Promise<void> {
+  if (c.get("demonstracao")) return;
+  await registrarEvento(deps.db, nome, c.get("orgId"), deps.log);
 }
 
 export async function corpo<S extends z.ZodType>(c: C, schema: S): Promise<z.infer<S>> {

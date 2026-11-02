@@ -19,7 +19,7 @@ import { readEnv } from "../src/env.ts";
 import { criarEscritorio } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { resumoDaManha } from "../src/servicos/avisos.ts";
-import { capturarCadernos, certidaoDaPublicacao, saudeDaCaptura, type DepsDaCaptura } from "../src/servicos/captura.ts";
+import { capturarCadernos, capturarDjen, certidaoDaPublicacao, saudeDaCaptura, type DepsDaCaptura } from "../src/servicos/captura.ts";
 import { painelDoDia } from "../src/servicos/hoje.ts";
 
 const DA_CARTEIRA = "5004321-25.2026.8.24.0038";
@@ -143,6 +143,25 @@ describe.skipIf(!hasTestDatabase)("captura pelo caderno do DJEN", () => {
     // A tela de Publicações diz quando foi a última captura: a do caderno conta.
     const [rodada] = await t.owner<{ encontradas: number; novas: number; erro: string | null }[]>`select encontradas, novas, erro from capturas where organization_id = ${souza}`;
     expect(rodada).toEqual({ encontradas: 2, novas: 2, erro: null });
+  });
+
+  const marcos = async (orgId: string) => (await t.owner<{ nome: string }[]>`select nome from eventos where organization_id = ${orgId}`).map((e) => e.nome);
+
+  test("o escritório que recebeu a primeira publicação marca primeira_publicacao; quem não recebeu, e a demonstração, não", async () => {
+    expect(await marcos(souza)).toEqual(["primeira_publicacao"]);
+    expect(await marcos(outro)).toEqual(["primeira_publicacao"]);
+    expect(await marcos(mineiro)).toEqual([]);
+    expect(await marcos(demo)).toEqual([]);
+  });
+
+  test("a busca pela OAB do reforço do dia também marca a primeira publicação", async () => {
+    const buscaPelaOab = (async () => resposta({ count: 1, items: [comunicacao(9, { cnj: DE_OUTRO, oab: "77001" })] })) as unknown as typeof fetch;
+    const r = await capturarDjen({ ...captura, fetch: buscaPelaOab }, mineiro, { de: "2026-10-28", ate: "2026-10-28" });
+    expect(r.novas).toHaveLength(1);
+    expect(await marcos(mineiro)).toEqual(["primeira_publicacao"]);
+    // Rodar de novo não repete a publicação nem o marco.
+    expect((await capturarDjen({ ...captura, fetch: buscaPelaOab }, mineiro, { de: "2026-10-28", ate: "2026-10-28" })).novas).toHaveLength(0);
+    expect(await marcos(mineiro)).toEqual(["primeira_publicacao"]);
   });
 
   test("também procura nos superiores (os recursos) e registra o dia sem caderno", async () => {

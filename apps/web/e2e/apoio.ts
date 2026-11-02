@@ -85,6 +85,11 @@ export class ApiFalsa {
       return json(200, { ok: true });
     }
     if (url.pathname.startsWith("/api/convites/")) return json(404, { erro: "nao_encontrado" });
+    // Os eventos da landing (visita, cliques): só guarda o que foi mandado.
+    if (url.pathname === "/api/eventos") {
+      this.pedidos.push({ metodo, caminho: "/eventos", corpo });
+      return route.fulfill({ status: 204 });
+    }
     // O cadastro aberto: cria a conta e já abre a sessão.
     if (url.pathname === "/api/cadastro") {
       this.pedidos.push({ metodo, caminho: "/cadastro", corpo });

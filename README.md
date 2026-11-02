@@ -81,6 +81,19 @@ TEST_OWNER_URL=postgres://dc_owner:dc_owner@localhost:5433/postgres bun apps/api
 
 O CI (`.github/workflows/ci.yml`) roda tudo isso a cada push.
 
+## Funil
+
+O site e o servidor contam alguns eventos sem cookie, sem IP e sem dado de pessoa: a visita e os
+cliques da landing, o cadastro, a OAB, a primeira publicação e o primeiro prazo confirmado (cada
+escritório marca uma vez só). `bun run funil` imprime o funil por período, com o que sobra de um
+passo para o outro.
+
+```sh
+bun run funil                                # os últimos 30 dias
+bun run funil --dias 7
+bun run funil --de 2026-10-01 --ate 2026-10-31
+```
+
 ## Servidor
 
 O Decreta roda na máquina do escritório, ao lado dos outros sistemas: API em

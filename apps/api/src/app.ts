@@ -1,4 +1,4 @@
-import { VERSAO_DOS_TERMOS } from "@decreta/core";
+import { ehEventoDoSite, VERSAO_DOS_TERMOS } from "@decreta/core";
 import { invitation, organization, user, type Database } from "@decreta/db";
 import { eq, sql } from "drizzle-orm";
 import { Hono, type Context } from "hono";
@@ -12,6 +12,7 @@ import { registrar } from "./auditoria.ts";
 import { AVISO_DO_ACEITE, type Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { criarEscritorio, slugUnico } from "./escritorio-novo.ts";
+import { registrarEvento, registrarEventoDoSite } from "./eventos.ts";
 import { ipDoPedido, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
@@ -70,6 +71,19 @@ export function createApp(deps: AppDeps) {
 
   // Rotas sem login: poucos pedidos por minuto de cada endereço, contra quem tenta adivinhar um segredo ou token.
   app.use("/api/convites/*", limitarPorIp({ janelaMs: 60_000, maximo: 30 }, ipDoPedido));
+  app.use("/api/eventos", csrf({ origin: env.WEB_ORIGIN }));
+  app.use("/api/eventos", limitarPorIp({ janelaMs: 60_000, maximo: 30 }, ipDoPedido));
+  /** A landing conta a visita e os cliques: só o nome, de uma lista fechada. Sem cookie, sem pessoa, e o endereço de quem mandou fica só no limitador, em memória. */
+  app.post(
+    "/api/eventos",
+    bodyLimit({ maxSize: TETO_DO_EVENTO_BYTES, onError: (c) => c.json({ erro: "muito_grande" }, 413) }),
+    async (c) => {
+      const corpo = (await c.req.json().catch(() => null)) as { nome?: unknown } | null;
+      if (!ehEventoDoSite(corpo?.nome)) return c.json({ erro: "evento_invalido" }, 400);
+      await registrarEventoDoSite(db, corpo.nome, log);
+      return c.body(null, 204);
+    },
+  );
   app.use("/api/envio/*", limitarPorIp({ janelaMs: 60_000, maximo: 60 }, ipDoPedido));
   const limiteDoMcp = limitarPorIp({ janelaMs: 60_000, maximo: 120 }, ipDoPedido);
   app.use("/api/mcp", limiteDoMcp);
@@ -109,6 +123,8 @@ export function createApp(deps: AppDeps) {
 }
 
 const TETO_DO_CADASTRO_BYTES = 16 * 1024;
+/** Um evento do site é `{"nome":"visita"}`: acima disto nem é lido. */
+const TETO_DO_EVENTO_BYTES = 1024;
 
 const CADASTRO = z.object({
   nome: z.string().trim().min(2, "Diga como você se chama.").max(120),
@@ -135,6 +151,7 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
   const slug = await slugUnico(db, b.escritorio);
   const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, dono: { email: b.email, nome: b.nome, senha: b.senha, termosVersao: b.termos } });
   await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug, termos: b.termos }, ip: ipDoPedido(c) }, log);
+  await registrarEvento(db, "cadastro_concluido", organizationId, log);
 
   // A sessão abre pelo mesmo caminho do login (com o registro de "entrou"): o cookie vai na resposta.
   const headers = new Headers({ "content-type": "application/json" });

@@ -3,7 +3,7 @@
  * `bun run funil` imprime. Os eventos não carregam dado pessoal: só o nome, o
  * instante e, quando houver, o escritório (ver `eventos` em @decreta/db).
  */
-import { diferencaEmDias, formatarDia, type Dia } from "./datas.ts";
+import { diferencaEmDias, ehDia, formatarDia, somarDias, type Dia } from "./datas.ts";
 
 /** O que o site (a landing) pode mandar, sem login. Lista fechada: nome fora dela é recusado. */
 export const EVENTOS_DO_SITE = ["visita", "clicou_demonstracao", "clicou_criar_conta"] as const;
@@ -45,6 +45,28 @@ export function montarFunil(totais: Record<string, number>): EtapaDoFunil[] {
     const anterior = i === 0 ? null : (totais[ESCADA[i - 1]!.nome] ?? 0);
     return { ...e, total, doAnterior: anterior ? total / anterior : null };
   });
+}
+
+const DIAS_PADRAO = 30;
+const MAX_DIAS = 366;
+
+/**
+ * O período do `bun run funil`: `--dias N` para trás a partir de hoje, ou `--de` e `--ate`
+ * (os dois dias entram). Sem nada, os últimos 30 dias. Argumento errado lança com a frase que vai para a tela.
+ */
+export function periodoDoFunil(a: { dias?: string; de?: string; ate?: string }, hoje: Dia): { de: Dia; ate: Dia } {
+  if (a.dias !== undefined && (a.de !== undefined || a.ate !== undefined)) throw new Error("Use --dias ou --de e --ate, não os dois.");
+  if (a.dias !== undefined) {
+    const dias = Number(a.dias);
+    if (!/^\d+$/.test(a.dias) || dias < 1 || dias > MAX_DIAS) throw new Error(`--dias é um número de 1 a ${MAX_DIAS}.`);
+    return { de: somarDias(hoje, 1 - dias), ate: hoje };
+  }
+  if (a.de !== undefined && !ehDia(a.de)) throw new Error("--de precisa ser um dia no formato AAAA-MM-DD.");
+  if (a.ate !== undefined && !ehDia(a.ate)) throw new Error("--ate precisa ser um dia no formato AAAA-MM-DD.");
+  const ate = a.ate ?? hoje;
+  const de = a.de ?? somarDias(ate, 1 - DIAS_PADRAO);
+  if (de > ate) throw new Error("--de vem depois de --ate.");
+  return { de, ate };
 }
 
 const percentual = (fracao: number) => `${(fracao * 100).toFixed(1).replace(".", ",")}%`;

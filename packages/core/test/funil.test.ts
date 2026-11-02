@@ -1,5 +1,30 @@
 import { describe, expect, test } from "bun:test";
-import { ehEventoDoSite, EVENTOS_DO_SERVIDOR, EVENTOS_DO_SITE, montarFunil, textoDoFunil } from "../src/funil.ts";
+import { ehEventoDoSite, EVENTOS_DO_SERVIDOR, EVENTOS_DO_SITE, montarFunil, periodoDoFunil, textoDoFunil } from "../src/funil.ts";
+
+describe("período do funil", () => {
+  test("sem nada, são os últimos 30 dias, contando hoje", () => {
+    expect(periodoDoFunil({}, "2026-11-02")).toEqual({ de: "2026-10-04", ate: "2026-11-02" });
+  });
+
+  test("--dias conta para trás a partir de hoje", () => {
+    expect(periodoDoFunil({ dias: "7" }, "2026-11-02")).toEqual({ de: "2026-10-27", ate: "2026-11-02" });
+    expect(periodoDoFunil({ dias: "1" }, "2026-11-02")).toEqual({ de: "2026-11-02", ate: "2026-11-02" });
+  });
+
+  test("--de e --ate valem como vierem; o --ate sozinho conta 30 dias para trás, e o --de sozinho vai até hoje", () => {
+    expect(periodoDoFunil({ de: "2026-10-01", ate: "2026-10-31" }, "2026-11-02")).toEqual({ de: "2026-10-01", ate: "2026-10-31" });
+    expect(periodoDoFunil({ ate: "2026-10-31" }, "2026-11-02")).toEqual({ de: "2026-10-02", ate: "2026-10-31" });
+    expect(periodoDoFunil({ de: "2026-10-15" }, "2026-11-02")).toEqual({ de: "2026-10-15", ate: "2026-11-02" });
+  });
+
+  test("dia torto, período de trás para frente e dias demais são recusados com a frase do erro", () => {
+    expect(() => periodoDoFunil({ de: "31/10/2026" }, "2026-11-02")).toThrow("--de precisa ser um dia no formato AAAA-MM-DD.");
+    expect(() => periodoDoFunil({ ate: "2026-02-30" }, "2026-11-02")).toThrow("--ate precisa ser um dia no formato AAAA-MM-DD.");
+    expect(() => periodoDoFunil({ de: "2026-11-02", ate: "2026-11-01" }, "2026-11-02")).toThrow("--de vem depois de --ate.");
+    for (const dias of ["0", "-3", "abc", "1.5", "400"]) expect(() => periodoDoFunil({ dias }, "2026-11-02")).toThrow("--dias é um número de 1 a 366.");
+    expect(() => periodoDoFunil({ dias: "7", de: "2026-10-01" }, "2026-11-02")).toThrow("Use --dias ou --de e --ate, não os dois.");
+  });
+});
 
 describe("eventos do funil", () => {
   test("o site só pode mandar os três nomes da lista; os do servidor ficam de fora", () => {

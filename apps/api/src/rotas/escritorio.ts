@@ -12,7 +12,7 @@ import { painelDoDia } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { textoDaPolitica, TITULO_DA_POLITICA } from "../servicos/politica-ia.ts";
 import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
-import { corpo, ehSocio, falha, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { corpo, ehSocio, falha, ip, marcarEvento, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const timbre = z.object({
   nome: z.string().trim().min(2).max(200),
@@ -202,6 +202,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .values({ organizationId: c.get("orgId"), userId, ...valores })
         .onConflictDoUpdate({ target: [equipe.organizationId, equipe.userId], set: valores });
     });
+    if (b.oabNumero) await marcarEvento(c, deps, "oab_cadastrada");
     return c.json({ ok: true });
   });
 

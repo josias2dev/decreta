@@ -9,6 +9,7 @@ import type { Armazenamento } from "@decreta/documentos";
 import { buscarNoDataJud, buscarNoDjen, certidaoDoDjen, dataJudAtualizadoAte, lerCaderno, orgaoSemComarca, partesDoDjen, ultimosEnviosAoDjen, type ComunicacaoDjen, type OpcoesDjen } from "@decreta/tribunais";
 import { and, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
+import { registrarEvento } from "../eventos.ts";
 import { calendarioDoEscritorio } from "./calendario.ts";
 import { comarcaDoDataJud, completarPartes } from "./consulta.ts";
 
@@ -139,6 +140,7 @@ export async function capturarDjen(deps: DepsDaCaptura, organizationId: string, 
       .set({ terminadaEm: new Date(), encontradas, novas: novas.length, erro: erros.length ? erros.join("; ").slice(0, 1000) : null })
       .where(eq(capturas.id, rodada!.id)),
   );
+  if (novas.length) await registrarEvento(deps.db, "primeira_publicacao", organizationId, deps.log);
   if (erros.length === oabs.length) throw new Error(`DJEN: ${erros.join("; ")}`);
   return { encontradas, novas };
 }
@@ -352,6 +354,7 @@ export async function capturarCadernos(deps: DepsDaCaptura, dias: Dia[]): Promis
       tx.insert(capturas).values({ organizationId, fonte: "djen", iniciadaEm, terminadaEm: new Date(), encontradas: r.encontradas, novas: r.novas, erro: r.erros.length === r.tentativas ? r.erros.join("; ").slice(0, 1000) : null }),
     );
   }
+  for (const organizationId of new Set(novas.map((n) => n.organizationId))) await registrarEvento(deps.db, "primeira_publicacao", organizationId, deps.log);
   if (falhas && falhas === tentativas) throw new Error(`DJEN: nenhum caderno pôde ser lido (${falhas})`);
   return { cadernos, novas };
 }
