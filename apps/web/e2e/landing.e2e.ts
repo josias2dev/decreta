@@ -129,10 +129,20 @@ test.describe("a página", () => {
     expect(texto).not.toContain("todos os tribunais");
   });
 
-  test("o que ainda não vem está escrito: financeiro, portal do cliente e aplicativo nativo", async ({ page }) => {
+  test("o que ainda não vem está escrito: contabilidade, portal do cliente e aplicativo nativo", async ({ page }) => {
     await abrirLanding(page);
     const falta = page.locator(".lp-vem__falta");
-    for (const item of ["Financeiro.", "Portal do cliente.", "Aplicativo nativo."]) await expect(falta.getByText(item)).toBeVisible();
+    for (const item of ["Contabilidade.", "Portal do cliente.", "Aplicativo nativo."]) await expect(falta.getByText(item)).toBeVisible();
+    await expect(falta.getByText("Financeiro.")).toHaveCount(0);
+  });
+
+  test("os honorários e a prestação de contas aparecem no que já vem, sem prometer serviço ainda não testado de verdade", async ({ page }) => {
+    await abrirLanding(page);
+    const vem = page.locator(".lp-vem__colunas");
+    await expect(vem.getByText("Honorários por caso: a receber, recebido e em atraso")).toBeVisible();
+    await expect(vem.getByText("Prestação de contas do alvará, em Word, no timbre")).toBeVisible();
+    const texto = (await page.locator("body").innerText()).toLowerCase();
+    for (const servico of ["asaas", "zapsign", "pix automático"]) expect(texto, servico).not.toContain(servico);
   });
 
   test("preço: o plano único e o convite para a equipe, enquanto o valor não existe", async ({ page }) => {
