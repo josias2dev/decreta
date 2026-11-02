@@ -18,7 +18,7 @@ const CONFIANCA = { alta: ["dc-selo--ok", "Confiança alta"], media: ["dc-selo--
 export function ConferenciaDaSugestao({ conferencia: c }: { conferencia: SegundaConferencia }) {
   const [classe, rotulo] = CONFIANCA[c.confianca];
   return (
-    <div className="dc-conferencia">
+    <div className="dc-segunda">
       <span className={`dc-selo ${classe}`}>{rotulo}</span>
       {c.motivos.length === 1 ? (
         <p>{c.motivos[0]}</p>

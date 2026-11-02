@@ -139,9 +139,9 @@ export function ProcessosPage() {
                 <thead>
                   <tr>
                     <th>Processo</th>
-                    <th style={{ width: 152 }}>Responsável</th>
-                    <th style={{ width: 300 }}>Próximo prazo</th>
-                    <th style={{ width: 120 }}>Movimentou</th>
+                    <th className="dc-col--pessoa">Responsável</th>
+                    <th className="dc-col--prazo">Próximo prazo</th>
+                    <th className="dc-col--mov">Movimentou</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -149,9 +149,11 @@ export function ProcessosPage() {
                     <tr key={p.id} data-link="" onClick={() => void navigate({ to: "/processos/$id", params: { id: p.id } })}>
                       <td>
                         <span className="dc-celula">
-                          <Link className="dc-celula__1 truncate" to="/processos/$id" params={{ id: p.id }} onClick={(e) => e.stopPropagation()}>
-                            {p.titulo}
-                          </Link>
+                          <span className="dc-celula__1 dc-celula__1--uma">
+                            <Link to="/processos/$id" params={{ id: p.id }} onClick={(e) => e.stopPropagation()}>
+                              {p.titulo}
+                            </Link>
+                          </span>
                           <span className="dc-celula__2">
                             <Onde p={p} />
                           </span>

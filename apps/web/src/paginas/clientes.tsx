@@ -71,7 +71,7 @@ export function ClientesPage() {
             {itens.map((c) => (
               <Link key={c.id} to="/clientes/$id" params={{ id: c.id }} className="dc-item">
                 <span className="dc-item__titulo">{c.nome}</span>
-                <span className="dc-num text-[13px] text-[var(--tinta-2)]">{c.processos ? `${c.processos} ${c.processos === 1 ? "processo" : "processos"}` : ""}</span>
+                <span className="dc-num dc-t-meta text-[var(--tinta-2)]">{c.processos ? `${c.processos} ${c.processos === 1 ? "processo" : "processos"}` : ""}</span>
                 <span className="dc-item__meta">{[c.documento && formatarDocumento(c.documento), telefone(c.whatsapp ?? c.telefone)].filter(Boolean).join(" · ") || "Sem documento"}</span>
               </Link>
             ))}
@@ -106,13 +106,13 @@ export function ClientesPage() {
         ) : itens.length ? (
           <>
             <Rolagem id="clientes" className="dc-tabela-caixa">
-              <table className="dc-tabela">
+              <table className="dc-tabela dc-tabela--fixa">
                 <thead>
                   <tr>
                     <th>Cliente</th>
-                    <th style={{ width: 240 }}>Contato</th>
-                    <th style={{ width: 100, textAlign: "right" }}>Processos</th>
-                    <th style={{ width: 150 }}>Último atendimento</th>
+                    <th className="dc-col--contato">Contato</th>
+                    <th className="dc-col--n dc-direita">Processos</th>
+                    <th className="dc-col--situacao">Último atendimento</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -120,19 +120,21 @@ export function ClientesPage() {
                     <tr key={c.id} data-link="" onClick={() => void navigate({ to: "/clientes/$id", params: { id: c.id } })}>
                       <td>
                         <span className="dc-celula">
-                          <Link className="dc-celula__1" to="/clientes/$id" params={{ id: c.id }} onClick={(e) => e.stopPropagation()}>
-                            {c.nome}
-                          </Link>
-                          <span className="dc-celula__2 dc-num">{c.documento ? formatarDocumento(c.documento) : c.tipo === "pj" ? "Pessoa jurídica" : "Sem CPF"}</span>
+                          <span className="dc-celula__1 dc-celula__1--uma">
+                            <Link to="/clientes/$id" params={{ id: c.id }} onClick={(e) => e.stopPropagation()}>
+                              {c.nome}
+                            </Link>
+                          </span>
+                          <span className="dc-celula__2 dc-celula__2--uma">{c.documento ? <span className="dc-num">{formatarDocumento(c.documento)}</span> : c.tipo === "pj" ? "Pessoa jurídica" : "Sem CPF"}</span>
                         </span>
                       </td>
                       <td>
                         <span className="dc-celula">
                           <span className="dc-num">{telefone(c.whatsapp ?? c.telefone) || "—"}</span>
-                          {c.email && <span className="dc-celula__2 truncate">{c.email}</span>}
+                          {c.email && <span className="dc-celula__2 dc-celula__2--uma">{c.email}</span>}
                         </span>
                       </td>
-                      <td className="dc-num" style={{ textAlign: "right" }}>
+                      <td className="dc-num dc-direita">
                         {c.processos || "—"}
                       </td>
                       <td className="dc-num text-[var(--tinta-2)]">{c.ultimoAtendimento ? diaCompleto(diaDoInstante(c.ultimoAtendimento)) : "—"}</td>
@@ -239,7 +241,7 @@ export function ClientePage() {
                   {diaDoInstante(a.em) === hoje ? `Hoje ${hora(a.em)}` : `${diaCompleto(diaDoInstante(a.em))} ${hora(a.em)}`} · {CANAL[a.canal]}
                   {a.autor && ` · ${a.autor.apelido}`}
                 </span>
-                <span className="whitespace-pre-wrap text-[14px] leading-[21px]">{a.resumo}</span>
+                <span className="whitespace-pre-wrap dc-t-leitura">{a.resumo}</span>
               </span>
             </div>
           ))}
@@ -312,7 +314,7 @@ export function ClientePage() {
   );
 
   const apagar = ehSocio(eu.data?.usuario.papel) && (
-    <button type="button" className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-[var(--vencido)] hover:underline" onClick={() => setDialogo("apagar")}>
+    <button type="button" className="inline-flex items-center gap-1.5 self-start dc-t-meta font-medium text-[var(--vencido)] hover:underline" onClick={() => setDialogo("apagar")}>
       <Trash2 className="size-3.5" /> Apagar cliente (LGPD)
     </button>
   );
@@ -339,7 +341,7 @@ export function ClientePage() {
       >
         <div className="flex flex-col gap-1">
           <h1 className="dc-h1">{c.nome}</h1>
-          {sobre && <span className="dc-num text-[14px] text-[var(--tinta-2)]">{sobre}</span>}
+          {sobre && <span className="dc-num dc-t-corpo text-[var(--tinta-2)]">{sobre}</span>}
         </div>
         <div className="dc-rodape__par">
           <Botao variante="primaria" bloco onClick={() => setDialogo("atendimento")}>

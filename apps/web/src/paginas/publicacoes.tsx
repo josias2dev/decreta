@@ -81,8 +81,10 @@ function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePubli
         <span className="dc-pub__titulo">{item.titulo}</span>
         <span className="dc-pub__data">{diaCurto(item.disponibilizadaEm)}</span>
       </span>
-      <span className="dc-pub__partes">{item.partes}</span>
-      <SeloDaLista selo={item.selo} />
+      <span className="dc-pub__base">
+        <span className="dc-pub__partes">{item.partes}</span>
+        <SeloDaLista selo={item.selo} />
+      </span>
     </>
   );
   if (celular) {
@@ -360,10 +362,10 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
 
   const processo = pub.processo ? (
     <div className="flex items-start justify-between gap-3">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <strong className="text-[16px] leading-[22px]">{pub.processo.titulo}</strong>
-        {celular && (pub.processo.classe || onde) && <span className="text-[14px] leading-[20px] text-[var(--tinta-2)]">{[pub.processo.classe, onde].filter(Boolean).join(" · ")}</span>}
-        <span className="text-[14px] leading-[20px] text-[var(--tinta-2)]">
+      <div className="flex min-w-0 flex-col">
+        <strong className="dc-t-corpo font-semibold">{pub.processo.titulo}</strong>
+        {celular && (pub.processo.classe || onde) && <span className="dc-t-corpo text-[var(--tinta-2)]">{[pub.processo.classe, onde].filter(Boolean).join(" · ")}</span>}
+        <span className="dc-t-corpo text-[var(--tinta-2)]">
           <Cnj cnj={pub.processo.cnj} />
           {!celular && [onde, pub.processo.responsavel?.apelido].filter(Boolean).map((x) => ` · ${x}`)}
         </span>
@@ -387,10 +389,10 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
   const teor = (
     <>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-        <h3 className="m-0 text-[14px] font-semibold leading-[20px]">{tituloTeor}</h3>
+        <h3 className="dc-painel__titulo">{tituloTeor}</h3>
         <span className="dc-nota">{celular ? `Disponibilizada em ${diaCompleto(pub.disponibilizadaEm)}` : datas}</span>
       </div>
-      <p className={cn("m-0 whitespace-pre-wrap", celular ? "dc-teor" : "text-[14px] leading-[24px]")}>{pub.texto || "Sem teor. Abra a publicação no sistema do tribunal."}</p>
+      <p className={cn("m-0 whitespace-pre-wrap", celular ? "dc-teor" : "dc-t-leitura")}>{pub.texto || "Sem teor. Abra a publicação no sistema do tribunal."}</p>
       {(pub.link || pub.certidao) && (
         <div className="dc-linha-acoes">
           {pub.link && (
@@ -426,9 +428,9 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
       {c ? (
         <ConteudoDaSugestao c={c} responsavel={s!.responsavel} />
       ) : !iaAqui ? (
-        <p className="m-0 text-[14px]">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
+        <p className="m-0 dc-t-corpo">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
       ) : pub.leituraParada ? (
-        <p className="m-0 text-[14px]">A IA não conseguiu ler esta publicação. Confira o teor e o prazo, ou peça para ler de novo.</p>
+        <p className="m-0 dc-t-corpo">A IA não conseguiu ler esta publicação. Confira o teor e o prazo, ou peça para ler de novo.</p>
       ) : null}
     </BlocoIa>
   );
@@ -610,7 +612,7 @@ function LeituraDaDecisao({ pub }: { pub: Publicacao }) {
       rodape={a ? "Gerado por IA. Confira na decisão." : "A IA lê a decisão pedido a pedido."}
     >
       {l && <ConteudoDaSentenca l={l} />}
-      {!a && !iaAqui && <p className="m-0 text-[14px]">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Leia a decisão e confirme o resultado à mão.</p>}
+      {!a && !iaAqui && <p className="m-0 dc-t-corpo">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Leia a decisão e confirme o resultado à mão.</p>}
       {r ? (
         <Faixa tipo="ok">
           <Check />
@@ -784,13 +786,13 @@ function ProvaDaLeitura({ c }: { c: Sugestao }) {
   return (
     <>
       {c.trechoConfere && c.trecho && (
-        <div className="dc-par dc-inteira" style={{ gridColumn: "1 / -1" }}>
+        <div className="dc-par dc-largo">
           <span className="dc-rotulo">Trecho da publicação</span>
           <p>“{c.trecho}”</p>
         </div>
       )}
       {c.conferencia && (
-        <div className="dc-par dc-inteira" style={{ gridColumn: "1 / -1" }}>
+        <div className="dc-par dc-largo">
           <span className="dc-rotulo">Segunda conferência</span>
           <ConferenciaDaSugestao conferencia={c.conferencia} />
         </div>
@@ -808,7 +810,7 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
         <Par rotulo="Data" valor={<span className="dc-num">{diaCompleto(a.data)}</span>} nota={diaDaSemana(a.data)} />
         <Par rotulo="Hora" valor={<span className="dc-num">{a.hora}</span>} nota={a.porVideo ? "Por vídeo" : "Presencial"} />
         {c.resumo && (
-          <div className="dc-par dc-inteira" style={{ gridColumn: "1 / -1" }}>
+          <div className="dc-par dc-largo">
             <span className="dc-rotulo">O que diz</span>
             <p>{c.resumo}</p>
           </div>
@@ -820,7 +822,7 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
   if (!c.geraPrazo || !c.dias) {
     return (
       <div className="dc-sugestao">
-        <div className="dc-par" style={{ gridColumn: "1 / -1" }}>
+        <div className="dc-par dc-largo">
           <span className="dc-rotulo">Não abre prazo para o escritório</span>
           <p>{c.resumo}</p>
         </div>
@@ -831,18 +833,18 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
   const conta = c.contagemCalculada;
   return (
     <div className="dc-sugestao">
-      <Par rotulo="Tipo" valor={c.tipo} className="dc-inteira" />
+      <Par rotulo="Tipo" valor={c.tipo} className="dc-sugestao__tipo" />
       <Par rotulo="Prazo" valor={prazoEmDias(c.dias, c.contagem)} nota={c.fundamento} />
-      <Par rotulo="Data final" valor={conta ? <span className="dc-num">{diaCompleto(conta.fim)}</span> : "—"} nota={conta ? diaDaSemana(conta.fim) : "Vincule a um processo para contar"} />
-      <div className="dc-par dc-largo">
-        <span className="dc-rotulo">Contagem</span>
-        <p>{conta ? [c.regra && `${c.regra}.`, conta.explicacao].filter(Boolean).join(" ") : "Falta saber o tribunal e a comarca do processo."}</p>
-      </div>
+      <Par rotulo="Data final" valor={conta ? <span className="dc-num">{diaCompleto(conta.fim)}</span> : "—"} nota={conta ? diaDaSemana(conta.fim) : "Vincule a um processo para contar"} className="dc-sugestao__fim" />
       <div className="dc-par">
         <span className="dc-rotulo">Responsável</span>
         <span className="dc-valor">
           <Responsavel pessoa={responsavel ?? null} />
         </span>
+      </div>
+      <div className="dc-par dc-largo">
+        <span className="dc-rotulo">Contagem</span>
+        <p>{conta ? [c.regra && `${c.regra}.`, conta.explicacao].filter(Boolean).join(" ") : "Falta saber o tribunal e a comarca do processo."}</p>
       </div>
       <ProvaDaLeitura c={c} />
     </div>

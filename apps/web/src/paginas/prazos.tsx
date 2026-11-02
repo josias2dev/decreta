@@ -12,6 +12,7 @@ import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaDaSemana, diaMes } from "@/lib/formato";
 import type { ListaDePrazos, PrazoNaLista, Quando } from "@/lib/tipos";
+import { cn } from "@/lib/util";
 
 const somarDias = (dia: string, n: number) => {
   const d = new Date(`${dia}T12:00:00Z`);
@@ -44,7 +45,7 @@ function agrupar(itens: PrazoNaLista[], hoje: string, quando: Quando) {
 export function Situacao({ item }: { item: Pick<PrazoNaLista, "situacao" | "confirmadoHoje" | "origem"> }) {
   const rotulo =
     item.situacao === "a_confirmar" ? (
-      <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-medium text-[var(--acento)]">
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-medium dc-acento">
         <MarcaIa /> Confirmar sugestão
       </span>
     ) : item.situacao === "peca_em_revisao" ? (
@@ -59,7 +60,7 @@ export function Situacao({ item }: { item: Pick<PrazoNaLista, "situacao" | "conf
   return (
     <span className="dc-celula">
       <span>{rotulo}</span>
-      <span className="dc-celula__2 dc-num">{item.origem}</span>
+      <span className="dc-celula__2 dc-celula__2--uma">{item.origem}</span>
     </span>
   );
 }
@@ -164,7 +165,7 @@ export function PrazosPage() {
             {grupos.length ? (
               grupos.map((g) => (
                 <section key={g.chave} className="dc-secao">
-                  <h2 className="dc-secao__titulo" style={{ fontSize: 15 }}>
+                  <h2 className="dc-secao__titulo">
                     {g.titulo} <span className="dc-num font-medium text-[var(--tinta-3)]">· {g.itens.length}</span>
                   </h2>
                   <div className="dc-lista">
@@ -175,7 +176,7 @@ export function PrazosPage() {
                         <span className="dc-item__meta">{[i.processo.titulo, i.processo.orgao].filter(Boolean).join(" · ")}</span>
                         <span className="dc-item__pe">
                           <Avatar pessoa={i.responsavel} /> {i.responsavel?.apelido ?? "Sem responsável"} ·{" "}
-                          {i.situacao === "a_confirmar" ? <span className="text-[var(--acento)]">Confirmar sugestão</span> : i.situacao === "peca_em_revisao" ? <span className="text-[var(--hoje)]">Peça em revisão</span> : <span>{i.origem}</span>}
+                          {i.situacao === "a_confirmar" ? <span className="dc-acento">Confirmar sugestão</span> : i.situacao === "peca_em_revisao" ? <span className="text-[var(--hoje)]">Peça em revisão</span> : <span>{i.origem}</span>}
                         </span>
                       </Link>
                     ))}
@@ -214,17 +215,17 @@ export function PrazosPage() {
         <Carregando />
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="dc-filtros">
             {chips}
             {pessoas}
           </div>
           <section className="dc-painel">
             {l.itens.length ? (
               <Rolagem id="prazos" className="dc-tabela-caixa">
-                <table className="dc-tabela">
+                <table className="dc-tabela dc-tabela--fixa">
                   <thead>
                     <tr>
-                      <th style={{ width: 36 }}>
+                      <th className="dc-col--marca">
                         <input
                           type="checkbox"
                           className="dc-checa"
@@ -233,16 +234,16 @@ export function PrazosPage() {
                           onChange={(e) => setSelecao(e.target.checked ? new Set(todosVisiveis) : new Set())}
                         />
                       </th>
-                      <th style={{ width: 124 }}>Vence</th>
+                      <th className="dc-col--quando">Vence</th>
                       <th>Prazo</th>
-                      <th style={{ width: 136 }}>Responsável</th>
-                      <th style={{ width: 200 }}>Situação</th>
+                      <th className="dc-col--pessoa">Responsável</th>
+                      <th className="dc-col--situacao">Situação</th>
                     </tr>
                   </thead>
                   {grupos.map((g) => (
                     <tbody key={g.chave}>
                       <tr>
-                        <td colSpan={5} className="dc-tabela__grupo" style={g.chave === "vencidos" ? { color: "var(--vencido)" } : undefined}>
+                        <td colSpan={5} className={cn("dc-tabela__grupo", g.chave === "vencidos" && "is-vencido")}>
                           {g.titulo} · <span className="dc-num">{g.itens.length}</span>
                         </td>
                       </tr>
@@ -267,11 +268,16 @@ export function PrazosPage() {
                           </td>
                           <td>
                             <span className="dc-celula">
-                              <Link className="dc-celula__1" to="/prazos/$id" params={{ id: i.id }} onClick={(e) => e.stopPropagation()}>
-                                {i.tipo}
-                              </Link>
-                              <span className="dc-celula__2">{[i.processo.titulo, i.processo.orgao && i.processo.comarca ? `${i.processo.orgao} de ${i.processo.comarca}` : i.processo.orgao].filter(Boolean).join(" · ")}</span>
-                              <Cnj cnj={i.processo.cnj} className="dc-celula__2" />
+                              <span className="dc-celula__1 dc-celula__1--uma">
+                                <Link to="/prazos/$id" params={{ id: i.id }} onClick={(e) => e.stopPropagation()}>
+                                  {i.tipo}
+                                </Link>
+                              </span>
+                              <span className="dc-celula__2 dc-celula__2--uma">
+                                {[i.processo.titulo, i.processo.orgao && i.processo.comarca ? `${i.processo.orgao} de ${i.processo.comarca}` : i.processo.orgao].filter(Boolean).join(" · ")}
+                                {" · "}
+                                <Cnj cnj={i.processo.cnj} />
+                              </span>
                             </span>
                           </td>
                           <td>
@@ -290,12 +296,12 @@ export function PrazosPage() {
               <Vazio titulo={quando === "cumpridos" ? "Nenhum prazo cumprido" : "Nenhum prazo aqui"}>{quando === "vencidos" ? "Nada vencido." : "Os prazos novos chegam das publicações do DJEN."}</Vazio>
             )}
             {selecao.size > 0 && (
-              <div className="flex items-center gap-3 border-t border-[var(--borda)] px-4 py-2.5" style={{ background: "var(--superficie-2)", borderRadius: "0 0 var(--radius-lg) var(--radius-lg)" }}>
-                <span className="text-[13px] font-medium">
+              <div className="dc-selecao">
+                <span className="dc-t-meta font-medium">
                   {selecao.size} {selecao.size === 1 ? "selecionado" : "selecionados"}
                 </span>
-                <div className="dc-campo" style={{ display: "block" }}>
-                  <select aria-label="Responsável" value={paraQuem} onChange={(e) => setParaQuem(e.target.value)} style={{ width: 200 }}>
+                <div className="dc-campo dc-selecao__campo">
+                  <select aria-label="Responsável" value={paraQuem} onChange={(e) => setParaQuem(e.target.value)}>
                     <option value="">Sem responsável</option>
                     {eu.data?.equipe.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -307,7 +313,7 @@ export function PrazosPage() {
                 <Botao variante="primaria" pequeno onClick={() => definir.mutate()} ocupado={definir.isPending}>
                   Definir responsável
                 </Botao>
-                <button type="button" className="dc-link ml-auto text-[13px]" onClick={() => setSelecao(new Set())}>
+                <button type="button" className="dc-link ml-auto" onClick={() => setSelecao(new Set())}>
                   Limpar seleção
                 </button>
               </div>

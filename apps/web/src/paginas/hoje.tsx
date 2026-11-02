@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import type { ItemDoDia, PainelDoDia } from "@/lib/tipos";
+import { cn } from "@/lib/util";
 import { TerminarDeConfigurar } from "./comecar";
 
 type Filtro = "tudo" | "prazo" | "audiencia" | "tarefa";
@@ -90,7 +91,7 @@ export function HojePage() {
         direita={
           <>
             <BotaoBuscar />
-            <Link to="/conta" aria-label="Minha conta" style={{ textDecoration: "none" }}>
+            <Link to="/conta" aria-label="Minha conta" className="no-underline">
               <Avatar pessoa={eu.data?.usuario} grande />
             </Link>
           </>
@@ -105,7 +106,7 @@ export function HojePage() {
             <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
             <AvisoDaLeitura n={p.contadores.publicacoesSemLeitura} />
             {p.contadores.publicacoesNovas > 0 && (
-              <Link to="/publicacoes" className="dc-cartao" style={{ flexDirection: "row", alignItems: "center", gap: 12, background: "var(--acento-suave)", borderColor: "var(--acento-borda)", boxShadow: "none" }}>
+              <Link to="/publicacoes" className="dc-cartao dc-cartao--ia">
                 <MarcaIa />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="dc-cartao__titulo">{plural(p.contadores.publicacoesNovas, "publicação nova", "publicações novas")} do DJEN</span>
@@ -155,12 +156,12 @@ export function HojePage() {
             <Painel titulo="Do dia" acao={chips} corpo={false}>
               {itens.length ? (
                 <div className="dc-tabela-caixa">
-                  <table className="dc-tabela">
+                  <table className="dc-tabela dc-tabela--fixa">
                     <thead>
                       <tr>
-                        <th style={{ width: 124 }}>Quando</th>
+                        <th className="dc-col--quando">Quando</th>
                         <th>O que</th>
-                        <th style={{ width: 136 }}>Responsável</th>
+                        <th className="dc-col--pessoa">Responsável</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -194,12 +195,12 @@ export function HojePage() {
                   <div className="flex flex-col gap-3.5">
                     {p.publicacoes.map((x) => (
                       <Link key={x.id} to="/publicacoes" search={{ id: x.id }} className="flex flex-col gap-0.5 no-underline">
-                        <span className="text-[14px] font-semibold leading-5 text-[var(--tinta)]">{x.titulo}</span>
-                        <span className="text-[13px] leading-[18px] text-[var(--tinta-2)]">{x.detalhe}</span>
+                        <span className="dc-t-corpo font-semibold text-[var(--tinta)]">{x.titulo}</span>
+                        <span className="dc-t-meta text-[var(--tinta-2)]">{x.detalhe}</span>
                       </Link>
                     ))}
                     {p.contadores.publicacoesNovas > p.publicacoes.length && (
-                      <Link to="/publicacoes" className="dc-link text-[13px]">
+                      <Link to="/publicacoes" className="dc-link">
                         Mais {p.contadores.publicacoesNovas - p.publicacoes.length}
                       </Link>
                     )}
@@ -217,10 +218,10 @@ export function HojePage() {
                           <td>
                             <Responsavel pessoa={r.pessoa} />
                           </td>
-                          <td className="dc-direita dc-num" style={{ width: 48, color: r.hoje ? "var(--hoje)" : "var(--tinta-3)", fontWeight: 500 }}>
+                          <td className={cn("dc-direita dc-num dc-col--n-curto", r.hoje ? "dc-hoje" : "dc-apagado")}>
                             {r.hoje}
                           </td>
-                          <td className="dc-direita dc-num" style={{ width: 48 }}>
+                          <td className="dc-direita dc-num dc-col--n-curto">
                             {r.semana}
                           </td>
                         </tr>
@@ -252,11 +253,11 @@ function Numeros({ painel, celular }: { painel: PainelDoDia; celular?: boolean }
       };
   return (
     <div className="dc-numeros dc-numeros--dia" aria-label="Números do dia">
-      <Link className="dc-contador dc-contador--hoje" to="/prazos" search={{ quando: "hoje" }} aria-label={`${c.vencemHoje} prazos vencem hoje`}>
+      <Link className={cn("dc-contador", c.vencemHoje > 0 && "dc-contador--hoje")} to="/prazos" search={{ quando: "hoje" }} aria-label={`${c.vencemHoje} prazos vencem hoje`}>
         <span className="dc-contador__n">{c.vencemHoje}</span>
         <span className="dc-contador__rotulo">{r.hoje}</span>
       </Link>
-      <Link className="dc-contador dc-contador--vencido" to="/prazos" search={{ quando: "vencidos" }} aria-label={`${c.vencidos} prazos vencidos`}>
+      <Link className={cn("dc-contador", c.vencidos > 0 && "dc-contador--vencido")} to="/prazos" search={{ quando: "vencidos" }} aria-label={`${c.vencidos} prazos vencidos`}>
         <span className="dc-contador__n">{c.vencidos}</span>
         <span className="dc-contador__rotulo">{r.vencido}</span>
       </Link>
@@ -297,18 +298,23 @@ function LinhaDoDia({ item: i }: { item: ItemDoDia }) {
       <td>{seloDoItem(i)}</td>
       <td>
         <span className="dc-celula">
-          <span className="dc-celula__1">
+          <span className="dc-celula__1 dc-celula__1--uma">
             {i.tipo === "prazo" ? (
               <Link to="/prazos/$id" params={{ id: i.id }} onClick={(e) => e.stopPropagation()}>
                 {i.titulo}
               </Link>
             ) : (
-              i.titulo
+              <span className="dc-corta">{i.titulo}</span>
             )}
-            {i.aConfirmar && <span className="dc-selo dc-selo--prazo ml-2" style={{ color: "var(--acento)" }}>IA · a confirmar</span>}
+            {i.aConfirmar && <span className="dc-selo dc-selo--ia">IA · a confirmar</span>}
           </span>
-          {i.detalhe && <span className="dc-celula__2">{i.detalhe}</span>}
-          {i.cnj && <Cnj cnj={i.cnj} className="dc-celula__2" />}
+          {(i.detalhe || i.cnj) && (
+            <span className="dc-celula__2 dc-celula__2--uma">
+              {i.detalhe}
+              {i.detalhe && i.cnj && " · "}
+              {i.cnj && <Cnj cnj={i.cnj} />}
+            </span>
+          )}
         </span>
       </td>
       <td>
@@ -335,7 +341,7 @@ function CartaoDoDia({ item: i }: { item: ItemDoDia }) {
               <Cnj cnj={i.cnj} />
             </>
           )}
-          {i.aConfirmar && <span style={{ color: "var(--acento)" }}> · a confirmar</span>}
+          {i.aConfirmar && <span className="dc-acento"> · a confirmar</span>}
         </span>
       </span>
     </>
