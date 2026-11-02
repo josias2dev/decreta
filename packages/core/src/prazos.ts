@@ -242,7 +242,7 @@ export function textoDaTempestividade(r: ResultadoDaContagem, o: { rito: Rito; d
 }
 
 /** Dias seguidos com o mesmo motivo viram "de 16/02/2026 a 17/02/2026 (Carnaval)"; o fim de semana no meio não separa. */
-function juntarIntervalos(lista: Feriado[]): { texto: string; dias: number } {
+export function juntarIntervalos(lista: Feriado[]): { texto: string; dias: number } {
   const blocos: { de: Dia; ate: Dia; nome: string }[] = [];
   for (const f of [...lista].sort((a, b) => a.dia.localeCompare(b.dia))) {
     const ultimo = blocos.at(-1);

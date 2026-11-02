@@ -24,12 +24,21 @@ import {
   type ResultadoDaContagem,
   type Rito,
 } from "@decreta/core";
-import { analises, prazos, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
+import { analises, escritorios, prazos, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
 import { impressao, sugerirPrazo, type Ia, type SugestaoDePrazo } from "@decreta/ia";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { analisar, type AnaliseNaTela } from "./analises.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { contextoParaIa } from "./contexto.ts";
+
+/** Quantos dias depois do fim do período ainda pode haver um fatal cujo interno cai nele: os 15 dias úteis do máximo, com feriados e o recesso no meio. */
+export const FOLGA_DO_INTERNO = 45;
+
+/** Os dias úteis de antecedência do prazo interno que o escritório escolheu. Zero: não usa. */
+export async function antecedenciaDoInterno(tx: Tx, organizationId: string): Promise<number> {
+  const [e] = await tx.select({ dias: escritorios.prazoInternoDias }).from(escritorios).where(eq(escritorios.organizationId, organizationId));
+  return e?.dias ?? 0;
+}
 
 export interface ContagemNaTela {
   publicacao: string;

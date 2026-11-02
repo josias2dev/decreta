@@ -1,5 +1,5 @@
 /** O que a API das telas devolve (apps/api/src/rotas). */
-import type { AchadoDaAuditoria, AvisoDaConferencia, EstrategiaDaPeca, FatoDaPeca, ParteDoCadastro } from "@decreta/core";
+import type { AchadoDaAuditoria, AvisoDaConferencia, EstrategiaDaPeca, FatoDaPeca, ParteDoCadastro, PrazoInterno } from "@decreta/core";
 
 export interface Pessoa {
   id: string;
@@ -133,6 +133,13 @@ export interface Analise<C = Record<string, unknown>> {
   erro: string | null;
 }
 
+/** O item da lista é o prazo interno, não o vencimento: o fatal é outro dia. */
+export interface InternoNaLista {
+  fatal: string;
+  regra: string;
+  aviso: string | null;
+}
+
 export interface ItemDoDia {
   tipo: "prazo" | "audiencia" | "tarefa";
   id: string;
@@ -144,6 +151,7 @@ export interface ItemDoDia {
   processoId: string | null;
   responsavel: Pessoa | null;
   aConfirmar?: boolean;
+  interno?: InternoNaLista;
 }
 
 export interface PainelDoDia {
@@ -246,6 +254,8 @@ export interface Prazo {
   pecas: { id: string; titulo: string; situacao: "rascunho" | "revisada"; atualizadaEm: string; preparadaPelaIa?: boolean }[];
   historico: { em: string; titulo: string; detalhe: string | null }[];
   conta: ContaDoPrazo;
+  /** O prazo interno do escritório. Nulo: sem antecedência configurada, ou o prazo não está mais em aberto. */
+  interno?: PrazoInterno | null;
   /** A segunda conferência, enquanto a sugestão da IA espera alguém confirmar. */
   conferencia: SegundaConferencia | null;
 }
@@ -702,6 +712,7 @@ export interface ItemDaAgenda {
   concluida?: boolean;
   urgencia?: Urgencia;
   aConfirmar?: boolean;
+  interno?: InternoNaLista;
 }
 
 export interface Agenda {
@@ -801,6 +812,8 @@ export interface Escritorio {
   jeito?: Record<string, JeitoDaPeca>;
   /** O nível de automação que vale em cada ação ("rascunho-da-peca" → "automatico"). */
   automacao?: Record<string, "automatico" | "sugestao" | "confirmar">;
+  /** Dias úteis antes do fatal do prazo interno. Zero: o escritório não usa. */
+  prazoInternoDias?: number;
   datajudLigado: boolean;
   iaLigada: boolean;
   suspensoes: { id: string; dia: string; motivo: string; tipo: "local" | "forense" | "recesso" | "reduzido"; tribunal: string | null; comarca: string | null }[];

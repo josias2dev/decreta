@@ -8,6 +8,7 @@ import { useAviso } from "@/componentes/avisos";
 import {
   DiasNoCelular,
   emOrdem,
+  fatalDoInterno,
   fimDoMes,
   gradeDoMes,
   inicioDaSemana,
@@ -135,10 +136,11 @@ export function AgendaPage() {
   const porDia = useMemo(() => new Map((a?.dias ?? []).map((d) => [d.dia, d.itens])), [a]);
   const titulo = !p ? " " : vista === "mes" ? nomeDoMes(p.de) : intervalo(p.de, p.ate, hoje);
   const noPeriodo = p ? (a?.dias ?? []).filter((d) => d.dia >= p.de && d.dia <= p.ate).flatMap((d) => d.itens) : [];
-  const n = (tipo: ItemDaAgenda["tipo"]) => noPeriodo.filter((i) => i.tipo === tipo).length;
+  // O dia do interno é o mesmo prazo de novo: não conta como mais um.
+  const n = (tipo: ItemDaAgenda["tipo"]) => noPeriodo.filter((i) => i.tipo === tipo && !i.interno).length;
   const resumo = !a
     ? " "
-    : noPeriodo.length
+    : noPeriodo.some((i) => !i.interno)
       ? juntar([n("audiencia") && contar(n("audiencia"), "audiência", "audiências"), n("prazo") && contar(n("prazo"), "prazo", "prazos"), n("tarefa") && contar(n("tarefa"), "tarefa", "tarefas")].filter(Boolean) as string[])
       : "Nada marcado neste período";
   const calendario = vista !== "lista";
@@ -335,7 +337,8 @@ export function AgendaPage() {
 
 function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; compacta?: boolean; aoMarcar: (feita: boolean) => void }) {
   const processo = i.processo ? (
-    <span className={cn("dc-celula__2", compacta && "truncate")}>
+    <span className={cn("dc-celula__2", compacta && "truncate")} title={i.interno ? [i.interno.regra, i.interno.aviso].filter(Boolean).join(". ") : undefined}>
+      {fatalDoInterno(i)}
       {i.processo.titulo}
       {!compacta && (
         <>
@@ -380,7 +383,7 @@ function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; co
             {i.hora}
           </span>
         ) : (
-          <Selo urgencia={i.urgencia ?? "prazo"}>Prazo</Selo>
+          <Selo urgencia={i.urgencia ?? "prazo"}>{i.interno ? "Interno" : "Prazo"}</Selo>
         )}
       </span>
       <span className="dc-celula min-w-0 flex-1">

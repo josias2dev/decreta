@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/539fa387-026c-4322-b60c-0dc0c992b0d4?confirmada",
+  "path": "/publicacoes/ab13e204-823a-4682-9557-8c928be7547f?confirmada",
   "corpo": {
-    "id": "539fa387-026c-4322-b60c-0dc0c992b0d4",
+    "id": "ab13e204-823a-4682-9557-8c928be7547f",
     "situacao": "nova",
     "fonte": "manual",
     "disponibilizadaEm": "2026-10-28",
@@ -19,7 +19,7 @@
     "destinatarios": [],
     "advogados": [],
     "processo": {
-      "id": "5bdd8ca2-8b52-4a0b-ba26-a690090643d0",
+      "id": "ced6f55d-7c1b-4ebe-bd23-df6bbff90744",
       "titulo": "Eduardo Lima × Saúde Litoral Planos",
       "cnj": "5003390-24.2026.8.24.0005",
       "classe": "Procedimento comum cível",
@@ -29,7 +29,7 @@
       "semIa": false
     },
     "sugestao": {
-      "id": "6f8971d9-91f5-424b-aae3-a9b52081eda9",
+      "id": "499385a2-86b9-4cab-a8e1-da1b19ca2c1a",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -75,13 +75,13 @@
         }
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-11-02T21:21:44.467Z",
+      "em": "2026-11-02T22:09:47.789Z",
       "desatualizada": false,
       "erro": null,
       "responsavel": null
     },
     "prazo": {
-      "id": "1da86ee5-e08f-4117-9747-262d93021b90",
+      "id": "8b30b2cb-a193-46c4-85c7-c9264733bced",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Apelação"
@@ -89,7 +89,7 @@
     "audiencia": null,
     "decisao": true,
     "sentenca": {
-      "id": "7b980f55-431f-4955-8c7d-a2e8695779e7",
+      "id": "299834bf-d4d5-4d6f-9a43-5c10c5eea669",
       "acao": "ler-sentenca",
       "situacao": "pronto",
       "conteudo": {
@@ -131,17 +131,17 @@
         "honorarios": "Ré paga custas e 10% do valor da condenação."
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-11-02T21:21:44.491Z",
+      "em": "2026-11-02T22:09:47.827Z",
       "desatualizada": false,
       "erro": null
     },
     "resultado": {
-      "id": "12f1ad2f-77e9-4540-aea4-1599ceb42412",
+      "id": "eaef5b5a-9d2f-4453-afcb-f66c30911fb4",
       "tipo": "sentenca",
       "resultado": "parcialmente_procedente",
       "resumo": "Cirurgia e reembolso; sem danos morais.",
       "confirmadoPor": {
-        "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+        "id": "tNzUMRL2hxSN8092R2nuZwrEH71nwJlh",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",

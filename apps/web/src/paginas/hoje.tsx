@@ -11,6 +11,7 @@ import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, Faixa, MarcaIa, Painel
 import { api } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
+import { diaCurto } from "@/lib/formato";
 import type { ItemDoDia, PainelDoDia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { TerminarDeConfigurar } from "./comecar";
@@ -283,8 +284,18 @@ function Numeros({ painel, celular }: { painel: PainelDoDia; celular?: boolean }
 function seloDoItem(i: ItemDoDia, celular?: boolean) {
   if (i.tipo === "tarefa") return <Selo urgencia={celular ? "breve" : "tarefa"}>{celular ? "Tarefa · hoje" : "Tarefa"}</Selo>;
   if (i.tipo === "audiencia") return <Selo urgencia="audiencia">{i.quando}</Selo>;
+  if (i.interno) {
+    return (
+      <span title={[i.interno.regra, i.interno.aviso].filter(Boolean).join(". ")}>
+        <Selo urgencia="breve">{i.quando}</Selo>
+      </span>
+    );
+  }
   return <Selo urgencia={i.urgencia as "vencido" | "hoje"}>{i.quando}</Selo>;
 }
+
+/** O item é o prazo interno: o fatal vem antes das partes. */
+const fatalDoInterno = (i: ItemDoDia) => (i.interno ? `Fatal ${diaCurto(i.interno.fatal)} · ` : "");
 
 function useAbrir(i: ItemDoDia) {
   const navigate = useNavigate();
@@ -313,7 +324,12 @@ function LinhaDoDia({ item: i }: { item: ItemDoDia }) {
           </span>
           {(i.detalhe || i.cnj) && (
             <span className="dc-celula__2 dc-celula__2--cnj">
-              {i.detalhe && <span className="dc-corta">{i.detalhe}</span>}
+              {i.detalhe && (
+                <span className="dc-corta">
+                  {fatalDoInterno(i)}
+                  {i.detalhe}
+                </span>
+              )}
               {i.cnj && <Cnj cnj={i.cnj} />}
             </span>
           )}
@@ -331,7 +347,12 @@ function CartaoDoDia({ item: i }: { item: ItemDoDia }) {
     <>
       <span className="dc-item__titulo">{i.tipo === "audiencia" ? `${i.titulo.replace(" · por vídeo", "")} · ${i.quando}` : i.titulo}</span>
       {i.tipo === "audiencia" ? <Selo urgencia="audiencia">{i.titulo.includes("por vídeo") ? "Por vídeo" : "Presencial"}</Selo> : seloDoItem(i, true)}
-      {i.detalhe && <span className="dc-item__meta">{i.detalhe}</span>}
+      {i.detalhe && (
+        <span className="dc-item__meta">
+          {fatalDoInterno(i)}
+          {i.detalhe}
+        </span>
+      )}
       <span className="dc-item__pe">
         <Avatar pessoa={i.responsavel} />
         {/* Um texto só, que quebra como frase, e não em colunas. */}

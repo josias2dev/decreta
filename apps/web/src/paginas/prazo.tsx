@@ -2,10 +2,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ExternalLink, FileText, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Cancelada } from "@/componentes/captura-do-djen";
-import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
+import { CampoIntimacaoNoSistema, DataDoInterno, diaDigitadoCompleto, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
@@ -131,6 +131,7 @@ export function PrazoPage() {
             <strong className="dc-num">{diaCompleto(p.fim)}</strong> <span className="text-[var(--tinta-2)]">{diaDaSemana(p.fim)}</span>
           </span>,
         ],
+        ...(p.interno ? ([["Prazo interno", <DataDoInterno key="interno" interno={p.interno} />]] as [string, ReactNode][]) : []),
         ["Responsável", <Responsavel pessoa={p.responsavel} />],
         ["Origem", p.origem === "ia" ? `${p.publicacao ? FONTE[p.publicacao.fonte] : "Publicação"} · sugerido pela IA` : p.publicacao ? `${FONTE[p.publicacao.fonte]} · criado à mão` : "Criado à mão"],
         ...(p.observacoes ? ([["Observações", p.observacoes]] as [string, string][]) : []),

@@ -1,9 +1,9 @@
 {
-  "path": "/pecas/c99b94c9-cf9d-454f-9bf9-439693a7b7e8",
+  "path": "/pecas/efa5a306-5022-4ea0-8bf5-24db1fe7cd7a",
   "corpo": {
-    "id": "c99b94c9-cf9d-454f-9bf9-439693a7b7e8",
-    "processoId": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
-    "prazoId": "e9108bb3-f762-4639-b950-7882c05cc1be",
+    "id": "efa5a306-5022-4ea0-8bf5-24db1fe7cd7a",
+    "processoId": "222ee426-17ae-4f0a-ae28-3fc5c006d25c",
+    "prazoId": "3de8d297-8524-4deb-a9f0-b35a9c588e13",
     "tipo": "manifestacao-laudo",
     "titulo": "Manifestação sobre laudo pericial · Marina Duarte",
     "instrucoes": "Concordar com o laudo e rebater o pedido da ré.",
@@ -14,11 +14,11 @@
     "revisao": null,
     "modelos": [
       {
-        "id": "18cb7ef6-9103-414d-9973-510bb3a94a14",
+        "id": "8e2bf725-539c-4109-8e2f-94a5eebb189a",
         "titulo": "Contrarrazões de apelação · servidor público contra o município"
       },
       {
-        "id": "faa59760-07ea-4eb0-a8ae-eca049848da0",
+        "id": "31b964da-9f12-4681-8599-d4f0cfe58080",
         "titulo": "Manifestação sobre laudo · invalidez no seguro de vida"
       }
     ],
@@ -50,7 +50,7 @@
             "folha": null,
             "evento": 87,
             "rotulo": "Laudo pericial.docx · evento 87",
-            "documentoId": "43b39ba9-9170-4e9b-bbb9-79c6dc641934"
+            "documentoId": "a3891cd7-be04-4459-8756-277286aabda3"
           },
           "motivo": null,
           "trecho": "há nexo causal entre o acidente de trânsito de 18/01/2026 e as lesões",
@@ -64,7 +64,7 @@
             "folha": null,
             "evento": 87,
             "rotulo": "Laudo pericial.docx · evento 87",
-            "documentoId": "43b39ba9-9170-4e9b-bbb9-79c6dc641934"
+            "documentoId": "a3891cd7-be04-4459-8756-277286aabda3"
           },
           "motivo": "O valor 45% não está em Laudo pericial.docx · evento 87.",
           "trecho": "Incapacidade parcial e permanente, fixada em 40% segundo a tabela da Lei 6.194/74",
@@ -101,7 +101,7 @@
       "semLigacao": null,
       "hashDoTexto": "d79c86658af415dbf1c7ee90b68738a479dfe1ca49a3d93fa1bc7e14e2ea88b2",
       "procedencia": {
-        "codigo": "73205fc",
+        "codigo": "e81f839",
         "chamadas": [
           {
             "alias": "mock-model-id",

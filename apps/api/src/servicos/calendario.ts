@@ -16,3 +16,20 @@ export async function calendarioDoEscritorio(tx: Tx, tribunal: string, comarca?:
   const extras: Feriado[] = linhas.map((l) => ({ dia: l.dia, nome: l.motivo, tipo: l.tipo }));
   return calendarioPara({ tribunal, extras });
 }
+
+/** Para as listas com processos de vários lugares: lê as suspensões uma vez só e monta um calendário por tribunal e comarca. */
+export async function calendariosDoEscritorio(tx: Tx, organizationId: string): Promise<(p: { tribunal: string | null; comarca: string | null }) => Calendario> {
+  const [linhas, padrao] = await Promise.all([tx.select().from(suspensoes), tribunalPadrao(tx, organizationId)]);
+  const prontos = new Map<string, Calendario>();
+  return ({ tribunal, comarca }) => {
+    const t = tribunal ?? padrao;
+    const chave = `${t}|${comarca ?? ""}`;
+    let cal = prontos.get(chave);
+    if (!cal) {
+      const extras: Feriado[] = linhas.filter((l) => (!l.tribunal || l.tribunal === t) && (comarca ? !l.comarca || l.comarca === comarca : !l.comarca)).map((l) => ({ dia: l.dia, nome: l.motivo, tipo: l.tipo }));
+      cal = calendarioPara({ tribunal: t, extras });
+      prontos.set(chave, cal);
+    }
+    return cal;
+  };
+}

@@ -8,6 +8,7 @@
 import { Link } from "@tanstack/react-router";
 import { Video } from "lucide-react";
 import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { diaCurto } from "@/lib/formato";
 import type { ItemDaAgenda } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { Avatar } from "./ui";
@@ -78,10 +79,12 @@ const marcasDoDia = (itens: ItemDaAgenda[]): Cor[] => {
   return [cores.has("audiencia") && "audiencia", prazo, cores.has("tarefa") && "tarefa"].filter(Boolean) as Cor[];
 };
 /** "Conciliação" em vez de "Audiência de conciliação": no calendário a hora já diz que é audiência. */
-const tituloCurto = (i: ItemDaAgenda) => (i.tipo === "audiencia" ? i.titulo.replace(/^audiência\s+(de\s+)?/i, "").replace(/^./, (x) => x.toUpperCase()) : i.titulo);
+const tituloCurto = (i: ItemDaAgenda) => (i.tipo === "audiencia" ? i.titulo.replace(/^audiência\s+(de\s+)?/i, "").replace(/^./, (x) => x.toUpperCase()) : i.interno ? `Interno: ${i.titulo}` : i.titulo);
+/** O dia é o do prazo interno: o fatal fica à vista. */
+export const fatalDoInterno = (i: ItemDaAgenda) => (i.interno ? `Fatal ${diaCurto(i.interno.fatal)} · ` : "");
 const destinoDoItem = (i: ItemDaAgenda) =>
   i.tipo === "audiencia" ? ({ to: "/audiencias/$id", params: { id: i.id } } as const) : i.tipo === "prazo" ? ({ to: "/prazos/$id", params: { id: i.id } } as const) : null;
-const dica = (i: ItemDaAgenda) => [i.tipo === "audiencia" ? `${i.hora} · ${i.titulo}` : i.titulo, i.processo?.titulo ?? i.detalhe].filter(Boolean).join(" · ");
+const dica = (i: ItemDaAgenda) => [i.tipo === "audiencia" ? `${i.hora} · ${i.titulo}` : tituloCurto(i), i.processo?.titulo ?? i.detalhe, i.interno?.regra, i.interno?.aviso].filter(Boolean).join(" · ");
 const quantos = (n: number) => (n ? `${n} ${n === 1 ? "compromisso" : "compromissos"}` : "nada marcado");
 
 type PorDia = Map<string, ItemDaAgenda[]>;
@@ -261,7 +264,12 @@ function EventoDaSemana({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (
   const corpo = (
     <>
       <span className="dc-evento__titulo">{i.tipo === "audiencia" ? tituloCurto(i) : i.titulo}</span>
-      {sobre && <span className="dc-evento__sobre">{sobre}</span>}
+      {sobre && (
+        <span className="dc-evento__sobre">
+          {fatalDoInterno(i)}
+          {sobre}
+        </span>
+      )}
     </>
   );
   const pessoa = i.responsavel && <Avatar pessoa={i.responsavel} />;
@@ -286,7 +294,7 @@ function EventoDaSemana({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (
           </>
         ) : (
           <>
-            Prazo
+            {i.interno ? "Interno" : "Prazo"}
             {i.aConfirmar && <span className="dc-evento__confirmar">a confirmar</span>}
           </>
         )}

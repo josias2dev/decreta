@@ -233,6 +233,8 @@ a.dc-contador:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--f
 .dc-dados { display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: baseline; gap: var(--space-2) var(--space-3); margin: 0; font: 400 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); }
 .dc-dados dt { color: var(--tinta-3); }
 .dc-dados dd { margin: 0; color: var(--tinta); min-width: 0; overflow-wrap: anywhere; }
+.dc-interno { display: flex; flex-direction: column; gap: var(--space-half); }
+.dc-interno__aviso { font-size: var(--texto-meta); line-height: var(--linha-meta); color: var(--hoje); }
 .dc-dados dt:has(+ dd > :is(.dc-pessoa, .dc-selo)), .dc-dados dd:has(> :is(.dc-pessoa, .dc-selo)) { align-self: center; }
 .dc-dados dd > :is(.dc-pessoa, .dc-selo) { vertical-align: top; }
 

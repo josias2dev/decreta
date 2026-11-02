@@ -1,7 +1,7 @@
 {
-  "path": "/prazos/c9cd5292-9aa7-4f14-8f8e-3a5fdd1dfbd2",
+  "path": "/prazos/3fd13fd2-ccd0-4f6a-be8c-ca2f4d6a6661",
   "corpo": {
-    "id": "c9cd5292-9aa7-4f14-8f8e-3a5fdd1dfbd2",
+    "id": "3fd13fd2-ccd0-4f6a-be8c-ca2f4d6a6661",
     "tipo": "Alegações finais",
     "fundamento": "art. 364, § 2º, CPC",
     "dias": 15,
@@ -21,14 +21,14 @@
     "origem": "ia",
     "confirmado": true,
     "confirmadoPor": {
-      "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+      "id": "tNzUMRL2hxSN8092R2nuZwrEH71nwJlh",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
       "foto": "/demonstracao/beatriz.jpg"
     },
     "responsavel": {
-      "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+      "id": "tNzUMRL2hxSN8092R2nuZwrEH71nwJlh",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
@@ -55,13 +55,13 @@
         }
       ],
       "prorrogadoDe": null,
-      "explicacao": "Começa em 08/10, primeiro dia útil depois da publicação. Fora da conta: fins de semana, 12/10 (Nossa Senhora Aparecida).",
+      "explicacao": "Começa em 08/10, primeiro dia útil depois da publicação. Fora da conta: fins de semana e 12/10 (Nossa Senhora Aparecida).",
       "fimDigitado": false,
       "pelaConta": null,
       "certidaoDe": null,
       "tempestividade": "A intimação foi disponibilizada no Diário de Justiça Eletrônico Nacional (DJEN) em 06/10/2026 e considera-se publicada em 07/10/2026, primeiro dia útil seguinte (Lei 11.419/2006, art. 4º, § 3º). O prazo de 15 dias úteis (CPC, art. 219) começou a correr em 08/10/2026 (Lei 11.419/2006, art. 4º, § 4º) e termina em 29/10/2026, excluídos os sábados, os domingos e o dia 12/10/2026 (Nossa Senhora Aparecida). Apresentada até 29/10/2026, a presente peça é tempestiva.",
       "confirmadoPor": {
-        "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+        "id": "tNzUMRL2hxSN8092R2nuZwrEH71nwJlh",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -69,9 +69,10 @@
       },
       "confirmadoEm": "2026-10-07T12:12:00.000Z"
     },
+    "interno": null,
     "conferencia": null,
     "processo": {
-      "id": "a024a7b9-4132-4c6a-8225-930c2544b89b",
+      "id": "d6e60cab-b2b2-4aaa-9874-8fb307c84048",
       "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
       "cnj": "5009876-57.2025.8.24.0038",
       "orgao": "4ª Vara Cível",
@@ -81,7 +82,7 @@
       "semIa": false
     },
     "publicacao": {
-      "id": "1891478e-6e6e-46bc-983d-75c4bc1127da",
+      "id": "75b46d6f-582d-417a-b6ec-8086216ceaf7",
       "fonte": "djen",
       "texto": "Encerrada a instrução, concedo às partes o prazo sucessivo de 15 (quinze) dias para apresentação de alegações finais por memoriais.",
       "disponibilizadaEm": "2026-10-06",
@@ -96,10 +97,10 @@
     "pecaContraria": null,
     "pecas": [
       {
-        "id": "b5e9b0df-daeb-4e99-b725-224562727a5c",
+        "id": "9a387517-1cef-4cac-8c78-d888e1235e5d",
         "titulo": "Alegações finais · Roberto Kühn",
         "situacao": "rascunho",
-        "atualizadaEm": "2026-11-02T21:21:36.699Z",
+        "atualizadaEm": "2026-11-02T22:09:39.270Z",
         "preparadaPelaIa": false
       }
     ],

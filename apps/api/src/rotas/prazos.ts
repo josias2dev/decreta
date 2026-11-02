@@ -1,4 +1,4 @@
-import { avisoDoDiaSemExpediente, diaPorExtensoCurto, ehDia, formatarDia, formatarDiaCurto, hojeEm, somarDias, urgenciaDoPrazo } from "@decreta/core";
+import { avisoDoDiaSemExpediente, diaPorExtensoCurto, ehDia, formatarDia, formatarDiaCurto, hojeEm, prazoInterno, somarDias, urgenciaDoPrazo } from "@decreta/core";
 import { pecas, prazos, processos, publicacoes } from "@decreta/db";
 import { and, asc, desc, eq, inArray, isNull, lt, lte, sql, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
@@ -9,7 +9,7 @@ import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.t
 import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { conferir, contaDoPrazo, contagemNaTela, contarParaProcesso, historicoDasSugestoes } from "../servicos/prazos.ts";
+import { antecedenciaDoInterno, conferir, contaDoPrazo, contagemNaTela, contarParaProcesso, historicoDasSugestoes } from "../servicos/prazos.ts";
 import { corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const QUANDO = ["hoje", "semana", "vencidos", "abertos", "cumpridos"] as const;
@@ -236,6 +236,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         observacoes: prazo.observacoes,
         motivoDescarte: prazo.motivoDescarte,
         conta: { ...conta, confirmadoPor: resumir(pessoas, prazo.confirmadoPor), confirmadoEm: prazo.confirmadoEm?.toISOString() ?? null },
+        interno: prazo.situacao === "aberto" ? prazoInterno({ fatal: prazo.fim, antecedencia: await antecedenciaDoInterno(tx, c.get("orgId")), hoje, calendario: cal }) : null,
         conferencia,
         processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, tribunal: processo.tribunal, poloCliente: processo.poloCliente, semIa: contexto?.semIa ?? false },
         publicacao: pub ? { id: pub.id, fonte: pub.fonte, texto: pub.texto, disponibilizadaEm: pub.disponibilizadaEm, publicadaEm: pub.publicadaEm, tipoComunicacao: pub.tipoComunicacao, tipoDocumento: pub.tipoDocumento, link: pub.link, certidao: !!(pub.certidao || pub.hash), cancelada: pub.canceladaEm ? { em: pub.canceladaEm.toISOString(), motivo: pub.motivoCancelamento } : null } : null,
