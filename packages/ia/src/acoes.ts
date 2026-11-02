@@ -38,7 +38,7 @@ export class IaRecusou extends Error {
 }
 
 /** Saída estruturada. Se o modelo do alias não aceita JSON Schema, pede JSON no texto e valida do mesmo jeito. */
-async function gerarObjeto<S extends z.ZodType>(ia: Ia, metodo: MetodoIa, schema: S, instrucoes: string, prompt: string, signal?: AbortSignal): Promise<z.infer<S>> {
+export async function gerarObjeto<S extends z.ZodType>(ia: Ia, metodo: MetodoIa, schema: S, instrucoes: string, prompt: string, signal?: AbortSignal): Promise<z.infer<S>> {
   const model = ia.modelo(metodo);
   try {
     const r = await generateText({ model, instructions: `${BASE}\n\n${instrucoes}`, prompt, output: Output.object({ schema }), abortSignal: signal, maxRetries: 1 });
@@ -61,7 +61,7 @@ async function gerarObjeto<S extends z.ZodType>(ia: Ia, metodo: MetodoIa, schema
   }
 }
 
-function exigir<T extends { recusa: string | null }>(r: T): T {
+export function exigir<T extends { recusa: string | null }>(r: T): T {
   if (r.recusa && r.recusa.trim()) throw new IaRecusou(r.recusa.trim());
   return r;
 }

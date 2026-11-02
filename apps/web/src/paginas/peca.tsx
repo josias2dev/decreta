@@ -2,13 +2,19 @@
  * Gerar peça: escolhe o modelo, diz o que quer, a IA escreve no timbre e a
  * pessoa revisa, edita e baixa o DOCX.
  */
-import { blocos, lacunas, trechos, type Bloco } from "@decreta/core";
+import { blocosComPosicao, lacunas, trechos, type BlocoNoTexto, type EstrategiaDaPeca, type FatoDaPeca } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { BookMarked, Check, CircleAlert, Download, FileText, Pencil, RefreshCw } from "lucide-react";
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { BookMarked, Check, CircleAlert, Download, FileText, ListTree, Pencil, RefreshCw } from "lucide-react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from "react";
+import { AjusteDaPecaPainel } from "@/componentes/ajuste-da-peca";
+import { AntesDeProtocolar, AvisoAoBaixar, pontosAntesDeProtocolar, type PontoNaLista } from "@/componentes/antes-de-protocolar";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
+import { EstrategiaDaPecaEditor } from "@/componentes/estrategia-da-peca";
+import { DialogoDoFato, FatosDaPeca } from "@/componentes/fatos-da-peca";
+import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
+import { JulgadosDaPeca } from "@/componentes/julgados-da-peca";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { RegistroDeRevisao } from "@/componentes/revisao-da-peca";
@@ -18,8 +24,11 @@ import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCurto, diaDoInstante, diaMes, hora } from "@/lib/formato";
-import type { Catalogo, Escritorio, Peca, PreparoDaPeca, Timbre } from "@/lib/tipos";
+import type { Catalogo, Escritorio, Peca, PreparoDaPeca, RespostaDaEstrategia, Timbre } from "@/lib/tipos";
 import { cn } from "@/lib/util";
+
+/** Por quanto tempo o parágrafo fica em destaque depois de um clique em "Antes de protocolar". */
+const DESTAQUE_DO_PONTO_MS = 1800;
 
 const paginas = (texto: string) => Math.max(1, Math.round(texto.length / 2800));
 
@@ -47,16 +56,26 @@ export function PecaPage() {
   const escritorio = useQuery({ queryKey: ["escritorio"], queryFn: () => api<Escritorio>("/escritorio") });
 
   const pecaId = search.id ?? prep.data?.ultima?.id;
-  const peca = pecaSalva.data ?? (prep.data?.ultima && pecaId === prep.data.ultima.id ? prep.data.ultima : undefined);
+  // A peça inteira, com a conferência e os julgados: também quando ela veio do preparo, sem o id no endereço.
+  const pecaAtual = useQuery({ queryKey: ["peca", pecaId], queryFn: () => api<Peca>(`/pecas/${pecaId}`), enabled: !!pecaId });
+  const salva = pecaAtual.data;
+  const peca = salva ?? (prep.data?.ultima && pecaId === prep.data.ultima.id ? prep.data.ultima : undefined);
 
   const [instrucoesDigitadas, setInstrucoes] = useState<string | null>(null);
   const [aoVivo, setAoVivo] = useState<string | null>(null);
   const [gerando, setGerando] = useState(false);
+  const [conferindo, setConferindo] = useState(false);
   const [edicao, setEdicao] = useState<string | null>(null);
   const [trocando, setTrocando] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [fatoAberto, setFatoAberto] = useState<FatoDaPeca | null>(null);
+  const [avisoAoBaixar, setAvisoAoBaixar] = useState(false);
+  const [estrategiaAberta, setEstrategiaAberta] = useState<boolean | null>(null);
+  /** O parágrafo em destaque depois de um clique em "Antes de protocolar". */
+  const [blocoAtivo, setBlocoAtivo] = useState<number | null>(null);
   // No computador só o papel do rascunho rola (no celular, a tela toda).
   const papel = useRef<HTMLDivElement>(null);
+  const campoDoEditor = useRef<HTMLTextAreaElement>(null);
   const lido = useRef(0);
 
   const tipo = tipoEscolhido ?? peca?.tipo ?? prep.data?.tipoSugerido ?? "";
@@ -72,20 +91,54 @@ export function PecaPage() {
   const tipos = catalogo.data?.grupos.flatMap((g) => g.tipos) ?? [];
   const nomeDoTipo = tipos.find((t) => t.id === tipo)?.nome ?? "Escolha o tipo";
 
-  async function gerar() {
+  // A estratégia em edição fica guardada na sessão: abrir um documento e voltar não perde o que a pessoa mudou.
+  const chaveDaEstrategia = ["pecas", "estrategia-em-edicao", consulta ?? search.id, tipo];
+  const estrategiaEmEdicao = useQuery<EstrategiaDaPeca | null>({ queryKey: chaveDaEstrategia, queryFn: () => null, enabled: false, gcTime: Number.POSITIVE_INFINITY });
+  const estrategia = estrategiaEmEdicao.data ?? (salva?.tipo === tipo ? salva.estrategia : null) ?? prep.data?.estrategia ?? null;
+  const definirEstrategia = (e: EstrategiaDaPeca) => qc.setQueryData(chaveDaEstrategia, e);
+  const montar = useMutation({
+    mutationFn: () => api<RespostaDaEstrategia>("/pecas/estrategia", { json: { processoId: prep.data!.processo.id, prazoId: prep.data!.prazo?.id ?? null, tipo, instrucoes } }),
+    onSuccess: (r) => {
+      if (r.estrategia) {
+        definirEstrategia(r.estrategia);
+        setEstrategiaAberta(true);
+      } else avisar(r.recusa ?? "A IA não conseguiu montar a estratégia agora. Tente de novo em instantes.", { erro: !r.recusa });
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+
+  async function conferirFatos(id: string) {
+    setConferindo(true);
+    try {
+      await api(`/pecas/${id}/conferir-fatos`, { method: "POST" });
+      await qc.fetchQuery({ queryKey: ["peca", id], queryFn: () => api<Peca>(`/pecas/${id}`) });
+      void qc.invalidateQueries({ queryKey: ["pecas", "preparar"] });
+    } catch (err) {
+      avisar(mensagemDoErro(err), { erro: true });
+    } finally {
+      setConferindo(false);
+    }
+  }
+
+  async function gerar(comEstrategia: EstrategiaDaPeca | null) {
     if (!prep.data) return;
     setGerando(true);
     setAoVivo("");
     setEdicao(null);
+    setEstrategiaAberta(false);
+    let gerada: string | null = null;
     try {
       const { headers } = await aosPoucos(
         "/pecas",
-        { json: { processoId: prep.data.processo.id, prazoId: prep.data.prazo?.id ?? null, tipo, instrucoes, pecaId: pecaId ?? null } },
+        { json: { processoId: prep.data.processo.id, prazoId: prep.data.prazo?.id ?? null, tipo, instrucoes, pecaId: pecaId ?? null, ...(comEstrategia ? { estrategia: comEstrategia } : {}) } },
         (t) => setAoVivo(t),
       );
-      const id = headers.get("x-peca-id");
-      if (id) {
-        await qc.fetchQuery({ queryKey: ["peca", id], queryFn: () => api<Peca>(`/pecas/${id}`) });
+      gerada = headers.get("x-peca-id");
+      if (gerada) {
+        const id = gerada;
+        const nova = await qc.fetchQuery({ queryKey: ["peca", id], queryFn: () => api<Peca>(`/pecas/${id}`) });
+        // Sem texto da IA (a geração falhou logo de saída), não há fato a conferir.
+        if (!nova.geradaPorIa) gerada = null;
         void qc.invalidateQueries({ queryKey: ["pecas", "preparar"] });
         void qc.invalidateQueries({ queryKey: ["prazo"] });
         // O endereço ganha o id sem levar a tela ao começo. Esperar a troca evita que o rascunho suma por um instante.
@@ -97,6 +150,29 @@ export function PecaPage() {
       setGerando(false);
       setAoVivo(null);
     }
+    // Antes de entregar, cada fato passa pela conferência. Falhou, o painel oferece conferir de novo.
+    if (gerada) await conferirFatos(gerada);
+  }
+
+  function irAoPonto(p: PontoNaLista) {
+    if (p.inicio === null) return;
+    if (edicao !== null) {
+      const caixa = campoDoEditor.current;
+      if (!caixa) return;
+      caixa.focus({ preventScroll: true });
+      caixa.setSelectionRange(p.inicio, p.fim ?? p.inicio);
+      // A caixa cresce com o texto: quem rola é o papel (no celular, a tela), na proporção do ponto.
+      const rola = papel.current ?? (document.scrollingElement as HTMLElement);
+      const topoDaCaixa = caixa.getBoundingClientRect().top - rola.getBoundingClientRect().top + rola.scrollTop;
+      rola.scrollTop = topoDaCaixa + (p.inicio / Math.max(1, edicao.length)) * caixa.offsetHeight - rola.clientHeight / 2;
+      return;
+    }
+    let alvo: HTMLElement | null = null;
+    for (const el of document.querySelectorAll<HTMLElement>(".dc-folha [data-inicio]")) if (Number(el.dataset.inicio) <= p.inicio) alvo = el;
+    if (!alvo) return;
+    alvo.scrollIntoView({ block: "center" });
+    setBlocoAtivo(Number(alvo.dataset.inicio));
+    window.setTimeout(() => setBlocoAtivo(null), DESTAQUE_DO_PONTO_MS);
   }
 
   const salvar = useMutation({
@@ -153,7 +229,7 @@ export function PecaPage() {
   const sobreOPrazo = p.prazo ? `Sugerido pelo prazo de ${diaCurto(p.prazo.fim)}` : "Escolha o modelo da peça";
   const quandoGerou = peca && !gerando ? `${diaDoInstante(peca.atualizadaEm) === eu.data?.hoje ? "às" : `em ${diaCurto(diaDoInstante(peca.atualizadaEm))} às`} ${hora(peca.atualizadaEm)}` : null;
   const revisada = peca?.situacao === "revisada";
-  const revisao = pecaSalva.data?.revisao;
+  const revisao = salva?.revisao;
   const quemRevisou = revisao
     ? [revisao.por ? `Revisada por ${revisao.por.apelido}` : "Revisada", revisao.por?.oab, `${diaDoInstante(revisao.em) === eu.data?.hoje ? "hoje" : diaCurto(diaDoInstante(revisao.em))} às ${hora(revisao.em)}`].filter(Boolean).join(" · ")
     : null;
@@ -169,6 +245,16 @@ export function PecaPage() {
     </Faixa>
   );
   const revisando = salvar.isPending && salvar.variables?.situacao === "revisada";
+  // A checagem roda no texto que está na tela, inclusive enquanto a pessoa edita.
+  const textoDaChecagem = edicao ?? texto;
+  const pontos = gerando ? [] : pontosAntesDeProtocolar(textoDaChecagem, salva?.partes ?? p.partes ?? [], salva);
+  // Não bloqueia o download: mostra o que está em aberto, e baixar continua a um clique.
+  const avisarAntesDeBaixar = (e: MouseEvent) => {
+    if (!pontos.length) return;
+    e.preventDefault();
+    setAvisoAoBaixar(true);
+  };
+  const mostrarEstrategia = !gerando && edicao === null && !!estrategia && (estrategiaAberta ?? !texto);
 
   const leu = (
     <ul className="dc-lista-check m-0 list-none p-0">
@@ -200,17 +286,41 @@ export function PecaPage() {
     />
   );
   const botaoGerar = (bloco: boolean) => (
-    <Botao variante={texto ? "secundaria" : "primaria"} bloco={bloco} onClick={() => void gerar()} ocupado={gerando} disabled={!iaLigada || !tipo}>
-      {texto ? <RefreshCw /> : <FileText />} {gerando ? "Escrevendo…" : texto ? "Gerar de novo" : "Gerar peça"}
+    <Botao variante={texto || iaLigada ? "secundaria" : "primaria"} bloco={bloco} onClick={() => void gerar(salva?.estrategia ?? null)} ocupado={gerando} disabled={!iaLigada || !tipo || conferindo}>
+      {texto ? <RefreshCw /> : <FileText />} {gerando ? "Escrevendo…" : texto ? "Gerar de novo" : iaLigada ? "Gerar direto" : "Gerar peça"}
     </Botao>
   );
+  /** A estratégia vem antes da peça: é o caminho principal enquanto não há texto. */
+  const botaoEstrategia = (bloco: boolean) =>
+    iaLigada && (
+      <Botao variante={texto ? "fantasma" : "primaria"} bloco={bloco} onClick={() => (estrategia ? setEstrategiaAberta(true) : montar.mutate())} ocupado={montar.isPending} disabled={!tipo || gerando || conferindo}>
+        <ListTree /> {montar.isPending ? "Montando…" : estrategia ? "Rever a estratégia" : "Montar estratégia"}
+      </Botao>
+    );
+  const acoesDaEstrategia = estrategia && (
+    <>
+      <Botao variante="fantasma" onClick={() => setEstrategiaAberta(false)}>
+        Fechar
+      </Botao>
+      <Botao onClick={() => montar.mutate()} ocupado={montar.isPending}>
+        Montar de novo
+      </Botao>
+      <Botao variante="primaria" onClick={() => void gerar(estrategia)} disabled={!tipo}>
+        <FileText /> Gerar com esta estratégia
+      </Botao>
+    </>
+  );
+  const editorDaEstrategia = estrategia && <EstrategiaDaPecaEditor estrategia={estrategia} partes={salva?.partes ?? p.partes ?? []} aoMudar={definirEstrategia} />;
   const semIa = !iaLigada && <Faixa tipo="aviso">{p.processo.semIa ? "O cliente não autorizou o uso de IA." : "A IA ainda não está ligada neste escritório."} Dá para escrever a peça à mão e baixar no timbre.</Faixa>;
 
+  const fatosAtuais = salva?.conferencia?.atual ? salva.conferencia.fatos : undefined;
   const folha =
     edicao !== null ? (
-      <Editor valor={edicao} aoMudar={setEdicao} focar={!texto || (!celular && lido.current < 0.01)} />
+      <Editor valor={edicao} aoMudar={setEdicao} focar={!texto || (!celular && lido.current < 0.01)} campo={campoDoEditor} />
     ) : texto ? (
-      <Folha texto={texto} timbre={timbre} escrevendo={gerando} />
+      <FontesDoProcesso processoId={p.processo.id}>
+        <Folha texto={texto} timbre={timbre} escrevendo={gerando} fatos={fatosAtuais} aoAbrirFato={setFatoAberto} ativo={blocoAtivo} />
+      </FontesDoProcesso>
     ) : (
       <div className="dc-folha">
         <Vazio titulo="Nenhum rascunho ainda">{iaLigada ? "Escolha o tipo, diga o que quer e gere. A IA escreve no timbre do escritório. Ou escreva à mão em Editar texto." : "Clique em Editar texto para escrever."}</Vazio>
@@ -242,9 +352,19 @@ export function PecaPage() {
   );
 
   // Confere o texto salvo: enquanto edita ou a IA escreve, não há o que conferir.
-  const citacoes = podeAvaliar && pecaSalva.data && <VerificacaoDaPeca pecaId={pecaId!} verificacao={pecaSalva.data.verificacao} hoje={eu.data?.hoje} />;
-  const registro = pecaId && pecaSalva.data && !gerando && <RegistroDeRevisao pecaId={pecaId} revisoes={pecaSalva.data.revisoes} hoje={eu.data?.hoje} folha={(t) => <Folha texto={t} timbre={timbre} />} />;
+  const citacoes = podeAvaliar && salva && <VerificacaoDaPeca pecaId={pecaId!} verificacao={salva.verificacao} hoje={eu.data?.hoje} />;
+  const registro = pecaId && salva && !gerando && <RegistroDeRevisao pecaId={pecaId} revisoes={salva.revisoes} hoje={eu.data?.hoje} folha={(t) => <Folha texto={t} timbre={timbre} />} />;
   const guardar = peca && pecaId && <GuardarComoModelo pecaId={pecaId} titulo={peca.titulo} aberto={guardando} aoFechar={() => setGuardando(false)} />;
+  const antes = textoDaChecagem.trim() && !gerando && <AntesDeProtocolar pontos={pontos} aoIr={irAoPonto} />;
+  const fatos = podeAvaliar && salva && <FatosDaPeca conferencia={salva.conferencia} conferindo={conferindo} iaLigada={iaLigada} aoConferir={() => void conferirFatos(pecaId!)} aoAbrir={setFatoAberto} />;
+  const julgados = podeAvaliar && salva && <JulgadosDaPeca pecaId={pecaId!} texto={texto} julgados={salva.julgados} aoInserir={() => void qc.invalidateQueries({ queryKey: ["peca", pecaId] })} />;
+  const ajuste = podeAvaliar && salva && iaLigada && <AjusteDaPecaPainel pecaId={pecaId!} texto={texto} aoAplicar={(novo) => salvar.mutate({ texto: novo })} aplicando={salvar.isPending} />;
+  const dialogos = (
+    <>
+      <DialogoDoFato fato={fatoAberto} aoFechar={() => setFatoAberto(null)} />
+      <AvisoAoBaixar aberto={avisoAoBaixar} pontos={pontos} docx={docx} aoFechar={() => setAvisoAoBaixar(false)} />
+    </>
+  );
   const pe = (solto: boolean) => (
     <div className={cn("dc-peca__pe", solto && "dc-peca__pe--solto")}>
       <span>Gerado por IA. Confira nos autos antes de protocolar.</span>
@@ -261,39 +381,56 @@ export function PecaPage() {
         rodape={
           edicao !== null ? (
             <div className="dc-rodape__par">{acoesDaEdicao}</div>
+          ) : mostrarEstrategia ? (
+            <>
+              <Botao variante="primaria" bloco onClick={() => void gerar(estrategia)} disabled={!tipo}>
+                <FileText /> Gerar com esta estratégia
+              </Botao>
+              <div className="dc-rodape__par">
+                <Botao bloco variante="fantasma" onClick={() => setEstrategiaAberta(false)}>
+                  Fechar
+                </Botao>
+                <Botao bloco onClick={() => montar.mutate()} ocupado={montar.isPending}>
+                  Montar de novo
+                </Botao>
+              </div>
+            </>
           ) : aRevisar ? (
             <>
-              <Botao variante="primaria" bloco onClick={revisar} ocupado={revisando}>
+              <Botao variante="primaria" bloco onClick={revisar} ocupado={revisando} disabled={conferindo}>
                 <Check /> Marcar como revisada
               </Botao>
               <div className="dc-rodape__par">
-                <Botao bloco onClick={editar}>
+                <Botao bloco onClick={editar} disabled={conferindo}>
                   <Pencil /> Editar
                 </Botao>
-                <a className="dc-btn dc-btn--secundaria dc-btn--md dc-btn--bloco" href={docx} download>
+                <a className="dc-btn dc-btn--secundaria dc-btn--md dc-btn--bloco" href={docx} download onClick={avisarAntesDeBaixar}>
                   <Download /> Baixar DOCX
                 </a>
               </div>
             </>
           ) : texto && !gerando ? (
             <>
-              <a className="dc-btn dc-btn--primaria dc-btn--md dc-btn--bloco" href={docx} download>
+              <a className="dc-btn dc-btn--primaria dc-btn--md dc-btn--bloco" href={docx} download onClick={avisarAntesDeBaixar}>
                 <Download /> Baixar DOCX no timbre
               </a>
               <div className="dc-rodape__par">
-                <Botao bloco onClick={editar}>
+                <Botao bloco onClick={editar} disabled={conferindo}>
                   <Pencil /> Editar
                 </Botao>
                 {botaoGerar(true)}
               </div>
             </>
           ) : iaLigada ? (
-            <div className="dc-rodape__par">
-              <Botao bloco onClick={editar} disabled={gerando}>
-                <Pencil /> Escrever
-              </Botao>
-              {botaoGerar(true)}
-            </div>
+            <>
+              {botaoEstrategia(true)}
+              <div className="dc-rodape__par">
+                <Botao bloco onClick={editar} disabled={gerando}>
+                  <Pencil /> Escrever
+                </Botao>
+                {botaoGerar(true)}
+              </div>
+            </>
           ) : (
             <Botao variante="primaria" bloco onClick={editar}>
               <Pencil /> Escrever à mão
@@ -302,11 +439,22 @@ export function PecaPage() {
         }
       >
         {semIa}
-        {(texto || edicao !== null) && (
+        {mostrarEstrategia && (
           <section className="dc-secao">
             <div className="dc-secao__topo">
               <span className="inline-flex items-center gap-2 font-semibold">
-                <MarcaIa /> {gerando ? "Escrevendo…" : revisada ? "Peça revisada" : "Rascunho pronto"}
+                <MarcaIa /> Estratégia da peça
+              </span>
+              <span className="dc-nota">edite antes de gerar</span>
+            </div>
+            {editorDaEstrategia}
+          </section>
+        )}
+        {!mostrarEstrategia && (texto || edicao !== null) && (
+          <section className="dc-secao">
+            <div className="dc-secao__topo">
+              <span className="inline-flex items-center gap-2 font-semibold">
+                <MarcaIa /> {gerando ? "Escrevendo…" : conferindo ? "Conferindo os fatos…" : revisada ? "Peça revisada" : "Rascunho pronto"}
               </span>
               {quandoGerou && <span className="dc-nota">{quandoGerou}</span>}
             </div>
@@ -327,7 +475,11 @@ export function PecaPage() {
             )}
           </section>
         )}
+        {antes}
+        {fatos}
+        {julgados}
         {citacoes}
+        {ajuste}
         <section className="dc-secao">
           <span className="dc-rotulo">Tipo de peça</span>
           <div className="dc-cartao dc-cartao--linha">
@@ -347,11 +499,13 @@ export function PecaPage() {
         <section className="dc-secao">
           <span className="dc-rotulo">Instruções</span>
           <div className="dc-campo">{campoInstrucoes}</div>
+          {texto && botaoEstrategia(true)}
           {aRevisar && iaLigada && botaoGerar(true)}
         </section>
         {registro}
         {trocar}
         {guardar}
+        {dialogos}
       </TelaCelular>
     );
   }
@@ -390,20 +544,20 @@ export function PecaPage() {
                     <BookMarked /> Guardar como modelo
                   </Botao>
                 )}
-                <Botao onClick={editar} disabled={gerando}>
+                <Botao onClick={editar} disabled={gerando || conferindo}>
                   <Pencil /> Editar texto
                 </Botao>
                 {aRevisar ? (
                   <>
-                    <a className="dc-btn dc-btn--secundaria dc-btn--md" href={docx} download>
+                    <a className="dc-btn dc-btn--secundaria dc-btn--md" href={docx} download onClick={avisarAntesDeBaixar}>
                       <Download /> Baixar DOCX no timbre
                     </a>
-                    <Botao variante="primaria" onClick={revisar} ocupado={revisando}>
+                    <Botao variante="primaria" onClick={revisar} ocupado={revisando} disabled={conferindo}>
                       <Check /> Marcar como revisada
                     </Botao>
                   </>
                 ) : docx ? (
-                  <a className="dc-btn dc-btn--primaria dc-btn--md" href={docx} download>
+                  <a className="dc-btn dc-btn--primaria dc-btn--md" href={docx} download onClick={avisarAntesDeBaixar}>
                     <Download /> Baixar DOCX no timbre
                   </a>
                 ) : (
@@ -419,7 +573,11 @@ export function PecaPage() {
       {semIa}
       <div className="dc-colunas dc-colunas--esquerda dc-peca">
         <div className="dc-pilha dc-rola dc-peca__lado">
+          {antes}
+          {fatos}
+          {julgados}
           {citacoes}
+          {ajuste}
           <Painel titulo="Tipo de peça" acao={catalogo.data && <span className="dc-nota">{catalogo.data.total} modelos</span>} corpo={false}>
             <EscolherTipo catalogo={catalogo.data} tipo={tipo} aoEscolher={setTipo} />
           </Painel>
@@ -428,7 +586,10 @@ export function PecaPage() {
           </Painel>
           <Painel titulo="Instruções" acao={<span className="dc-nota">opcional</span>}>
             <div className="dc-campo">{campoInstrucoes}</div>
-            {botaoGerar(true)}
+            <div className="dc-peca__gerar">
+              {!mostrarEstrategia && botaoEstrategia(true)}
+              {botaoGerar(true)}
+            </div>
           </Painel>
           {registro}
         </div>
@@ -436,21 +597,22 @@ export function PecaPage() {
           <div className="dc-painel__topo">
             <span className="inline-flex min-w-0 items-center gap-2">
               <MarcaIa />
-              <span className="dc-painel__titulo">{gerando ? "Escrevendo…" : revisada ? "Peça revisada" : "Rascunho"}</span>
-              {texto && !gerando && (
+              <span className="dc-painel__titulo">{mostrarEstrategia ? "Estratégia da peça" : gerando ? "Escrevendo…" : conferindo ? "Conferindo os fatos…" : revisada ? "Peça revisada" : "Rascunho"}</span>
+              {mostrarEstrategia && <span className="dc-nota">edite antes de gerar</span>}
+              {texto && !gerando && !mostrarEstrategia && (
                 <span className="dc-nota">
                   {quandoGerou ? `gerado ${quandoGerou} · ` : ""}
                   {paginas(texto)} {paginas(texto) === 1 ? "página" : "páginas"}
                 </span>
               )}
             </span>
-            {revisada && quemRevisou && !gerando && (
+            {revisada && quemRevisou && !gerando && !mostrarEstrategia && (
               <span className="inline-flex items-center gap-1.5 dc-t-meta text-[var(--tinta-2)]">
                 <Check className="size-3.5 text-[var(--cumprido)]" /> {quemRevisou}
               </span>
             )}
           </div>
-          {avisoDasLacunas && <div className="dc-peca__lacunas">{avisoDasLacunas}</div>}
+          {avisoDasLacunas && !mostrarEstrategia && <div className="dc-peca__lacunas">{avisoDasLacunas}</div>}
           <div
             ref={papel}
             className="dc-folha-fundo dc-rola"
@@ -461,13 +623,14 @@ export function PecaPage() {
               lido.current = fim > 0 ? el.scrollTop / fim : 0;
             }}
           >
-            {folha}
+            {mostrarEstrategia ? editorDaEstrategia : folha}
           </div>
-          {pe(false)}
+          {mostrarEstrategia ? <div className="dc-peca__acoes-da-estrategia">{acoesDaEstrategia}</div> : pe(false)}
         </section>
       </div>
       {trocar}
       {guardar}
+      {dialogos}
     </Pagina>
   );
 }
@@ -515,16 +678,15 @@ function useAcompanharAIa(papel: RefObject<HTMLElement | null>, escrevendo: bool
  * O texto da peça para editar. A caixa cresce com o texto (a cópia escondida
  * ao lado dá a altura), então quem rola é o papel, sem rolagem dentro de rolagem.
  */
-function Editor({ valor, aoMudar, focar }: { valor: string; aoMudar: (v: string) => void; focar: boolean }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
+function Editor({ valor, aoMudar, focar, campo }: { valor: string; aoMudar: (v: string) => void; focar: boolean; campo: RefObject<HTMLTextAreaElement | null> }) {
   const focarAoAbrir = useRef(focar);
   useEffect(() => {
-    if (focarAoAbrir.current) ref.current?.focus({ preventScroll: true });
-  }, []);
+    if (focarAoAbrir.current) campo.current?.focus({ preventScroll: true });
+  }, [campo]);
   return (
     <div className="dc-folha">
       <div className="dc-folha__editor" data-texto={valor}>
-        <textarea ref={ref} aria-label="Texto da peça" value={valor} onChange={(e) => aoMudar(e.target.value)} />
+        <textarea ref={campo} aria-label="Texto da peça" value={valor} onChange={(e) => aoMudar(e.target.value)} />
       </div>
     </div>
   );
@@ -608,7 +770,44 @@ function EscolherTipo({ catalogo, tipo, aoEscolher }: { catalogo: Catalogo | und
   );
 }
 
-function Inline({ texto }: { texto: string }) {
+/** O texto corrido: cada fato conferido vira um toque que mostra o trecho, e "(evento 87, fl. 3)" abre o documento na folha. */
+function ComFatos({ texto, fatos, aoAbrir }: { texto: string; fatos: readonly FatoDaPeca[]; aoAbrir?: (f: FatoDaPeca) => void }) {
+  const partes: ReactNode[] = [];
+  let resto = texto;
+  for (;;) {
+    let primeiro: { i: number; fato: FatoDaPeca } | null = null;
+    for (const fato of fatos) {
+      const i = fato.afirmacao ? resto.indexOf(fato.afirmacao) : -1;
+      if (i >= 0 && (!primeiro || i < primeiro.i)) primeiro = { i, fato };
+    }
+    if (!primeiro) break;
+    const { i, fato } = primeiro;
+    if (i > 0) partes.push(<TextoComFontes key={partes.length} texto={resto.slice(0, i)} />);
+    // Um <button> vira caixa e não quebra junto com a linha: o fato precisa correr dentro do parágrafo.
+    partes.push(
+      <span
+        key={partes.length}
+        role="button"
+        tabIndex={0}
+        className={`dc-fato dc-fato--${fato.situacao}`}
+        title="Ver de onde saiu este fato"
+        onClick={() => aoAbrir?.(fato)}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          aoAbrir?.(fato);
+        }}
+      >
+        {fato.afirmacao}
+      </span>,
+    );
+    resto = resto.slice(i + fato.afirmacao.length);
+  }
+  if (resto) partes.push(<TextoComFontes key={partes.length} texto={resto} />);
+  return <>{partes}</>;
+}
+
+function Inline({ texto, fatos = [], aoAbrirFato }: { texto: string; fatos?: readonly FatoDaPeca[]; aoAbrirFato?: (f: FatoDaPeca) => void }) {
   return (
     <>
       {trechos(texto).map((t, i) =>
@@ -619,64 +818,65 @@ function Inline({ texto }: { texto: string }) {
         ) : t.italico ? (
           <em key={i}>{t.texto}</em>
         ) : (
-          <Fragment key={i}>{t.texto}</Fragment>
+          <ComFatos key={i} texto={t.texto} fatos={fatos} aoAbrir={aoAbrirFato} />
         ),
       )}
     </>
   );
 }
 
-/** A peça como o DOCX vai sair: timbre no alto, endereçamento, seções e parágrafos com recuo. */
-export function Folha({ texto, timbre, escrevendo }: { texto: string; timbre: Timbre; escrevendo?: boolean }) {
+/** A peça como o DOCX vai sair: timbre no alto, endereçamento, seções e parágrafos com recuo. Cada bloco diz onde está no texto, para os avisos levarem até ele. */
+export function Folha({ texto, timbre, escrevendo, fatos, aoAbrirFato, ativo }: { texto: string; timbre: Timbre; escrevendo?: boolean; fatos?: readonly FatoDaPeca[]; aoAbrirFato?: (f: FatoDaPeca) => void; ativo?: number | null }) {
   const cor = timbre.cor ? (timbre.cor.startsWith("#") ? timbre.cor : `#${timbre.cor}`) : undefined;
   const linha = [timbre.registro, timbre.endereco, timbre.contato].filter(Boolean).join(" · ");
   const saida: ReactNode[] = [];
-  let lista: { numerado: boolean; itens: string[] } | null = null;
+  let lista: { numerado: boolean; itens: BlocoNoTexto[] } | null = null;
+  const destaque = (inicio: number) => (ativo === inicio ? "is-ponto" : undefined);
   const fecharLista = () => {
     if (!lista) return;
     const Tag = lista.numerado ? "ol" : "ul";
     saida.push(
       <Tag key={saida.length}>
-        {lista.itens.map((i, n) => (
-          <li key={n}>
-            <Inline texto={i} />
+        {lista.itens.map((i) => (
+          <li key={i.inicio} data-inicio={i.inicio} className={destaque(i.inicio)}>
+            <Inline texto={i.texto} fatos={fatos} aoAbrirFato={aoAbrirFato} />
           </li>
         ))}
       </Tag>,
     );
     lista = null;
   };
-  for (const b of blocos(texto) as Bloco[]) {
+  for (const b of blocosComPosicao(texto)) {
     if (b.tipo === "item") {
       if (lista && lista.numerado !== b.numerado) fecharLista();
       lista ??= { numerado: b.numerado, itens: [] };
-      lista.itens.push(b.texto);
+      lista.itens.push(b);
       continue;
     }
     fecharLista();
     const k = saida.length;
     if (b.tipo === "enderecamento")
       saida.push(
-        <p key={k} className="dc-folha__enderecamento">
+        <p key={k} data-inicio={b.inicio} className={cn("dc-folha__enderecamento", destaque(b.inicio))}>
           <Inline texto={b.texto} />
         </p>,
       );
     else if (b.tipo === "secao")
       saida.push(
-        <h2 key={k}>
+        <h2 key={k} data-inicio={b.inicio} className={destaque(b.inicio)}>
           <Inline texto={b.texto} />
         </h2>,
       );
     else if (b.tipo === "subtitulo")
       saida.push(
-        <h3 key={k}>
+        <h3 key={k} data-inicio={b.inicio} className={destaque(b.inicio)}>
           <Inline texto={b.texto} />
         </h3>,
       );
     else
       saida.push(
-        <p key={k}>
-          <Inline texto={b.texto} />
+        <p key={k} data-inicio={b.inicio} className={destaque(b.inicio)}>
+          <Inline texto={b.texto} fatos={fatos} aoAbrirFato={aoAbrirFato} />
         </p>,
       );
   }

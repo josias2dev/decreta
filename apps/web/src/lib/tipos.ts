@@ -1,5 +1,5 @@
 /** O que a API das telas devolve (apps/api/src/rotas). */
-import type { AchadoDaAuditoria } from "@decreta/core";
+import type { AchadoDaAuditoria, AvisoDaConferencia, EstrategiaDaPeca, FatoDaPeca, ParteDoCadastro } from "@decreta/core";
 
 export interface Pessoa {
   id: string;
@@ -772,6 +772,10 @@ export interface PreparoDaPeca {
   /** Os modelos do escritório que a IA vai seguir. */
   modelos: { id: string; titulo: string }[];
   ultima: { id: string; titulo: string; tipo: string; instrucoes: string | null; texto: string; situacao: "rascunho" | "revisada"; atualizadaEm: string } | null;
+  /** As partes como o cadastro diz. */
+  partes: ParteDoCadastro[];
+  /** A estratégia aprovada na peça deste tipo ou, sem ela, a última que a IA propôs. */
+  estrategia: EstrategiaDaPeca | null;
 }
 
 export interface Peca {
@@ -793,6 +797,84 @@ export interface Peca {
   semIa: boolean;
   /** A última verificação das citações; `atual` cai quando o texto muda depois dela. */
   verificacao: (VerificacaoDaPeca & { atual: boolean }) | null;
+  /** As partes como o cadastro diz. */
+  partes: ParteDoCadastro[];
+  /** A última geração trouxe texto da IA. */
+  geradaPorIa: boolean;
+  /** Cada fato ligado ao trecho; `atual` cai quando o texto muda depois da conferência. */
+  conferencia: ConferenciaDaPeca | null;
+  /** A estratégia aprovada na última geração. */
+  estrategia: EstrategiaDaPeca | null;
+  /** Os julgados que a pessoa escolheu do acervo. */
+  julgados: JulgadoDaPeca[];
+}
+
+export interface ConferenciaDaPeca {
+  em: string;
+  atual: boolean;
+  /** Por que os fatos não foram ligados, quando não foram: valeu só a parte do código. */
+  semLigacao: "cliente_sem_ia" | "ia_desligada" | "ia_falhou" | null;
+  fatos: FatoDaPeca[];
+  avisos: AvisoDaConferencia[];
+  resumo: { conferidos: number; comAviso: number; aComprovar: number };
+}
+
+export interface JulgadoDaPeca {
+  chave: string;
+  rotulo: string;
+  tese: string;
+  afirmacao: string;
+  trecho: string;
+  /** Como ficou no texto da peça. */
+  citacao: string;
+  selo: SeloDaCitacao;
+  motivo: string;
+  sustenta: "sim" | "parcial" | "nao" | null;
+  fonte: { nome: string; url: string; capturadoEm: string } | null;
+  avisoDeForca: string | null;
+  em: string;
+}
+
+export type PapelDoJulgado = "enfrenta" | "contraponto" | "tangencia";
+
+export interface CandidatoDaTese {
+  chave: string;
+  rotulo: string;
+  tribunal: string;
+  selo: SeloDaCitacao;
+  motivo: string;
+  situacao: string;
+  trecho: string;
+  texto: string | null;
+  questao: string | null;
+  /** Nulo sem a leitura da IA. */
+  papel: PapelDoJulgado | null;
+  porque: string | null;
+  fonte: { nome: string; url: string; capturadoEm: string };
+}
+
+export interface BuscaDaTese {
+  tese: string;
+  itens: CandidatoDaTese[];
+  lados: { aFavor: number; contra: number; tangenciam: number };
+  semLeitura: boolean;
+  cobertura: { tem: string[]; naoCobre: string[] };
+  explicacao: string | null;
+}
+
+export interface AjusteDaPeca {
+  /** O texto com as trocas aplicadas; nulo na recusa. */
+  texto: string | null;
+  resumo: string | null;
+  naoAplicadas: string[];
+  avisos: string[];
+  recusa: string | null;
+}
+
+export interface RespostaDaEstrategia {
+  situacao: "pronto" | "recusa" | "erro";
+  estrategia: EstrategiaDaPeca | null;
+  recusa: string | null;
 }
 
 /** Radar de precedentes: o precedente do BNP que mudou e pode afetar um processo. */

@@ -9,7 +9,7 @@ import { aplicarUltimaDensidade } from "./lib/densidade";
 import { router } from "./router";
 
 // Erros das telas no navegador. O DSN entra no build (VITE_SENTRY_DSN no CI); sem ele, nada sai daqui.
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+const sentryDsn = import.meta.env.MODE === "previa" ? undefined : import.meta.env.VITE_SENTRY_DSN;
 // O link de envio do cliente carrega o segredo no endereço: nem a URL da página nem a do pedido vão ao Sentry.
 const semSegredo = (url: string) => url.replace(/\/(enviar|api\/envio)\/[^/?#]+\/[^/?#]+/, "/$1/[omitido]/[omitido]");
 if (sentryDsn)

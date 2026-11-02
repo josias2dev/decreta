@@ -1,0 +1,96 @@
+{
+  "path": "/pecas/estrategia?amostra",
+  "corpo": {
+    "situacao": "pronto",
+    "estrategia": {
+      "teses": [
+        {
+          "id": "t1",
+          "falta": null,
+          "titulo": "O laudo é conclusivo sobre a incapacidade",
+          "evidencias": [
+            {
+              "folha": null,
+              "fonte": "D2",
+              "rotulo": "Laudo pericial.docx · evento 87",
+              "trecho": "Incapacidade parcial e permanente, fixada em 40% segundo a tabela da Lei 6.194/74",
+              "confere": true,
+              "documentoId": "43b39ba9-9170-4e9b-bbb9-79c6dc641934"
+            }
+          ],
+          "fundamento": "O perito fixou o grau e o nexo pela avaliação médica."
+        },
+        {
+          "id": "t2",
+          "falta": null,
+          "titulo": "A vistoria não era necessária",
+          "evidencias": [
+            {
+              "folha": null,
+              "fonte": "D2",
+              "rotulo": "Laudo pericial.docx · evento 87",
+              "trecho": "Não foi realizada vistoria no veículo, por não ser necessária à avaliação médica",
+              "confere": true,
+              "documentoId": "43b39ba9-9170-4e9b-bbb9-79c6dc641934"
+            },
+            {
+              "folha": null,
+              "fonte": "D2",
+              "rotulo": "Laudo pericial.docx · evento 87",
+              "trecho": "O perito examinou o veículo e não achou dano",
+              "confere": false,
+              "documentoId": "43b39ba9-9170-4e9b-bbb9-79c6dc641934"
+            }
+          ],
+          "fundamento": "A incapacidade se mede no corpo da autora, não no veículo."
+        },
+        {
+          "id": "t3",
+          "falta": "prova da demora no atendimento do sinistro",
+          "titulo": "Dano moral pela demora no sinistro",
+          "evidencias": [],
+          "fundamento": "A demora da seguradora agravou o caso."
+        }
+      ],
+      "provas": [
+        {
+          "id": "p1",
+          "rotulo": "Laudo pericial.docx · evento 87",
+          "descricao": "Laudo pericial"
+        },
+        {
+          "id": "p2",
+          "rotulo": null,
+          "descricao": "Prontuário da autora"
+        }
+      ],
+      "teoria": "O laudo favorece a autora e a falta de vistoria não muda a avaliação médica.",
+      "capitulos": [
+        {
+          "id": "c1",
+          "resumo": "O que o perito concluiu.",
+          "titulo": "Do laudo"
+        },
+        {
+          "id": "c2",
+          "resumo": "Por que a vistoria não era necessária.",
+          "titulo": "Do pedido de esclarecimentos"
+        },
+        {
+          "id": "c3",
+          "resumo": "A homologação do laudo.",
+          "titulo": "Dos pedidos"
+        }
+      ],
+      "perguntas": [
+        {
+          "id": "q1",
+          "muda": "Entra o pedido de julgamento do valor; sem isso, a peça pede só a homologação do laudo.",
+          "pergunta": "A autora quer a complementação do valor já neste momento?",
+          "resposta": ""
+        }
+      ]
+    },
+    "recusa": null
+  }
+}

@@ -19,15 +19,13 @@ import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { numero, reais } from "@/lib/formato";
+import type { SituacaoDoFinanceiro } from "@/lib/rotas";
 import type { AlvaraParaPrestar, FinanceiroGeral, GrupoDoResumo, ParcelaDeHonorario } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
 type Periodo = "mes" | "30" | "tudo";
-export type SituacaoDoFinanceiro = "abertas" | "atraso" | "pagas" | "todas";
 type Situacao = SituacaoDoFinanceiro;
 type Visao = "parcelas" | "clientes" | "processos" | "meses";
-
-export const SITUACOES_DO_FINANCEIRO: readonly Situacao[] = ["abertas", "atraso", "pagas", "todas"];
 
 const semAcento = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
 const nomeDoMes = (mes: string) => {

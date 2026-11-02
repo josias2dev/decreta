@@ -26,6 +26,7 @@ import {
   uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import type { AvisoDaConferencia, EstrategiaDaPeca, FatoDaPeca, ResultadoDaConferencia } from "@decreta/core";
 import { organization, user } from "./auth.ts";
 
 /** Papel sem login criado na migration 0000; o usuário de conexão herda dele. */
@@ -569,6 +570,39 @@ export interface VerificacaoDaPeca {
   }[];
 }
 
+/** A conferência dos fatos da peça, feita depois da geração (`conferirFatos` de @decreta/core). */
+export interface ConferenciaDaPeca {
+  em: string;
+  /** sha256 do texto conferido: mudou o texto, a conferência deixa de valer. */
+  hashDoTexto: string;
+  /** Por que os fatos não foram ligados, quando não foram: valeu só a parte do código. */
+  semLigacao: "cliente_sem_ia" | "ia_desligada" | "ia_falhou" | null;
+  fatos: FatoDaPeca[];
+  avisos: AvisoDaConferencia[];
+  resumo: ResultadoDaConferencia["resumo"];
+  procedencia: Procedencia | null;
+}
+
+/** Um julgado que a pessoa escolheu do acervo. A citação é montada pelo servidor, a partir do banco. */
+export interface JulgadoDaPeca {
+  chave: string;
+  rotulo: string;
+  /** A tese da marca [JURISPRUDÊNCIA: ...] que ele preencheu. */
+  tese: string;
+  /** A frase da peça que o julgado sustenta. */
+  afirmacao: string;
+  trecho: string;
+  /** Como ficou no texto da peça. */
+  citacao: string;
+  selo: SeloDaCitacao;
+  motivo: string;
+  sustenta: "sim" | "parcial" | "nao" | null;
+  fonte: { nome: string; url: string; capturadoEm: string } | null;
+  /** "consolidou" sem base no trecho. */
+  avisoDeForca: string | null;
+  em: string;
+}
+
 export const pecas = pgTable(
   "pecas",
   {
@@ -597,6 +631,12 @@ export const pecas = pgTable(
     procedencia: jsonb("procedencia").$type<Procedencia>(),
     /** A última verificação das citações ("Verificar peça"), com o hash do texto que foi conferido. */
     verificacao: jsonb("verificacao").$type<VerificacaoDaPeca>(),
+    /** A última conferência dos fatos: cada afirmação ligada ao trecho, e o que não bate. */
+    conferencia: jsonb("conferencia").$type<ConferenciaDaPeca>(),
+    /** A estratégia aprovada na última geração. */
+    estrategia: jsonb("estrategia").$type<EstrategiaDaPeca>(),
+    /** Os julgados que a pessoa escolheu do acervo, com o selo de quando entraram. */
+    julgados: jsonb("julgados").$type<JulgadoDaPeca[]>().notNull().default([]),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

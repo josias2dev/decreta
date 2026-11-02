@@ -7,10 +7,10 @@
       "cor": "#3346C4",
       "nome": "Souza & Freitas Advocacia",
       "fonte": "Arial",
-      "contato": "(47) 3433-0000 · contato@souzafreitas.adv.br",
+      "contato": "(47) 3433-0000 · contato@souzafreitas.exemplo.com.br",
       "endereco": "Rua das Palmeiras, 120, sala 804 · Centro · Joinville/SC · 89201-000",
       "registro": "OAB/SC 9.876",
-      "logoDocumentoId": "ab77a7a4-48f9-416b-94ff-6af1f141077f"
+      "logoDocumentoId": "27ba679c-4427-467a-845c-68e73a262a9b"
     },
     "avisos": {
       "hora": "07:30",
@@ -34,7 +34,7 @@
     "iaLigada": false,
     "suspensoes": [
       {
-        "id": "9d9f94b0-f30b-442e-9361-12bced205347",
+        "id": "47d8ea22-f555-4296-bc67-8716a51b7e07",
         "dia": "2026-11-25",
         "motivo": "Instabilidade do eproc (portaria da Presidência)",
         "tipo": "forense",
@@ -42,7 +42,7 @@
         "comarca": null
       },
       {
-        "id": "8d531c04-d5c5-45d5-849d-cefff91ca784",
+        "id": "eee2ffd4-4088-40eb-8189-880a782e4ad1",
         "dia": "2027-03-09",
         "motivo": "Aniversário de Joinville",
         "tipo": "local",

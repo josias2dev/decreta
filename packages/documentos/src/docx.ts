@@ -11,6 +11,8 @@
  *   "### " subtítulo (negrito)
  *   "- "  item de lista;  "1. " item numerado
  *   **negrito**, *itálico* e [COMPLETAR: ...] (marcado em amarelo para revisar)
+ *
+ * Sai limpo: [A COMPROVAR: ...] vira [COMPLETAR: ...] e as marcas internas somem.
  */
 import {
   AlignmentType,
@@ -27,7 +29,7 @@ import {
   TextRun,
   convertMillimetersToTwip,
 } from "docx";
-import { blocos, trechos } from "@decreta/core";
+import { blocos, limparParaDocx, trechos } from "@decreta/core";
 
 export { blocos, trechos };
 
@@ -74,7 +76,7 @@ export async function gerarDocx(peca: PecaParaDocx): Promise<Uint8Array> {
   const entrelinha = 360;
 
   const corpo: Paragraph[] = [];
-  for (const b of blocos(peca.texto)) {
+  for (const b of blocos(limparParaDocx(peca.texto))) {
     switch (b.tipo) {
       case "enderecamento":
         corpo.push(new Paragraph({ children: runs(b.texto, { font, size, maiusculas: true, negrito: true }), spacing: { line: entrelinha, after: 720 } }));

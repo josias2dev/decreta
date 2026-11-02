@@ -26,6 +26,8 @@ export const ids = {
   cliente: amostras.cliente!.corpo.id as string,
   audiencia: amostras.audiencia!.corpo.id as string,
   peca: amostras.peca!.corpo.id as string,
+  /** Peça conferida pelas rotas de verdade, com a IA de mentira. */
+  pecaConferida: amostras.pecaConferida!.corpo.id as string,
   /** Sentença inventada, lida pela IA de mentira (propostas 1 a 5). */
   sentenca: amostras.publicacaoSentenca!.corpo.id as string,
   processoComResultado: amostras.processoComResultado!.corpo.id as string,
@@ -89,6 +91,11 @@ export class ApiFalsa {
     if (url.pathname === "/api/eventos") {
       this.pedidos.push({ metodo, caminho: "/eventos", corpo });
       return route.fulfill({ status: 204 });
+    }
+    // A página aberta de cobertura.
+    if (url.pathname === "/api/cobertura") {
+      const troca = this.trocas.get("/cobertura");
+      return troca ? json(troca.status ?? 200, troca.corpo) : json(404, { erro: "nao_encontrado" });
     }
     // O cadastro aberto: cria a conta e já abre a sessão.
     if (url.pathname === "/api/cadastro") {

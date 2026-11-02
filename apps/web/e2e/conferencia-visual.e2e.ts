@@ -39,6 +39,7 @@ const TELAS_DO_APP = [
   "/configuracoes",
   "/conta",
   `/pecas?id=${ids.peca}`,
+  `/pecas?id=${ids.pecaConferida}&prazo=${ids.prazo}`,
   "/perguntar",
   `/perguntar/${ids.conversaSemana}`,
   "/comecar",

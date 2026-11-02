@@ -1,0 +1,31 @@
+{
+  "path": "/plano",
+  "corpo": {
+    "cobrancaAtiva": false,
+    "plano": {
+      "nome": "Escritório",
+      "testeDias": 14,
+      "valorMensalCentavos": null
+    },
+    "situacao": "cortesia",
+    "rotulo": "Cortesia",
+    "situacaoGravada": "cortesia",
+    "acesso": "total",
+    "motivo": null,
+    "testeAte": null,
+    "diasRestantesDoTeste": null,
+    "diasDeAtraso": null,
+    "viraSoLeituraEm": null,
+    "bloqueiaEm": null,
+    "acessoAte": null,
+    "cancelamentoAgendado": false,
+    "valorMensalCentavos": null,
+    "assinante": false,
+    "podeAssinar": false,
+    "motivoSemAssinar": "A cobrança ainda não foi aberta. Por enquanto nada é cobrado.",
+    "podeCancelar": false,
+    "faturas": [],
+    "trocarFormaEm": null,
+    "aviso": null
+  }
+}

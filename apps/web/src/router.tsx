@@ -1,36 +1,58 @@
-import { createHashHistory, createRootRoute, createRoute, createRouter, Outlet } from "@tanstack/react-router";
-import { AppLayout } from "./componentes/moldura";
+import { createHashHistory, createRootRoute, createRoute, createRouter, lazyRouteComponent, Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { FOLHA, VOLTAM_AO_TOPO } from "./componentes/rolagem";
 import { ErroNaTela, NaoEncontrada } from "./componentes/nao-encontrada";
+import { ABAS_DO_PROCESSO, SITUACOES_DO_FINANCEIRO, VISTAS_DA_AGENDA, type AbaDoProcesso, type SituacaoDoFinanceiro, type VistaDaAgenda } from "./lib/rotas";
 import type { Quando, SituacaoPublicacao } from "./lib/tipos";
-import { ConvitePage, RedefinirSenhaPage } from "./paginas/acesso";
-import { AgendaPage, AudienciaPage, VISTAS_DA_AGENDA, type VistaDaAgenda } from "./paginas/agenda";
-import { AlvarasPage } from "./paginas/alvaras";
-import { CadastroPage } from "./paginas/cadastro";
-import { ClientePage, ClientesPage } from "./paginas/clientes";
-import { ComecarPage } from "./paginas/comecar";
-import { ConfiguracoesPage } from "./paginas/configuracoes";
-import { ContaPage } from "./paginas/conta";
-import { DocumentosPage } from "./paginas/documentos";
-import { ModelosPage } from "./paginas/modelos";
-import { EnviarDocumentosPage } from "./paginas/enviar";
-import { EntrarPage } from "./paginas/entrar";
-import { EquipePage } from "./paginas/equipe";
-import { FinanceiroPage, SITUACOES_DO_FINANCEIRO, type SituacaoDoFinanceiro } from "./paginas/financeiro";
-import { HojePage } from "./paginas/hoje";
-import { InicioPage } from "./paginas/inicio";
-import { MaisPage } from "./paginas/mais";
-import { NegociosPage } from "./paginas/negocios";
-import { PecaPage } from "./paginas/peca";
-import { ConversaPage, PerguntarPage } from "./paginas/perguntar";
-import { PrazoPage } from "./paginas/prazo";
-import { PrazosPage } from "./paginas/prazos";
-import { ProcessoPage, type AbaDoProcesso, ABAS_DO_PROCESSO } from "./paginas/processo";
-import { ProcessosPage } from "./paginas/processos";
-import { PrivacidadePage } from "./paginas/privacidade";
-import { PublicacaoPage, PublicacoesPage } from "./paginas/publicacoes";
-import { SegurancaPage } from "./paginas/seguranca";
-import { TermosPage } from "./paginas/termos";
+
+const NA_PREVIA = import.meta.env.MODE === "previa";
+
+/** Cada tela é um pedaço à parte: quem abre o login não baixa o editor de peças. */
+const AcessoPage = {
+  convite: lazyRouteComponent(() => import("./paginas/acesso"), "ConvitePage"),
+  redefinir: lazyRouteComponent(() => import("./paginas/acesso"), "RedefinirSenhaPage"),
+};
+const AgendaPage = lazyRouteComponent(() => import("./paginas/agenda"), "AgendaPage");
+const AudienciaPage = lazyRouteComponent(() => import("./paginas/agenda"), "AudienciaPage");
+const AlvarasPage = lazyRouteComponent(() => import("./paginas/alvaras"), "AlvarasPage");
+const AppLayout = lazyRouteComponent(() => import("./componentes/moldura"), "AppLayout");
+const CadastroPage = lazyRouteComponent(() => import("./paginas/cadastro"), "CadastroPage");
+const ClientePage = lazyRouteComponent(() => import("./paginas/clientes"), "ClientePage");
+const ClientesPage = lazyRouteComponent(() => import("./paginas/clientes"), "ClientesPage");
+const CoberturaPage = lazyRouteComponent(() => import("./paginas/cobertura"), "CoberturaPage");
+const ComecarPage = lazyRouteComponent(() => import("./paginas/comecar"), "ComecarPage");
+const ConfiguracoesPage = lazyRouteComponent(() => import("./paginas/configuracoes"), "ConfiguracoesPage");
+const ContaPage = lazyRouteComponent(() => import("./paginas/conta"), "ContaPage");
+const ConversaPage = lazyRouteComponent(() => import("./paginas/perguntar"), "ConversaPage");
+const DocumentosPage = lazyRouteComponent(() => import("./paginas/documentos"), "DocumentosPage");
+const EnviarDocumentosPage = lazyRouteComponent(() => import("./paginas/enviar"), "EnviarDocumentosPage");
+const EntrarPage = lazyRouteComponent(() => import("./paginas/entrar"), "EntrarPage");
+const EquipePage = lazyRouteComponent(() => import("./paginas/equipe"), "EquipePage");
+const FinanceiroPage = lazyRouteComponent(() => import("./paginas/financeiro"), "FinanceiroPage");
+const HojePage = lazyRouteComponent(() => import("./paginas/hoje"), "HojePage");
+const MaisPage = lazyRouteComponent(() => import("./paginas/mais"), "MaisPage");
+const ModelosPage = lazyRouteComponent(() => import("./paginas/modelos"), "ModelosPage");
+const NegociosPage = lazyRouteComponent(() => import("./paginas/negocios"), "NegociosPage");
+const PecaPage = lazyRouteComponent(() => import("./paginas/peca"), "PecaPage");
+const PerguntarPage = lazyRouteComponent(() => import("./paginas/perguntar"), "PerguntarPage");
+const PrazoPage = lazyRouteComponent(() => import("./paginas/prazo"), "PrazoPage");
+const PrazosPage = lazyRouteComponent(() => import("./paginas/prazos"), "PrazosPage");
+const ProcessoPage = lazyRouteComponent(() => import("./paginas/processo"), "ProcessoPage");
+const ProcessosPage = lazyRouteComponent(() => import("./paginas/processos"), "ProcessosPage");
+const PrivacidadePage = lazyRouteComponent(() => import("./paginas/privacidade"), "PrivacidadePage");
+const PublicacaoPage = lazyRouteComponent(() => import("./paginas/publicacoes"), "PublicacaoPage");
+const PublicacoesPage = lazyRouteComponent(() => import("./paginas/publicacoes"), "PublicacoesPage");
+const SegurancaPage = lazyRouteComponent(() => import("./paginas/seguranca"), "SegurancaPage");
+const TermosPage = lazyRouteComponent(() => import("./paginas/termos"), "TermosPage");
+
+/** A landing é outra página (landing.html), servida em "/": um link do app para lá recarrega. Na demonstração, que vive num arquivo só, volta para o dia. */
+function ParaOSite() {
+  useEffect(() => {
+    if (NA_PREVIA) void router.navigate({ to: "/hoje", replace: true });
+    else location.replace("/");
+  }, []);
+  return null;
+}
 
 const QUANDO: readonly Quando[] = ["hoje", "semana", "vencidos", "abertos", "cumpridos"];
 const SITUACOES: readonly SituacaoPublicacao[] = ["nova", "pendente", "lida", "vinculada"];
@@ -50,23 +72,24 @@ const entrarRoute = createRoute({
 });
 // Cadastro aberto: a pessoa, o escritório e a sessão; depois, a configuração inicial em /comecar.
 const cadastroRoute = createRoute({ getParentRoute: () => rootRoute, path: "/cadastro", component: CadastroPage });
-const conviteRoute = createRoute({ getParentRoute: () => rootRoute, path: "/convite/$id", component: ConvitePage });
+const conviteRoute = createRoute({ getParentRoute: () => rootRoute, path: "/convite/$id", component: AcessoPage.convite });
 // O link que o cliente recebe no WhatsApp para mandar os documentos que faltam: sem login.
 const enviarRoute = createRoute({ getParentRoute: () => rootRoute, path: "/enviar/$org/$segredo", component: EnviarDocumentosPage });
 const redefinirRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/redefinir-senha",
   validateSearch: (s: Record<string, unknown>): { token?: string } => (texto(s.token, 500) ? { token: texto(s.token, 500) } : {}),
-  component: RedefinirSenhaPage,
+  component: AcessoPage.redefinir,
 });
 
-// decreta.site: a landing para quem chega de fora; quem tem sessão segue para /hoje.
-const inicioRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: InicioPage });
+const inicioRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: ParaOSite });
 // Segurança e LGPD, aberta: o termo de uso de IA e a política interna apontam para cá.
 const segurancaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/seguranca", component: SegurancaPage });
 // Termos de Uso e Política de Privacidade, abertos: o cadastro e o convite pedem o aceite deles.
 const termosRoute = createRoute({ getParentRoute: () => rootRoute, path: "/termos", component: TermosPage });
 const privacidadeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/privacidade", component: PrivacidadePage });
+// A cobertura por tribunal, aberta: a última leitura do DJEN e o calendário que a conta usa.
+const coberturaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/cobertura", component: CoberturaPage });
 
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
@@ -180,6 +203,7 @@ const routeTree = rootRoute.addChildren([
   segurancaRoute,
   termosRoute,
   privacidadeRoute,
+  coberturaRoute,
   entrarRoute,
   cadastroRoute,
   conviteRoute,
@@ -222,7 +246,7 @@ export const router = createRouter({
   scrollRestoration: ({ location }) => !location.pathname.startsWith("/perguntar"),
   scrollToTopSelectors: [...VOLTAM_AO_TOPO, FOLHA],
   // A prévia (vite build --mode previa) vive num arquivo só, então as rotas vão no #.
-  ...(import.meta.env.MODE === "previa" ? { history: createHashHistory() } : {}),
+  ...(NA_PREVIA ? { history: createHashHistory() } : {}),
 });
 
 declare module "@tanstack/react-router" {

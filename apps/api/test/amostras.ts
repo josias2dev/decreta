@@ -358,6 +358,104 @@ try {
   await naHora(nova.id, "2026-10-29T09:30:00", "2026-10-29T09:30:09");
   await guardar("conversaNova", `/ia/conversas/${nova.id}`);
 
+  /*
+   * A peça que prova o que diz, pelas rotas de verdade: a IA de mentira segue um
+   * roteiro com trechos da demonstração, e a conferência é o código de verdade.
+   * Vem por último para as amostras de cima ficarem como estavam.
+   */
+  await t.db.insert(acervoDocumentos).values([
+    {
+      chave: "sumula:STJ:474",
+      fonte: "cnj_bnp",
+      situacao: "Vigente",
+      texto: "A indenização do seguro DPVAT, em caso de invalidez parcial do beneficiário, será paga de forma proporcional ao grau da invalidez.",
+      url: "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-474",
+      hash: "amostra",
+      capturadoEm: new Date("2026-10-16T06:00:00-03:00"),
+    },
+    {
+      chave: "sumula:STJ:573",
+      fonte: "cnj_bnp",
+      situacao: "Vigente",
+      texto: "Nas ações de indenização decorrente de seguro DPVAT, a ciência inequívoca do caráter permanente da invalidez, para fins de contagem do prazo prescricional, depende de laudo médico.",
+      url: "https://pangeabnp.pdpj.jus.br/precedentes?id=stj-sum-573",
+      hash: "amostra",
+      capturadoEm: new Date("2026-10-16T06:00:00-03:00"),
+    },
+  ]);
+  const comIaEmJson = async (path: string, corpo: unknown) => {
+    const res = await comIa.request(`/api/app${path}`, { method: "POST", headers: { cookie, origin: env.WEB_ORIGIN, "content-type": "application/json" }, body: JSON.stringify(corpo) });
+    if (!res.ok) throw new Error(`POST ${path}: ${res.status} ${await res.text()}`);
+    return res;
+  };
+  /** A referência que a fonte recebeu no pedido: "D2". */
+  const referencia = (pedido: string, nome: string) => new RegExp(`Fonte (\\w+): ${nome}`).exec(pedido)?.[1] ?? null;
+  const TRECHO_DO_LAUDO = "Incapacidade parcial e permanente, fixada em 40% segundo a tabela da Lei 6.194/74";
+  const LAUDO = "Laudo pericial.docx";
+  ia.respostas["estrategia-peca"] = (pedido: string) => ({
+    teoria: "O laudo favorece a autora e a falta de vistoria não muda a avaliação médica.",
+    teses: [
+      { titulo: "O laudo é conclusivo sobre a incapacidade", fundamento: "O perito fixou o grau e o nexo pela avaliação médica.", evidencias: [{ fonte: referencia(pedido, LAUDO), trecho: TRECHO_DO_LAUDO }], falta: null },
+      { titulo: "A vistoria não era necessária", fundamento: "A incapacidade se mede no corpo da autora, não no veículo.", evidencias: [{ fonte: referencia(pedido, LAUDO), trecho: "Não foi realizada vistoria no veículo, por não ser necessária à avaliação médica" }, { fonte: referencia(pedido, LAUDO), trecho: "O perito examinou o veículo e não achou dano" }], falta: null },
+      { titulo: "Dano moral pela demora no sinistro", fundamento: "A demora da seguradora agravou o caso.", evidencias: [], falta: "prova da demora no atendimento do sinistro" },
+    ],
+    provas: [
+      { descricao: "Laudo pericial", fonte: referencia(pedido, LAUDO) },
+      { descricao: "Prontuário da autora", fonte: null },
+    ],
+    capitulos: [
+      { titulo: "Do laudo", resumo: "O que o perito concluiu." },
+      { titulo: "Do pedido de esclarecimentos", resumo: "Por que a vistoria não era necessária." },
+      { titulo: "Dos pedidos", resumo: "A homologação do laudo." },
+    ],
+    perguntas: [{ pergunta: "A autora quer a complementação do valor já neste momento?", muda: "Entra o pedido de julgamento do valor; sem isso, a peça pede só a homologação do laudo." }],
+    recusa: null,
+  });
+  amostras["estrategiaDaPeca"] = { path: "/pecas/estrategia?amostra", corpo: await (await comIaEmJson("/pecas/estrategia", { processoId, prazoId: marina.id, tipo: "manifestacao-laudo", instrucoes: "Concordar com o laudo e rebater o pedido da ré." })).json() };
+  const FATO_CERTO = "O perito concluiu pelo nexo causal com o acidente de trânsito de 18/01/2026 (evento 87).";
+  const FATO_COM_AVISO = "O laudo fixou a incapacidade em 45% (evento 87).";
+  const FATO_SEM_FONTE = "A seguradora sempre tratou a autora com descaso durante o atendimento do sinistro.";
+  ia.respostas["gerar-documento"] = [
+    "# Excelentíssimo Senhor Doutor Juiz de Direito da 2ª Vara Cível da Comarca de Joinville",
+    "**MARINA DUARTE**, já qualificada nos autos, vem manifestar-se sobre o laudo pericial.",
+    "## 1. Dos fatos",
+    FATO_CERTO,
+    FATO_COM_AVISO,
+    FATO_SEM_FONTE,
+    "A intimação ocorreu em, o protocolo realizado na data de assegura a tempestividade.",
+    "## 2. Do direito",
+    "A indenização acompanha o grau da invalidez. [JURISPRUDÊNCIA: seguro invalidez parcial proporcional]",
+    "## 3. Dos pedidos",
+    "Requer a homologação do laudo, com o pagamento de R$ 77.000,00.",
+    "[cidade], [data].",
+    "Beatriz Souza, OAB/SC 41.233.",
+  ].join("\n\n");
+  const gerada = await comIaEmJson("/pecas", { processoId, prazoId: marina.id, tipo: "manifestacao-laudo", instrucoes: "Concordar com o laudo e rebater o pedido da ré." });
+  await gerada.text();
+  const pecaConferida = gerada.headers.get("x-peca-id")!;
+  ia.respostas["ligar-fatos"] = (pedido: string) => ({
+    fatos: [
+      { afirmacao: FATO_CERTO, fonte: referencia(pedido, LAUDO), trecho: "há nexo causal entre o acidente de trânsito de 18/01/2026 e as lesões", falta: null },
+      { afirmacao: FATO_COM_AVISO, fonte: referencia(pedido, LAUDO), trecho: TRECHO_DO_LAUDO, falta: null },
+      { afirmacao: FATO_SEM_FONTE, fonte: null, trecho: null, falta: "prova do atendimento do sinistro" },
+    ],
+  });
+  await comIaEmJson(`/pecas/${pecaConferida}/conferir-fatos`, {});
+  await guardar("pecaConferida", `/pecas/${pecaConferida}`);
+  ia.respostas["papel-do-julgado"] = {
+    itens: [
+      { chave: "sumula:STJ:474", papel: "enfrenta", porque: "Diz que a indenização é proporcional ao grau da invalidez.", trecho: "será paga de forma proporcional ao grau da invalidez" },
+      { chave: "sumula:STJ:573", papel: "tangencia", porque: "Trata do prazo prescricional, não do valor.", trecho: "depende de laudo médico" },
+    ],
+  };
+  amostras["julgadosDaTese"] = { path: `/pecas/${pecaConferida}/julgados/buscar?amostra`, corpo: await (await comIaEmJson(`/pecas/${pecaConferida}/julgados/buscar`, { tese: "seguro invalidez parcial proporcional" })).json() };
+  amostras["julgadosSemResultado"] = { path: `/pecas/${pecaConferida}/julgados/buscar?vazia`, corpo: await (await comIaEmJson(`/pecas/${pecaConferida}/julgados/buscar`, { tese: "usucapião quilombola" })).json() };
+  ia.respostas["ajustar-peca"] = { trocas: [{ de: "Requer a homologação do laudo, com o pagamento de R$ 77.000,00.", para: "Requer a homologação do laudo e o julgamento do valor da indenização." }, { de: "A seguradora sempre tratou a autora com descaso durante o atendimento do sinistro. [A COMPROVAR: prova do atendimento do sinistro]\n\n", para: "" }], resumo: "Tirei a frase sem prova e o valor que não está nos autos.", recusa: null };
+  amostras["ajusteDaPeca"] = { path: `/pecas/${pecaConferida}/ajuste?amostra`, corpo: await (await comIaEmJson(`/pecas/${pecaConferida}/ajuste`, { pedido: "Tire o que não tem prova." })).json() };
+  ia.respostas["conferir-citacao"] = { veredito: "sim", justificativa: "O enunciado diz que o valor acompanha o grau da invalidez." };
+  await comIaEmJson(`/pecas/${pecaConferida}/julgados/inserir`, { tese: "seguro invalidez parcial proporcional", escolhidos: [{ chave: "sumula:STJ:474", trecho: "será paga de forma proporcional ao grau da invalidez" }] });
+  amostras["pecaComJulgado"] = { path: `/pecas/${pecaConferida}?julgado`, corpo: await get(`/pecas/${pecaConferida}`) };
+
   mkdirSync(DESTINO, { recursive: true });
   for (const [nome, v] of Object.entries(amostras)) writeFileSync(`${DESTINO}${nome}.json`, `${JSON.stringify(v, null, 2)}\n`);
   console.log(`${Object.keys(amostras).length} amostras em ${DESTINO}`);

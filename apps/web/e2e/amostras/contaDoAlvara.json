@@ -1,33 +1,33 @@
 {
-  "path": "/financeiro/alvaras/5f8514e0-a3f6-44d4-9cd6-d87ac1ff4299/conta",
+  "path": "/financeiro/alvaras/8f4c6c75-6504-41c7-bdf2-9ae84dcc86ec/conta",
   "corpo": {
     "alvara": {
-      "id": "5f8514e0-a3f6-44d4-9cd6-d87ac1ff4299",
+      "id": "8f4c6c75-6504-41c7-bdf2-9ae84dcc86ec",
       "descricao": "Depósito judicial do réu",
       "etapa": "sacado",
       "valor": 418000,
       "valorRecebido": 418000,
       "sacadoEm": "2026-10-19",
       "processo": {
-        "id": "c4f2de12-5447-4129-86b3-b4bc1ee67e30",
+        "id": "74ac578b-268c-4774-abeb-cf8f66eaae33",
         "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
         "cnj": "5011873-86.2026.8.24.0023"
       },
       "cliente": {
-        "id": "b282f966-5ab0-43a5-9cdb-a7ccf964275d",
+        "id": "74034be4-3fdb-4335-8e1d-97ab969f6fee",
         "nome": "Ana Lúcia Ferraz"
       }
     },
     "contratos": [
       {
-        "id": "87156db9-6ef3-4dff-b985-88cc841e6839",
+        "id": "db68e91e-d579-46d4-8828-27085a00f123",
         "titulo": "Honorários · Ana Lúcia Ferraz",
         "exitoBp": 2500,
         "nivel": "processo"
       }
     ],
     "contrato": {
-      "id": "87156db9-6ef3-4dff-b985-88cc841e6839",
+      "id": "db68e91e-d579-46d4-8828-27085a00f123",
       "titulo": "Honorários · Ana Lúcia Ferraz",
       "exitoBp": 2500,
       "nivel": "processo"

@@ -36,6 +36,8 @@ export const ROTULO: Record<string, string> = {
   "mcp.token_criado": "Criou um token do conector MCP",
   "mcp.token_revogado": "Revogou um token do conector MCP",
   "peca.baixada": "Baixou uma peça em DOCX",
+  "peca.fatos_conferidos": "Conferiu os fatos de uma peça nos autos",
+  "peca.julgado_inserido": "Escolheu um julgado do acervo para a peça",
   "processo.criado": "Cadastrou um processo",
   "cliente.criado": "Cadastrou um cliente",
   "cliente.apagado": "Apagou um cliente",

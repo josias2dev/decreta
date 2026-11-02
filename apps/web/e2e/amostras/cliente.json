@@ -1,7 +1,7 @@
 {
-  "path": "/clientes/208a1b5d-a4cf-4464-ae6f-c3ff8f522de6",
+  "path": "/clientes/dd61d628-a7dc-43fa-a916-e673543a5fd5",
   "corpo": {
-    "id": "208a1b5d-a4cf-4464-ae6f-c3ff8f522de6",
+    "id": "dd61d628-a7dc-43fa-a916-e673543a5fd5",
     "nome": "Marina Duarte",
     "tipo": "pf",
     "documento": "318.204.567-90",
@@ -15,13 +15,13 @@
     "criadoEm": "2025-09-24T12:00:00.000Z",
     "processos": [
       {
-        "id": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1",
+        "id": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "orgao": "2ª Vara Cível",
         "situacao": "ativo",
         "responsavel": {
-          "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
+          "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -31,32 +31,32 @@
     ],
     "atendimentos": [
       {
-        "id": "906c3f2b-bc6f-4200-a4b3-f3e94120aae8",
+        "id": "7a9ba4cf-4f56-4739-bb5d-28ed2bb3178e",
         "em": "2026-10-20T18:30:00.000Z",
         "canal": "whatsapp",
         "resumo": "Cliente perguntou sobre a perícia. Expliquei que o laudo sai em até 10 dias e que vamos avisar. Pedi o comprovante das despesas médicas de agosto.",
         "autor": {
-          "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
+          "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "processoId": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1"
+        "processoId": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd"
       },
       {
-        "id": "396a8c78-b262-4713-aa19-a0abb7cf0a43",
+        "id": "dc782e15-6c48-4c1f-bd55-d93432d4a08a",
         "em": "2026-08-30T18:30:00.000Z",
         "canal": "presencial",
         "resumo": "Reunião para preparar a perícia: levar exames, receitas e relatório do ortopedista. Assistente técnico indicado: Dra. Juliana Prates.",
         "autor": {
-          "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
+          "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
           "foto": "/demonstracao/beatriz.jpg"
         },
-        "processoId": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1"
+        "processoId": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd"
       }
     ],
     "documentos": [],

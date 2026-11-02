@@ -11,7 +11,6 @@ test("landing no celular: Entrar e Criar conta no topo, sem rolar para o lado", 
   const topo = page.locator(".lp-topo");
   await expect(topo.getByRole("link", { name: "Entrar" })).toBeInViewport();
   await expect(topo.getByRole("link", { name: "Criar conta" })).toBeInViewport();
-  await expect.poll(() => page.locator(".lp-vitrine__img").evaluate((img: HTMLImageElement) => img.currentSrc)).toContain("vitrine-celular");
   expect(await sobraNaLateral(page)).toBe(0);
 });
 

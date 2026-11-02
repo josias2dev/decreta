@@ -21,5 +21,9 @@ export function tetoDeSaida(teto: { porEscritorio: number; todos: number }, agor
 export const WHATSAPP_EM_AVALIACAO = tetoDeSaida({ porEscritorio: 10, todos: 60 });
 export const CONVITES_EM_AVALIACAO = tetoDeSaida({ porEscritorio: 5, todos: 30 });
 
+/** A busca imediata pela OAB: cada uma é uma consulta ao DJEN e uma leva de leituras da IA. */
+export const BUSCAS_EM_AVALIACAO = tetoDeSaida({ porEscritorio: 3, todos: 60 });
+
+export const AVISO_DAS_BUSCAS = "Escritório novo faz até 3 buscas imediatas por dia. Fale com a equipe do Decreta para liberar.";
 export const AVISO_DO_WHATSAPP = "Escritório novo manda até 10 mensagens por dia pelo WhatsApp do Decreta. Fale com a equipe do Decreta para liberar.";
 export const AVISO_DOS_CONVITES = "Escritório novo manda até 5 convites por dia. Fale com a equipe do Decreta para liberar.";
