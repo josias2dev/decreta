@@ -139,9 +139,7 @@ export function EstrategiaDaPecaEditor({ estrategia: e, partes, aoMudar }: { est
               <input aria-label={`Prova ${i + 1}`} value={p.descricao} onChange={(ev) => mudar({ provas: trocar(e.provas, i, { descricao: ev.target.value }) })} placeholder="A prova" />
             </div>
             <span className="dc-nota dc-estrategia__onde">{p.rotulo ?? "a produzir"}</span>
-            <Botao variante="fantasma" pequeno aria-label={`Remover a prova ${i + 1}`} onClick={() => mudar({ provas: e.provas.filter((_, j) => j !== i) })}>
-              <Trash2 />
-            </Botao>
+            <ControlesDaLinha nome={p.descricao || `a prova ${i + 1}`} i={i} total={e.provas.length} aoMover={(para) => mudar({ provas: mover(e.provas, i, para) })} aoRemover={() => mudar({ provas: e.provas.filter((_, j) => j !== i) })} />
           </div>
         ))}
       </Secao>
