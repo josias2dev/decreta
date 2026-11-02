@@ -1,0 +1,60 @@
+/* As variações da tela de Publicações (paginas/publicacoes-variantes). Escolhida uma, as outras e este arquivo saem. */
+
+/* O seletor, pequeno, no cabeçalho da tela: só em desenvolvimento e na prévia. */
+.dc-variantes { display: inline-flex; align-items: center; gap: var(--space-2); margin-right: var(--space-2); font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-3); }
+.dc-variantes .dc-segmentos__item { min-width: var(--altura-controle); padding: 0 var(--space-2); }
+
+/* B · Fila focada */
+.dc-pagina--cheia > .dc-fila { flex: 1 1 auto; min-height: 0; }
+.dc-fila { display: grid; grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: var(--vao-bloco); }
+.dc-fila__trilho { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-fila__lista { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-half); padding: var(--space-2); }
+.dc-fila__item { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); flex: none; width: 100%; padding: var(--space-2-half) var(--space-2-half); border: 0; border-radius: var(--radius-md); background: transparent; text-align: left; color: var(--tinta-2); cursor: pointer; transition: background-color var(--transicao), color var(--transicao); }
+.dc-fila__item:hover { background: var(--superficie-2); color: var(--tinta); }
+.dc-fila__item.is-on { background: var(--superficie-2); color: var(--tinta); box-shadow: inset 2px 0 0 var(--primaria); }
+.dc-fila__item:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--foco); }
+.dc-fila__titulo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); }
+.dc-fila__data { flex: none; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); }
+.dc-fila__foco { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-fila__foco > .dc-fila__leitura { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--space-6); }
+.dc-fila__coluna { display: flex; flex-direction: column; gap: var(--space-5); width: 100%; max-width: 720px; margin: 0 auto; }
+.dc-fila__barra { flex: none; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding: var(--space-3) var(--space-6); border-top: 1px solid var(--borda); background: var(--superficie); }
+.dc-fila__resumo { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
+.dc-fila__botoes { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.dc-fila__confianca { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1) var(--space-2-half); }
+
+/* C · Tabela com linha que abre */
+.dc-triagem__intimacao { width: 26%; }
+.dc-triagem__sugestao { width: 21%; }
+.dc-triagem__vence { width: calc(96px * var(--escala-coluna)); }
+.dc-triagem__recebida { width: calc(88px * var(--escala-coluna)); }
+.dc-triagem__partes { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tinta-2); }
+.dc-triagem__abrir { display: flex; align-items: center; gap: var(--space-2); width: 100%; padding: 0; border: 0; background: none; text-align: left; font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); cursor: pointer; }
+.dc-triagem__abrir > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-triagem__abrir > svg { width: var(--space-3-half); height: var(--space-3-half); flex: none; color: var(--tinta-3); transition: transform var(--transicao); }
+.dc-triagem__abrir[aria-expanded="true"] > svg { transform: rotate(90deg); }
+.dc-tabela .dc-triagem__linha td { height: var(--altura-linha); }
+.dc-tabela .dc-triagem__linha.is-on td { background: var(--superficie-2); border-bottom-color: transparent; }
+.dc-tabela .dc-triagem__aberta td { padding: 0; background: var(--papel); }
+.dc-tabela tbody .dc-triagem__aberta:hover td { background: var(--papel); }
+.dc-triagem__corpo { display: grid; grid-template-columns: minmax(0, 1fr) var(--layout-fatos); gap: var(--vao-bloco) var(--space-6); align-items: start; padding: var(--space-5) var(--space-5) var(--space-5) calc(var(--respiro-painel) + var(--space-5)); border-bottom: 1px solid var(--borda); }
+.dc-triagem__largo { grid-column: 1 / -1; }
+.dc-triagem__acoes { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+
+/* D · Três colunas */
+.dc-pagina--cheia > .dc-tres { flex: 1 1 auto; min-height: 0; }
+.dc-tres { display: grid; grid-template-columns: 340px minmax(0, 1fr) 340px; grid-template-rows: minmax(0, 1fr); gap: var(--vao-bloco); }
+.dc-tres__lista, .dc-tres__teor, .dc-tres__decisao { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-tres__lista > .dc-abas { flex: none; padding: 0 var(--space-2-half); gap: 0; }
+.dc-tres__lista .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 var(--space-1); }
+.dc-tres__lista > .dc-linhas { overflow-y: auto; }
+.dc-tres__teor > .dc-tres__leitura { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-5); padding: var(--respiro-painel) var(--space-5); }
+.dc-tres__fatos { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--vao-bloco); padding: var(--respiro-painel); }
+.dc-tres__botoes { flex: none; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--respiro-painel) var(--respiro-painel); border-top: 1px solid var(--borda); }
+.dc-tres__botoes > .dc-btn { width: 100%; }
+/* Abaixo de 1200 px a decisão desce para baixo do teor. */
+@media (max-width: 1199px) {
+  .dc-tres { grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .dc-tres__lista { grid-row: 1 / -1; }
+  .dc-tres__decisao { grid-column: 2; max-height: 52vh; }
+}

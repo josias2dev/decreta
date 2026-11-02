@@ -1,16 +1,28 @@
 /**
- * Variações de uma tela para escolher na prévia (bun run web:previa): um
- * seletor flutuante embaixo da folha. No build normal o seletor não aparece
- * e vale sempre a primeira opção.
+ * Variações de uma tela para escolher: um seletor pequeno, só em desenvolvimento
+ * e na prévia (bun run web:previa). A escolha fica no navegador, e `daUrl` deixa
+ * mandar o link direto. Em produção o seletor não aparece e vale sempre a primeira.
  */
 import { useState } from "react";
 import { Segmentos } from "@/componentes/ui";
 
-export const NA_PREVIA = import.meta.env.MODE === "previa";
+export const COM_VARIANTES = import.meta.env.DEV || import.meta.env.MODE === "previa";
 
-export function useVariante<T extends string>(chave: string, opcoes: readonly { id: T }[]): [T, (v: T) => void] {
+function guardar(chave: string, valor: string) {
+  try {
+    localStorage.setItem(`variante:${chave}`, valor);
+  } catch {
+    // sem armazenamento: vale só nesta visita
+  }
+}
+
+export function useVariante<T extends string>(chave: string, opcoes: readonly { id: T }[], daUrl?: T): [T, (v: T) => void] {
   const [v, setV] = useState<T>(() => {
-    if (!NA_PREVIA) return opcoes[0]!.id;
+    if (!COM_VARIANTES) return opcoes[0]!.id;
+    if (daUrl) {
+      guardar(chave, daUrl);
+      return daUrl;
+    }
     try {
       const salvo = localStorage.getItem(`variante:${chave}`);
       return opcoes.find((o) => o.id === salvo)?.id ?? opcoes[0]!.id;
@@ -20,17 +32,13 @@ export function useVariante<T extends string>(chave: string, opcoes: readonly { 
   });
   const mudar = (novo: T) => {
     setV(novo);
-    try {
-      localStorage.setItem(`variante:${chave}`, novo);
-    } catch {
-      // sem armazenamento: vale só nesta visita
-    }
+    guardar(chave, novo);
   };
-  return [v, mudar];
+  return [COM_VARIANTES && daUrl ? daUrl : v, mudar];
 }
 
 export function SeletorDeVariante<T extends string>({ opcoes, valor, aoMudar }: { opcoes: { id: T; rotulo: string }[]; valor: T; aoMudar: (v: T) => void }) {
-  if (!NA_PREVIA) return null;
+  if (!COM_VARIANTES) return null;
   return (
     <div className="dc-variantes">
       <span>Variação</span>

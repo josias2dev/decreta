@@ -9,20 +9,26 @@ import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plu
 import { useMemo, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery } from "@/componentes/captura-do-djen";
-import { CampoIntimacaoNoSistema, ConferenciaDaSugestao, diaDigitadoCompleto, MotivosParaConferir, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
+import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosDaConferencia, MotivosParaConferir, PreviaNoDialogo, SeloDeConfianca } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
-import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
+import { SeletorDeVariante, useVariante } from "@/componentes/variantes";
+import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
+import type { VarianteDePublicacoes } from "@/router";
 import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { atualizarPrazos } from "./prazo";
+import { CaixaComCartao } from "./publicacoes-variantes/a-caixa";
+import { FilaFocada } from "./publicacoes-variantes/b-fila";
+import { TabelaQueAbre } from "./publicacoes-variantes/c-tabela";
+import { TresColunas } from "./publicacoes-variantes/d-colunas";
 
 const ABAS: { id: SituacaoPublicacao; rotulo: string }[] = [
   { id: "nova", rotulo: "Novas" },
@@ -40,7 +46,7 @@ const caixaQuery = (situacao: SituacaoPublicacao) => ({
   refetchInterval: 60_000,
 });
 
-const publicacaoQuery = (id: string) => ({
+export const publicacaoQuery = (id: string) => ({
   queryKey: ["publicacao", id],
   queryFn: () => api<Publicacao>(`/publicacoes/${id}`),
   // Enquanto a IA lê o teor, a tela pergunta de novo; a leitura da sentença chega logo depois (e só se a IA estiver ligada).
@@ -65,7 +71,7 @@ export function proximaBusca(agora = new Date()): string {
   return dia === 0 || (dia >= 1 && dia <= 4) ? "amanhã às 04:30" : "segunda às 04:30";
 }
 
-function SeloDaLista({ selo }: { selo: Selo }) {
+export function SeloDaLista({ selo }: { selo: Selo }) {
   return (
     <span className={cn("dc-pub__selo", `dc-pub__selo--${selo.tipo}`)}>
       {selo.tipo === "sem_teor" || selo.tipo === "recusa" || selo.tipo === "erro" || selo.tipo === "sem_ia" ? <CircleAlert /> : selo.tipo === "lendo" ? <LoaderCircle className="animate-spin" /> : <MarcaIa />}
@@ -74,17 +80,15 @@ function SeloDaLista({ selo }: { selo: Selo }) {
   );
 }
 
-function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePublicacoes["itens"][number]; ligado?: boolean; celular: boolean; aoEscolher?: () => void }) {
+export function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePublicacoes["itens"][number]; ligado?: boolean; celular: boolean; aoEscolher?: () => void }) {
   const miolo = (
     <>
       <span className="dc-pub__topo">
         <span className="dc-pub__titulo">{item.titulo}</span>
         <span className="dc-pub__data">{diaCurto(item.disponibilizadaEm)}</span>
       </span>
-      <span className="dc-pub__base">
-        <span className="dc-pub__partes">{item.partes}</span>
-        <SeloDaLista selo={item.selo} />
-      </span>
+      <span className="dc-pub__partes">{item.partes}</span>
+      <SeloDaLista selo={item.selo} />
     </>
   );
   if (celular) {
@@ -114,10 +118,38 @@ function useBuscarAgora() {
   });
 }
 
+/** Tudo que uma variação da tela recebe: a lista, as abas e como escolher e seguir para a próxima. */
+export interface CaixaNaTela {
+  /** undefined enquanto carrega. */
+  itens: CaixaDePublicacoes["itens"] | undefined;
+  abas: { id: SituacaoPublicacao; rotulo: string; n?: number }[];
+  situacao: SituacaoPublicacao;
+  irPara: (s: SituacaoPublicacao) => void;
+  /** A do endereço, se houver. */
+  aberta: string | undefined;
+  /** A do endereço ou, sem ela, a primeira da lista. */
+  selecionada: string | undefined;
+  escolher: (id: string | undefined) => void;
+  proxima: () => void;
+  vazio: ReactNode;
+}
+
+const VARIANTES: { id: VarianteDePublicacoes; rotulo: string }[] = [
+  { id: "a", rotulo: "A" },
+  { id: "b", rotulo: "B" },
+  { id: "c", rotulo: "C" },
+  { id: "d", rotulo: "D" },
+];
+
 export function PublicacoesPage() {
   const celular = useCelular();
   const search = useSearch({ from: "/app/publicacoes" });
   const navigate = useNavigate({ from: "/publicacoes" });
+  const [variante, setVariante] = useVariante("publicacoes", VARIANTES, search.variante);
+  const trocarVariante = (v: VarianteDePublicacoes) => {
+    setVariante(v);
+    void navigate({ search: (s) => ({ ...s, variante: v === "a" ? undefined : v }), replace: true, resetScroll: false });
+  };
   const situacao: SituacaoPublicacao = search.situacao ?? "nova";
   const eu = useQuery(euQuery);
   const caixa = useQuery(caixaQuery(situacao));
@@ -134,7 +166,7 @@ export function PublicacoesPage() {
       ? `${c.contagens.nova} ${c.contagens.nova === 1 ? "nova" : "novas"} do DJEN, capturadas ${diaDoInstante(capturada.em) === eu.data?.hoje ? "hoje" : `em ${diaCurto(diaDoInstante(capturada.em))}`} às ${capturada.hora} · próxima busca ${proximaBusca()}`
       : `Nenhuma busca no DJEN ainda · próxima ${proximaBusca()}`;
   const abas = c ? ABAS.map((a) => ({ ...a, n: c.contagens[a.id] || undefined })) : ABAS;
-  const irPara = (s: SituacaoPublicacao) => void navigate({ search: { situacao: s === "nova" ? undefined : s } });
+  const irPara = (s: SituacaoPublicacao) => void navigate({ search: (x) => ({ situacao: s === "nova" ? undefined : s, variante: x.variante }) });
   const vazio = (
     <Vazio titulo={situacao === "nova" ? "Nenhuma publicação nova" : situacao === "pendente" ? "Nada pendente" : "Nada aqui ainda"}>
       {situacao === "nova" ? `O Decreta lê o DJEN de madrugada e busca pelas OABs da equipe. Próxima busca ${proximaBusca()}.` : null}
@@ -205,6 +237,7 @@ export function PublicacoesPage() {
     const i = itens.findIndex((x) => x.id === selecionada);
     escolher(itens[i + 1]?.id ?? itens[i - 1]?.id);
   };
+  const caixaNaTela: CaixaNaTela = { itens: c?.itens, abas, situacao, irPara, aberta: search.id, selecionada, escolher, proxima, vazio };
 
   return (
     <Pagina cheia>
@@ -220,6 +253,7 @@ export function PublicacoesPage() {
         }
         acoes={
           <>
+            <SeletorDeVariante opcoes={VARIANTES} valor={variante} aoMudar={trocarVariante} />
             <Botao onClick={() => setColar(true)}>
               <ClipboardPaste /> Colar publicação
             </Botao>
@@ -231,43 +265,19 @@ export function PublicacoesPage() {
       />
       {falhou}
       {avisoDaCaptura}
-      <div className="dc-caixa">
-        <section className="dc-painel dc-caixa__lista">
-          <Abas abas={abas} ativa={situacao} aoMudar={(s) => void navigate({ search: { situacao: s === "nova" ? undefined : s } })} />
-          {!c ? (
-            <div className="p-4">
-              <Carregando linhas={3} />
-            </div>
-          ) : c.itens.length ? (
-            <Rolagem id="publicacoes" className="dc-linhas">
-              {c.itens.map((i) => (
-                <ItemDaCaixa key={i.id} item={i} celular={false} ligado={i.id === selecionada} aoEscolher={() => escolher(i.id)} />
-              ))}
-            </Rolagem>
-          ) : (
-            vazio
-          )}
-        </section>
-        {selecionada ? (
-          <Rolagem key={selecionada} id="publicacao" className="dc-caixa__detalhe">
-            <Selecionada id={selecionada} aoTerminar={proxima} />
-          </Rolagem>
-        ) : (
-          <div />
-        )}
-      </div>
+      {variante === "b" ? <FilaFocada caixa={caixaNaTela} /> : variante === "c" ? <TabelaQueAbre caixa={caixaNaTela} /> : variante === "d" ? <TresColunas caixa={caixaNaTela} /> : <CaixaComCartao caixa={caixaNaTela} />}
       <ColarPublicacao aberto={colar} aoFechar={() => setColar(false)} />
       {dialogoDaCaptura}
     </Pagina>
   );
 }
 
-function Selecionada({ id, aoTerminar }: { id: string; aoTerminar: () => void }) {
+export function ComPublicacao({ id, children }: { id: string; children: (pub: Publicacao) => ReactNode }) {
   const q = useQuery(publicacaoQuery(id));
   if (!q.data) {
     return <section className="dc-painel p-4">{q.error ? <FalhaAoCarregar erro={q.error} sumiu="Publicação não encontrada" aoTentar={() => void q.refetch()} /> : <Carregando />}</section>;
   }
-  return <VerPublicacao pub={q.data} celular={false} aoTerminar={aoTerminar} />;
+  return <>{children(q.data)}</>;
 }
 
 /** Tela própria no celular. No computador, a mesma publicação abre dentro da caixa. */
@@ -305,8 +315,29 @@ export function PublicacaoPage() {
 }
 
 type Modo = "prazo" | "audiencia" | "sem_prazo" | "feito";
+export type AcaoDaPublicacao = { rotulo: string; icone?: ReactNode; fazer: () => void; ocupado?: boolean; desligado?: boolean };
 
-function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publicacao; celular: boolean; aoTerminar: () => void; titulo?: string; sobre?: string }) {
+/** Os botões da decisão: o principal, o secundário e os discretos. `invertido` deixa o principal na ponta direita. */
+export function BotoesDaDecisao({ acoes, ocupado, invertido }: { acoes: AcaoDaPublicacao[]; ocupado: boolean; invertido?: boolean }) {
+  const botoes = acoes.map((a, i) => (
+    <Botao key={a.rotulo} variante={i === 0 ? "primaria" : i === 1 ? "secundaria" : "fantasma"} onClick={a.fazer} ocupado={a.ocupado} disabled={a.desligado || ocupado}>
+      {i < 2 && a.icone} {a.rotulo}
+    </Botao>
+  ));
+  return <>{invertido ? botoes.reverse() : botoes}</>;
+}
+
+/** "Vence 24/11 · 15 dias úteis · Beatriz": a decisão numa linha. */
+export function resumoDaDecisao(c: Sugestao | null, responsavel: Pessoa | null): string | null {
+  if (!c) return null;
+  if (c.audiencia) return `Audiência em ${diaCurto(c.audiencia.data)} às ${c.audiencia.hora} · ${c.audiencia.porVideo ? "por vídeo" : "presencial"}`;
+  if (!c.geraPrazo || !c.dias) return "A IA não viu prazo para o escritório";
+  const conta = c.contagemCalculada;
+  return [conta ? `Vence ${diaCurto(conta.fim)}` : "Falta o processo para contar", prazoEmDias(c.dias, c.contagem), responsavel?.apelido ?? "Sem responsável"].join(" · ");
+}
+
+/** O que toda forma de mostrar a publicação precisa: os dados, as ações, os diálogos e os pedaços prontos da tela. */
+export function usePublicacaoNaTela(pub: Publicacao, celular: boolean, aoTerminar: () => void) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
@@ -362,10 +393,10 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
 
   const processo = pub.processo ? (
     <div className="flex items-start justify-between gap-3">
-      <div className="flex min-w-0 flex-col">
-        <strong className="dc-t-corpo font-semibold">{pub.processo.titulo}</strong>
-        {celular && (pub.processo.classe || onde) && <span className="dc-t-corpo text-[var(--tinta-2)]">{[pub.processo.classe, onde].filter(Boolean).join(" · ")}</span>}
-        <span className="dc-t-corpo text-[var(--tinta-2)]">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <strong className="dc-t-titulo font-semibold">{pub.processo.titulo}</strong>
+        {celular && (pub.processo.classe || onde) && <span className="dc-t-meta text-[var(--tinta-2)]">{[pub.processo.classe, onde].filter(Boolean).join(" · ")}</span>}
+        <span className="dc-t-meta text-[var(--tinta-2)]">
           <Cnj cnj={pub.processo.cnj} />
           {!celular && [onde, pub.processo.responsavel?.apelido].filter(Boolean).map((x) => ` · ${x}`)}
         </span>
@@ -387,14 +418,12 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
   );
 
   const teor = (
-    <>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-        <h3 className="dc-painel__titulo">{tituloTeor}</h3>
-        <span className="dc-nota">{celular ? `Disponibilizada em ${diaCompleto(pub.disponibilizadaEm)}` : datas}</span>
-      </div>
-      <p className={cn("dc-texto-longo m-0 whitespace-pre-wrap", celular ? "dc-teor" : "dc-t-leitura")}>{pub.texto || "Sem teor. Abra a publicação no sistema do tribunal."}</p>
+    <section className="dc-lido">
+      <h3 className="dc-lido__titulo">{tituloTeor}</h3>
+      <span className="dc-lido__meta">{datas}</span>
+      <p className="dc-lido__texto">{pub.texto || "Sem teor. Abra a publicação no sistema do tribunal."}</p>
       {(pub.link || pub.certidao) && (
-        <div className="dc-linha-acoes">
+        <div className="dc-lido__acoes">
           {pub.link && (
             <a href={pub.link} target="_blank" rel="noreferrer" className="dc-link">
               Abrir no tribunal
@@ -407,7 +436,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
           )}
         </div>
       )}
-    </>
+    </section>
   );
 
   const cancelada = pub.cancelada && <Cancelada cancelada={pub.cancelada} comPrazo={!!pub.prazo} />;
@@ -416,7 +445,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
   // Cliente que recusou a IA: a rotina de fundo não lê, e a pessoa cria o prazo à mão.
   const semIa = !!pub.processo?.semIa;
   const iaAqui = !!eu.data?.ia && !semIa;
-  const ia = (
+  const blocoIa = (conteudo: ReactNode) => (
     <BlocoIa
       titulo={tituloIa}
       analise={s}
@@ -426,7 +455,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
       rodape={s ? "Gerado por IA. Confira nos autos." : !iaAqui ? undefined : pub.leituraParada ? "Sem leitura da IA." : "A IA está lendo o teor."}
     >
       {c ? (
-        <ConteudoDaSugestao c={c} responsavel={s!.responsavel} />
+        conteudo
       ) : !iaAqui ? (
         <p className="m-0 dc-t-corpo">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
       ) : pub.leituraParada ? (
@@ -461,8 +490,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
   const lida = modo === "sem_prazo" && pub.situacao === "lida" && <Faixa tipo="ok">Marcada como lida, sem prazo.</Faixa>;
 
   // Ações: [principal, secundária, terciária, extra]
-  type Acao = { rotulo: string; icone?: ReactNode; fazer: () => void; ocupado?: boolean; desligado?: boolean };
-  const acoes: Acao[] =
+  const acoes: AcaoDaPublicacao[] =
     modo === "prazo"
       ? [
           // Confiança baixa: não confirma num clique; abre o ajuste com os motivos no topo.
@@ -496,6 +524,28 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
       {c?.audiencia && <AjustarAudiencia pub={pub} audiencia={c.audiencia} aberto={dialogo === "audiencia"} aoFechar={() => setDialogo(null)} aoMarcar={() => pronto("Audiência na agenda.")} />}
     </>
   );
+
+  return {
+    s,
+    c,
+    modo,
+    ocupado,
+    acoes,
+    dialogos,
+    processo,
+    teor,
+    cancelada,
+    feito,
+    lida,
+    blocoIa,
+    ia: blocoIa(c && <FatosDaSugestao c={c} responsavel={s!.responsavel} />),
+    prova: c && <ProvaDaSugestao c={c} />,
+    leituraDaDecisao: pub.decisao && <LeituraDaDecisao pub={pub} />,
+  };
+}
+
+export function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publicacao; celular: boolean; aoTerminar: () => void; titulo?: string; sobre?: string }) {
+  const { acoes, ocupado, dialogos, processo, teor, cancelada, feito, lida, ia, prova, leituraDaDecisao } = usePublicacaoNaTela(pub, celular, aoTerminar);
 
   if (celular) {
     const [a1, a2, a3] = acoes;
@@ -534,9 +584,10 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
         </section>
         {feito}
         {lida}
-        <section className="flex flex-col gap-2">{teor}</section>
         {ia}
-        {pub.decisao && <LeituraDaDecisao pub={pub} />}
+        {teor}
+        {prova}
+        {leituraDaDecisao}
         {acoes[3] && (
           <button type="button" className="dc-link self-center" onClick={acoes[3].fazer} disabled={ocupado}>
             {acoes[3].rotulo}
@@ -548,20 +599,23 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
   }
 
   return (
-    <section className="dc-painel">
-      {cancelada && <div className="dc-painel__secao">{cancelada}</div>}
-      <div className="dc-painel__secao">{processo}</div>
-      <div className="dc-painel__secao">{teor}</div>
-      {ia}
-      {pub.decisao && <LeituraDaDecisao pub={pub} />}
-      {(feito || lida) && <div className="dc-painel__secao">{feito || lida}</div>}
+    <section className="dc-painel dc-decisao">
+      <div className="dc-decisao__topo">{processo}</div>
+      <Rolagem id="publicacao" className="dc-decisao__corpo">
+        {cancelada}
+        {feito || lida}
+        <div className="dc-decisao__grade">
+          <div className="dc-decisao__leitura">
+            {teor}
+            {prova}
+          </div>
+          <aside className="dc-decisao__fatos">{ia}</aside>
+        </div>
+        {leituraDaDecisao}
+      </Rolagem>
       {acoes.length > 0 && (
         <div className="dc-painel__acoes">
-          {acoes.map((a, i) => (
-            <Botao key={a.rotulo} variante={i === 0 ? "primaria" : i === 1 ? "secundaria" : "fantasma"} onClick={a.fazer} ocupado={a.ocupado} disabled={a.desligado || ocupado}>
-              {i < 2 && a.icone} {a.rotulo}
-            </Botao>
-          ))}
+          <BotoesDaDecisao acoes={acoes} ocupado={ocupado} />
         </div>
       )}
       {dialogos}
@@ -781,72 +835,74 @@ function Par({ rotulo, valor, nota, className }: { rotulo: string; valor: ReactN
   );
 }
 
-/** A prova da leitura: a frase que o código achou no teor e a segunda conferência. */
-function ProvaDaLeitura({ c }: { c: Sugestao }) {
+function Lido({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <section className="dc-lido">
+      <h3 className="dc-lido__titulo">{titulo}</h3>
+      <p className="dc-lido__texto">{texto}</p>
+    </section>
+  );
+}
+
+/** O que sustenta a leitura, para ler junto do teor: a conta ou o que a publicação diz e a frase que o código achou nela. */
+function ProvaDaSugestao({ c }: { c: Sugestao }) {
+  const abrePrazo = !c.audiencia && c.geraPrazo && !!c.dias;
+  const conta = c.contagemCalculada;
   return (
     <>
-      {c.trechoConfere && c.trecho && (
-        <div className="dc-par dc-largo">
-          <span className="dc-rotulo">Trecho da publicação</span>
-          <p>“{c.trecho}”</p>
-        </div>
-      )}
-      {c.conferencia && (
-        <div className="dc-par dc-largo">
-          <span className="dc-rotulo">Segunda conferência</span>
-          <ConferenciaDaSugestao conferencia={c.conferencia} />
-        </div>
-      )}
+      {abrePrazo && <Lido titulo="Contagem" texto={conta ? [c.regra && `${c.regra}.`, conta.explicacao].filter(Boolean).join(" ") : "Falta saber o tribunal e a comarca do processo."} />}
+      {!abrePrazo && c.resumo && <Lido titulo={c.audiencia ? "O que diz" : "Por que não abre prazo"} texto={c.resumo} />}
+      {c.trechoConfere && c.trecho && <Lido titulo="Trecho da publicação" texto={`“${c.trecho}”`} />}
     </>
   );
 }
 
-function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pessoa | null }) {
+/** Os fatos que se decidem: a data em destaque e, abaixo, rótulo e valor num padrão só. */
+function FatosDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pessoa | null }) {
+  const confianca: [ReactNode, ReactNode][] = c.conferencia ? [["Confiança", <SeloDeConfianca key="confianca" confianca={c.conferencia.confianca} />]] : [];
+  const motivos = c.conferencia && <MotivosDaConferencia conferencia={c.conferencia} />;
   if (c.audiencia) {
     const a = c.audiencia;
     return (
-      <div className="dc-sugestao">
-        <Par rotulo="Tipo" valor={a.tipo} />
-        <Par rotulo="Data" valor={<span className="dc-num">{diaCompleto(a.data)}</span>} nota={diaDaSemana(a.data)} />
-        <Par rotulo="Hora" valor={<span className="dc-num">{a.hora}</span>} nota={a.porVideo ? "Por vídeo" : "Presencial"} />
-        {c.resumo && (
-          <div className="dc-par dc-largo">
-            <span className="dc-rotulo">O que diz</span>
-            <p>{c.resumo}</p>
-          </div>
-        )}
-        <ProvaDaLeitura c={c} />
+      <div className="dc-fatos">
+        <span className="dc-fatos__ato">{a.tipo}</span>
+        <div className="dc-fatos__destaque">
+          <span className="dc-rotulo">Data</span>
+          <strong className="dc-fatos__data">{diaCompleto(a.data)}</strong>
+          <span className="dc-nota">{diaDaSemana(a.data)}</span>
+        </div>
+        <Dados linhas={[["Hora", <span key="hora" className="dc-num">{a.hora}</span>], ["Formato", a.porVideo ? "Por vídeo" : "Presencial"], ...confianca]} />
+        {motivos}
       </div>
     );
   }
   if (!c.geraPrazo || !c.dias) {
     return (
-      <div className="dc-sugestao">
-        <div className="dc-par dc-largo">
-          <span className="dc-rotulo">Não abre prazo para o escritório</span>
-          <p>{c.resumo}</p>
-        </div>
-        <ProvaDaLeitura c={c} />
+      <div className="dc-fatos">
+        <span className="dc-fatos__ato">Não abre prazo para o escritório</span>
+        {confianca.length > 0 && <Dados linhas={confianca} />}
+        {motivos}
       </div>
     );
   }
   const conta = c.contagemCalculada;
   return (
-    <div className="dc-sugestao">
-      <Par rotulo="Tipo" valor={c.tipo} className="dc-sugestao__tipo" />
-      <Par rotulo="Prazo" valor={prazoEmDias(c.dias, c.contagem)} nota={c.fundamento} />
-      <Par rotulo="Data final" valor={conta ? <span className="dc-num">{diaCompleto(conta.fim)}</span> : "—"} nota={conta ? diaDaSemana(conta.fim) : "Vincule a um processo para contar"} className="dc-sugestao__fim" />
-      <div className="dc-par">
-        <span className="dc-rotulo">Responsável</span>
-        <span className="dc-valor">
-          <Responsavel pessoa={responsavel ?? null} />
-        </span>
+    <div className="dc-fatos">
+      <span className="dc-fatos__ato">{c.tipo}</span>
+      <div className="dc-fatos__destaque">
+        <span className="dc-rotulo">Data final</span>
+        <strong className="dc-fatos__data">{conta ? diaCompleto(conta.fim) : "—"}</strong>
+        <span className="dc-nota">{conta ? diaDaSemana(conta.fim) : "Vincule a um processo para contar"}</span>
       </div>
-      <div className="dc-par dc-largo">
-        <span className="dc-rotulo">Contagem</span>
-        <p>{conta ? [c.regra && `${c.regra}.`, conta.explicacao].filter(Boolean).join(" ") : "Falta saber o tribunal e a comarca do processo."}</p>
-      </div>
-      <ProvaDaLeitura c={c} />
+      <Dados
+        linhas={[
+          ["Prazo", prazoEmDias(c.dias, c.contagem)],
+          ["Base legal", c.fundamento ?? "—"],
+          ["Responsável", <Responsavel key="responsavel" pessoa={responsavel ?? null} />],
+          ...confianca,
+        ]}
+      />
+      {motivos}
     </div>
   );
 }
