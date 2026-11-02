@@ -12,7 +12,7 @@ import { registrar } from "./auditoria.ts";
 import { AVISO_DO_ACEITE, type Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { criarEscritorio, slugUnico } from "./escritorio-novo.ts";
-import { registrarEvento, registrarEventoDoSite } from "./eventos.ts";
+import { registrarEvento, registrarEventoSemEscritorio } from "./eventos.ts";
 import { ipDoPedido, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
@@ -80,7 +80,7 @@ export function createApp(deps: AppDeps) {
     async (c) => {
       const corpo = (await c.req.json().catch(() => null)) as { nome?: unknown } | null;
       if (!ehEventoDoSite(corpo?.nome)) return c.json({ erro: "evento_invalido" }, 400);
-      await registrarEventoDoSite(db, corpo.nome, log);
+      await registrarEventoSemEscritorio(db, corpo.nome, log);
       return c.body(null, 204);
     },
   );

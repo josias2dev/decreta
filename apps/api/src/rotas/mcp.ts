@@ -45,6 +45,9 @@ async function donoDoToken(db: Database, token: string) {
   if (!m) return null;
   const organizationId = m[1]!;
   const agora = new Date();
+  // Escritório encerrado: o token deixa de valer.
+  const [o] = await db.select({ timezone: organization.timezone, encerradoEm: organization.encerradoEm }).from(organization).where(eq(organization.id, organizationId));
+  if (o?.encerradoEm) return null;
   const t = await withTenant(db, organizationId, async (tx) => {
     const [linha] = await tx
       .select({ id: tokensMcp.id, userId: tokensMcp.userId, usadoEm: tokensMcp.usadoEm })
@@ -56,7 +59,6 @@ async function donoDoToken(db: Database, token: string) {
   if (!t.usadoEm || agora.getTime() - t.usadoEm.getTime() > INTERVALO_DO_USADO_EM_MS) {
     await withTenant(db, organizationId, (tx) => tx.update(tokensMcp).set({ usadoEm: agora }).where(eq(tokensMcp.id, t.id)));
   }
-  const [o] = await db.select({ timezone: organization.timezone }).from(organization).where(eq(organization.id, organizationId));
   const [u] = await db.select({ nome: user.name }).from(user).where(eq(user.id, t.userId));
   return { organizationId, userId: t.userId, nome: u?.nome ?? null, timezone: o?.timezone ?? "America/Sao_Paulo" };
 }

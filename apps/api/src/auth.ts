@@ -11,6 +11,7 @@ import { ehContaDaDemonstracao } from "./demonstracao/slug.ts";
 import { PAPEL, type Mailer } from "./email.ts";
 import type { Env } from "./env.ts";
 import { AVISO_DOS_CONVITES, CONVITES_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
+import { AVISO_DO_ENCERRAMENTO } from "./servicos/encerramento.ts";
 
 /** O que a conta da demonstração não muda, para ninguém trancar os outros do lado de fora. */
 const FIXOS_NA_DEMONSTRACAO = new Set(["/change-password", "/change-email", "/two-factor/enable", "/delete-user"]);
@@ -140,16 +141,20 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
       },
       session: {
         create: {
-          // Quem entra já cai no próprio escritório: a sessão nasce com ele ativo.
+          // Quem entra já cai no próprio escritório: a sessão nasce com o primeiro que não foi encerrado.
+          // Quem só tem escritório encerrado não entra.
           before: async (sessao) => {
             if ((sessao as { activeOrganizationId?: string | null }).activeOrganizationId) return;
-            const [m] = await db
-              .select({ organizationId: schema.member.organizationId })
+            const meus = await db
+              .select({ organizationId: schema.member.organizationId, encerradoEm: schema.organization.encerradoEm })
               .from(schema.member)
+              .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
               .where(eq(schema.member.userId, sessao.userId))
-              .orderBy(asc(schema.member.createdAt))
-              .limit(1);
-            return m ? { data: { ...sessao, activeOrganizationId: m.organizationId } } : undefined;
+              .orderBy(asc(schema.member.createdAt));
+            const aberto = meus.find((m) => !m.encerradoEm);
+            if (aberto) return { data: { ...sessao, activeOrganizationId: aberto.organizationId } };
+            if (meus.length) throw new APIError("FORBIDDEN", { code: "ESCRITORIO_ENCERRADO", message: AVISO_DO_ENCERRAMENTO });
+            return undefined;
           },
         },
       },

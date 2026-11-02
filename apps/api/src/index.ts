@@ -73,7 +73,7 @@ const app = createApp({
   rotas,
   envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log }),
   mcp: rotasDoMcp({ db, log }),
-  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao }) }),
+  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao, mailer }) }),
   log,
   reporter,
 });

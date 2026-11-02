@@ -19,6 +19,7 @@ import { bodyLimit } from "hono/body-limit";
 import { registrar } from "../auditoria.ts";
 import { ipDoPedido } from "../limitador.ts";
 import { semIa } from "../servicos/contexto.ts";
+import { escritorioEncerrado } from "../servicos/encerramento.ts";
 import { precisaDeLeitura } from "../servicos/leitura.ts";
 import { falha, type Pedido } from "./base.ts";
 
@@ -66,6 +67,8 @@ async function cobrancaDoLink(deps: DepsDoEnvio, c: Context) {
   const org = c.req.param("org") ?? "";
   const segredo = c.req.param("segredo") ?? "";
   if (!ORG.test(org) || !SEGREDO.test(segredo)) falha(404, "nao_encontrado", "Este link não existe.");
+  // Escritório encerrado: o link de envio deixa de abrir.
+  if (await escritorioEncerrado(deps.db, org)) falha(404, "nao_encontrado", "Este link não existe.");
   const achada = await withTenant(deps.db, org, async (tx) => {
     const [l] = await tx
       .select({ id: mensagensCliente.id, itens: mensagensCliente.itens, expira: mensagensCliente.linkExpiraEm, recebidos: mensagensCliente.recebidos, clienteId: clientes.id, nome: clientes.nome })

@@ -491,4 +491,20 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     expect((await call(`/mensagens-cliente/${m.id}/conferir-envio`, { method: "POST", json: { saiu: false } })).status).toBe(200);
     expect((await app.request(caminho, { headers: { "x-forwarded-for": "203.0.113.9" } })).status).toBe(404);
   });
+
+  test("escritório encerrado: o link de envio deixa de abrir, e volta se o escritório volta", async () => {
+    const m = await json<{ id: string }>(call(`/clientes/${escritorio.clienteId}/cobrar-documentos`, { method: "POST" }));
+    expect((await call(`/mensagens-cliente/${m.id}/enviar`, { method: "POST", json: {} })).status).toBe(200);
+    const novo = zap.enviados.at(-1)!.text.match(/https:\/\/decreta\.local\/enviar\/\S+/)![0];
+    const caminho = `/api/envio${new URL(novo).pathname.replace(/^\/enviar/, "")}`;
+    const ip = { "x-forwarded-for": "203.0.113.11" };
+    expect((await app.request(caminho, { headers: ip })).status).toBe(200);
+    await t.owner`update organization set encerrado_em = now() where id = ${escritorio.orgId}`;
+    expect((await app.request(caminho, { headers: ip })).status).toBe(404);
+    const form = new FormData();
+    form.set("arquivo", new File([new Uint8Array([1])], "rg.jpg", { type: "image/jpeg" }));
+    expect((await app.request(caminho, { method: "POST", body: form, headers: ip })).status).toBe(404);
+    await t.owner`update organization set encerrado_em = null where id = ${escritorio.orgId}`;
+    expect((await app.request(caminho, { headers: ip })).status).toBe(200);
+  });
 });

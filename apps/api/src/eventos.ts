@@ -3,18 +3,18 @@
  * quando houver, o escritório. Gravar nunca derruba a ação: a falha vai para o
  * log e a ação segue, como no registro de auditoria.
  */
-import { instanteLocal, somarDias, type Dia, type EventoDoSite, type NomeDeEvento } from "@decreta/core";
+import { instanteLocal, somarDias, type Dia, type NomeDeEvento } from "@decreta/core";
 import { eventos, withTenant, type Database } from "@decreta/db";
 import { sql } from "drizzle-orm";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
-/** O que o site mandou (uma visita, um clique): sem escritório e sem nenhum dado da pessoa. */
-export async function registrarEventoDoSite(db: Database, nome: EventoDoSite, log?: Log): Promise<void> {
+/** Um evento sem escritório: o que o site mandou (uma visita, um clique) ou o de um escritório que acabou de ser apagado. Nenhum dado da pessoa. */
+export async function registrarEventoSemEscritorio(db: Database, nome: NomeDeEvento, log?: Log): Promise<void> {
   try {
     await db.insert(eventos).values({ nome });
   } catch (err) {
-    log?.("evento do site não foi gravado", { nome, error: err instanceof Error ? err.message : String(err) });
+    log?.("evento não foi gravado", { nome, error: err instanceof Error ? err.message : String(err) });
   }
 }
 

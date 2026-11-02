@@ -88,6 +88,12 @@ export async function ehDemonstracao(db: Database, organizationId: string): Prom
   return o?.slug === SLUG_DA_DEMONSTRACAO;
 }
 
+/** O que não vai ao DJEN nem ao DataJud: a demonstração (OABs e processos inventados) e o escritório encerrado. */
+export async function foraDaCaptura(db: Database, organizationId: string): Promise<boolean> {
+  const [o] = await db.select({ slug: organization.slug, encerradoEm: organization.encerradoEm }).from(organization).where(eq(organization.id, organizationId));
+  return o?.slug === SLUG_DA_DEMONSTRACAO || !!o?.encerradoEm;
+}
+
 /**
  * A certidão de publicação do DJEN, a prova da data: a guardada com o
  * escritório ou, na primeira vez, baixada e guardada. Nula quando não há
@@ -100,7 +106,7 @@ export async function certidaoDaPublicacao(deps: { db: Database; arquivos: Armaz
   const guardada = pub.certidao ? await deps.arquivos.read(pub.certidao).catch(() => null) : null;
   if (guardada) return guardada;
   // A demonstração nunca consulta o DJEN (ver demonstracao/slug.ts).
-  if (!pub.hash || (await ehDemonstracao(deps.db, organizationId))) return null;
+  if (!pub.hash || (await foraDaCaptura(deps.db, organizationId))) return null;
   const baixada = await certidaoDoDjen(pub.hash, { fetch: deps.fetch });
   if (!baixada) return null;
   const chave = `${organizationId}/certidoes/${publicacaoId}.pdf`;
@@ -111,7 +117,7 @@ export async function certidaoDaPublicacao(deps: { db: Database; arquivos: Armaz
 
 /** Busca no DJEN de `de` a `ate` por todas as OABs da equipe. */
 export async function capturarDjen(deps: DepsDaCaptura, organizationId: string, periodo: { de: Dia; ate: Dia }): Promise<{ encontradas: number; novas: string[] }> {
-  if (await ehDemonstracao(deps.db, organizationId)) return { encontradas: 0, novas: [] };
+  if (await foraDaCaptura(deps.db, organizationId)) return { encontradas: 0, novas: [] };
   const { oabs, ligado } = await withTenant(deps.db, organizationId, async (tx) => {
     const [e] = await tx.select({ ligado: escritorios.capturaDjen }).from(escritorios).where(eq(escritorios.organizationId, organizationId));
     const linhas = await tx.select({ numero: equipe.oabNumero, uf: equipe.oabUf }).from(equipe).where(isNotNull(equipe.oabNumero));
@@ -174,9 +180,9 @@ function tribunaisDoCaderno(carteira: string[], ufsDasOabs: string[]): Set<strin
   return t;
 }
 
-/** Os escritórios com a captura ligada, fora a demonstração (ver demonstracao/slug.ts). */
+/** Os escritórios com a captura ligada, fora a demonstração (ver demonstracao/slug.ts) e os encerrados. */
 async function escritoriosDoCaderno(db: Database, dias: Dia[]): Promise<EscritorioNoCaderno[]> {
-  const orgs = await db.select({ id: organization.id }).from(organization).where(ne(organization.slug, SLUG_DA_DEMONSTRACAO));
+  const orgs = await db.select({ id: organization.id }).from(organization).where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm)));
   const saida: EscritorioNoCaderno[] = [];
   for (const { id } of orgs) {
     const e = await withTenant(db, id, async (tx) => {
@@ -455,7 +461,7 @@ export function periodoDaCaptura(hoje: Dia): { de: Dia; ate: Dia } {
 
 /** Andamentos do DataJud de um processo. Devolve quantos entraram. */
 export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: string, processoId: string): Promise<number> {
-  if (await ehDemonstracao(deps.db, organizationId)) return 0;
+  if (await foraDaCaptura(deps.db, organizationId)) return 0;
   const p = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(processos).where(eq(processos.id, processoId)))[0]);
   if (!p?.cnj || limparCnj(p.cnj).length !== 20) return 0;
   const dados = await buscarNoDataJud(p.cnj, { apiKey: deps.datajudKey, fetch: deps.fetch });
@@ -502,7 +508,7 @@ export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: st
  * respondeu fica com a conferência anterior.
  */
 export async function conferirDataJudDoEscritorio(deps: DepsDaCaptura, organizationId: string): Promise<Record<string, string>> {
-  if (await ehDemonstracao(deps.db, organizationId)) return {};
+  if (await foraDaCaptura(deps.db, organizationId)) return {};
   const { cnjs, antes } = await withTenant(deps.db, organizationId, async (tx) => ({
     cnjs: await tx
       .selectDistinct({ cnj: processos.cnj })

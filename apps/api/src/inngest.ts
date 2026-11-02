@@ -11,6 +11,9 @@
  *   publicação nova que é sentença ou acórdão ── ler-sentenca
  *   foto ou PDF escaneado enviado ── ler-documento
  *   prazo confirmado ── rascunho-do-prazo (a peça sugerida, em rascunho)
+ *   cópia dos dados pedida ── exportar-dados (planilhas e documentos em ZIP, e e-mail para quem pediu)
+ *   04:20 (todo dia) ── limpar-copias-dos-dados (as cópias de mais de 7 dias saem)
+ *   03:45 (todo dia) ── apagar-escritorios-encerrados (o escritório encerrado há 30 dias é apagado de vez)
  *
  * A captura de um escritório roda uma por vez; a sugestão da IA, duas por vez
  * por escritório. Repetir uma rodada é inócuo: publicação e movimentação
@@ -20,14 +23,17 @@ import { diaDaSemana, hojeEm } from "@decreta/core";
 import { avisosEnviados, escritorios, organization, withTenant, type Database } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
 import type { Ia } from "@decreta/ia";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { eventType, Inngest, NonRetriableError, staticSchema } from "inngest";
 import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
+import type { Mailer } from "./email.ts";
 import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
 import { sincronizarTemasDoStj } from "./servicos/acervo.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { WHATSAPP_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
+import { apagarEscritoriosEncerrados } from "./servicos/encerramento.ts";
+import { apagarExportacoesVencidas, marcarExportacaoFalhou, prepararExportacao } from "./servicos/exportacao.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
 import { cruzarRadar, sincronizarPrecedentesDoBnp } from "./servicos/radar.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
@@ -51,6 +57,7 @@ export const datajudDoEscritorio = eventType("decreta/datajud.escritorio", { sch
 export const processoDataJud = eventType("decreta/processo.datajud", { schema: staticSchema<Org & { processoId: string }>() });
 export const documentoParaLer = eventType("decreta/documento.ler", { schema: staticSchema<Org & { documentoId: string }>() });
 export const prazoConfirmado = eventType("decreta/prazo.confirmado", { schema: staticSchema<Org & { prazoId: string }>() });
+export const exportacaoPedida = eventType("decreta/exportacao.pedida", { schema: staticSchema<Org & { exportacaoId: string }>() });
 
 /** O pedido de uma rota vira o evento certo. */
 export function eventoDoPedido(p: Pedido) {
@@ -65,6 +72,8 @@ export function eventoDoPedido(p: Pedido) {
       return documentoParaLer.create({ organizationId: p.organizationId, documentoId: p.documentoId });
     case "prazo.confirmado":
       return prazoConfirmado.create({ organizationId: p.organizationId, prazoId: p.prazoId });
+    case "exportacao.pedida":
+      return exportacaoPedida.create({ organizationId: p.organizationId, exportacaoId: p.exportacaoId });
   }
 }
 
@@ -81,11 +90,19 @@ export interface DepsDasRotinas {
   limites?: LimitesDaIa;
   /** O modelo ou prompt candidato que lê as publicações em paralelo. */
   observacao?: Observacao;
+  /** O e-mail que avisa o sócio de que a cópia dos dados ficou pronta. */
+  mailer?: Mailer;
 }
 
-/** Os escritórios das rotinas. A demonstração fica de fora: nada dela sai para o DJEN, o DataJud ou o WhatsApp. */
-async function escritoriosAtivos(db: Database) {
-  return db.select({ id: organization.id, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao }).from(organization).where(ne(organization.slug, SLUG_DA_DEMONSTRACAO));
+/**
+ * Os escritórios das rotinas. A demonstração fica de fora (nada dela sai para o DJEN, o DataJud
+ * ou o WhatsApp), e o escritório encerrado também: não busca, não lê e não manda mais nada.
+ */
+export async function escritoriosAtivos(db: Database) {
+  return db
+    .select({ id: organization.id, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao })
+    .from(organization)
+    .where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm)));
 }
 
 /** O que a IA deve ler de novo em cada escritório (a demonstração fica de fora, como nas outras rotinas). */
@@ -390,5 +407,41 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn];
+  // A cópia de todos os dados do escritório: planilhas e documentos em ZIP, e um e-mail para quem pediu. Se desistir, a tela mostra "não deu certo" e o sócio pede de novo.
+  const exportarFn = inngest.createFunction(
+    {
+      id: "exportar-dados",
+      triggers: [exportacaoPedida],
+      concurrency: { limit: 1, key: "event.data.organizationId" },
+      retries: 1,
+      onFailure: async ({ event, error }) => {
+        const d = event.data.event.data as Org & { exportacaoId: string };
+        await marcarExportacaoFalhou(db, d.organizationId, d.exportacaoId, error).catch(() => {});
+        reporter.error(error, { funcao: "exportar-dados", organizationId: d.organizationId });
+      },
+    },
+    async ({ event, step }) =>
+      step.run("preparar", async () => {
+        const r = await prepararExportacao({ db, arquivos: deps.arquivos, mailer: deps.mailer, telas: deps.telas, log }, event.data.organizationId, event.data.exportacaoId);
+        return { partes: r.partes.length, documentos: r.documentos, naoEncontrados: r.naoEncontrados.length };
+      }),
+  );
+
+  // Toda madrugada: as cópias que passaram de 7 dias saem do armazenamento.
+  const limparCopiasFn = inngest.createFunction(
+    { id: "limpar-copias-dos-dados", triggers: [{ cron: "TZ=America/Sao_Paulo 20 4 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "limpar-copias-dos-dados" }) },
+    async ({ step }) => ({ apagadas: await step.run("apagar", () => apagarExportacoesVencidas({ db, arquivos: deps.arquivos, log })) }),
+  );
+
+  // O escritório encerrado há 30 dias é apagado de vez: linhas, pessoas e arquivos. Falhou em algum, o erro vai para o Sentry e a rodada de amanhã tenta de novo.
+  const apagarEncerradosFn = inngest.createFunction(
+    { id: "apagar-escritorios-encerrados", triggers: [{ cron: "TZ=America/Sao_Paulo 45 3 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "apagar-escritorios-encerrados" }) },
+    async ({ step }) => {
+      const r = await step.run("apagar", () => apagarEscritoriosEncerrados({ db, arquivos: deps.arquivos, log }));
+      if (r.falhas.length) throw new Error(`${r.falhas.length} escritório(s) encerrado(s) não foram apagados: ${r.falhas.map((f) => `${f.organizationId} (${f.erro})`).join("; ")}`);
+      return { apagados: r.apagados.length };
+    },
+  );
+
+  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn];
 }

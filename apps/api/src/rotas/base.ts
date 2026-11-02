@@ -40,7 +40,8 @@ export type Pedido =
   | { nome: "captura.djen"; organizationId: string }
   | { nome: "processo.datajud"; organizationId: string; processoId: string }
   | { nome: "documento.ler"; organizationId: string; documentoId: string }
-  | { nome: "prazo.confirmado"; organizationId: string; prazoId: string };
+  | { nome: "prazo.confirmado"; organizationId: string; prazoId: string }
+  | { nome: "exportacao.pedida"; organizationId: string; exportacaoId: string };
 
 /** Prazo confirmado: pede o rascunho da peça sugerida. Na demonstração, não (nada sai para a IA de verdade). A falha não desfaz a confirmação. */
 export async function pedirRascunho(c: C, deps: DepsDasRotas, prazoId: string): Promise<void> {

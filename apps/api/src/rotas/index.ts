@@ -8,6 +8,7 @@ import { alvaras, clientes, escritorios, negocios, organization, prazos, process
 import { and, eq, ilike, inArray, like, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
+import { AVISO_DO_ENCERRAMENTO } from "../servicos/encerramento.ts";
 import { ehMembro, pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { ehSocio, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
@@ -17,6 +18,7 @@ import { rotasDosClientes } from "./clientes.ts";
 import { rotasDasConsultas } from "./consultas.ts";
 import { rotasDosDocumentos } from "./documentos.ts";
 import { rotasDoEscritorio } from "./escritorio.ts";
+import { rotasDosDadosDoEscritorio } from "./dados-do-escritorio.ts";
 import { rotasDaIa } from "./ia.ts";
 import { rotasDosTokensMcp } from "./mcp.ts";
 import { rotasDasMensagensAoCliente } from "./mensagens-cliente.ts";
@@ -40,7 +42,9 @@ export function createRotas(deps: DepsDasRotas) {
     // O escritório ativo fica gravado na sessão; confere que o vínculo ainda existe.
     const papel = await ehMembro(db, orgId, sessao.user.id);
     if (!papel) return c.json({ erro: "sem_escritorio" }, 403);
-    const [org] = await db.select({ nome: organization.name, slug: organization.slug, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao }).from(organization).where(eq(organization.id, orgId));
+    const [org] = await db.select({ nome: organization.name, slug: organization.slug, timezone: organization.timezone, emAvaliacao: organization.emAvaliacao, encerradoEm: organization.encerradoEm }).from(organization).where(eq(organization.id, orgId));
+    // Escritório encerrado: ninguém mais usa, mesmo com a sessão ainda de pé.
+    if (org?.encerradoEm) return c.json({ erro: "escritorio_encerrado", detalhe: AVISO_DO_ENCERRAMENTO }, 403);
     c.set("orgId", orgId);
     c.set("orgNome", org?.nome ?? "");
     c.set("demonstracao", org?.slug === SLUG_DA_DEMONSTRACAO);
@@ -124,6 +128,7 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDosCalculos(app, deps);
   rotasDosNegocios(app, deps);
   rotasDoEscritorio(app, deps);
+  rotasDosDadosDoEscritorio(app, deps);
   rotasDasMensagensAoCliente(app, deps);
   rotasDosTokensMcp(app, deps);
   rotasDoRadar(app, deps);

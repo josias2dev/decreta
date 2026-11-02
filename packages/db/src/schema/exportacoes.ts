@@ -27,7 +27,7 @@ export const exportacoes = pgTable(
     pedidaPor: text("pedida_por").references(() => user.id, { onDelete: "set null" }),
     situacao: situacaoExportacao("situacao").notNull().default("pedida"),
     partes: jsonb("partes").$type<ParteDaExportacao[]>().notNull().default([]),
-    /** Quantos documentos do escritório entraram nos arquivos. */
+    /** Quantos arquivos guardados (documentos e certidões do DJEN) entraram nos ZIP. */
     documentos: integer("documentos").notNull().default(0),
     erro: text("erro"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
