@@ -43,7 +43,7 @@
 .lp-palco[data-passo="4"] .lp-trilha li:nth-child(-n+4),
 .lp-palco[data-passo="5"] .lp-trilha li:nth-child(-n+5),
 .lp-palco[data-passo="6"] .lp-trilha li:nth-child(-n+6) { color: var(--tinta); font-weight: 500; border-bottom-color: var(--primaria); }
-.lp-telas { position: relative; height: 392px; }
+.lp-telas { position: relative; height: 366px; }
 .lp-tela { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 14px; padding: 20px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: opacity .26s ease, transform .3s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .26s; }
 .lp-palco[data-passo="1"] [data-tela="1"],
 .lp-palco[data-passo="2"] [data-tela="2"],
@@ -315,7 +315,7 @@
   .lp-arquivo small { font-size: 11px; line-height: 14px; }
   .lp-arquivo__tipo { width: 28px; height: 28px; font-size: 9px; }
   .lp-passos { margin-top: 20px; }
-  .lp-passo { min-height: 42vh; padding-left: 34px; }
+  .lp-passo { min-height: 33vh; padding-left: 34px; }
   .lp-passo:last-child { min-height: 0; padding-bottom: 12px; }
   .lp-passo h3 { font-size: 23px; line-height: 28px; }
 
@@ -343,12 +343,11 @@
   .lp-folhinha__dia { font-size: 64px; margin-top: 8px; }
   .lp-folhinha__semana { flex-basis: 60%; text-align: left; order: 3; display: none; }
   .lp-folhinha__nome { flex: 1 1 40%; max-width: 60%; margin-top: 8px; text-align: left; }
-  .lp-margem__folha { padding: 16px 18px; font-size: 18px; line-height: 28px; }
-  .lp-etapas { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
-  .lp-etapas li { padding: 12px 0 12px 18px; border-top: 0; border-left: 2px solid var(--borda-forte); }
-  .lp-etapas li::before { left: -6px; top: 18px; }
-  .lp-etapas .is-parada { border-left-color: var(--hoje); }
-  .lp-etapas b { font-size: 22px; line-height: 26px; }
+  .lp-margem__folha { padding: 14px 16px; font-size: 17px; line-height: 26px; }
+  .lp-nota-selo { padding: 7px 0; }
+  .lp-etapas { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
+  .lp-etapas li { padding: 10px 10px 0 0; }
+  .lp-etapas b { font-size: 21px; line-height: 26px; }
   .lp-sigilo { padding: 32px 0; }
   .lp-sigilo__lista { grid-template-columns: minmax(0, 1fr); }
   .lp-sigilo__lista li { padding: 10px 0 12px; }
@@ -356,5 +355,8 @@
   .lp-duvidas summary { font-size: 20px; line-height: 26px; }
   .lp-fim { padding-top: 40px; }
   .lp-fim__tela { height: 170px; }
-  .lp-rodape__grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .lp-rodape { padding-top: 28px; }
+  .lp-rodape__grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .lp-rodape ul { gap: 2px; margin-top: 6px; }
+  .lp-rodape__base { margin-top: 20px; }
 }

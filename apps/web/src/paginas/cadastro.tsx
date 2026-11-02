@@ -3,7 +3,7 @@ import { VERSAO_DOS_TERMOS } from "@decreta/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AceiteDosTermos } from "@/componentes/aceite-dos-termos";
 import { Botao, Campo, Faixa } from "@/componentes/ui";
 import { API_URL } from "@/lib/api";
@@ -20,11 +20,12 @@ export function CadastroPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
-  // Já tem sessão: vai para o dia.
+  // Já tem sessão: vai para o dia. Quem acabou de criar a conta vai para o /comecar, e a tela dele pode levar um instante para carregar.
+  const acabouDeCriar = useRef(false);
   useEffect(() => {
-    if (eu.data) router.history.replace("/hoje");
+    if (eu.data && !acabouDeCriar.current) router.history.replace("/hoje");
   }, [eu.data, router]);
-  if (eu.data) return null;
+  if (eu.data && !acabouDeCriar.current) return null;
 
   const curta = f.senha.length > 0 && f.senha.length < 10;
   const pronto = f.nome.trim().length >= 2 && f.email.includes("@") && f.senha.length >= 10 && f.escritorio.trim().length >= 2 && aceito;
@@ -42,6 +43,7 @@ export function CadastroPage() {
       });
       const corpo = (await r.json().catch(() => null)) as { detalhe?: string; sessao?: boolean } | null;
       if (!r.ok) throw new Error(corpo?.detalhe ?? (r.status === 429 ? "Muitas contas criadas deste endereço. Espere uma hora e tente de novo." : "Não deu certo agora. Tente de novo em instantes."));
+      acabouDeCriar.current = true;
       await qc.invalidateQueries({ queryKey: ["eu"] });
       marcarComecarAberto();
       // Sem sessão (raro): entra com a conta recém-criada e cai no /comecar.

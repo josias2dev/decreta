@@ -211,6 +211,7 @@ html:has(.lp-corpo) { scroll-behavior: smooth; scroll-padding-top: 72px; }
   .lp-razao__fora { grid-column: 1 / -1; grid-row: 2; }
   .lp-res__rever { min-height: 44px; }
   .lp-res__final strong { font-size: 28px; }
+  .lp-res__contando { font-size: 24px; white-space: nowrap; }
 }
 
 /* Celular e tablet: sem vidro, que em parte dos Android deixa a página em branco. */

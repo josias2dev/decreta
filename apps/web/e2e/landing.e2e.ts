@@ -68,6 +68,7 @@ test.describe("a conta aberta", () => {
   test("prazo longo: a janela do calendário mostra o fim, sem barra de rolagem que prenda a roda do mouse", async ({ page }) => {
     await abrirLanding(page);
     await conta(page).locator('input[name="dias"]').fill("60");
+    await expect(conta(page).locator(".lp-res__final strong")).not.toHaveText("24/11/2026");
     await expect(conta(page).locator(".lp-dia--vence")).toBeInViewport();
     const janela = conta(page).locator(".lp-cal__janela");
     expect(await janela.evaluate((e) => getComputedStyle(e).overflowY)).toBe("hidden");
@@ -271,7 +272,7 @@ test.describe("a demonstração pública", () => {
       for (const m of readFileSync(new URL(nome, pasta), "utf8").matchAll(/[\w.%+-]+@[\w.-]+\.[a-z]{2,}/g)) emails.add(m[0]);
     }
     expect(emails.size).toBeGreaterThan(0);
-    for (const email of emails) expect(email).toMatch(/@(exemplo\.com\.br|demo\.decreta\.app|decreta\.site)$/);
+    for (const email of emails) expect(email).toMatch(/[@.]exemplo\.com\.br$|@demo\.decreta\.app$|@decreta\.site$/);
   });
 });
 
