@@ -27,8 +27,9 @@ describe("a seção de preço", () => {
     expect(html).not.toContain("fale com a equipe");
   });
 
-  test("os dias de teste vêm da constante", () => {
-    expect(htmlDoPreco({ ...PLANO, testeDias: 30 }, CONTATO)).toContain("30 dias de teste");
+  test("não promete um teste com prazo que o produto ainda não aplica", () => {
+    expect(htmlDoPreco(PLANO, CONTATO)).not.toContain("dias de teste");
+    expect(htmlDoPreco(PLANO, CONTATO)).toContain("sem cartão");
   });
 });
 

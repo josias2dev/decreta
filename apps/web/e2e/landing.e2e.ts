@@ -281,7 +281,7 @@ test.describe("com a CSP do servidor", () => {
   const caddy = readFileSync(new URL("../../../deploy/Caddyfile.decreta", import.meta.url), "utf8");
   const politica = (matcher: string) => new RegExp(`header @${matcher} \\{[\\s\\S]*?Content-Security-Policy "([^"]+)"`).exec(caddy)![1]!;
 
-  async function comCsp(page: Page, padrao: string, csp: string) {
+  async function comCsp(page: Page, padrao: string | ((url: URL) => boolean), csp: string) {
     await page.route(padrao, async (r) => {
       const resposta = await r.fetch();
       await r.fulfill({ response: resposta, headers: { ...resposta.headers(), "content-security-policy": csp } });

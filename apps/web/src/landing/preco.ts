@@ -1,11 +1,12 @@
 /**
  * A seção de preço lê o `PLANO` do core. O valor ainda não foi decidido: com
  * `null`, convida a falar com a equipe; com um número, mostra o número, e nada
- * mais precisa mudar.
+ * mais precisa mudar. Os dias de teste do plano (`testeDias`) ainda não aparecem
+ * aqui porque o teste com prazo só existe quando a cobrança (onda 3) entrar: a
+ * landing diz só o que o produto faz hoje.
  */
 export interface PlanoDaLanding {
   nome: string;
-  testeDias: number;
   valorMensalCentavos: number | null;
 }
 
@@ -26,7 +27,7 @@ export function htmlDoPreco(plano: PlanoDaLanding, contato: string): string {
     <ul class="lp-preco__lista">
       <li>Tudo o que está nesta página, sem módulo à parte</li>
       <li>A IA inclusa, com o limite de uso à vista na tela</li>
-      <li>${plano.testeDias} dias de teste, sem cartão</li>
+      <li>Para começar, sem cartão</li>
       <li>Sem taxa de adesão</li>
       <li>Cancelamento no próprio app, sem falar com ninguém</li>
     </ul>`;
