@@ -7,17 +7,27 @@
  * tamanho, e quem serve o arquivo confere o escritório antes de ler daqui.
  */
 import { S3Client } from "bun";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readdir, rm } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
 
 export interface Armazenamento {
   put(chave: string, bytes: Uint8Array, mime: string): Promise<void>;
   read(chave: string): Promise<Uint8Array>;
   delete(chave: string): Promise<void>;
+  /** Apaga tudo do escritório (`<id do escritório>/`, com a barra) e devolve quantos arquivos eram. Outro prefixo é recusado. */
+  apagarPrefixo(prefixo: string): Promise<number>;
 }
 
 export function chaveDoDocumento(organizationId: string, documentoId: string): string {
   return `${organizationId}/${documentoId}`;
+}
+
+const PREFIXO_DE_ESCRITORIO = /^[A-Za-z0-9_-]{1,64}\/$/;
+
+/** O prefixo de um escritório e nada mais: um engano aqui apagaria o armazenamento de todos. */
+function prefixoDoEscritorio(prefixo: string): string {
+  if (!PREFIXO_DE_ESCRITORIO.test(prefixo)) throw new Error(`prefixo de escritório inválido: "${prefixo}"`);
+  return prefixo;
 }
 
 /** Pasta local. A chave nunca sai da pasta (`../` é recusado). */
@@ -39,6 +49,12 @@ export function armazenamentoEmDisco(dir: string): Armazenamento {
     },
     async delete(chave) {
       await rm(caminho(chave), { force: true });
+    },
+    async apagarPrefixo(prefixo) {
+      const pasta = caminho(prefixoDoEscritorio(prefixo));
+      const arquivos = await readdir(pasta, { recursive: true, withFileTypes: true }).catch((err: NodeJS.ErrnoException) => (err.code === "ENOENT" ? [] : Promise.reject(err)));
+      await rm(pasta, { recursive: true, force: true });
+      return arquivos.filter((a) => a.isFile()).length;
     },
   };
 }
@@ -63,6 +79,20 @@ export function armazenamentoS3(config: ConfigS3): Armazenamento {
     async delete(chave) {
       await client.delete(chave);
     },
+    async apagarPrefixo(prefixo) {
+      const alvo = prefixoDoEscritorio(prefixo);
+      let apagados = 0;
+      let continuar: string | undefined;
+      do {
+        const pagina = await client.list({ prefix: alvo, maxKeys: 500, continuationToken: continuar });
+        for (const { key } of pagina.contents ?? []) {
+          await client.delete(key);
+          apagados++;
+        }
+        continuar = pagina.isTruncated ? pagina.nextContinuationToken : undefined;
+      } while (continuar);
+      return apagados;
+    },
   };
 }
 
@@ -81,6 +111,12 @@ export function armazenamentoEmMemoria(): Armazenamento & { arquivos: Map<string
     },
     async delete(chave) {
       arquivos.delete(chave);
+    },
+    async apagarPrefixo(prefixo) {
+      const alvo = prefixoDoEscritorio(prefixo);
+      const chaves = [...arquivos.keys()].filter((k) => k.startsWith(alvo));
+      for (const k of chaves) arquivos.delete(k);
+      return chaves.length;
     },
   };
 }

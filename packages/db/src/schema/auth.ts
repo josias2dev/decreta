@@ -18,6 +18,9 @@ export const user = pgTable("user", {
   image: text("image"),
   /** Plugin twoFactor: login pede o código do app autenticador. */
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  /** A versão dos Termos de Uso e da Política de Privacidade (`VERSAO_DOS_TERMOS`) que a pessoa aceitou ao criar a conta, e quando. Nulo nas contas anteriores ao aceite. */
+  termosVersao: text("termos_versao"),
+  termosAceitosEm: timestamp("termos_aceitos_em", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -103,6 +106,11 @@ export const organization = pgTable("organization", {
   timezone: text("timezone").notNull().default("America/Sao_Paulo"),
   /** Nasceu pelo cadastro aberto e ainda não foi liberado: tetos menores no que sai para terceiros e na IA (ver `servicos/em-avaliacao.ts`). */
   emAvaliacao: boolean("em_avaliacao").notNull().default(false),
+  /**
+   * Quando um sócio encerrou o escritório. Preenchido, ninguém entra, a captura e o WhatsApp
+   * param, e os dados são apagados de vez 30 dias depois (`DIAS_ATE_APAGAR` na rotina de encerramento).
+   */
+  encerradoEm: timestamp("encerrado_em", { withTimezone: true }),
 });
 
 export const member = pgTable(

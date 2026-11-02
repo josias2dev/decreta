@@ -183,6 +183,13 @@
       "when": 1793584044919,
       "tag": "0025_observacoes_da_ia",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793636457883,
+      "tag": "0026_termos_encerramento_e_funil",
+      "breakpoints": true
     }
   ]
 }
