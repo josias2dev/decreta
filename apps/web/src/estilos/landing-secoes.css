@@ -73,16 +73,11 @@
 .lp-minical > .c { background: var(--acento-suave); color: var(--acento); }
 .lp-minical > .h { background: repeating-linear-gradient(-45deg, var(--superficie-2) 0 3px, transparent 3px 6px); color: var(--tinta-3); text-decoration: line-through; }
 .lp-minical > .v { background: var(--acento); color: var(--on-acento); font-weight: 600; }
-.lp-cal__legenda { display: flex; gap: 12px; padding: 0 12px 10px; font: 400 11px/14px var(--font-sans); color: var(--tinta-3); }
-.lp-cal__legenda i { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 2px; vertical-align: -0.5px; background: var(--acento-suave); box-shadow: inset 0 0 0 1px var(--acento-borda); }
-.lp-cal__legenda i.h { background: repeating-linear-gradient(-45deg, var(--borda-forte) 0 2px, transparent 2px 4px); box-shadow: none; }
-.lp-cal__legenda i.v { background: var(--acento); box-shadow: none; }
 /* No bloco o calendário fica mais compacto, para caber inteiro no visual */
 .lp-bloco .lp-m__cab:has(+ .lp-minical) { min-height: 32px; padding: 6px 12px; }
 .lp-bloco .lp-minical { gap: 2px; padding: 6px 10px 6px; }
 .lp-bloco .lp-minical > span { height: 17px; border-radius: 4px; }
 .lp-bloco .lp-minical > .s { height: 14px; }
-.lp-bloco .lp-cal__legenda { padding: 0 10px 8px; }
 .lp-bloco__vis:has(.lp-minical) { padding: 14px 16px; }
 
 /* Números do dia */
@@ -97,23 +92,12 @@
 .lp-m__folha p { margin: 0 0 7px; }
 .lp-m__timbre { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 7px; border-bottom: 1px solid #e7e7ea; font: 600 9.5px/12px var(--font-sans); letter-spacing: 0.06em; color: #6b6a76; }
 .lp-m__falta { padding: 0 3px; border-radius: 3px; background: var(--acento-suave); color: var(--acento); font-family: var(--font-sans); font-size: 9.5px; font-weight: 600; }
-.lp-m__arquivo { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
-.lp-m__docx { position: relative; display: grid; flex: none; place-items: end center; width: 26px; height: 32px; padding-bottom: 4px; border: 1px solid var(--borda-forte); border-radius: 3px 8px 3px 3px; background: var(--superficie); font: 700 6.5px/1 var(--font-sans); letter-spacing: 0.04em; color: #2b579a; }
-.lp-m__docx::before { content: ""; position: absolute; top: 7px; left: 5px; right: 5px; height: 9px; background: repeating-linear-gradient(to bottom, var(--borda-forte) 0 1px, transparent 1px 3px); }
 
 /* Código de seis dígitos */
-.lp-m__codigo { display: flex; justify-content: center; gap: 6px; }
-.lp-m__codigo span { display: grid; place-items: center; width: 30px; height: 38px; border: 1px solid var(--borda-forte); border-radius: 7px; background: var(--superficie); font: 600 16px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
-.lp-m__codigo span.is-aqui { border-color: var(--acento); box-shadow: 0 0 0 3px var(--anel); }
-.lp-m__codigo span.is-aqui::after { content: ""; width: 1.5px; height: 16px; background: var(--acento); }
 
 /* Barra de progresso */
 
 /* Três pontos com ícone, embaixo da seção */
-.lp-tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 48px; }
-.lp-tres > div { display: flex; gap: 14px; }
-.lp-tres h3 { margin: 4px 0 0; font: 600 15px/22px var(--font-sans); color: var(--tinta); }
-.lp-tres p { margin: 4px 0 0; font: 400 14px/22px var(--font-sans); color: var(--tinta-2); text-wrap: pretty; }
 
 /* ---- IA: o briefing e a peça, que pedem mais espaço ---- */
 .lp-briefing { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; border: 1px solid var(--acento-borda); border-radius: 10px; background: var(--acento-suave); box-shadow: 0 14px 30px -22px rgba(51, 70, 196, 0.45); font: 400 12.5px/19px var(--font-sans); color: var(--tinta); }
@@ -124,21 +108,14 @@
 .lp-briefing ul { padding-left: 15px; }
 .lp-briefing__dois { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding-top: 10px; border-top: 1px solid var(--acento-borda); }
 .lp-peca { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: end; height: 100%; }
-.lp-peca__lado { display: flex; flex-direction: column; gap: 12px; align-self: center; }
 
 /* ---- No celular: o telefone no meio, o WhatsApp e o Perguntar dos lados ---- */
-.lp-palco { display: grid; grid-template-columns: minmax(0, 1fr) 300px minmax(0, 1fr); gap: 48px; align-items: center; max-width: 1080px; margin: 0 auto; }
+.lp-palco { display: flex; justify-content: center; align-items: center; gap: 72px; max-width: 1080px; margin: 0 auto; }
 .lp-palco__lado { display: flex; flex-direction: column; gap: 10px; }
-.lp-palco__lado--esq { align-items: flex-end; padding-top: 140px; }
-.lp-palco__lado--dir { align-items: flex-start; padding-bottom: 180px; }
 .lp-palco__nota { display: inline-flex; align-items: center; gap: 6px; font: 500 12.5px/18px var(--font-sans); color: var(--tinta-3); }
 .lp-palco__nota svg { width: 14px; height: 14px; }
-.lp-palco .lp-zap { position: static; width: 300px; }
-.lp-pergunta-cartao { width: 300px; padding: 12px; border: 1px solid var(--borda); border-radius: 16px; background: var(--superficie); box-shadow: 0 2px 6px rgba(27, 25, 45, 0.05), 0 30px 60px -30px rgba(27, 25, 45, 0.45); display: flex; flex-direction: column; gap: 8px; }
-.lp-pergunta-cartao__topo { display: flex; align-items: center; gap: 8px; padding: 2px 2px 6px; border-bottom: 1px solid var(--superficie-2); font: 600 13.5px/20px var(--font-sans); }
-.lp-pergunta-cartao__topo small { margin-left: auto; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
-.lp-pergunta-cartao .lp-m__balao, .lp-pergunta-cartao .lp-m__resposta { font-size: 13.5px; line-height: 20px; }
-.lp-palco + .lp-tres { max-width: 1080px; margin-inline: auto; }
+.lp-palco .lp-zap { position: static; width: 340px; }
+.lp-palco__tela { flex: none; width: 300px; height: auto; filter: drop-shadow(0 40px 48px rgba(29, 29, 32, 0.24)); }
 
 /* ---- Segurança: escritórios separados ---- */
 .lp-iso { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); align-items: center; gap: 6px; }
@@ -169,10 +146,10 @@
 .lp-plano-largo__nota a { color: var(--acento); font-weight: 500; text-decoration: none; }
 
 /* ---- Dúvidas ---- */
-.lp-faq-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; }
-.lp-faq-grade > div { padding: 24px 26px; border: 1px solid var(--borda); border-radius: 14px; background: var(--superficie); }
-.lp-faq-grade dt { font: 600 16px/24px var(--font-sans); color: var(--tinta); }
-.lp-faq-grade dd { margin: 8px 0 0; font: 400 14.5px/23px var(--font-sans); color: var(--tinta-2); text-wrap: pretty; }
+.lp-faq-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 48px; margin: 0; }
+.lp-faq-grade > div { padding: 20px 0 24px; border-top: 1px solid var(--borda); }
+.lp-faq-grade dt { font: 600 15px/22px var(--font-sans); color: var(--tinta); }
+.lp-faq-grade dd { margin: 6px 0 0; font: 400 14px/22px var(--font-sans); color: var(--tinta-2); text-wrap: pretty; }
 
 /* ---- Chamada final ---- */
 .lp-fim { position: relative; isolation: isolate; overflow: hidden; padding: 136px 0 128px; scroll-margin-top: 64px; background: #0b0b0f; }
@@ -187,15 +164,12 @@
 @media (max-width: 1023px) {
   .lp-cabeca { grid-template-columns: minmax(0, 1fr); gap: 16px; margin-bottom: 40px; }
   .lp-blocos--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp-palco { grid-template-columns: minmax(0, 1fr) 300px; }
-  .lp-palco__lado--dir { grid-column: 1 / -1; flex-direction: row; justify-content: center; padding: 0; }
-  .lp-palco__lado--esq { padding-top: 0; }
+
 }
 
 @media (max-width: 900px) {
   .lp-blocos--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lp-blocos--3 > .lp-bloco--largo { grid-column: 1 / -1; }
-  .lp-tres { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .lp-plano-largo { grid-template-columns: minmax(0, 1fr); }
   .lp-plano-largo__lista { border-left: 0; border-top: 1px solid var(--borda); }
 }
@@ -213,19 +187,16 @@
   /* No celular a folha fica de fundo e o arquivo pronto aparece por cima dela */
   .lp-peca { position: relative; display: block; }
   .lp-peca .lp-m__folha { height: calc(100% + 16px); margin: 0 10px -16px; overflow: hidden; }
-  .lp-peca__lado { position: absolute; right: -2px; bottom: 8px; left: -2px; }
-  .lp-peca__lado .lp-m__chips { display: none; }
   .lp-briefing__topo small { display: none; }
   .lp-briefing__dois { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .lp-palco { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 20px; }
+  .lp-palco { flex-direction: column; gap: 24px; }
   .lp-palco__lado { order: 2; align-items: stretch; width: 100%; max-width: 340px; }
-  .lp-palco__lado--dir { flex-direction: column; }
-  .lp-palco .lp-zap, .lp-pergunta-cartao { width: 100%; }
-  .lp-palco .lp-aparelho { order: 1; }
+  .lp-palco .lp-zap { width: 100%; }
+  .lp-palco__tela { width: 280px; }
   .lp-plano-largo__preco, .lp-plano-largo__lista { padding: 24px 20px; }
   .lp-plano-largo__lista ul { grid-template-columns: minmax(0, 1fr); }
-  .lp-faq-grade { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .lp-faq-grade > div { padding: 20px; }
+  .lp-faq-grade { grid-template-columns: minmax(0, 1fr); }
+
   .lp-fim { padding: 96px 0; }
   .lp-fim .lp-h2 { font-size: 36px; }
   .lp-fim__acoes { flex-direction: column; align-items: stretch; width: 100%; }
@@ -233,14 +204,63 @@
   .lp-fim__motivos { flex-direction: column; align-items: center; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes lp-pisca { 50% { opacity: 0; } }
+/* Prazos: a conta em destaque, e a confirmação deitada embaixo dos dois primeiros passos. */
+.lp-blocos--prazos { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: "a b c c" "d d c c"; }
+.lp-blocos--prazos > :nth-child(1) { grid-area: a; }
+.lp-blocos--prazos > :nth-child(2) { grid-area: b; }
+.lp-blocos--prazos > :nth-child(3) { grid-area: c; }
+.lp-blocos--prazos > :nth-child(4) { grid-area: d; }
+.lp-bloco--deitado { flex-direction: row; align-items: stretch; }
+.lp-bloco--deitado .lp-bloco__vis { flex: 1 1 54%; height: auto; min-height: 176px; margin: 6px 0 6px 6px; }
+.lp-bloco--deitado .lp-bloco__txt { flex: 1 1 46%; justify-content: center; }
+.lp-bloco--conta .lp-bloco__vis { flex: 1; height: auto; padding: 20px; }
+.lp-contagem__corpo { display: grid; grid-template-columns: minmax(0, 1fr) 172px; gap: 20px; padding: 14px 16px 16px; }
+.lp-bloco .lp-minical--grande { gap: 4px; padding: 0; align-self: start; }
+.lp-bloco .lp-minical--grande > span { height: 42px; border-radius: 6px; font-size: 13px; }
+.lp-bloco .lp-minical--grande > .s { height: 20px; font-size: 11px; }
+.lp-minical--grande > .c { background: var(--superficie-2); color: var(--tinta); }
+.lp-minical--grande > .f { background: repeating-linear-gradient(135deg, transparent 0 3px, var(--superficie-2) 3px 5px); color: var(--tinta-3); }
+.lp-minical--grande > .h { background: var(--hoje-suave); color: var(--hoje); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hoje) 30%, transparent); text-decoration: line-through; }
+.lp-minical--grande > .v { background: var(--primaria); color: var(--on-primaria); }
+.lp-minical--grande > .d { color: var(--borda-forte); }
+.lp-contagem__razao { display: flex; flex-direction: column; gap: 14px; margin: 0; }
+.lp-contagem__razao dt { font: 500 12px/16px var(--font-sans); color: var(--tinta-3); }
+.lp-contagem__razao dd { margin: 3px 0 0; font: 400 13px/18px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta); }
+.lp-contagem__razao dd b { font-weight: 600; color: var(--hoje); }
+.lp-contagem__razao .lp-contagem__fds { color: var(--tinta-3); }
+.lp-contagem__razao .lp-contagem__vence { font: 600 20px/26px var(--font-sans); letter-spacing: -0.02em; }
+
+/* IA: a folha com as citações marcadas e o selo de cada uma. */
+.lp-selos { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+.lp-selos__folha { padding: 16px 18px; font: 400 14px/25px var(--font-sans); color: var(--tinta); }
+.lp-selos__folha p + p { margin-top: 8px; }
+.lp-cit { padding-bottom: 1px; border-bottom: 2px solid; }
+.lp-cit--ok { border-color: var(--cumprido); }
+.lp-cit--ressalva { border-color: var(--hoje); }
+.lp-cit--nao { border-color: var(--vencido); }
+.lp-selos__lista { display: flex; flex-direction: column; }
+.lp-selo { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--borda); font-size: 13px; line-height: 18px; }
+.lp-selo:first-child { padding-top: 0; border-top: 0; }
+.lp-selo svg { width: 15px; height: 15px; margin-top: 2px; }
+.lp-selo b { display: block; font-weight: 600; }
+.lp-selo span { color: var(--tinta-2); }
+.lp-selo--ok svg, .lp-selo--ok b { color: var(--cumprido); }
+.lp-selo--ressalva svg, .lp-selo--ressalva b { color: var(--hoje); }
+.lp-selo--nao svg, .lp-selo--nao b { color: var(--vencido); }
+.lp-peca--so-folha { grid-template-columns: minmax(0, 1fr); }
+
+/* O plano sem valor: uma frase, não um preço. */
+.lp-preco--conversa { margin: 4px 0 0; font: 600 24px/30px var(--font-sans); letter-spacing: -0.02em; color: var(--tinta); text-wrap: balance; }
+
+@media (max-width: 1023px) {
+  .lp-blocos--prazos { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "a b" "c c" "d d"; }
 }
-
-/* Peças pequenas dos recursos: semana da agenda, valor do alvará e a equipe */
-
-.lp-m__dados--selos > div { grid-template-columns: 98px minmax(0, 1fr); }
-
-/* A tela do celular de exemplo: o que no app vem de app.css. */
-.lp-aparelho .dc-ia__sec ul { list-style: disc; }
-.lp-aparelho .dc-ia__sec li + li { margin-top: var(--space-half); }
+@media (max-width: 760px) {
+  .lp-blocos--prazos { grid-template-columns: minmax(0, 1fr); grid-template-areas: "a" "b" "c" "d"; gap: 12px; }
+  .lp-bloco--deitado { flex-direction: column; }
+  .lp-bloco--deitado .lp-bloco__vis { flex: none; margin: 6px 6px 0; }
+  .lp-bloco--conta .lp-bloco__vis { padding: 12px; }
+  .lp-contagem__corpo { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  .lp-contagem__razao { flex-direction: row; flex-wrap: wrap; gap: 12px 28px; }
+  .lp-selos { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+}

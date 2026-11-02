@@ -1,5 +1,8 @@
 <!-- A landing do Decreta, estática. O que tem <!- -X- -> entra no build (scripts/vite-landing.ts); o JavaScript está em landing/main.ts. -->
 <svg class="lp-simbolos" aria-hidden="true" width="0" height="0">
+  <symbol id="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-alerta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-duvida" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
   <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
 </svg>
 
@@ -51,14 +54,6 @@
           <source media="(max-width: 1023px)" srcset="/src/landing/vitrine-celular.webp" width="300" height="630">
           <img class="lp-vitrine__img" src="/src/landing/vitrine-computador.webp" width="1216" height="682" fetchpriority="high" alt="Tela de um prazo no Decreta: manifestação sobre laudo pericial, vencendo em 23/11, com o briefing da IA sobre o que o juízo decidiu e o que fazer, e a peça pronta para baixar.">
         </picture>
-
-        <!-- Régua de fatos -->
-        <ul class="lp-fatos">
-          <li class="lp-fato lp-a"><span class="lp-icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg></span><div><strong>Publicações do DJEN</strong><span>buscadas pelas OABs da equipe três vezes por dia</span></div></li>
-          <li class="lp-fato lp-a lp-a--2"><span class="lp-icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"></path><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h5"></path><path d="M17.5 17.5 16 16.3V14"></path><circle cx="16" cy="16" r="6"></circle></svg></span><div><strong>Prazo em dias úteis</strong><span>com feriados e suspensões, confirmado por uma pessoa</span></div></li>
-          <li class="lp-fato lp-a lp-a--3"><span class="lp-icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M13 8H7"></path><path d="M17 12H7"></path></svg></span><div><strong>Briefing de cada prazo</strong><span>o que o juízo decidiu, o que fazer, a favor e contra</span></div></li>
-          <li class="lp-fato lp-a lp-a--4"><span class="lp-icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg></span><div><strong>Peça em Word</strong><span>no timbre do escritório, com os trechos a completar marcados</span></div></li>
-        </ul>
       </div>
     </section>
 
@@ -74,7 +69,7 @@
         <p class="lp-texto">Três vezes por dia o Decreta busca no DJEN as publicações das OABs da equipe. A IA sugere o prazo, o motor conta os dias úteis e uma pessoa confirma.</p>
       </div>
     </div>
-    <ol class="lp-blocos lp-blocos--4">
+    <ol class="lp-blocos lp-blocos--prazos">
       <li class="lp-bloco lp-a">
         <div class="lp-bloco__vis" aria-hidden="true">
           <div class="lp-m">
@@ -101,16 +96,23 @@
         </div>
         <div class="lp-bloco__txt"><span class="lp-bloco__n">02</span><h3>A IA sugere</h3><p>Lê o teor e propõe o tipo de prazo, os dias e quem cuida dele.</p></div>
       </li>
-      <li class="lp-bloco lp-a lp-a--3">
-        <div class="lp-bloco__vis" aria-hidden="true">
-          <div class="lp-m">
-            <div class="lp-m__cab"><b>Novembro de 2026</b><span>30/10 → 23/11</span></div>
-            <div class="lp-minical"><span class="s">D</span><span class="s">S</span><span class="s">T</span><span class="s">Q</span><span class="s">Q</span><span class="s">S</span><span class="s">S</span><span class="f">1</span><span class="h">2</span><span class="c">3</span><span class="c">4</span><span class="c">5</span><span class="c">6</span><span class="f">7</span><span class="f">8</span><span class="c">9</span><span class="c">10</span><span class="c">11</span><span class="c">12</span><span class="c">13</span><span class="f">14</span><span class="f">15</span><span class="c">16</span><span class="c">17</span><span class="c">18</span><span class="c">19</span><span class="h">20</span><span class="f">21</span><span class="f">22</span><span class="v">23</span><span>24</span><span>25</span><span>26</span><span>27</span><span class="f">28</span><span class="f">29</span><span>30</span></div><div class="lp-cal__legenda"><span><i></i>Dia contado</span><span><i class="h"></i>Feriado</span><span><i class="v"></i>Vence</span></div>
+      <li class="lp-bloco lp-bloco--conta lp-a lp-a--3">
+        <div class="lp-bloco__vis">
+          <div class="lp-m lp-contagem">
+            <div class="lp-m__cab"><b>Novembro de 2026</b><span>15 dias úteis</span></div>
+            <div class="lp-contagem__corpo">
+              <div class="lp-minical lp-minical--grande" aria-hidden="true"><span class="s">D</span><span class="s">S</span><span class="s">T</span><span class="s">Q</span><span class="s">Q</span><span class="s">S</span><span class="s">S</span><span class="f">1</span><span class="h">2</span><span class="c">3</span><span class="c">4</span><span class="c">5</span><span class="c">6</span><span class="f">7</span><span class="f">8</span><span class="c">9</span><span class="c">10</span><span class="c">11</span><span class="c">12</span><span class="c">13</span><span class="f">14</span><span class="f">15</span><span class="c">16</span><span class="c">17</span><span class="c">18</span><span class="c">19</span><span class="h">20</span><span class="f">21</span><span class="f">22</span><span class="v">23</span><span class="d">24</span><span class="d">25</span><span class="d">26</span><span class="d">27</span><span class="d">28</span><span class="d">29</span><span class="d">30</span></div>
+              <dl class="lp-contagem__razao">
+                <div><dt>Começa</dt><dd>30/10/2026</dd></div>
+                <div><dt>Fora da conta</dt><dd><b>02/11</b> Finados</dd><dd><b>20/11</b> Consciência Negra</dd><dd class="lp-contagem__fds">e os fins de semana</dd></div>
+                <div><dt>Vence</dt><dd class="lp-contagem__vence">23/11/2026</dd></div>
+              </dl>
+            </div>
           </div>
         </div>
-        <div class="lp-bloco__txt"><span class="lp-bloco__n">03</span><h3>O motor conta</h3><p>Dias úteis, com os feriados forenses do tribunal e as suspensões do escritório.</p></div>
+        <div class="lp-bloco__txt"><span class="lp-bloco__n">03</span><h3>O motor conta</h3><p>A data não vem da IA. Sai de um motor de calendário, com os feriados forenses do tribunal e as suspensões do escritório, e a conta fica à mostra.</p></div>
       </li>
-      <li class="lp-bloco lp-a lp-a--4">
+      <li class="lp-bloco lp-bloco--deitado lp-a lp-a--4">
         <div class="lp-bloco__vis" aria-hidden="true">
           <div class="lp-m">
             <div class="lp-m__linha"><span class="dc-selo dc-selo--prazo">Vence 23 nov</span><span class="dc-selo dc-selo--cumprido"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Confirmado</span></div>
@@ -162,31 +164,30 @@
         </div>
         <div class="lp-bloco__txt"><h3>Pergunte ao processo</h3><p>Respostas com o evento e a página de onde vieram.</p></div>
       </article>
-      <article class="lp-bloco lp-a">
+      <article class="lp-bloco lp-bloco--largo lp-bloco--citacoes lp-a">
         <div class="lp-bloco__vis lp-bloco__vis--alto" aria-hidden="true">
-          <div class="lp-m">
-            <div class="lp-m__cab"><span class="lp-m__ia"><span class="dc-ia__marca">IA</span><b>Citações da peça</b></span><span>conferidas</span></div>
-            <dl class="lp-m__dados lp-m__dados--selos">
-              <div><dt>Verificada</dt><dd>art. 477, § 1º, do CPC</dd></div>
-              <div><dt>Com ressalva</dt><dd>tema afetado, sem tese firmada</dd></div>
-              <div><dt>Não verificada</dt><dd>não está no acervo oficial</dd></div>
-            </dl>
+          <div class="lp-selos">
+            <div class="lp-m lp-selos__folha">
+              <p>O laudo deve ser apreciado na forma do <span class="lp-cit lp-cit--ok">art. 477, § 1º, do CPC</span>, e a contagem observa o <span class="lp-cit lp-cit--ressalva">tema afetado no STJ</span>.</p>
+              <p>Nesse sentido, o <span class="lp-cit lp-cit--nao">REsp 1.234.567/SC</span>.</p>
+            </div>
+            <ul class="lp-selos__lista">
+              <li class="lp-selo lp-selo--ok"><svg aria-hidden="true"><use href="#i-ok"></use></svg><div><b>Verificada</b><span>Encontrada em normas.leg.br.</span></div></li>
+              <li class="lp-selo lp-selo--ressalva"><svg aria-hidden="true"><use href="#i-alerta"></use></svg><div><b>Com ressalva</b><span>Tema afetado, ainda sem tese firmada.</span></div></li>
+              <li class="lp-selo lp-selo--nao"><svg aria-hidden="true"><use href="#i-duvida"></use></svg><div><b>Não verificada</b><span>Não está no acervo oficial. Confira antes de usar.</span></div></li>
+            </ul>
           </div>
         </div>
-        <div class="lp-bloco__txt"><h3>Citações com selo</h3><p>Antes de baixar a peça, um clique confere súmulas, temas e artigos nas fontes oficiais.</p></div>
+        <div class="lp-bloco__txt"><h3>Citações com selo</h3><p>Antes de baixar a peça, um clique confere súmulas, temas e artigos nas fontes oficiais. O que não está lá vem como “confira antes de usar”, nunca como certo.</p></div>
       </article>
-      <article class="lp-bloco lp-bloco--largo lp-a lp-a--2">
+      <article class="lp-bloco lp-a lp-a--2">
         <div class="lp-bloco__vis lp-bloco__vis--alto" aria-hidden="true">
-          <div class="lp-peca">
+          <div class="lp-peca lp-peca--so-folha">
             <div class="lp-m__folha">
               <div class="lp-m__timbre"><span>TIMBRE DO ESCRITÓRIO</span><span>1/4</span></div>
               <p>Excelentíssimo(a) Senhor(a) Doutor(a) Juiz(a) de Direito da 2ª Vara Cível da Comarca de Joinville/SC</p>
               <p><b>MARINA DUARTE</b>, já qualificada nos autos, vem manifestar-se sobre o laudo pericial juntado no evento 87, nos termos do art. 477, § 1º, do CPC.</p>
               <p>O valor pago em <span class="lp-m__falta">[COMPLETAR: data do pagamento]</span> não cobre a incapacidade fixada.</p>
-            </div>
-            <div class="lp-peca__lado">
-              <div class="lp-m__chips"><span class="lp-m__chip is-on">Manifestações</span><span class="lp-m__chip">Defesas</span><span class="lp-m__chip">Recursos</span><span class="lp-m__chip">Iniciais</span><span class="lp-m__chip">Consultivo</span></div>
-              <div class="lp-m"><div class="lp-m__arquivo"><span class="lp-m__docx">DOCX</span><span class="lp-m__col"><span class="lp-m__t">Manifestação sobre laudo.docx</span><span class="lp-m__s">Word · timbre do escritório</span></span></div></div>
             </div>
           </div>
         </div>
@@ -208,8 +209,8 @@
         <p class="lp-texto">O dia começa com uma pergunta: o que vence hoje e o que eu faço com isso? O Decreta responde na primeira tela do celular, e o resumo da manhã chega no WhatsApp.</p>
       </div>
     </div>
-    <div class="lp-palco lp-a" aria-hidden="true">
-      <div class="lp-palco__lado lp-palco__lado--esq">
+    <div class="lp-palco lp-a">
+      <div class="lp-palco__lado" aria-hidden="true">
         <span class="lp-palco__nota"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5 13.6c-.2.6-1.2 1.1-1.7 1.2-.4 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4l.9 2.1c0 .2.1.4 0 .6l-.4.6-.4.5c-.1.1-.3.3-.1.6.1.3.7 1.2 1.5 1.9 1 .9 1.9 1.2 2.2 1.3.3.1.4.1.6-.1l.7-.9c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.2 1z"></path></svg>Às 7h, no WhatsApp de cada um</span>
         <div class="lp-zap">
             <div class="lp-zap__topo">
@@ -227,49 +228,7 @@
             </div>
           </div>
       </div>
-      <div class="lp-aparelho">
-            <div class="lp-aparelho__ilha" aria-hidden="true"></div>
-            <div class="lp-aparelho__tela" aria-hidden="true">
-              <div class="dc dc-celular" style="width: 390px; height: 844px; padding-top: 44px; display: flex; flex-direction: column; background: var(--papel);">
-                <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px 8px 8px;">
-                  <span class="dc-btn dc-btn--fantasma" style="width: 44px; padding: 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px;"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg></span>
-                  <span style="font: 500 15px/20px var(--font-sans); color: var(--tinta-2);">Prazos</span>
-                </div>
-                <div style="flex-grow: 1; overflow: hidden; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 16px;">
-                  <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;"><span class="dc-selo dc-selo--prazo">23 nov · 15 dias úteis</span><span class="dc-selo dc-selo--cumprido"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Confirmado por Beatriz</span></div>
-                    <div style="font: 600 20px/26px var(--font-sans); letter-spacing: -0.025em; color: var(--tinta);">Manifestação sobre laudo pericial</div>
-                    <div style="display: flex; flex-direction: column; gap: 2px;"><span style="font: 500 15px/20px var(--font-sans); color: var(--tinta);">Marina Duarte × Seguradora Alfa S.A.</span><span style="font: 400 14px/20px var(--font-sans); color: var(--tinta-2);">2ª Vara Cível de Joinville · <span class="dc-num">5004321-18.2026.8.24.0038</span></span></div>
-                  </div>
-                  <div class="dc-ia">
-                    <div class="dc-ia__topo"><span class="dc-ia__marca">IA</span><span class="dc-ia__titulo">Briefing do prazo</span><span class="dc-ia__fonte">DJEN · 28/10/2026</span></div>
-                    <div class="dc-ia__sec"><h4>O que o juízo decidiu</h4><p>Juntou o laudo pericial e abriu prazo comum de 15 dias úteis para as duas partes se manifestarem. Depois disso o processo vai para sentença.</p></div>
-                    <div class="dc-ia__sec"><h4>O que fazer</h4><p>Protocolar manifestação até 23/11 concordando com a conclusão do laudo e pedindo o julgamento.</p></div>
-                    <div class="dc-ia__sec"><h4>A nosso favor</h4><ul><li>O perito confirmou o nexo entre o acidente e a incapacidade parcial.</li><li>O percentual de 40% fica acima do que a seguradora pagou.</li></ul></div>
-                    <div class="dc-ia__sec"><h4>Contra nós</h4><ul><li>O laudo não fez vistoria no veículo.</li></ul></div>
-                    <div class="dc-ia__pe"><span>Gerado por IA. Confira nos autos.</span></div>
-                  </div>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 28px; background: var(--superficie); border-top: 1px solid var(--borda);">
-                  <span class="dc-btn dc-btn--ia dc-btn--bloco"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>Gerar peça para este prazo</span>
-                  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;"><span class="dc-btn dc-btn--secundaria">Cumprir</span><span class="dc-btn dc-btn--perigo">Descartar</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-      <div class="lp-palco__lado lp-palco__lado--dir">
-        <span class="lp-palco__nota"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>A IA já sabe onde você está</span>
-        <div class="lp-pergunta-cartao">
-          <div class="lp-pergunta-cartao__topo"><span class="dc-ia__marca">IA</span>Perguntar<small>Hoje</small></div>
-          <span class="lp-m__balao">O que vence hoje para mim?</span>
-          <div class="lp-m__resposta">Alegações finais de Roberto Kühn × Transportes Serra Azul. O briefing está pronto e a peça já tem rascunho.</div>
-        </div>
-      </div>
-    </div>
-    <div class="lp-tres">
-      <div class="lp-a"><span class="lp-icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span><div><h3>O dia inteiro em uma tela</h3><p>Prazos, audiências, publicações e alvarás de hoje, com a urgência e o responsável.</p></div></div>
-      <div class="lp-a lp-a--2"><span class="lp-icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5 13.6c-.2.6-1.2 1.1-1.7 1.2-.4 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4l.9 2.1c0 .2.1.4 0 .6l-.4.6-.4.5c-.1.1-.3.3-.1.6.1.3.7 1.2 1.5 1.9 1 .9 1.9 1.2 2.2 1.3.3.1.4.1.6-.1l.7-.9c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.2 1z"></path></svg></span><div><h3>Resumo da manhã no WhatsApp</h3><p>Cada pessoa recebe os próprios prazos do dia, com o link do briefing.</p></div></div>
-      <div class="lp-a lp-a--3"><span class="lp-icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></span><div><h3>Perguntar a qualquer hora</h3><p>O botão Perguntar abre a IA já no processo ou no cliente que está na tela.</p></div></div>
+      <img class="lp-palco__tela" src="/src/landing/celular-hoje.webp" width="300" height="630" loading="lazy" alt="A tela Hoje do Decreta no celular: os números do dia e a lista do que vence, com o responsável de cada prazo.">
     </div>
   </div>
 </section>
@@ -308,22 +267,21 @@
       </article>
       <article class="lp-bloco lp-a lp-a--3">
         <div class="lp-bloco__vis lp-bloco__vis--baixo" aria-hidden="true">
-          <span class="lp-m__s" style="text-align: center;">Código do aplicativo autenticador</span>
-          <div class="lp-m__codigo"><span>4</span><span>8</span><span>2</span><span>9</span><span class="is-aqui"></span><span></span></div>
+          <div class="lp-m">
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Termo de IA</span><span class="lp-m__s">propósito, riscos e revisão</span></span></div>
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Assinado pelo cliente</span><span class="lp-m__s">autoriza ou recusa</span></span></div>
+          </div>
         </div>
-        <div class="lp-bloco__txt"><h3>Verificação em duas etapas</h3><p>Cada pessoa entra com a própria conta e pode ligar o código do aplicativo autenticador, além da senha.</p></div>
+        <div class="lp-bloco__txt"><h3>Termo de IA para o cliente</h3><p>Segue a Recomendação CFOAB 001/2024: o cliente lê o propósito, os riscos e a revisão humana, e autoriza ou recusa por assinatura.</p></div>
       </article>
       <article class="lp-bloco lp-a lp-a--4">
         <div class="lp-bloco__vis lp-bloco__vis--baixo" aria-hidden="true">
           <div class="lp-m">
-            <ol class="lp-m__hist">
-              <li class="is-ia"><time>06:41</time><span>A IA sugeriu 23/11</span></li>
-              <li class="is-ok"><time>09:12</time><span>Beatriz confirmou</span></li>
-              <li><time>10:05</time><span>Rafael gerou a peça</span></li>
-            </ol>
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5"/><path d="m22 8-5 5"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Cliente recusou a IA</span><span class="lp-m__s">fica marcado no cadastro</span></span></div>
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Casos deste cliente</span><span class="lp-m__s">nada vai para a IA</span></span></div>
           </div>
         </div>
-        <div class="lp-bloco__txt"><h3>Tudo com autor e hora</h3><p>Quem sugeriu, quem confirmou e quando. O histórico de cada prazo fica guardado.</p></div>
+        <div class="lp-bloco__txt"><h3>Cliente que recusa a IA</h3><p>Recusou? Fica marcado, e nada dos casos dele vai à IA.</p></div>
       </article>
     </div>
   </div>

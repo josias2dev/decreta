@@ -47,6 +47,67 @@ test.describe("a página", () => {
     expect(texto).not.toContain("todos os tribunais");
   });
 
+  test("o hero termina na imagem, sem a faixa que repetia as seções", async ({ page }) => {
+    await abrirLanding(page);
+    await expect(page.locator(".lp-vitrine")).toBeVisible();
+    await expect(page.locator(".lp-fatos")).toHaveCount(0);
+  });
+
+  test("prazos: a conta em destaque, com os feriados riscados e nomeados", async ({ page }) => {
+    await abrirLanding(page);
+    const destaque = page.locator(".lp-bloco--conta");
+    await expect(destaque.getByRole("heading", { name: "O motor conta" })).toBeVisible();
+    await expect(destaque.getByText("Finados")).toBeVisible();
+    await expect(destaque.getByText("Consciência Negra")).toBeVisible();
+    await expect(destaque.getByText("23/11/2026")).toBeVisible();
+    await expect(destaque.locator(".lp-minical .h")).toHaveCount(2);
+    await expect(destaque.locator(".lp-minical .h").first()).toHaveCSS("text-decoration-line", "line-through");
+    const larguraDaConta = (await destaque.boundingBox())!.width;
+    const larguraDoPrimeiro = (await page.locator("#prazos .lp-bloco").first().boundingBox())!.width;
+    expect(larguraDaConta).toBeGreaterThan(larguraDoPrimeiro * 1.8);
+  });
+
+  test("IA: as citações em destaque, com os três selos", async ({ page }) => {
+    await abrirLanding(page);
+    const citacoes = page.locator(".lp-bloco--citacoes");
+    for (const selo of ["Verificada", "Com ressalva", "Não verificada"]) await expect(citacoes.locator(".lp-selo").getByText(selo, { exact: true })).toBeVisible();
+    const peca = page.locator("#ia .lp-bloco").filter({ hasText: "Peça em Word" });
+    expect((await citacoes.boundingBox())!.width).toBeGreaterThan((await peca.boundingBox())!.width * 1.8);
+  });
+
+  test("segurança: o termo de IA e o cliente que recusa, no lugar das duas etapas", async ({ page }) => {
+    await abrirLanding(page);
+    const seguranca = page.locator("#seguranca");
+    await expect(seguranca.locator(".lp-bloco")).toHaveCount(4);
+    await expect(seguranca.getByRole("heading", { name: "Termo de IA para o cliente" })).toBeVisible();
+    await expect(seguranca.getByText(/Recomendação CFOAB 001\/2024/)).toBeVisible();
+    await expect(seguranca.getByRole("heading", { name: "Cliente que recusa a IA" })).toBeVisible();
+    await expect(seguranca.getByRole("heading", { name: "Verificação em duas etapas" })).toHaveCount(0);
+  });
+
+  test("celular: o resumo no WhatsApp e a tela Hoje de verdade, sem o que repetia", async ({ page }) => {
+    await abrirLanding(page);
+    const celular = page.locator("#celular");
+    const tela = celular.getByRole("img", { name: /tela Hoje/ });
+    await tela.scrollIntoViewIfNeeded();
+    await expect.poll(() => tela.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    await expect(celular.getByText("Bom dia, Beatriz.")).toBeVisible();
+    await expect(celular.locator(".lp-tres, .lp-pergunta-cartao, .lp-aparelho")).toHaveCount(0);
+  });
+
+  test("dúvidas: uma lista simples, sem cartões", async ({ page }) => {
+    await abrirLanding(page);
+    const itens = page.locator(".lp-faq-grade > div");
+    await expect(itens).toHaveCount(6);
+    await expect(itens.first()).toHaveCSS("border-radius", "0px");
+    await expect(itens.first()).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+
+  test("plano: uma só ação", async ({ page }) => {
+    await abrirLanding(page);
+    await expect(page.locator("#planos a")).toHaveCount(1);
+  });
+
   test("preço: o plano único e o convite para a equipe, enquanto o valor não existe", async ({ page }) => {
     await abrirLanding(page);
     const preco = page.locator("#planos");

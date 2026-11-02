@@ -1,8 +1,8 @@
 /**
- * Refaz as imagens da landing a partir das telas de verdade: a tela de um prazo
- * no computador, com os cartões por cima, a mesma tela no celular (da demonstração,
- * com dados fictícios) e a imagem de compartilhamento (o topo da landing). Rode com
- * o build no ar:
+ * Refaz as imagens da landing a partir das telas de verdade (da demonstração, com
+ * dados fictícios): a tela de um prazo no computador, com os cartões por cima, a
+ * mesma tela e a tela Hoje no celular, e a imagem de compartilhamento (o topo da
+ * landing). Rode com o build no ar:
  *
  *   bun run web:build
  *   cd apps/web && bunx vite preview --port 4181
@@ -35,17 +35,26 @@ async function salvarWebp(page, png, destino, qualidade = 0.88) {
 
 const navegador = await chromium.launch();
 
-/** A tela do prazo com o briefing, como está na demonstração. */
-async function telaDoPrazo(viewport, extra = {}) {
+async function telaDaDemonstracao(viewport, abrir, extra = {}) {
   const ctx = await navegador.newContext({ viewport, deviceScaleFactor: 2, locale: "pt-BR", timezoneId: "America/Sao_Paulo", reducedMotion: "reduce", ...extra });
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/demonstracao/app.html#/prazos`);
-  await page.getByText("Manifestação sobre laudo pericial").first().click();
-  await page.getByText("O que o juízo decidiu").first().waitFor();
+  await abrir(page);
   await page.waitForTimeout(900);
   const png = await page.screenshot();
   await ctx.close();
   return png.toString("base64");
+}
+
+/** O prazo com o briefing, como está na demonstração. */
+async function abrirPrazo(page) {
+  await page.goto(`${BASE}/demonstracao/app.html#/prazos`);
+  await page.getByText("Manifestação sobre laudo pericial").first().click();
+  await page.getByText("O que o juízo decidiu").first().waitFor();
+}
+
+async function abrirHoje(page) {
+  await page.goto(`${BASE}/demonstracao/app.html#/hoje`);
+  await page.getByRole("heading", { level: 1 }).first().waitFor();
 }
 
 const ESTILO = `
@@ -68,7 +77,7 @@ async function compor(html, viewport) {
 }
 
 // No computador: a janela do navegador com a tela, que some embaixo, e dois cartões por cima.
-const computador = await telaDoPrazo({ width: 1164, height: 760 });
+const computador = await telaDaDemonstracao({ width: 1164, height: 760 }, abrirPrazo);
 {
   const { page, ctx, png } = await compor(
     `<div style="position:relative;width:1216px;height:682px;overflow:hidden">
@@ -99,17 +108,20 @@ const computador = await telaDoPrazo({ width: 1164, height: 760 });
   await ctx.close();
 }
 
-// No celular: a mesma tela, dentro do aparelho.
-const celular = await telaDoPrazo({ width: 390, height: 838 }, { isMobile: true, hasTouch: true });
-{
+// No celular: dentro do aparelho, o prazo para o hero e a tela Hoje para a seção do celular.
+for (const [abrir, arquivo] of [
+  [abrirPrazo, "vitrine-celular.webp"],
+  [abrirHoje, "celular-hoje.webp"],
+]) {
+  const tela = await telaDaDemonstracao({ width: 390, height: 838 }, abrir, { isMobile: true, hasTouch: true });
   const { page, ctx, png } = await compor(
     `<div style="position:relative;width:300px;height:630px;border:8px solid #1d1d20;border-radius:44px;overflow:hidden;background:#fff">
       <span style="position:absolute;z-index:1;left:50%;top:7px;width:84px;height:23px;margin-left:-42px;border-radius:99px;background:#1d1d20"></span>
-      <img src="data:image/png;base64,${celular}" style="display:block;width:284px">
+      <img src="data:image/png;base64,${tela}" style="display:block;width:284px">
     </div>`,
     { width: 300, height: 630 },
   );
-  await salvarWebp(page, png, new URL("../src/landing/vitrine-celular.webp", import.meta.url));
+  await salvarWebp(page, png, new URL(`../src/landing/${arquivo}`, import.meta.url));
   await ctx.close();
 }
 
