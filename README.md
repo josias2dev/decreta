@@ -16,6 +16,11 @@ no computador.
   DOCX sai pronto, com os trechos a completar marcados.
 - **Clientes, agenda, novos negócios, alvarás, documentos, equipe** com convite e
   verificação em duas etapas.
+- **Levar os dados e encerrar**: em Configurações > Dados o sócio baixa uma cópia de tudo
+  (planilhas CSV e os documentos, em ZIP) e encerra o escritório digitando o nome. Encerrado,
+  ninguém entra e a captura e o WhatsApp param; 30 dias depois a rotina
+  `apagar-escritorios-encerrados` (Inngest, 03:45) apaga de vez as linhas, as pessoas que só
+  eram dele e todos os arquivos. A demonstração nunca é encerrada nem apagada.
 
 Dados de cliente são sigilosos (LGPD): o código, a demonstração e os testes usam
 só dados inventados.
