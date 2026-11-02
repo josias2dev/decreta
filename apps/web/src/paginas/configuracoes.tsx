@@ -40,7 +40,7 @@ export function ConfiguracoesPage() {
       aoMudar={setAba}
       abas={[
         { id: "escritorio", rotulo: "Timbre" },
-        // No celular, rótulos curtos: as seis abas do sócio cabem sem rolar.
+        // No celular, rótulos curtos: as sete abas do sócio cabem sem rolar.
         { id: "pecas", rotulo: celular ? "Peças" : "Jeito das peças" },
         { id: "avisos", rotulo: celular ? "Avisos" : "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },

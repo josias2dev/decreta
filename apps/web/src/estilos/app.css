@@ -382,7 +382,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc input.dc-cor { width: 44px; height: 32px; padding: 2px; flex: none; cursor: pointer; }
 /* No celular as abas dividem a largura e cabem sem rolar. */
 .dc-celular .dc-abas, .dc-celular .dc-abas--pagina { gap: 0; }
-.dc-celular .dc-abas .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 4px; }
+.dc-celular .dc-abas .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 3px; }
 /* Na tela estreita, texto justificado abre buracos entre as palavras. */
 .dc-celular .dc-folha p { text-align: left; }
 

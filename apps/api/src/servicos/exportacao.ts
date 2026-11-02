@@ -55,8 +55,8 @@ type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
 /** Quantos dias a cópia fica disponível para baixar; depois os arquivos saem do armazenamento. */
 export const DIAS_DA_COPIA = 7;
-/** Quanto de documentos cabe em cada ZIP. */
-export const LIMITE_DA_PARTE_BYTES = 50 * 1024 * 1024;
+/** Quanto de documentos cabe em cada ZIP: o servidor tem pouca memória, e cada ZIP é montado inteiro nela. */
+export const LIMITE_DA_PARTE_BYTES = 30 * 1024 * 1024;
 const DIA_MS = 24 * 60 * 60 * 1000;
 
 export interface DepsDaExportacao {

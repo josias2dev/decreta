@@ -77,7 +77,10 @@ describe.skipIf(!hasTestDatabase)("encerrar o escritório", () => {
 
     beforeAll(async () => {
       ({ organizationId: souza, userId: beatriz } = await novo("Souza & Mendes Advocacia", "souza-mendes", "beatriz@souza.adv.br", "Beatriz Souza"));
-      ({ organizationId: mendes } = await novo("Mendes Advogados", "mendes", "tiago@mendes.adv.br", "Tiago Mendes"));
+      let tiago = "";
+      ({ organizationId: mendes, userId: tiago } = await novo("Mendes Advogados", "mendes", "tiago@mendes.adv.br", "Tiago Mendes"));
+      // Tiago também é sócio do Souza: depois que o Souza fechar, ele ainda tem sessão (no Mendes) e não pode chamar ninguém para lá.
+      await juntar(souza, tiago, "owner");
       // Rafael tem o próprio escritório e é membro (não sócio) do Souza: ao fechar o Souza, ele ainda tem para onde entrar.
       ({ organizationId: rafaelSolo, userId: rafaelId } = await novo("Rafael Lima Advocacia", "rafael-lima", "rafael@lima.adv.br", "Rafael Lima"));
       await juntar(souza, rafaelId);
@@ -145,6 +148,13 @@ describe.skipIf(!hasTestDatabase)("encerrar o escritório", () => {
       expect(((await r.json()) as { code: string }).code).toBe("ESCRITORIO_ENCERRADO");
       expect(r.headers.get("set-cookie")).toBeNull();
       expect((await t.owner<{ n: number }[]>`select count(*)::int as n from session where user_id = ${beatriz}`)[0]!.n).toBe(0);
+    });
+
+    test("o escritório encerrado não convida mais ninguém, nem por um sócio que ainda tem sessão em outro escritório", async () => {
+      const r = await app.request("/api/auth/organization/invite-member", { method: "POST", headers: { "content-type": "application/json", cookie: cookieTiago, origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "intruso@exemplo.adv.br", role: "member", organizationId: souza }) });
+      expect(r.status).toBe(403);
+      expect(((await r.json()) as { code: string }).code).toBe("ESCRITORIO_ENCERRADO");
+      expect(await t.owner`select 1 from invitation where email = 'intruso@exemplo.adv.br'`).toHaveLength(0);
     });
 
     test("quem tem outro escritório entra nele, e o outro escritório segue como estava", async () => {
@@ -274,6 +284,8 @@ describe.skipIf(!hasTestDatabase)("encerrar o escritório", () => {
     });
 
     test("apaga só o escritório que passou de 30 dias: linhas de todas as tabelas e todos os arquivos", async () => {
+      // Um pedido de troca de senha ainda aberto da pessoa que só era do escritório que sai.
+      await t.owner`insert into verification (id, identifier, value, expires_at) values (${crypto.randomUUID()}, 'reset-password:token-de-teste', ${velho.pessoa}, now() + interval '1 hour')`;
       expect(await linhasDe(velho.org)).toBeGreaterThan(8);
       expect(quantas(velho.org)).toBe(3);
       const antesRecente = await linhasDe(recente.org);
@@ -304,6 +316,7 @@ describe.skipIf(!hasTestDatabase)("encerrar o escritório", () => {
     test("as pessoas: quem só era do escritório apagado sai de vez; quem é de outro escritório também fica", async () => {
       expect(await t.owner`select 1 from "user" where id = ${velho.pessoa}`).toHaveLength(0);
       expect(await t.owner`select 1 from account where user_id = ${velho.pessoa}`).toHaveLength(0);
+      expect(await t.owner`select 1 from verification where value = ${velho.pessoa}`).toHaveLength(0);
       expect(await t.owner`select 1 from "user" where id = ${compartilhado}`).toHaveLength(1);
       expect(await t.owner`select 1 from member where user_id = ${compartilhado} and organization_id = ${aberto.org}`).toHaveLength(1);
       expect(await t.owner`select 1 from member where user_id = ${compartilhado} and organization_id = ${velho.org}`).toHaveLength(0);

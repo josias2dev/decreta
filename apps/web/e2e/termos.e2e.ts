@@ -91,3 +91,26 @@ test("cadastro: os links do aceite abrem os textos em outra aba, sem perder o fo
   await expect(aba).toHaveURL(/\/termos$/);
   await expect(page.getByLabel("Seu nome")).toHaveValue("Beatriz Souza");
 });
+
+test.describe("no celular", () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  for (const rota of ["/termos", "/privacidade", "/cadastro"]) {
+    test(`${rota} cabe na largura do celular, com o rodapé dos documentos à mão`, async ({ page }) => {
+      await abrir(page, rota, semSessao());
+      await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+      expect(await sobraNaLateral(page)).toBe(0);
+      const rodape = page.getByRole("navigation", { name: "Documentos legais" });
+      await rodape.scrollIntoViewIfNeeded();
+      await expect(rodape.getByRole("link", { name: "Termos de Uso" })).toBeInViewport();
+    });
+  }
+
+  test("cadastro: a caixa de aceite e o botão cabem na tela, com o botão desligado até marcar", async ({ page }) => {
+    await abrir(page, "/cadastro", semSessao());
+    const aceite = page.getByLabel(/Li e aceito os Termos de Uso/);
+    await aceite.scrollIntoViewIfNeeded();
+    await expect(aceite).toBeInViewport();
+    await expect(page.getByRole("button", { name: "Criar conta" })).toBeDisabled();
+  });
+});

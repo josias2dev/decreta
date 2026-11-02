@@ -72,7 +72,9 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
           const s = await getSessionFromCtx(ctx);
           const orgId = (ctx.body as { organizationId?: string } | undefined)?.organizationId ?? (s?.session as { activeOrganizationId?: string | null } | undefined)?.activeOrganizationId;
           if (!orgId) return;
-          const [org] = await db.select({ emAvaliacao: schema.organization.emAvaliacao }).from(schema.organization).where(eq(schema.organization.id, orgId));
+          const [org] = await db.select({ emAvaliacao: schema.organization.emAvaliacao, encerradoEm: schema.organization.encerradoEm }).from(schema.organization).where(eq(schema.organization.id, orgId));
+          // Escritório encerrado não convida ninguém (quem tem outro escritório ainda poderia chamar por aqui).
+          if (org?.encerradoEm) throw new APIError("FORBIDDEN", { code: "ESCRITORIO_ENCERRADO", message: AVISO_DO_ENCERRAMENTO });
           if (org?.emAvaliacao && !CONVITES_EM_AVALIACAO.permitir(orgId)) throw new APIError("TOO_MANY_REQUESTS", { code: "TETO_EM_AVALIACAO", message: AVISO_DOS_CONVITES });
           return;
         }

@@ -120,3 +120,21 @@ test("quem é da equipe e não é sócio não vê a aba Dados", async ({ page })
   await expect(page.getByRole("tab", { name: "Timbre" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Dados" })).toHaveCount(0);
 });
+
+test.describe("no celular", () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test("a aba Dados e os dois passos de encerrar cabem na largura da tela", async ({ page }) => {
+    const api = new ApiFalsa().responder("/escritorio", escritorio).responder("/escritorio/exportacoes", { itens: [pronta] });
+    await abrirDados(page, api);
+    await expect(page.getByRole("link", { name: /Baixar parte 1 de 2/ })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+    await page.getByRole("button", { name: "Encerrar o escritório…" }).click();
+    const explicacao = page.getByRole("dialog", { name: "Encerrar o escritório?" });
+    await expect(explicacao).toBeInViewport();
+    await explicacao.getByRole("button", { name: "Continuar" }).click();
+    const confirmacao = page.getByRole("dialog", { name: "Confirme o nome do escritório" });
+    await expect(confirmacao.getByRole("button", { name: "Encerrar o escritório" })).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+  });
+});

@@ -6,7 +6,7 @@
  * confere `encerradoEm`). Trinta dias depois, uma rotina apaga o escritório, as
  * pessoas que só eram dele e todos os arquivos. Nada de outro escritório é tocado.
  */
-import { invitation, member, organization, session, user, type Database } from "@decreta/db";
+import { invitation, member, organization, session, user, verification, type Database } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
 import { and, eq, inArray, isNotNull, isNull, lte, ne } from "drizzle-orm";
 import { registrar } from "../auditoria.ts";
@@ -112,7 +112,11 @@ async function apagarEscritorio(deps: { db: Database; arquivos: Armazenamento; l
   const soDele = membros.filter((id) => !emOutros.has(id));
   await db.transaction(async (tx) => {
     await tx.delete(organization).where(eq(organization.id, organizationId));
-    if (soDele.length) await tx.delete(user).where(inArray(user.id, soDele));
+    if (soDele.length) {
+      await tx.delete(user).where(inArray(user.id, soDele));
+      // Os pedidos de troca de senha ainda abertos guardam o id da pessoa e não têm vínculo com ela.
+      await tx.delete(verification).where(inArray(verification.value, soDele));
+    }
   });
   await registrarEventoSemEscritorio(db, "escritorio_apagado", deps.log);
   deps.log?.("escritório apagado de vez", { organizationId, arquivos, pessoas: soDele.length });
