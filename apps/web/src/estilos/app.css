@@ -317,7 +317,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 60%
 .dc-pub__partes { font: 400 13px/18px var(--font-sans); color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-pub__selo { display: flex; align-items: center; gap: 6px; margin-top: 4px; font: 500 12px/16px var(--font-sans); color: var(--tinta); }
 .dc-pub__selo svg { width: 14px; height: 14px; flex: none; }
-.dc-pub__selo--sem_teor { color: var(--hoje); }
+.dc-pub__selo--sem_teor,
+.dc-pub__selo--recusa { color: var(--hoje); }
 .dc-pub__selo--erro { color: var(--vencido); }
 .dc-pub__selo--lendo { color: var(--tinta-3); }
 .dc-pub__selo--sem_ia { color: var(--tinta-2); }

@@ -1,6 +1,6 @@
 import { dataDaPublicacao, ehDia, formatarCnj, formatarDiaCurto, hojeEm, horaLocal, instanteLocal, lerCnj, tribunalDoCnj } from "@decreta/core";
 import { analises, audiencias, capturas, prazos, processos, publicacoes, resultados } from "@decreta/db";
-import { ehDecisaoFinal } from "@decreta/ia";
+import { ehDecisaoFinal, semTeor } from "@decreta/ia";
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -19,10 +19,11 @@ const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
 type Situacao = (typeof SITUACOES)[number];
 
 /** O selo da lista: o que a IA achou, numa linha. */
-export function seloDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, semIa = false, parada = false): { tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro" | "sem_ia"; texto: string } {
+export function seloDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, teor: string, semIa = false, parada = false): { tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "recusa" | "lendo" | "erro" | "sem_ia"; texto: string } {
   // Cliente que recusou a IA: a rotina de fundo não lê, e a pessoa trata à mão.
   if (!a) return semIa ? { tipo: "sem_ia", texto: "Cliente sem IA" } : parada ? { tipo: "erro", texto: "A IA não conseguiu ler" } : { tipo: "lendo", texto: "IA lendo" };
-  if (a.situacao === "recusa") return { tipo: "sem_teor", texto: "Falta o teor: abrir no sistema do tribunal" };
+  // A IA também recusa com o teor na mão (não sabe quem é o nosso cliente, por exemplo): aí não é o tribunal que falta.
+  if (a.situacao === "recusa") return semTeor(teor) ? { tipo: "sem_teor", texto: "Falta o teor: abrir no sistema do tribunal" } : { tipo: "recusa", texto: "A IA não concluiu: leia o teor e confira o prazo" };
   if (a.situacao === "erro") return { tipo: "erro", texto: "A IA não conseguiu ler" };
   const s = a.conteudo as Partial<SugestaoNaTela>;
   if (s.audiencia) return { tipo: "audiencia", texto: `Audiência · ${s.audiencia.data.slice(8, 10)}/${s.audiencia.data.slice(5, 7)} às ${s.audiencia.hora}` };
@@ -72,14 +73,14 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         ultimaCaptura: rodada ? { em: rodada.terminadaEm!.toISOString(), hora: horaLocal(rodada.terminadaEm!, c.get("timezone")), novas: rodada.novas, erro: rodada.erro } : null,
         itens: linhas.map(({ pub, processo, semIa: recusou }) => {
           const s = ultima.get(pub.id);
-          const assunto = s?.situacao === "pronto" ? (s.conteudo as { assunto?: string }).assunto : s?.situacao === "recusa" ? "sem teor" : null;
+          const assunto = s?.situacao === "pronto" ? (s.conteudo as { assunto?: string }).assunto : s?.situacao === "recusa" && semTeor(pub.texto) ? "sem teor" : null;
           return {
             id: pub.id,
             titulo: tituloDaPublicacao(pub.tipoComunicacao, assunto ?? pub.tipoDocumento?.toLocaleLowerCase("pt-BR") ?? null),
             disponibilizadaEm: pub.disponibilizadaEm,
             partes: processo?.titulo ?? (pub.destinatarios.map((d) => d.nome).join(" × ") || pub.cnj || "Sem processo vinculado"),
             processoId: processo?.id ?? null,
-            selo: pub.canceladaEm ? { tipo: "erro" as const, texto: "Cancelada pelo tribunal" } : seloDaSugestao(s, recusou, !!deps.ia && leituraParada(pub.createdAt)),
+            selo: pub.canceladaEm ? { tipo: "erro" as const, texto: "Cancelada pelo tribunal" } : seloDaSugestao(s, pub.texto, recusou, !!deps.ia && leituraParada(pub.createdAt)),
           };
         }),
       });

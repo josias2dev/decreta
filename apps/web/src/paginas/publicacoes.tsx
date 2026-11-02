@@ -68,7 +68,7 @@ export function proximaBusca(agora = new Date()): string {
 function SeloDaLista({ selo }: { selo: Selo }) {
   return (
     <span className={cn("dc-pub__selo", `dc-pub__selo--${selo.tipo}`)}>
-      {selo.tipo === "sem_teor" || selo.tipo === "erro" || selo.tipo === "sem_ia" ? <CircleAlert /> : selo.tipo === "lendo" ? <LoaderCircle className="animate-spin" /> : <MarcaIa />}
+      {selo.tipo === "sem_teor" || selo.tipo === "recusa" || selo.tipo === "erro" || selo.tipo === "sem_ia" ? <CircleAlert /> : selo.tipo === "lendo" ? <LoaderCircle className="animate-spin" /> : <MarcaIa />}
       {selo.texto}
     </span>
   );

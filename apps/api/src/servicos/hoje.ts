@@ -5,6 +5,7 @@
  */
 import { diaPorExtenso, diaPorExtensoCurto, horaLocal, instanteLocal, nomeDaAudiencia, somarDias, urgenciaDoPrazo, type AchadoDaAuditoria, type Calendario, type Dia, type Urgencia } from "@decreta/core";
 import { alvaras, analises, audiencias, negocios, prazos, processos, publicacoes, tarefas, type Database, type Tx } from "@decreta/db";
+import { semTeor } from "@decreta/ia";
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { auditarCarteira } from "./auditoria-carteira.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
@@ -50,10 +51,10 @@ export interface PainelDoDia {
 /** Achados que o painel guarda: o resumo de cada pessoa escolhe os dela daqui. */
 const ACHADOS_NO_PAINEL = 50;
 
-/** "prazo sugerido 23/11", "não gera prazo", "falta o teor". */
-export function resumoDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, parada = false): string {
+/** "prazo sugerido 23/11", "não gera prazo", "falta o teor", "a IA não concluiu". */
+export function resumoDaSugestao(a: { situacao: string; conteudo: Record<string, unknown> } | undefined, teor: string, parada = false): string {
   if (!a) return parada ? "a IA não conseguiu ler" : "a IA ainda vai ler";
-  if (a.situacao === "recusa") return "falta o teor";
+  if (a.situacao === "recusa") return semTeor(teor) ? "falta o teor" : "a IA não concluiu";
   if (a.situacao === "erro") return "a IA não conseguiu ler";
   const c = a.conteudo as { geraPrazo?: boolean; audiencia?: { data: string; hora: string } | null; contagemCalculada?: { fim: string } | null };
   if (c.audiencia) return `audiência ${c.audiencia.data.slice(8, 10)}/${c.audiencia.data.slice(5, 7)} às ${c.audiencia.hora}`;
@@ -99,7 +100,7 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       .where(and(isNull(tarefas.concluidaEm), lte(tarefas.dia, hoje)))
       .orderBy(asc(tarefas.dia)),
     tx
-      .select({ id: publicacoes.id, tipoDocumento: publicacoes.tipoDocumento, tipoComunicacao: publicacoes.tipoComunicacao, processo: processos.titulo, destinatarios: publicacoes.destinatarios, canceladaEm: publicacoes.canceladaEm, chegouEm: publicacoes.createdAt, semIa: sql<boolean>`coalesce((select c.sem_ia from clientes c where c.id = ${processos.clienteId}), false)` })
+      .select({ id: publicacoes.id, texto: publicacoes.texto, tipoDocumento: publicacoes.tipoDocumento, tipoComunicacao: publicacoes.tipoComunicacao, processo: processos.titulo, destinatarios: publicacoes.destinatarios, canceladaEm: publicacoes.canceladaEm, chegouEm: publicacoes.createdAt, semIa: sql<boolean>`coalesce((select c.sem_ia from clientes c where c.id = ${processos.clienteId}), false)` })
       .from(publicacoes)
       .leftJoin(processos, eq(processos.id, publicacoes.processoId))
       .where(eq(publicacoes.situacao, "nova"))
@@ -203,7 +204,7 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
       const lida = s?.situacao === "pronto" ? (s.conteudo as { geraPrazo?: boolean; tipo?: string; assunto?: string }) : null;
       const quem = p.processo?.split(" × ")[0] ?? p.destinatarios[0]?.nome ?? "Sem processo";
       const titulo = lida?.geraPrazo && lida.tipo ? lida.tipo : tituloDaPublicacao(p.tipoComunicacao, lida?.assunto ?? p.tipoDocumento?.toLocaleLowerCase("pt-BR") ?? null);
-      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s, semLeitura(p))}` };
+      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s, p.texto, semLeitura(p))}` };
     }),
     porResponsavel,
     alertasDaCaptura: (await saudeDaCaptura(tx, hoje)).alertas,

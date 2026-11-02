@@ -229,7 +229,7 @@ export interface Sugestao {
 export type SituacaoPublicacao = "nova" | "pendente" | "lida" | "vinculada";
 
 export interface Selo {
-  tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "lendo" | "erro" | "sem_ia";
+  tipo: "prazo" | "sem_prazo" | "audiencia" | "sem_teor" | "recusa" | "lendo" | "erro" | "sem_ia";
   texto: string;
 }
 

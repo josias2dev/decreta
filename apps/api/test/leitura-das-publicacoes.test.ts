@@ -35,7 +35,7 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
   const json = async <T = any>(r: Response | Promise<Response>): Promise<T> => (await r).json() as Promise<T>;
   const hoje = () => json(chamar(app, "/hoje"));
 
-  async function publicacao(o: { processoId?: string; canceladaEm?: Date } = {}, escritorio = orgId) {
+  async function publicacao(o: { processoId?: string; canceladaEm?: Date; texto?: string } = {}, escritorio = orgId) {
     const [p] = await withTenant(t.db, escritorio, (tx) =>
       tx
         .insert(publicacoes)
@@ -93,6 +93,24 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
     await Bun.sleep(5);
     await analise(relida, "pronto");
     expect((await hoje()).contadores.publicacoesSemLeitura).toBe(1);
+  });
+
+  test("a IA recusou com o teor na mão: a lista e o Hoje não dizem que falta o teor", async () => {
+    const id = await publicacao();
+    await analise(id, "recusa");
+    expect(await seloNaLista(id)).toEqual({ tipo: "recusa", texto: "A IA não concluiu: leia o teor e confira o prazo" });
+    const item = (await json(chamar(app, "/publicacoes"))).itens.find((i: { id: string }) => i.id === id);
+    expect(item.titulo).not.toContain("sem teor");
+    expect((await hoje()).publicacoes[0].detalhe).toContain("a IA não concluiu");
+  });
+
+  test("a publicação veio mesmo sem teor: a lista e o Hoje continuam mandando abrir no tribunal", async () => {
+    const id = await publicacao({ texto: "Sem teor disponível. Consulte o processo no sistema." });
+    await analise(id, "recusa");
+    expect(await seloNaLista(id)).toEqual({ tipo: "sem_teor", texto: "Falta o teor: abrir no sistema do tribunal" });
+    const item = (await json(chamar(app, "/publicacoes"))).itens.find((i: { id: string }) => i.id === id);
+    expect(item.titulo).toContain("sem teor");
+    expect((await hoje()).publicacoes[0].detalhe).toContain("falta o teor");
   });
 
   test("sem leitura nenhuma uma hora depois de chegar: a rotina não rodou, e a tela para de dizer que a IA está lendo", async () => {
