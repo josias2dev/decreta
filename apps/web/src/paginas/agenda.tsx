@@ -32,13 +32,12 @@ import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaDaSemana, diaMes, juntar, ondeTramita } from "@/lib/formato";
+import type { VistaDaAgenda } from "@/lib/rotas";
 import type { Agenda, Audiencia, Feriados, ItemDaAgenda, PreparacaoDeAudiencia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
 const SITUACAO = { marcada: "Marcada", realizada: "Realizada", cancelada: "Cancelada", redesignada: "Redesignada" } as const;
 
-export const VISTAS_DA_AGENDA = ["lista", "semana", "mes"] as const;
-export type VistaDaAgenda = (typeof VISTAS_DA_AGENDA)[number];
 const VISTAS: { id: VistaDaAgenda; rotulo: string; icone: LucideIcon }[] = [
   { id: "lista", rotulo: "Lista", icone: List },
   { id: "semana", rotulo: "Semana", icone: CalendarRange },

@@ -30,7 +30,15 @@ test("criar conta: o clique conta clicou_criar_conta e leva ao cadastro", async 
   await expect.poll(() => eventos(api)).toEqual([{ nome: "visita" }]);
   await page.locator(".lp-hero").getByRole("link", { name: "Criar conta" }).click();
   await expect(page).toHaveURL(/\/cadastro$/);
-  expect(eventos(api)).toEqual([{ nome: "visita" }, { nome: "clicou_criar_conta" }]);
+  await expect.poll(() => eventos(api)).toEqual([{ nome: "visita" }, { nome: "clicou_criar_conta" }]);
+});
+
+test("ver a demonstração: o clique conta clicou_demonstracao e leva ao escritório de exemplo", async ({ page }) => {
+  const api = await abrir(page, "/", semSessao());
+  await expect.poll(() => eventos(api)).toEqual([{ nome: "visita" }]);
+  await page.locator(".lp-hero").getByRole("link", { name: "Ver um escritório de exemplo" }).click();
+  await expect(page).toHaveURL(/\/demonstracao$/);
+  await expect.poll(() => eventos(api)).toEqual([{ nome: "visita" }, { nome: "clicou_demonstracao" }]);
 });
 
 test("o que tem data-evento da lista conta o clique; nome fora da lista não manda nada", async ({ page }) => {

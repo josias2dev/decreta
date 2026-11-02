@@ -90,6 +90,11 @@ export class ApiFalsa {
       this.pedidos.push({ metodo, caminho: "/eventos", corpo });
       return route.fulfill({ status: 204 });
     }
+    // A página aberta de cobertura.
+    if (url.pathname === "/api/cobertura") {
+      const troca = this.trocas.get("/cobertura");
+      return troca ? json(troca.status ?? 200, troca.corpo) : json(404, { erro: "nao_encontrado" });
+    }
     // O cadastro aberto: cria a conta e já abre a sessão.
     if (url.pathname === "/api/cadastro") {
       this.pedidos.push({ metodo, caminho: "/cadastro", corpo });

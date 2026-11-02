@@ -13,10 +13,9 @@ import { OpcoesDeTribunal } from "@/componentes/opcoes-de-tribunal";
 import { Botao, Campo, Carregando, Faixa } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { escritorioQuery, euQuery } from "@/lib/consultas";
 import type { Escritorio, Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
-import { escritorioQuery } from "./configuracoes";
 
 const ETAPAS = [
   { id: "voce", rotulo: "Você" },
