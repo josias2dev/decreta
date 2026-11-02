@@ -1,3 +1,4 @@
+export * from "./assinatura.ts";
 export * from "./calculos.ts";
 export * from "./calendario.ts";
 export * from "./citacoes.ts";
@@ -8,6 +9,7 @@ export * from "./datas.ts";
 export * from "./documentos.ts";
 export * from "./peca.ts";
 export * from "./pjecalc.ts";
+export * from "./plano.ts";
 export * from "./prazos.ts";
 export * from "./previdenciario.ts";
 export * from "./publicacao.ts";
