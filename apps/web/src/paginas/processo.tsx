@@ -116,7 +116,7 @@ export function ProcessoPage() {
             {p.valorCausa && <> · Valor da causa {dinheiro(p.valorCausa)}</>}
           </span>
         </div>
-        <div className="-mx-4 px-4">{abas}</div>
+        <div className="-mx-3 px-3">{abas}</div>
         {conteudo}
       </TelaCelular>
     );
@@ -302,7 +302,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
           <Link key={a.id} to="/audiencias/$id" params={{ id: a.id }} className="dc-linhas__item">
             <span className="dc-celula min-w-0 flex-1">
               <span className="dc-celula__1">{a.tipo}</span>
-              <span className="dc-celula__2 dc-num">
+              <span className="dc-celula__2 tabular-nums">
                 {diaCompleto(diaDoInstante(a.em))} às {hora(a.em)}
                 {a.porVideo ? " · por vídeo" : ""}
               </span>
@@ -313,7 +313,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
           <Link key={a.id} to="/alvaras" className="dc-linhas__item">
             <span className="dc-celula min-w-0 flex-1">
               <span className="dc-celula__1">{a.descricao}</span>
-              <span className="dc-celula__2 dc-num">Alvará · {dinheiro(a.valor)}</span>
+              <span className="dc-celula__2 tabular-nums">Alvará · {dinheiro(a.valor)}</span>
             </span>
           </Link>
         ))}
@@ -413,7 +413,7 @@ function ListaDeMovimentacoes({ itens, celular }: { itens: Movimentacao[]; celul
         {itens.map((m) => (
           <div key={m.id} className="dc-linhas__item">
             <span className="dc-celula min-w-0 flex-1">
-              <span className="dc-celula__2 dc-num">
+              <span className="dc-celula__2 tabular-nums">
                 {diaCompleto(diaDoInstante(m.em))}
                 {m.evento != null && ` · evento ${m.evento}`}
               </span>

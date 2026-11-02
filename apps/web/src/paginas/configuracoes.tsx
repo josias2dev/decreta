@@ -74,7 +74,7 @@ export function ConfiguracoesPage() {
   if (celular) {
     return (
       <TelaCelular titulo="Configurações" sobre={eu.data?.escritorio.nome} voltar>
-        <div className="-mx-4 px-4">{abas}</div>
+        <div className="-mx-3 px-3">{abas}</div>
         {soLeitura}
         {corpo}
       </TelaCelular>

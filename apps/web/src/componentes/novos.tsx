@@ -102,7 +102,7 @@ export function EscolherCliente({ valor, aoEscolher }: { valor: { id: string; no
               </span>
             </button>
           ))}
-          <button type="button" className="dc-linhas__item w-full cursor-pointer border-0 bg-transparent text-left text-[var(--acento)] hover:bg-[var(--superficie-2)]" onClick={() => setNovo(true)}>
+          <button type="button" className="dc-linhas__item w-full cursor-pointer border-0 bg-transparent text-left font-medium text-[var(--tinta)] hover:bg-[var(--superficie-2)]" onClick={() => setNovo(true)}>
             Cadastrar “{termo}” como cliente novo
           </button>
         </div>
@@ -154,7 +154,7 @@ function DoTribunal({ consulta, buscando, erro, doCliente, aoEscolher, aoCadastr
           </span>
         </Faixa>
       )}
-      {c.exemplo && <Faixa tipo="ia">Demonstração: um exemplo com dados inventados. No escritório de verdade eles vêm do DataJud e do Diário de Justiça.</Faixa>}
+      {c.exemplo && <Faixa tipo="nota">Demonstração: um exemplo com dados inventados. No escritório de verdade eles vêm do DataJud e do Diário de Justiça.</Faixa>}
       {achou && (
         <div className="dc-consulta">
           <div className="dc-consulta__titulo">Do tribunal · {c.exemplo ? "exemplo" : fontes}</div>

@@ -8,9 +8,10 @@
 @import "./estilos/landing-secoes.css";
 
 /*
- * O design system do Decreta (estilos/tokens.css e estilos/componentes.css,
- * classes dc-*) vem do Claude Design e fica como está. O Tailwind entra só
- * para o layout que as telas montam em volta dos componentes.
+ * O design system do Decreta está em estilos/tokens.css (tipo, espaço, cor e
+ * densidade) e estilos/componentes.css (classes dc-*). O Tailwind entra só
+ * para o layout que as telas montam em volta dos componentes: tamanho de letra
+ * vem da escala (dc-t-*), nunca de text-[13px].
  */
 @theme inline {
   --font-sans: var(--font-sans);

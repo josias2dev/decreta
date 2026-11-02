@@ -122,7 +122,7 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
           </select>
         </Campo>
         {conta.data && (
-          <Faixa tipo="ia">
+          <Faixa tipo="nota">
             <span>
               Vence em <strong className="dc-num">{diaCompleto(conta.data.fim)}</strong>, {diaDaSemana(conta.data.fim)}. {conta.data.explicacao}
             </span>

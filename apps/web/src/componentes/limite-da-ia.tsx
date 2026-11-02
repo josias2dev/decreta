@@ -39,13 +39,13 @@ export function UsoDaIaHoje() {
         {mensagens && (
           <div className="dc-uso-hoje__linha">
             <span>Mensagens no chat</span>
-            <strong className="dc-num">{mensagens.restam === 1 ? "Resta 1" : `Restam ${mensagens.restam}`} de {mensagens.limite}</strong>
+            <strong className="tabular-nums">{mensagens.restam === 1 ? "Resta 1" : `Restam ${mensagens.restam}`} de {mensagens.limite}</strong>
           </div>
         )}
         {gasto !== null && (
           <div className="dc-uso-hoje__linha">
             <span>Uso da IA</span>
-            <strong className="dc-num">{Math.round(gasto * 100)}% do limite do dia</strong>
+            <strong className="tabular-nums">{Math.round(gasto * 100)}% do limite do dia</strong>
             <span className="dc-uso-hoje__barra" aria-hidden>
               <span style={{ transform: `scaleX(${gasto})` }} />
             </span>

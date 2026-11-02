@@ -58,7 +58,7 @@ export function Busca({ aberta, aoFechar }: { aberta: boolean; aoFechar: () => v
                       <FolderOpen size={16} className="mt-0.5 flex-none text-[var(--tinta-3)]" />
                       <span className="dc-celula">
                         <span className="dc-celula__1">{p.titulo}</span>
-                        <span className="dc-celula__2 dc-num">{[p.cnj, p.orgao].filter(Boolean).join(" · ")}</span>
+                        <span className="dc-celula__2 tabular-nums">{[p.cnj, p.orgao].filter(Boolean).join(" · ")}</span>
                       </span>
                     </button>
                   ))}

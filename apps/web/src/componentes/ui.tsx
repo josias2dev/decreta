@@ -295,7 +295,7 @@ export function Carregando({ linhas = 4 }: { linhas?: number }) {
   return (
     <div className="flex flex-col gap-3" aria-label="Carregando">
       {Array.from({ length: linhas }, (_, i) => (
-        <Esqueleto key={i} altura={i === 0 ? 24 : 56} largura={i === 0 ? "40%" : "100%"} />
+        <Esqueleto key={i} altura={i === 0 ? 20 : 44} largura={i === 0 ? "40%" : "100%"} />
       ))}
     </div>
   );
@@ -324,7 +324,7 @@ export function Campo({ rotulo, ajuda, erro, children, htmlFor }: { rotulo: stri
   );
 }
 
-export function Faixa({ tipo, children }: { tipo: "aviso" | "erro" | "ok" | "ia"; children: ReactNode }) {
+export function Faixa({ tipo, children }: { tipo: "aviso" | "erro" | "ok" | "nota"; children: ReactNode }) {
   return (
     <div className={cn("dc-faixa", `dc-faixa--${tipo}`)} role={tipo === "erro" ? "alert" : undefined}>
       {children}

@@ -106,7 +106,7 @@ function EmEnvio({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void }) 
     },
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
-  if (!m.envioIncerto) return <Faixa tipo="ia">Enviando a mensagem para {m.cliente.nome} no WhatsApp.</Faixa>;
+  if (!m.envioIncerto) return <Faixa tipo="nota">Enviando a mensagem para {m.cliente.nome} no WhatsApp.</Faixa>;
   return (
     <>
       <Faixa tipo="aviso">
@@ -157,7 +157,7 @@ function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void })
       {m.situacao === "falhou" ? (
         <Faixa tipo="erro">Esta mensagem não saiu. Confira o texto e tente de novo.</Faixa>
       ) : (
-        <Faixa tipo="ia">
+        <Faixa tipo="nota">
           {m.tipo === "decisao"
             ? "Rascunho da IA a partir do briefing. Revise: nada sai sem a sua aprovação, e a mensagem não dá parecer sobre o caso."
             : "Lista do que falta, tirada da conferência da pasta. O link de envio, sem senha e válido por 7 dias, entra quando você aprovar."}

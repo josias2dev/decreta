@@ -446,7 +446,7 @@ export function PecaPage() {
             </span>
             {revisada && quemRevisou && !gerando && (
               <span className="inline-flex items-center gap-1.5 dc-t-meta text-[var(--tinta-2)]">
-                <Check className="size-3.5 text-[var(--acento)]" /> {quemRevisou}
+                <Check className="size-3.5 text-[var(--cumprido)]" /> {quemRevisou}
               </span>
             )}
           </div>

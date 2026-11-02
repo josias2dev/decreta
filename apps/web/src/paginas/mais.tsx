@@ -20,7 +20,7 @@ export function MaisPage() {
         if (!itens.length) return null;
         return (
           <section key={g.titulo} className="dc-secao">
-            <span className="dc-rotulo uppercase tracking-[0.08em]">{g.titulo}</span>
+            <span className="dc-rotulo">{g.titulo}</span>
             <div className="dc-painel">
               <div className="dc-linhas">
                 {itens.map((i) => {
@@ -40,7 +40,7 @@ export function MaisPage() {
         );
       })}
       <section className="dc-secao">
-        <span className="dc-rotulo uppercase tracking-[0.08em]">Conta</span>
+        <span className="dc-rotulo">Conta</span>
         <div className="dc-painel">
           <Link to="/conta" className="dc-linhas__item dc-linhas__item--toque items-center">
             {e ? <Avatar pessoa={e.usuario} grande /> : <UserRound className="size-5" />}

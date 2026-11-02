@@ -151,6 +151,7 @@
   --avatar: 20px;
   --avatar-grande: 32px;
 
+  --escala-coluna: 1;
   --layout-menu: 208px;
   --layout-menu-recolhido: 52px;
   --layout-lado: 320px;
@@ -198,6 +199,7 @@
   --icone-botao: 16px;
   --avatar: 24px;
   --avatar-grande: 36px;
+  --escala-coluna: 1.16;
   --layout-menu: 232px;
   --layout-lado: 340px;
 }

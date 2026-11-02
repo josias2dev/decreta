@@ -392,7 +392,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
         <h3 className="dc-painel__titulo">{tituloTeor}</h3>
         <span className="dc-nota">{celular ? `Disponibilizada em ${diaCompleto(pub.disponibilizadaEm)}` : datas}</span>
       </div>
-      <p className={cn("m-0 whitespace-pre-wrap", celular ? "dc-teor" : "dc-t-leitura")}>{pub.texto || "Sem teor. Abra a publicação no sistema do tribunal."}</p>
+      <p className={cn("dc-texto-longo m-0 whitespace-pre-wrap", celular ? "dc-teor" : "dc-t-leitura")}>{pub.texto || "Sem teor. Abra a publicação no sistema do tribunal."}</p>
       {(pub.link || pub.certidao) && (
         <div className="dc-linha-acoes">
           {pub.link && (

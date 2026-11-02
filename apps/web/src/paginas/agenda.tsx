@@ -322,7 +322,7 @@ export function AgendaPage() {
             className="dc-agenda-mes__dia"
             corpo={false}
             titulo={<h2 className={cn("dc-painel__titulo dc-agenda__dia", dia === hoje && "is-hoje")}>{tituloDoDia(dia)}</h2>}
-            acao={doDia.length > 0 && <span className="dc-nota dc-num">{contar(doDia.length, "compromisso", "compromissos")}</span>}
+            acao={doDia.length > 0 && <span className="dc-nota tabular-nums">{contar(doDia.length, "compromisso", "compromissos")}</span>}
           >
             <div className="dc-rola">{!a ? <Carregando linhas={3} /> : doDia.length ? linhas(doDia, true) : vazioDoDia}</div>
             <Legenda />

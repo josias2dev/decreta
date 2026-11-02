@@ -120,7 +120,7 @@ export function PainelDaConta({ conta, contagem, conferencia, aoAjustar }: { con
         <Dados linhas={linhas} />
         {conta.calendarioCompleto === false && <AvisoSemCalendarioProprio />}
         {conta.outra && (
-          <Faixa tipo="ia">
+          <Faixa tipo="nota">
             <span>{duplaIntimacao(conta.pelo, conta.fim, conta.outra.fim)}</span>
           </Faixa>
         )}
@@ -155,7 +155,7 @@ export function PreviaNoDialogo({ fim, previa, sabeData }: { fim: string; previa
   const semExpediente = sabeData && previa?.diaDigitado?.dia === fim ? previa.diaDigitado : null;
   return (
     <>
-      <Faixa tipo="ia">
+      <Faixa tipo="nota">
         <span>
           Vence em <strong className="dc-num">{diaCompleto(fim)}</strong>, {diaDaSemana(fim)}.{conta ? ` ${conta.explicacao}` : ""}
           {conta?.outra ? ` ${duplaIntimacao(conta.pelo, conta.fim, conta.outra.fim)}` : ""}

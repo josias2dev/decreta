@@ -351,7 +351,7 @@ function Teor({ publicacao }: { publicacao: NonNullable<Prazo["publicacao"]> }) 
   return (
     <Painel titulo={titulo} acao={<span className="dc-nota">Publicada em {diaCompleto(publicacao.publicadaEm)}</span>}>
       {publicacao.cancelada && <Cancelada cancelada={publicacao.cancelada} comPrazo />}
-      <p className="m-0 whitespace-pre-wrap dc-t-leitura">{longo && !inteiro ? `${publicacao.texto.slice(0, 1200).trimEnd()}…` : publicacao.texto}</p>
+      <p className="dc-texto-longo m-0 whitespace-pre-wrap dc-t-leitura">{longo && !inteiro ? `${publicacao.texto.slice(0, 1200).trimEnd()}…` : publicacao.texto}</p>
       <div className="dc-linha-acoes">
         {longo && (
           <button type="button" className="dc-link" onClick={() => setInteiro(!inteiro)}>

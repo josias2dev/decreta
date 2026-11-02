@@ -71,7 +71,7 @@ export function ClientesPage() {
             {itens.map((c) => (
               <Link key={c.id} to="/clientes/$id" params={{ id: c.id }} className="dc-item">
                 <span className="dc-item__titulo">{c.nome}</span>
-                <span className="dc-num dc-t-meta text-[var(--tinta-2)]">{c.processos ? `${c.processos} ${c.processos === 1 ? "processo" : "processos"}` : ""}</span>
+                <span className="dc-t-meta tabular-nums text-[var(--tinta-2)]">{c.processos ? `${c.processos} ${c.processos === 1 ? "processo" : "processos"}` : ""}</span>
                 <span className="dc-item__meta">{[c.documento && formatarDocumento(c.documento), telefone(c.whatsapp ?? c.telefone)].filter(Boolean).join(" · ") || "Sem documento"}</span>
               </Link>
             ))}
@@ -341,7 +341,7 @@ export function ClientePage() {
       >
         <div className="flex flex-col gap-1">
           <h1 className="dc-h1">{c.nome}</h1>
-          {sobre && <span className="dc-num dc-t-corpo text-[var(--tinta-2)]">{sobre}</span>}
+          {sobre && <span className="dc-t-corpo tabular-nums text-[var(--tinta-2)]">{sobre}</span>}
         </div>
         <div className="dc-rodape__par">
           <Botao variante="primaria" bloco onClick={() => setDialogo("atendimento")}>

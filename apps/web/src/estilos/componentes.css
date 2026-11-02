@@ -8,6 +8,9 @@
 .dc-cnj { white-space: nowrap; }
 .dc-logo { display: block; height: 20px; width: auto; color: var(--tinta); }
 
+/* Foco visível em tudo que se alcança pelo teclado; os componentes abaixo trocam pelo anel deles. */
+:where(.dc) a:focus-visible, :where(.dc) button:focus-visible, :where(.dc) summary:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
+
 /* Botão */
 .dc-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1-half); box-sizing: border-box; height: var(--altura-controle); padding: 0 var(--respiro-controle); border: 1px solid transparent; border-radius: var(--radius-md); font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); cursor: pointer; white-space: nowrap; text-decoration: none; transition: background-color var(--transicao), border-color var(--transicao), color var(--transicao); }
 .dc-btn svg { width: var(--icone-botao); height: var(--icone-botao); flex: none; }
@@ -45,7 +48,8 @@
 .dc-tecla { display: inline-grid; place-items: center; min-width: var(--space-4); height: var(--space-4); padding: 0 var(--space-1); margin-left: auto; box-sizing: border-box; border: 1px solid var(--borda); border-radius: var(--radius-sm); background: var(--superficie-2); font: 500 var(--texto-legenda)/1 var(--font-mono); color: var(--tinta-2); }
 
 /* Chip de filtro: ligado, em grafite. */
-.dc-chips { display: flex; gap: var(--vao-filtros); overflow-x: auto; scrollbar-width: none; }
+/* A folga em cima e embaixo deixa o anel de foco inteiro: a lista rola para o lado e cortaria o resto. */
+.dc-chips { display: flex; gap: var(--vao-filtros); overflow-x: auto; scrollbar-width: none; margin-block: -3px; padding-block: 3px; padding-inline: 3px; margin-inline: -3px; }
 .dc-chip { display: inline-flex; align-items: center; gap: var(--space-1-half); box-sizing: border-box; height: var(--altura-chip); padding: 0 var(--space-2); border: 1px solid var(--borda); border-radius: var(--radius-md); background: var(--superficie); color: var(--tinta-2); font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--transicao), border-color var(--transicao), color var(--transicao); }
 .dc-chip:hover { background: var(--superficie-2); color: var(--tinta); }
 .dc-chip__n { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--tinta-3); }
@@ -92,11 +96,11 @@ a.dc-contador:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--f
 .dc-contador--hoje .dc-contador__n { color: var(--hoje); }
 
 /* Bloco da IA */
-.dc-ia { display: grid; gap: var(--space-2-half); padding: var(--respiro-painel); background: var(--acento-suave); border: 1px solid var(--acento-borda); border-radius: var(--radius-lg); color: var(--tinta); }
+.dc-ia { container-type: inline-size; display: grid; gap: var(--space-2-half); padding: var(--respiro-painel); background: var(--acento-suave); border: 1px solid var(--acento-borda); border-radius: var(--radius-lg); color: var(--tinta); }
 .dc-ia__topo { display: flex; align-items: center; gap: var(--space-1-half); flex-wrap: wrap; }
 .dc-ia__marca { display: inline-flex; align-items: center; height: var(--space-4); padding: 0 var(--space-1); border-radius: var(--radius-sm); background: var(--acento); color: var(--on-acento); font: 600 var(--texto-legenda)/1 var(--font-sans); letter-spacing: 0.04em; }
 .dc-ia__titulo { font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); }
-.dc-ia__fonte { margin-left: auto; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-mono); letter-spacing: -0.02em; color: var(--tinta-2); }
+.dc-ia__fonte { margin-left: auto; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-2); }
 .dc-ia__sec h4 { margin: 0 0 var(--space-half); font: 600 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
 .dc-ia__sec p, .dc-ia__sec ul { margin: 0; font: 400 var(--texto-leitura)/var(--linha-leitura) var(--font-sans); color: var(--tinta); }
 .dc-ia__sec ul { padding-left: var(--space-4); }
@@ -204,7 +208,7 @@ a.dc-contador:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--f
 .dc-tabela tr.is-on td { background: var(--superficie-2); }
 .dc-tabela .dc-direita { text-align: right; }
 .dc-tabela a { color: var(--tinta); text-decoration: none; }
-.dc-celula { display: flex; flex-direction: column; gap: var(--space-half); min-width: 0; }
+.dc-celula { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .dc-celula__1 { font-weight: 500; color: var(--tinta); }
 .dc-celula__2 { font-size: var(--texto-meta); line-height: var(--linha-meta); color: var(--tinta-2); }
 /* A segunda linha da lista: partes · vara · CNJ numa linha só. O que não cabe some nas reticências. */
@@ -217,6 +221,7 @@ a.dc-contador:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--f
 .dc-abas { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--borda); overflow-x: auto; scrollbar-width: none; }
 .dc-aba { flex: none; height: var(--altura-aba); padding: 0 var(--space-2); border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: transparent; font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta-2); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: var(--space-1-half); transition: color var(--transicao), border-color var(--transicao); }
 .dc-aba:hover { color: var(--tinta); }
+.dc-aba:focus-visible { box-shadow: inset 0 0 0 2px var(--foco); }
 .dc-aba.is-on { border-bottom-color: var(--primaria); color: var(--tinta); font-weight: 600; }
 .dc-aba .dc-chip__n { font-size: var(--texto-meta); color: var(--tinta-3); }
 .dc-abas--pagina { gap: var(--space-4); }
