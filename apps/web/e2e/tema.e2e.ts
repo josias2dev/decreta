@@ -18,11 +18,13 @@ async function telaPronta(page: Page) {
   await expect(page.getByLabel("Carregando")).toHaveCount(0);
 }
 
+/** A chave de /conta. No menu da conta, onde o ARIA não prevê "switch", é um item de marcar. */
 const chave = (page: Page) => page.getByRole("switch", { name: "Modo escuro" });
+const itemDoMenu = (page: Page) => page.getByRole("menuitemcheckbox", { name: "Modo escuro" });
 
 async function escolherEscuroNoMenu(page: Page) {
   await page.getByRole("button", { name: /Menu da conta de/ }).click();
-  await chave(page).click();
+  await itemDoMenu(page).click();
 }
 
 /** O texto com contraste abaixo de 4,5:1 sobre o fundo real, na tela. */
@@ -90,11 +92,11 @@ test.describe("no computador, com o sistema pedindo escuro", () => {
     expect(await barra(page)).toBe("#fbfaf7");
 
     await page.getByRole("button", { name: /Menu da conta de/ }).click();
-    await expect(chave(page)).toHaveAttribute("aria-checked", "false");
-    await chave(page).click();
+    await expect(itemDoMenu(page)).toHaveAttribute("aria-checked", "false");
+    await itemDoMenu(page).click();
     // Alterna ali mesmo: o menu fica aberto, para ver a tela mudar.
     await expect(page.getByRole("menu")).toBeVisible();
-    await expect(chave(page)).toHaveAttribute("aria-checked", "true");
+    await expect(itemDoMenu(page)).toHaveAttribute("aria-checked", "true");
     await expect(raizEscura(page)).toHaveCount(1);
     await expect.poll(() => fundoDoCorpo(page)).toBe(ESCURO);
     expect(await barra(page)).toBe("#121213");
@@ -106,9 +108,9 @@ test.describe("no computador, com o sistema pedindo escuro", () => {
     expect(await fundoDoCorpo(page)).toBe(ESCURO);
 
     await page.getByRole("button", { name: /Menu da conta de/ }).click();
-    await expect(chave(page)).toHaveAttribute("aria-checked", "true");
-    await chave(page).click();
-    await expect(chave(page)).toHaveAttribute("aria-checked", "false");
+    await expect(itemDoMenu(page)).toHaveAttribute("aria-checked", "true");
+    await itemDoMenu(page).click();
+    await expect(itemDoMenu(page)).toHaveAttribute("aria-checked", "false");
     await expect(raizEscura(page)).toHaveCount(0);
     await expect.poll(() => fundoDoCorpo(page)).toBe(CLARO);
   });
@@ -121,17 +123,17 @@ test.describe("no computador, com o sistema pedindo escuro", () => {
     await expect(page.getByRole("menu")).toBeVisible();
     await expect(page.getByRole("menuitemradio", { name: /Claro|Escuro/ })).toHaveCount(0);
     for (let i = 0; i < 8; i++) {
-      if (await chave(page).evaluate((e) => e === document.activeElement)) break;
+      if (await itemDoMenu(page).evaluate((e) => e === document.activeElement)) break;
       await page.keyboard.press("ArrowDown");
     }
-    await expect(chave(page)).toBeFocused();
+    await expect(itemDoMenu(page)).toBeFocused();
     await page.keyboard.press("Space");
     await expect(raizEscura(page)).toHaveCount(1);
-    await expect(chave(page)).toHaveAttribute("aria-checked", "true");
-    await expect(chave(page)).toBeFocused();
+    await expect(itemDoMenu(page)).toHaveAttribute("aria-checked", "true");
+    await expect(itemDoMenu(page)).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(raizEscura(page)).toHaveCount(0);
-    await expect(chave(page)).toHaveAttribute("aria-checked", "false");
+    await expect(itemDoMenu(page)).toHaveAttribute("aria-checked", "false");
     await expect(page.getByRole("menu")).toBeVisible();
   });
 

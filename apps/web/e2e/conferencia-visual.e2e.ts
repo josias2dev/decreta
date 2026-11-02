@@ -368,7 +368,8 @@ test.describe("menu rápido da pessoa", () => {
     const itens = await menu.getByRole("menuitem").allTextContents();
     expect(itens.map((t) => t.trim())).toEqual(["Minha conta", "Configurações", "Segurança e LGPD", "Sair"]);
     await expect(menu.getByRole("menuitemradio")).toHaveText(["Compacto", "Confortável"]);
-    await expect(menu.getByRole("switch", { name: "Modo escuro" })).toHaveAttribute("aria-checked", "false");
+    await expect(menu.getByRole("menuitemcheckbox", { name: "Modo escuro" })).toHaveAttribute("aria-checked", "false");
+    await expect(menu.getByRole("switch")).toHaveCount(0);
     await conferirEscala(page, ESCALA_DO_COMPUTADOR);
   });
 

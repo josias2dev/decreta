@@ -69,18 +69,11 @@ export function MenuDaConta({ eu, recolhido }: { eu: Eu; recolhido: boolean }) {
             ))}
           </Menu.RadioGroup>
           <Menu.Separator className="dc-menu-flutuante__sep" />
-          <Menu.Item
-            role="switch"
-            aria-checked={tema === "escuro"}
-            className="dc-menu-flutuante__item"
-            onSelect={(e) => {
-              e.preventDefault();
-              escolherTema(tema === "escuro" ? "claro" : "escuro");
-            }}
-          >
+          {/* Dentro de um menu, o ARIA prevê item de marcar, não "switch". A aparência continua a da chave. */}
+          <Menu.CheckboxItem checked={tema === "escuro"} onCheckedChange={(ligado) => escolherTema(ligado ? "escuro" : "claro")} onSelect={(e) => e.preventDefault()} className="dc-menu-flutuante__item">
             <Moon aria-hidden /> Modo escuro
             <span className="dc-interruptor dc-menu-flutuante__marca" aria-hidden />
-          </Menu.Item>
+          </Menu.CheckboxItem>
           <Menu.Separator className="dc-menu-flutuante__sep" />
           <Menu.Item asChild className="dc-menu-flutuante__item">
             <Link to="/configuracoes">
