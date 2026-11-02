@@ -139,6 +139,9 @@ export function wameowDeMentira() {
   return { w, enviados };
 }
 
+/** A resposta da API nos testes: o corpo JSON sai como `any`, porque cada teste confere os campos que lhe interessam. */
+export type Resposta = Omit<Response, "json"> & { json(): Promise<any> };
+
 export interface Cenario {
   t: TestDatabase;
   app: ReturnType<typeof createApp>;
@@ -151,10 +154,10 @@ export interface Cenario {
   mendes: { orgId: string; cookie: string; clienteId: string; processoId: string };
   demo: { orgId: string; cookie: string };
   /** Pede à API como a pessoa: `com("beatriz", "/financeiro")`. */
-  com: (quem: "beatriz" | "rafael" | "camila" | "tiago" | "bianca" | "mendes" | "demo", caminho: string, init?: { metodo?: string; json?: unknown }) => Promise<Response>;
-  json: <T = any>(r: Response | Promise<Response>) => Promise<T>;
+  com: (quem: "beatriz" | "rafael" | "camila" | "tiago" | "bianca" | "mendes" | "demo", caminho: string, init?: { metodo?: string; json?: unknown }) => Promise<Resposta>;
+  json: (r: Resposta | Promise<Resposta>) => Promise<any>;
   /** O aviso de pagamento do Asaas, direto no endereço público, sem sessão. */
-  aviso: (orgId: string, corpo: unknown, cabecalhos?: Record<string, string>) => Promise<Response>;
+  aviso: (orgId: string, corpo: unknown, cabecalhos?: Record<string, string>) => Promise<Resposta>;
   encerrar: () => Promise<void>;
 }
 
@@ -237,7 +240,7 @@ export async function montarCenario(opcoes: { cofre?: boolean; wameow?: boolean 
   const casoMendes = await caso(mendesId, "Hotel Mar Azul Ltda.", "Hotel Mar Azul × Banco Beta", "5007777-12.2026.8.24.0038");
 
   const cookieDe = { ...cookies, mendes: cookieMendes, demo: cookieDemo };
-  const com: Cenario["com"] = (quem, caminho, init = {}) =>
+  const com: Cenario["com"] = async (quem, caminho, init = {}) =>
     app.request(`/api/app${caminho}`, {
       method: init.metodo ?? (init.json !== undefined ? "POST" : "GET"),
       headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, cookie: cookieDe[quem] },
@@ -257,7 +260,7 @@ export async function montarCenario(opcoes: { cofre?: boolean; wameow?: boolean 
     demo: { orgId: demoId, cookie: cookieDemo },
     com,
     json: async (r) => (await r).json(),
-    aviso: (orgId, corpo, cabecalhos = {}) => app.request(`/api/cobranca/asaas/${orgId}`, { method: "POST", headers: { "content-type": "application/json", ...cabecalhos }, body: JSON.stringify(corpo) }),
+    aviso: async (orgId, corpo, cabecalhos = {}) => app.request(`/api/cobranca/asaas/${orgId}`, { method: "POST", headers: { "content-type": "application/json", ...cabecalhos }, body: JSON.stringify(corpo) }),
     encerrar: () => t.drop(),
   };
 }

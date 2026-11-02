@@ -28,7 +28,7 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
 
   const contrato = async (corpo: Record<string, unknown>, quem: "beatriz" | "mendes" = "beatriz") => (await s.json(s.com(quem, "/financeiro/contratos", { json: corpo }))) as any;
   const cobrancaId = async (parcelaId: string) => (await s.t.owner<{ cobranca_id: string | null }[]>`select cobranca_id from parcelas_honorarios where id = ${parcelaId}`)[0]!.cobranca_id;
-  const pagamentos = async (parcelaId: string) => s.t.owner<{ valor: number; origem: string; forma: string; registrado_por: string | null; estornado_em: Date | null }[]>`select valor::int as valor, origem, forma, registrado_por, estornado_em from pagamentos_honorarios where parcela_id = ${parcelaId} order by created_at`;
+  const pagamentos = async (parcelaId: string) => [...(await s.t.owner<{ valor: number; origem: string; forma: string; registrado_por: string | null; estornado_em: Date | null }[]>`select valor::int as valor, origem, forma, registrado_por, estornado_em from pagamentos_honorarios where parcela_id = ${parcelaId} order by created_at`)];
   const aviso = (evento: string, pagamento: string, extra: Record<string, unknown> = {}, id = `evt_${crypto.randomUUID()}`, orgId = s.souza.orgId, token = s.provedores.webhooks.filter((w) => w.url.endsWith(`/${orgId}`)).at(-1)?.authToken ?? "") =>
     s.aviso(orgId, { id, event: evento, dateCreated: `${HOJE} 10:00:00`, payment: { object: "payment", id: pagamento, value: 0, billingType: "PIX", status: "RECEIVED", ...extra } }, { "asaas-access-token": token });
 
@@ -106,7 +106,8 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
     test("a cópia dos dados do escritório leva os honorários e não leva as chaves nem o segredo do aviso", async () => {
       await s.t.owner`update cobranca_config set zapsign_chave = 'v1.zapsign.cifrada.x' where organization_id = ${s.souza.orgId}`;
       const pedida = await s.json(s.com("beatriz", "/escritorio/exportacoes", { json: {} }));
-      const [{ asaas_chave: chave, asaas_webhook_token_hash: hash }] = await s.t.owner<{ asaas_chave: string; asaas_webhook_token_hash: string }[]>`select asaas_chave, asaas_webhook_token_hash from cobranca_config where organization_id = ${s.souza.orgId}`;
+      const [guardada] = await s.t.owner<{ asaas_chave: string; asaas_webhook_token_hash: string }[]>`select asaas_chave, asaas_webhook_token_hash from cobranca_config where organization_id = ${s.souza.orgId}`;
+      const { asaas_chave: chave, asaas_webhook_token_hash: hash } = guardada!;
       await prepararExportacao({ db: s.t.db, arquivos: s.arquivos, telas: "https://decreta.local" }, s.souza.orgId, pedida.id);
       const baixada = await s.com("beatriz", `/escritorio/exportacoes/${pedida.id}/partes/1`);
       const zip = await JSZip.loadAsync(new Uint8Array(await baixada.arrayBuffer()));
@@ -420,7 +421,7 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
       const decontratoCancelado = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 20_000, parcelas: 1, primeiroVencimento: HOJE } });
       await s.com("beatriz", `/financeiro/contratos/${decontratoCancelado.id}/cancelar`, { json: {} });
       await gerarLembretesDoDia(s.t.db, s.souza.orgId, HOJE);
-      const de = async (parcelaId: string) => s.t.owner<{ texto: string }[]>`select m.texto from mensagens_cliente m join lembretes_de_cobranca l on l.mensagem_id = m.id where l.parcela_id = ${parcelaId} order by l.passo`;
+      const de = async (parcelaId: string) => [...(await s.t.owner<{ texto: string }[]>`select m.texto from mensagens_cliente m join lembretes_de_cobranca l on l.mensagem_id = m.id where l.parcela_id = ${parcelaId} order by l.passo`)];
       const textos = await de(c.parcelas[0].id);
       expect(textos).toHaveLength(1);
       expect(textos[0]!.texto).toMatch(/Hoje vence o pagamento dos honorários \(Honorários\), de R\$ 200,00\.\nhttps:\/\/sandbox\.asaas\.com\/i\/pay_/);
@@ -505,7 +506,8 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
     });
 
     test("o aviso de ativação muda a situação; a cobrança do mês seguinte sai por Pix, ligada à autorização", async () => {
-      const [{ pix_automatico_id: autorizacao }] = await s.t.owner<{ pix_automatico_id: string }[]>`select pix_automatico_id from contratos_honorarios where id = ${contratoId}`;
+      const [guardado] = await s.t.owner<{ pix_automatico_id: string }[]>`select pix_automatico_id from contratos_honorarios where id = ${contratoId}`;
+      const autorizacao = guardado!.pix_automatico_id;
       const ativado = await s.aviso(s.souza.orgId, { id: "evt_pix_1", event: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED", authorization: { id: autorizacao, status: "ACTIVE" } }, { "asaas-access-token": s.provedores.webhooks.at(-1)!.authToken });
       expect(ativado.status).toBe(200);
       const c = await s.json(s.com("beatriz", `/financeiro/contratos/${contratoId}`));
