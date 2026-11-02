@@ -47,7 +47,7 @@ function acabou(p: Progresso | undefined): boolean {
 function SeloDaLeitura({ leitura }: { leitura: Leitura }) {
   if (leitura === "lendo")
     return (
-      <span className="dc-busca__lendo">
+      <span className="dc-primeira-busca__lendo">
         <LoaderCircle aria-hidden className="animate-spin" /> A IA está lendo
       </span>
     );
@@ -72,16 +72,16 @@ export function PrimeiraBusca({ busca }: { busca: BuscaPedida }) {
   const emAndamento = !p || p.situacao === "na_fila" || p.situacao === "buscando";
 
   return (
-    <section className="dc-busca" aria-live="polite" aria-label="Busca no DJEN">
+    <section className="dc-primeira-busca" aria-live="polite" aria-label="Busca no DJEN">
       {emAndamento ? (
         <>
-          <p className="dc-busca__titulo">
+          <p className="dc-primeira-busca__titulo">
             <LoaderCircle aria-hidden className="animate-spin" /> Buscando no DJEN as publicações da {busca.oab} dos últimos {busca.dias} dias…
           </p>
           <p className="dc-nota">{demorando ? "A busca está demorando. Pode seguir: as publicações chegam na caixa assim que o DJEN responder." : "Pode seguir configurando enquanto isso."}</p>
         </>
       ) : p.situacao === "falhou" ? (
-        <p className="dc-busca__titulo dc-busca__titulo--aviso">
+        <p className="dc-primeira-busca__titulo dc-primeira-busca__titulo--aviso">
           <CircleAlert aria-hidden />
           <span>
             O DJEN não respondeu agora. A sua OAB está salva, e o Decreta olha de novo {p.proximaBusca}.
@@ -89,12 +89,12 @@ export function PrimeiraBusca({ busca }: { busca: BuscaPedida }) {
         </p>
       ) : p.encontradas === 0 ? (
         <>
-          <p className="dc-busca__titulo">Nenhuma publicação da {busca.oab} nos últimos {busca.dias} dias.</p>
+          <p className="dc-primeira-busca__titulo">Nenhuma publicação da {busca.oab} nos últimos {busca.dias} dias.</p>
           <p className="dc-nota">O Decreta olha de novo {p.proximaBusca}. Se o número estiver errado, corrija em Equipe.</p>
         </>
       ) : (
         <>
-          <p className="dc-busca__titulo">
+          <p className="dc-primeira-busca__titulo">
             Achei {publicacoes(p.encontradas)}
             {p.comPrazo > 0 ? `, ${comPrazo(p.comPrazo)}` : ""}
           </p>
@@ -105,10 +105,10 @@ export function PrimeiraBusca({ busca }: { busca: BuscaPedida }) {
           ) : (
             <p className="dc-nota">A leitura da IA não está disponível agora: as publicações ficam na caixa para você decidir.</p>
           )}
-          <ul className="dc-busca__lista">
+          <ul className="dc-primeira-busca__lista">
             {p.itens.map((i) => (
               <li key={i.id}>
-                <span className="dc-busca__item">
+                <span className="dc-primeira-busca__item">
                   <strong>{i.prazo ?? i.titulo}</strong>
                   <span className="dc-nota">
                     {[i.tribunal, diaCurto(i.disponibilizadaEm)].filter(Boolean).join(" · ")}
@@ -118,7 +118,7 @@ export function PrimeiraBusca({ busca }: { busca: BuscaPedida }) {
               </li>
             ))}
           </ul>
-          <Link className="dc-link dc-busca__abrir" to="/publicacoes">
+          <Link className="dc-link dc-primeira-busca__abrir" to="/publicacoes">
             Abrir a caixa de Publicações <ArrowRight aria-hidden />
           </Link>
         </>
@@ -130,8 +130,8 @@ export function PrimeiraBusca({ busca }: { busca: BuscaPedida }) {
 /** O pedido não saiu (o teto de quem está em avaliação, a fila fora do ar): diz, sem segurar ninguém. */
 export function BuscaNaoSaiu({ mensagem }: { mensagem: string }) {
   return (
-    <section className="dc-busca" role="status">
-      <p className="dc-busca__titulo dc-busca__titulo--aviso">
+    <section className="dc-primeira-busca" role="status">
+      <p className="dc-primeira-busca__titulo dc-primeira-busca__titulo--aviso">
         <CircleAlert aria-hidden />
         <span>{mensagem}</span>
       </p>
