@@ -50,7 +50,7 @@ test.describe("a prévia", () => {
     await expect(page.locator(".dc-chat__resposta .dc-md").last()).toBeVisible();
     expect(await vezesQueOTextoCresceu(page, 1000)).toBeGreaterThan(5);
     await expect(page.getByRole("button", { name: "Enviar" })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole("heading", { name: "Prazos", exact: true })).toBeVisible();
+    await expect(page.locator(".dc-chat__cartoes").getByRole("button", { name: /^Prazos/ })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Prazos dos próximos 7 dias" })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Conversas" }).getByRole("link", { name: "Prazos dos próximos 7 dias" })).toBeVisible();
     // Recarregada, a conversa abre com a resposta gravada (uma só).
