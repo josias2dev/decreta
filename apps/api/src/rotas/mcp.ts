@@ -19,6 +19,7 @@ import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { ipDoPedido } from "../limitador.ts";
 import { dadosDoEscritorio } from "../servicos/assistente.ts";
+import { colunasDaAssinatura, estadoDoEscritorio } from "../servicos/assinatura.ts";
 import { ehMembro } from "../servicos/pessoas.ts";
 import { corpo, falha, id, ip, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
@@ -40,14 +41,16 @@ const TOKEN = /^dcmcp\.([A-Za-z0-9_-]{1,64})\.([A-Za-z0-9_-]{40,64})$/;
 const hashDoToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
 /** Quem é o dono do token: o escritório e a pessoa, se o token vale, não venceu e ela ainda está na equipe. */
-async function donoDoToken(db: Database, token: string) {
+async function donoDoToken(db: Database, token: string, cobrancaAtiva: boolean) {
   const m = TOKEN.exec(token);
   if (!m) return null;
   const organizationId = m[1]!;
   const agora = new Date();
   // Escritório encerrado: o token deixa de valer.
-  const [o] = await db.select({ timezone: organization.timezone, encerradoEm: organization.encerradoEm }).from(organization).where(eq(organization.id, organizationId));
+  const [o] = await db.select({ encerradoEm: organization.encerradoEm, ...colunasDaAssinatura }).from(organization).where(eq(organization.id, organizationId));
   if (o?.encerradoEm) return null;
+  // Só leitura ainda lê; bloqueado, não: o conector é um jeito de ler os dados do escritório.
+  if (o && estadoDoEscritorio(o, cobrancaAtiva).acesso === "bloqueado") return null;
   const t = await withTenant(db, organizationId, async (tx) => {
     const [linha] = await tx
       .select({ id: tokensMcp.id, userId: tokensMcp.userId, usadoEm: tokensMcp.usadoEm })
@@ -69,14 +72,14 @@ type Pedido = { jsonrpc?: string; id?: string | number | null; method?: string; 
 const resposta = (id: Pedido["id"], result: unknown) => ({ jsonrpc: "2.0", id: id ?? null, result });
 const erro = (id: Pedido["id"], code: number, message: string) => ({ jsonrpc: "2.0", id: id ?? null, error: { code, message } });
 
-export function rotasDoMcp(deps: { db: Database; log: (msg: string, extra?: Record<string, unknown>) => void }) {
+export function rotasDoMcp(deps: { db: Database; log: (msg: string, extra?: Record<string, unknown>) => void; cobrancaAtiva?: boolean }) {
   const app = new Hono();
   // Só JSON-RPC por POST; o fluxo de eventos do servidor não é usado.
   app.get("/", (c) => c.body(null, 405, { allow: "POST" }));
 
   app.post("/", bodyLimit({ maxSize: TETO_DO_PEDIDO_BYTES, onError: (c) => c.json(erro(null, -32600, "Pedido grande demais."), 413) }), async (c: Context) => {
     const token = (c.req.header("authorization") ?? "").replace(/^Bearer\s+/i, "");
-    const dono = token ? await donoDoToken(deps.db, token) : null;
+    const dono = token ? await donoDoToken(deps.db, token, !!deps.cobrancaAtiva) : null;
     if (!dono) return c.json(erro(null, -32001, "Token inválido ou revogado. Crie outro em Minha conta > Conector MCP."), 401, { "www-authenticate": "Bearer" });
     const p = (await c.req.json().catch(() => null)) as Pedido | null;
     if (!p || typeof p.method !== "string") return c.json(erro(null, -32700, "Pedido fora do formato JSON-RPC."), 400);

@@ -10,6 +10,7 @@ import { buscarNoDataJud, buscarNoDjen, certidaoDoDjen, dataJudAtualizadoAte, le
 import { and, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { registrarEvento } from "../eventos.ts";
+import { colunasDaAssinatura, estadoDoEscritorio } from "./assinatura.ts";
 import { calendarioDoEscritorio } from "./calendario.ts";
 import { comarcaDoDataJud, completarPartes } from "./consulta.ts";
 
@@ -21,6 +22,8 @@ export interface DepsDaCaptura {
   datajudKey: string;
   fetch?: typeof fetch;
   log?: Log;
+  /** Com a cobrança ligada, o escritório sem acesso total (só leitura ou bloqueado) não é buscado. */
+  cobrancaAtiva?: boolean;
 }
 
 /** O ato é do juízo, das partes ou do cartório, pelo nome (a TPU não diz). */
@@ -88,10 +91,14 @@ export async function ehDemonstracao(db: Database, organizationId: string): Prom
   return o?.slug === SLUG_DA_DEMONSTRACAO;
 }
 
-/** O que não vai ao DJEN nem ao DataJud: a demonstração (OABs e processos inventados) e o escritório encerrado. */
-export async function foraDaCaptura(db: Database, organizationId: string): Promise<boolean> {
-  const [o] = await db.select({ slug: organization.slug, encerradoEm: organization.encerradoEm }).from(organization).where(eq(organization.id, organizationId));
-  return o?.slug === SLUG_DA_DEMONSTRACAO || !!o?.encerradoEm;
+/**
+ * O que não vai ao DJEN nem ao DataJud: a demonstração (OABs e processos inventados), o escritório encerrado e, com a
+ * cobrança ligada, o que não tem acesso total (o teste acabou, a fatura passou de 7 dias, a equipe pôs só leitura).
+ */
+export async function foraDaCaptura(db: Database, organizationId: string, cobrancaAtiva = false): Promise<boolean> {
+  const [o] = await db.select({ slug: organization.slug, encerradoEm: organization.encerradoEm, ...colunasDaAssinatura }).from(organization).where(eq(organization.id, organizationId));
+  if (o?.slug === SLUG_DA_DEMONSTRACAO || !!o?.encerradoEm) return true;
+  return !!o && estadoDoEscritorio(o, cobrancaAtiva).acesso !== "total";
 }
 
 /**
@@ -100,13 +107,13 @@ export async function foraDaCaptura(db: Database, organizationId: string): Promi
  * certidão (sem hash, a demonstração, ou o DJEN não achou); lança quando o
  * DJEN não respondeu, para quem pediu tentar de novo.
  */
-export async function certidaoDaPublicacao(deps: { db: Database; arquivos: Armazenamento; fetch?: typeof fetch }, organizationId: string, publicacaoId: string): Promise<Uint8Array | null> {
+export async function certidaoDaPublicacao(deps: { db: Database; arquivos: Armazenamento; fetch?: typeof fetch; cobrancaAtiva?: boolean }, organizationId: string, publicacaoId: string): Promise<Uint8Array | null> {
   const [pub] = await withTenant(deps.db, organizationId, (tx) => tx.select({ hash: publicacoes.hash, certidao: publicacoes.certidao }).from(publicacoes).where(eq(publicacoes.id, publicacaoId)));
   if (!pub) return null;
   const guardada = pub.certidao ? await deps.arquivos.read(pub.certidao).catch(() => null) : null;
   if (guardada) return guardada;
   // A demonstração nunca consulta o DJEN (ver demonstracao/slug.ts).
-  if (!pub.hash || (await foraDaCaptura(deps.db, organizationId))) return null;
+  if (!pub.hash || (await foraDaCaptura(deps.db, organizationId, deps.cobrancaAtiva))) return null;
   const baixada = await certidaoDoDjen(pub.hash, { fetch: deps.fetch });
   if (!baixada) return null;
   const chave = `${organizationId}/certidoes/${publicacaoId}.pdf`;
@@ -117,7 +124,7 @@ export async function certidaoDaPublicacao(deps: { db: Database; arquivos: Armaz
 
 /** Busca no DJEN de `de` a `ate` por todas as OABs da equipe. */
 export async function capturarDjen(deps: DepsDaCaptura, organizationId: string, periodo: { de: Dia; ate: Dia }): Promise<{ encontradas: number; novas: string[] }> {
-  if (await foraDaCaptura(deps.db, organizationId)) return { encontradas: 0, novas: [] };
+  if (await foraDaCaptura(deps.db, organizationId, deps.cobrancaAtiva)) return { encontradas: 0, novas: [] };
   const { oabs, ligado } = await withTenant(deps.db, organizationId, async (tx) => {
     const [e] = await tx.select({ ligado: escritorios.capturaDjen }).from(escritorios).where(eq(escritorios.organizationId, organizationId));
     const linhas = await tx.select({ numero: equipe.oabNumero, uf: equipe.oabUf }).from(equipe).where(isNotNull(equipe.oabNumero));
@@ -180,9 +187,10 @@ function tribunaisDoCaderno(carteira: string[], ufsDasOabs: string[]): Set<strin
   return t;
 }
 
-/** Os escritórios com a captura ligada, fora a demonstração (ver demonstracao/slug.ts) e os encerrados. */
-async function escritoriosDoCaderno(db: Database, dias: Dia[]): Promise<EscritorioNoCaderno[]> {
-  const orgs = await db.select({ id: organization.id }).from(organization).where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm)));
+/** Os escritórios com a captura ligada, fora a demonstração (ver demonstracao/slug.ts), os encerrados e, com a cobrança ligada, os sem acesso total. */
+async function escritoriosDoCaderno(db: Database, dias: Dia[], cobrancaAtiva = false): Promise<EscritorioNoCaderno[]> {
+  const todas = await db.select({ id: organization.id, ...colunasDaAssinatura }).from(organization).where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm)));
+  const orgs = todas.filter((o) => estadoDoEscritorio(o, cobrancaAtiva).acesso === "total");
   const saida: EscritorioNoCaderno[] = [];
   for (const { id } of orgs) {
     const e = await withTenant(db, id, async (tx) => {
@@ -243,7 +251,7 @@ export interface CadernoDaRodada {
  */
 export async function capturarCadernos(deps: DepsDaCaptura, dias: Dia[]): Promise<{ cadernos: CadernoDaRodada[]; novas: { organizationId: string; publicacaoId: string }[] }> {
   const iniciadaEm = new Date();
-  const todos = await escritoriosDoCaderno(deps.db, dias);
+  const todos = await escritoriosDoCaderno(deps.db, dias, deps.cobrancaAtiva);
   const tribunais = [...new Set(todos.flatMap((e) => [...e.tribunais]))].sort();
   const cadernos: CadernoDaRodada[] = [];
   const novas: { organizationId: string; publicacaoId: string }[] = [];
@@ -461,7 +469,7 @@ export function periodoDaCaptura(hoje: Dia): { de: Dia; ate: Dia } {
 
 /** Andamentos do DataJud de um processo. Devolve quantos entraram. */
 export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: string, processoId: string): Promise<number> {
-  if (await foraDaCaptura(deps.db, organizationId)) return 0;
+  if (await foraDaCaptura(deps.db, organizationId, deps.cobrancaAtiva)) return 0;
   const p = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(processos).where(eq(processos.id, processoId)))[0]);
   if (!p?.cnj || limparCnj(p.cnj).length !== 20) return 0;
   const dados = await buscarNoDataJud(p.cnj, { apiKey: deps.datajudKey, fetch: deps.fetch });
@@ -508,7 +516,7 @@ export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: st
  * respondeu fica com a conferência anterior.
  */
 export async function conferirDataJudDoEscritorio(deps: DepsDaCaptura, organizationId: string): Promise<Record<string, string>> {
-  if (await foraDaCaptura(deps.db, organizationId)) return {};
+  if (await foraDaCaptura(deps.db, organizationId, deps.cobrancaAtiva)) return {};
   const { cnjs, antes } = await withTenant(deps.db, organizationId, async (tx) => ({
     cnjs: await tx
       .selectDistinct({ cnj: processos.cnj })

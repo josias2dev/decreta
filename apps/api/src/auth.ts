@@ -10,8 +10,10 @@ import { registrar } from "./auditoria.ts";
 import { ehContaDaDemonstracao } from "./demonstracao/slug.ts";
 import { PAPEL, type Mailer } from "./email.ts";
 import type { Env } from "./env.ts";
+import { colunasDaAssinatura, estadoDoEscritorio, recusaDeAcesso } from "./servicos/assinatura.ts";
 import { AVISO_DOS_CONVITES, CONVITES_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
 import { AVISO_DO_ENCERRAMENTO } from "./servicos/encerramento.ts";
+import { emailsDaPlataforma } from "./servicos/plataforma.ts";
 
 /** O que a conta da demonstração não muda, para ninguém trancar os outros do lado de fora. */
 const FIXOS_NA_DEMONSTRACAO = new Set(["/change-password", "/change-email", "/two-factor/enable", "/delete-user"]);
@@ -48,6 +50,7 @@ const REGISTRADAS: Record<string, string> = {
  */
 export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEmailError?: (err: unknown) => void; log?: Log } = {}) {
   const telas = env.WEB_ORIGIN.replace(/\/$/, "");
+  const operadores = emailsDaPlataforma(env.PLATAFORMA_EMAILS);
   const enviar = async (email: Parameters<Mailer["send"]>[0]) => {
     try {
       await opts.mailer?.send(email);
@@ -72,16 +75,20 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
           const s = await getSessionFromCtx(ctx);
           const orgId = (ctx.body as { organizationId?: string } | undefined)?.organizationId ?? (s?.session as { activeOrganizationId?: string | null } | undefined)?.activeOrganizationId;
           if (!orgId) return;
-          const [org] = await db.select({ emAvaliacao: schema.organization.emAvaliacao, encerradoEm: schema.organization.encerradoEm }).from(schema.organization).where(eq(schema.organization.id, orgId));
+          const [org] = await db.select({ emAvaliacao: schema.organization.emAvaliacao, encerradoEm: schema.organization.encerradoEm, ...colunasDaAssinatura }).from(schema.organization).where(eq(schema.organization.id, orgId));
           // Escritório encerrado não convida ninguém (quem tem outro escritório ainda poderia chamar por aqui).
           if (org?.encerradoEm) throw new APIError("FORBIDDEN", { code: "ESCRITORIO_ENCERRADO", message: AVISO_DO_ENCERRAMENTO });
+          // Só leitura e bloqueado também não: convidar manda e-mail e abre conta nova, e isso é escrita.
+          const assinatura = org ? estadoDoEscritorio(org, env.COBRANCA_ATIVA) : null;
+          if (assinatura && assinatura.acesso !== "total") throw new APIError("FORBIDDEN", { code: "SO_LEITURA", message: recusaDeAcesso(assinatura).detalhe });
           if (org?.emAvaliacao && !CONVITES_EM_AVALIACAO.permitir(orgId)) throw new APIError("TOO_MANY_REQUESTS", { code: "TETO_EM_AVALIACAO", message: AVISO_DOS_CONVITES });
           return;
         }
         if (ctx.path !== "/sign-up/email") return;
         const corpo = (ctx.body ?? {}) as { email?: unknown; termosVersao?: unknown };
         const email = String(corpo.email ?? "").trim().toLowerCase();
-        if (!email || !(await temConvite(db, email))) {
+        // O e-mail de um operador da plataforma não abre conta por convite (o sign-up não confirma o e-mail de quem convida a si mesmo): a conta dele é criada pela equipe.
+        if (!email || operadores.has(email) || !(await temConvite(db, email))) {
           throw new APIError("FORBIDDEN", { code: "SEM_CONVITE", message: "Conta nova só por convite do escritório." });
         }
         // Quem entra por convite também aceita os Termos de Uso e a Política de Privacidade, na versão que a tela mostrou.
