@@ -13,16 +13,20 @@ import { hojeEm } from "@decreta/core";
 import {
   alvaras,
   analises,
+  assinaturas,
   atendimentos,
   audiencias,
   auditoria,
   calculos,
   clientes,
+  cobrancaConfig,
+  contratosHonorarios,
   conversas,
   documentos,
   equipe,
   escritorios,
   exportacoes,
+  lembretesDeCobranca,
   member,
   mensagensCliente,
   mensagensIa,
@@ -30,12 +34,16 @@ import {
   movimentacoes,
   negocios,
   organization,
+  pagamentosHonorarios,
+  parcelasHonorarios,
   partes,
   pecas,
   prazos,
+  prestacoesDeContas,
   processos,
   publicacoes,
   radarPrecedentes,
+  repassesDeAlvara,
   resultados,
   retornosIa,
   revisoesDePeca,
@@ -101,6 +109,15 @@ const PLANILHAS: Planilha[] = [
   { arquivo: "atendimentos", tabela: atendimentos },
   { arquivo: "novos_negocios", tabela: negocios },
   { arquivo: "alvaras", tabela: alvaras },
+  { arquivo: "contratos_de_honorarios", tabela: contratosHonorarios },
+  { arquivo: "parcelas_de_honorarios", tabela: parcelasHonorarios },
+  { arquivo: "pagamentos_de_honorarios", tabela: pagamentosHonorarios },
+  { arquivo: "prestacoes_de_contas", tabela: prestacoesDeContas },
+  { arquivo: "repasses_de_alvara", tabela: repassesDeAlvara },
+  { arquivo: "lembretes_de_cobranca", tabela: lembretesDeCobranca },
+  // As chaves do Asaas e da ZapSign ficam de fora: só o escritório e o provedor conhecem.
+  { arquivo: "cobranca_e_assinatura", tabela: cobrancaConfig, fora: ["asaasChave", "asaasWebhookId", "asaasWebhookTokenHash", "zapsignChave"] },
+  { arquivo: "assinaturas_eletronicas", tabela: assinaturas, fora: ["token"] },
   { arquivo: "mensagens_ao_cliente", tabela: mensagensCliente, fora: ["linkHash"] },
   { arquivo: "radar_de_precedentes", tabela: radarPrecedentes },
   { arquivo: "calculos", tabela: calculos },
@@ -118,6 +135,7 @@ export const NAO_EXPORTADAS: Record<string, string> = {
   avisos_enviados: "registro técnico dos resumos da manhã",
   uso_ia: "só números do gasto com a IA, sem conteúdo",
   tokens_mcp: "guarda só o hash de segredos",
+  eventos_cobranca: "registro técnico dos avisos do Asaas, só para não tratar o mesmo aviso duas vezes",
   observacoes_da_ia: "comparação interna de modelos de IA",
   exportacoes: "as próprias cópias",
   eventos: "contagem do funil do Decreta, sem dado do escritório",
@@ -168,14 +186,14 @@ async function planilhaDaTabela(db: Database, organizationId: string, p: Planilh
 async function planilhaDaEquipe(db: Database, organizationId: string): Promise<{ csv: string; linhas: number }> {
   const linhas = await withTenant(db, organizationId, (tx) =>
     tx
-      .select({ userId: member.userId, nome: user.name, email: user.email, papel: member.role, apelido: equipe.apelido, cargo: equipe.cargo, oabNumero: equipe.oabNumero, oabUf: equipe.oabUf, whatsapp: equipe.whatsapp, avisoManha: equipe.avisoManha })
+      .select({ userId: member.userId, nome: user.name, email: user.email, papel: member.role, apelido: equipe.apelido, cargo: equipe.cargo, oabNumero: equipe.oabNumero, oabUf: equipe.oabUf, whatsapp: equipe.whatsapp, avisoManha: equipe.avisoManha, financeiro: equipe.financeiro })
       .from(member)
       .innerJoin(user, eq(user.id, member.userId))
       .leftJoin(equipe, and(eq(equipe.userId, member.userId), eq(equipe.organizationId, member.organizationId)))
       .where(eq(member.organizationId, organizationId)),
   );
-  const campos = ["userId", "nome", "email", "papel", "apelido", "cargo", "oabNumero", "oabUf", "whatsapp", "avisoManha"] as const;
-  const cabecalho = ["user_id", "nome", "email", "papel", "apelido", "cargo", "oab_numero", "oab_uf", "whatsapp", "aviso_manha"];
+  const campos = ["userId", "nome", "email", "papel", "apelido", "cargo", "oabNumero", "oabUf", "whatsapp", "avisoManha", "financeiro"] as const;
+  const cabecalho = ["user_id", "nome", "email", "papel", "apelido", "cargo", "oab_numero", "oab_uf", "whatsapp", "aviso_manha", "financeiro"];
   return { csv: montarCsv(cabecalho, linhas.map((l) => campos.map((c) => celula(l[c], "PgText")))), linhas: linhas.length };
 }
 
@@ -378,7 +396,7 @@ function textoDoLeiaMe(d: { escritorio: string; dia: string; contagens: [string,
     "",
     "O que não vem na cópia",
     "",
-    "- O texto extraído dos documentos (sai de novo do arquivo), os segredos (senhas, hash de token e de link de envio) e os registros técnicos: buscas no DJEN e no DataJud, resumos da manhã enviados e gasto com a IA.",
+    "- O texto extraído dos documentos (sai de novo do arquivo), os segredos (senhas, hash de token e de link de envio, chaves do Asaas e da ZapSign) e os registros técnicos: buscas no DJEN e no DataJud, resumos da manhã enviados, avisos do Asaas e gasto com a IA.",
     ...(d.naoEncontrados.length ? ["", "Arquivos que não foram encontrados no armazenamento e por isso não entraram", "", ...d.naoEncontrados.map((n) => `- ${n}`)] : []),
     "",
     `Os arquivos da cópia ficam disponíveis no Decreta por ${DIAS_DA_COPIA} dias (cada ZIP até ${MIB(LIMITE_DA_PARTE_BYTES)} de documentos).`,

@@ -4,4 +4,5 @@ export * from "./calculos.ts";
 export * from "./dominio.ts";
 export * from "./eventos.ts";
 export * from "./exportacoes.ts";
+export * from "./financeiro.ts";
 export * from "./observacoes.ts";

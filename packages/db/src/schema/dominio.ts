@@ -135,6 +135,8 @@ export const equipe = pgTable(
     /** WhatsApp para o resumo da manhã, 55 + DDD + número. */
     whatsapp: text("whatsapp"),
     avisoManha: boolean("aviso_manha").notNull().default(true),
+    /** Vê e mexe no Financeiro (honorários, cobrança e a prestação de contas do alvará). Os sócios têm sempre; quem não é sócio só com esta marca. */
+    financeiro: boolean("financeiro").notNull().default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -232,6 +234,8 @@ export const processos = pgTable(
     datajudAtualizadoEm: timestamp("datajud_atualizado_em", { withTimezone: true }),
     segredo: boolean("segredo").notNull().default(false),
     observacoes: text("observacoes"),
+    /** Alguém dispensou o aviso "processo sem honorário" deste processo. */
+    honorarioDispensadoEm: timestamp("honorario_dispensado_em", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -958,7 +962,7 @@ export const avisosEnviados = pgTable(
   (t) => [uniqueIndex("avisos_enviados_uq").on(t.organizationId, t.userId, t.tipo, t.dia), tenantPolicy("avisos_enviados")],
 ).enableRLS();
 
-export const tipoMensagemCliente = pgEnum("tipo_mensagem_cliente", ["decisao", "documentos"]);
+export const tipoMensagemCliente = pgEnum("tipo_mensagem_cliente", ["decisao", "documentos", "cobranca"]);
 export const situacaoMensagemCliente = pgEnum("situacao_mensagem_cliente", ["rascunho", "enviando", "enviada", "falhou", "descartada"]);
 
 /**
