@@ -276,6 +276,47 @@ test.describe("a demonstração pública", () => {
   });
 });
 
+test.describe("com a CSP do servidor", () => {
+  /** A política de cada caminho, lida do próprio bloco do Caddy, para o teste não envelhecer. */
+  const caddy = readFileSync(new URL("../../../deploy/Caddyfile.decreta", import.meta.url), "utf8");
+  const politica = (matcher: string) => new RegExp(`header @${matcher} \\{[\\s\\S]*?Content-Security-Policy "([^"]+)"`).exec(caddy)![1]!;
+
+  async function comCsp(page: Page, padrao: string, csp: string) {
+    await page.route(padrao, async (r) => {
+      const resposta = await r.fetch();
+      await r.fulfill({ response: resposta, headers: { ...resposta.headers(), "content-security-policy": csp } });
+    });
+    const recusas: string[] = [];
+    page.on("console", (m) => {
+      if (/Content Security Policy|Refused to/.test(m.text())) recusas.push(m.text());
+    });
+    return recusas;
+  }
+
+  test("a demonstração abre e abre um documento embutido, sem nada recusado, e a política não deixa sair para a rede", async ({ page }) => {
+    const csp = politica("demonstracao");
+    expect(csp).toContain("connect-src data: blob:");
+    expect(csp).not.toContain("'unsafe-inline'; img");
+    const recusas = await comCsp(page, "**/demonstracao**", csp);
+    await page.goto("/demonstracao");
+    const app = page.frameLocator("iframe");
+    await expect(app.getByRole("heading", { level: 1, name: "Hoje" })).toBeVisible();
+    await app.getByRole("link", { name: /^Documentos/ }).first().click();
+    await expect(app.getByRole("heading", { level: 1, name: "Documentos" })).toBeVisible();
+    expect(recusas).toEqual([]);
+  });
+
+  test("a landing roda inteira sem script inline", async ({ page }) => {
+    const recusas = await comCsp(page, (u) => u.pathname === "/", politica("telas"));
+    await semSessao().ligar(page);
+    await page.goto("/");
+    await expect(page.locator(".lp-res__final strong")).toHaveText("24/11/2026");
+    await page.locator("#conta select").selectOption("TJBA");
+    await expect(page.getByText("Este tribunal ainda não tem calendário próprio")).toBeVisible();
+    expect(recusas).toEqual([]);
+  });
+});
+
 test.describe("a cobertura", () => {
   const COBERTURA = {
     geradaEm: "2026-10-30T12:00:00.000Z",

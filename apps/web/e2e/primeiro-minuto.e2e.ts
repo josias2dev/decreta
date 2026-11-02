@@ -14,7 +14,7 @@ function comBusca(progresso: unknown) {
   return api;
 }
 
-const base = { novas: 0, lidas: 0, comPrazo: 0, iaLigada: true, itens: [], erro: null, proximaBusca: "segunda-feira, às 04:30" };
+const base = { novas: 0, lidas: 0, faltamLer: 0, comPrazo: 0, iaLigada: true, itens: [], erro: null, proximaBusca: "segunda-feira, às 04:30" };
 
 async function informarOab(page: Page) {
   await page.getByRole("textbox", { name: "OAB" }).fill("41233");
@@ -23,7 +23,7 @@ async function informarOab(page: Page) {
 
 test("achou: quantas, quantas com prazo, a leitura chegando e o atalho para a caixa, enquanto a pessoa segue", async ({ page }) => {
   const item = (id: string, leitura: string, prazo: string | null = null) => ({ id, titulo: "Intimação", tribunal: "TJSC", disponibilizadaEm: "2026-10-28", leitura, prazo });
-  const api = comBusca({ ...base, situacao: "pronta", encontradas: 12, novas: 12, lidas: 7, comPrazo: 5, itens: [item("a", "com_prazo", "Manifestação sobre laudo · 15 dias úteis"), item("b", "sem_prazo"), item("c", "lendo")] });
+  const api = comBusca({ ...base, situacao: "pronta", encontradas: 12, novas: 12, lidas: 7, faltamLer: 5, comPrazo: 5, itens: [item("a", "com_prazo", "Manifestação sobre laudo · 15 dias úteis"), item("b", "sem_prazo"), item("c", "lendo")] });
   await abrir(page, "/comecar", api);
   await informarOab(page);
   const busca = page.getByRole("region", { name: "Busca no DJEN" });
@@ -46,6 +46,13 @@ test("a tela acompanha: da fila à leitura pronta, sem recarregar", async ({ pag
   api.responder(`GET ${CAMINHO}`, { ...base, situacao: "pronta", encontradas: 2, novas: 2, lidas: 2, comPrazo: 1, itens: [] });
   await expect(page.getByText("Achei 2 publicações, 1 com prazo")).toBeVisible({ timeout: 6000 });
   await expect(page.getByText("A IA leu todas. Falta uma pessoa conferir e confirmar.")).toBeVisible();
+});
+
+test("achou o que já estava na caixa: não fala em leitura pendente", async ({ page }) => {
+  await abrir(page, "/comecar", comBusca({ ...base, situacao: "pronta", encontradas: 3 }));
+  await informarOab(page);
+  await expect(page.getByText("Achei 3 publicações")).toBeVisible();
+  await expect(page.getByText("Elas já estão na caixa de Publicações.")).toBeVisible();
 });
 
 test("nada encontrado: diz isso e quando o Decreta olha de novo", async ({ page }) => {

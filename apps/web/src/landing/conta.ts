@@ -7,7 +7,7 @@ import { abrirConta, type PedidoDaContaAberta } from "@decreta/core";
 import { desenharConta, SEMANAS_NA_JANELA } from "./conta-html";
 
 /** Quanto dura a contagem inteira, e os limites de cada passo: prazo curto não arrasta, prazo longo não vira borrão. */
-const DURACAO_MS = 2400;
+const DURACAO_MS = 1900;
 const PASSO_MIN_MS = 14;
 const PASSO_MAX_MS = 115;
 /** A pausa no feriado pulado: é o momento que a conta quer mostrar. */

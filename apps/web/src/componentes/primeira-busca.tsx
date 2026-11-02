@@ -23,6 +23,7 @@ interface Progresso {
   encontradas: number;
   novas: number;
   lidas: number;
+  faltamLer: number;
   comPrazo: number;
   iaLigada: boolean;
   itens: { id: string; titulo: string; tribunal: string | null; disponibilizadaEm: string; leitura: Leitura; prazo: string | null }[];
@@ -40,8 +41,7 @@ const comPrazo = (n: number) => (n === 1 ? "1 com prazo" : `${n} com prazo`);
 function acabou(p: Progresso | undefined): boolean {
   if (!p) return false;
   if (p.situacao === "falhou") return true;
-  if (p.situacao !== "pronta") return false;
-  return !p.iaLigada || p.encontradas === 0 || p.itens.every((i) => i.leitura !== "lendo");
+  return p.situacao === "pronta" && p.faltamLer === 0;
 }
 
 function SeloDaLeitura({ leitura }: { leitura: Leitura }) {
@@ -98,8 +98,10 @@ export function PrimeiraBusca({ busca }: { busca: BuscaPedida }) {
             Achei {publicacoes(p.encontradas)}
             {p.comPrazo > 0 ? `, ${comPrazo(p.comPrazo)}` : ""}
           </p>
-          {p.iaLigada ? (
-            <p className="dc-nota">{p.lidas >= p.encontradas ? "A IA leu todas. Falta uma pessoa conferir e confirmar." : `A IA leu ${p.lidas} de ${p.encontradas}. Uma pessoa confere e confirma cada prazo.`}</p>
+          {p.novas === 0 ? (
+            <p className="dc-nota">Elas já estão na caixa de Publicações.</p>
+          ) : p.iaLigada ? (
+            <p className="dc-nota">{p.faltamLer === 0 ? "A IA leu todas. Falta uma pessoa conferir e confirmar." : `A IA leu ${p.lidas} de ${p.lidas + p.faltamLer}. Uma pessoa confere e confirma cada prazo.`}</p>
           ) : (
             <p className="dc-nota">A leitura da IA não está disponível agora: as publicações ficam na caixa para você decidir.</p>
           )}

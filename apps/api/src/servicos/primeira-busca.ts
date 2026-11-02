@@ -56,6 +56,8 @@ export interface ProgressoDaBusca {
   encontradas: number;
   novas: number;
   lidas: number;
+  /** As que entraram e a IA ainda vai ler. */
+  faltamLer: number;
   comPrazo: number;
   iaLigada: boolean;
   itens: ItemDaBusca[];
@@ -75,7 +77,7 @@ function textoDoPrazo(c: ConteudoDaLeitura): string | null {
 export async function progressoDaBusca(tx: Tx, desde: Date, iaLigada: boolean, agora: Date = new Date()): Promise<ProgressoDaBusca> {
   const [rodada] = await tx.select().from(capturas).where(and(eq(capturas.fonte, "djen"), gte(capturas.iniciadaEm, desde))).orderBy(desc(capturas.iniciadaEm)).limit(1);
   const base = { iaLigada, proximaBusca: proximaBusca(agora) };
-  if (!rodada) return { situacao: "na_fila", encontradas: 0, novas: 0, lidas: 0, comPrazo: 0, itens: [], erro: null, ...base };
+  if (!rodada) return { situacao: "na_fila", encontradas: 0, novas: 0, lidas: 0, faltamLer: 0, comPrazo: 0, itens: [], erro: null, ...base };
 
   const novas = await tx
     .select({ id: publicacoes.id, tipo: publicacoes.tipoComunicacao, tribunal: publicacoes.tribunal, disponibilizadaEm: publicacoes.disponibilizadaEm })
@@ -107,6 +109,7 @@ export async function progressoDaBusca(tx: Tx, desde: Date, iaLigada: boolean, a
     encontradas: rodada.encontradas,
     novas: rodada.novas,
     lidas: itens.filter((i) => i.leitura === "com_prazo" || i.leitura === "sem_prazo").length,
+    faltamLer: itens.filter((i) => i.leitura === "lendo").length,
     comPrazo: itens.filter((i) => i.leitura === "com_prazo").length,
     // As que já têm leitura primeiro: é o que muda na tela.
     itens: [...itens].sort((a, b) => Number(b.leitura === "com_prazo") - Number(a.leitura === "com_prazo")).slice(0, ITENS_NA_TELA),

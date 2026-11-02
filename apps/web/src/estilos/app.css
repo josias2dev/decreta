@@ -1370,7 +1370,7 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-aparencia--chave { width: 100%; min-height: var(--altura-controle); padding: 0; flex-wrap: nowrap; background: none; border: 0; border-radius: var(--radius-md); text-align: left; cursor: pointer; }
 
 /* O primeiro minuto em /comecar: a busca no DJEN, ao vivo, acima da etapa */
-.dc-busca { display: flex; flex-direction: column; gap: var(--space-1); width: min(560px, 100%); padding: var(--space-3) var(--space-4); box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); }
+.dc-busca { flex: none; display: flex; flex-direction: column; gap: var(--space-1); text-align: left; width: min(560px, 100%); padding: var(--space-3) var(--space-4); box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); }
 .dc-busca__titulo { display: flex; align-items: center; gap: var(--space-2); margin: 0; font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); }
 .dc-busca__titulo svg { flex: none; width: var(--space-4); height: var(--space-4); color: var(--tinta-3); }
 .dc-busca__titulo--aviso { align-items: flex-start; font-weight: 500; color: var(--hoje); }

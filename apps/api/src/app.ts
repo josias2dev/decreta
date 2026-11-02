@@ -200,7 +200,7 @@ function servirTelas(app: Hono, dir: string) {
     } catch {
       return c.notFound();
     }
-    const asset = path.startsWith("/assets/");
+    const asset = path.startsWith("/assets/") || path.startsWith("/demonstracao/assets/");
     if (alvo.startsWith(raiz + sep)) {
       const file = Bun.file(alvo);
       if (await file.exists()) return new Response(file, { headers: { "cache-control": asset ? "public, max-age=31536000, immutable" : "no-cache" } });

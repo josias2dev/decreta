@@ -134,7 +134,7 @@ describe.skipIf(!hasTestDatabase)("a primeira busca", () => {
     expect(urls[0]!.searchParams.get("dataDisponibilizacaoFim")).toBe("2026-10-30");
 
     let p = await progresso(desde);
-    expect(p).toMatchObject({ situacao: "pronta", encontradas: 3, novas: 3, lidas: 0, comPrazo: 0, iaLigada: true, erro: null });
+    expect(p).toMatchObject({ situacao: "pronta", encontradas: 3, novas: 3, lidas: 0, faltamLer: 3, comPrazo: 0, iaLigada: true, erro: null });
     expect(p.itens).toHaveLength(3);
     expect(p.itens[0]).toMatchObject({ titulo: "Intimação", tribunal: "TJSC", disponibilizadaEm: "2026-10-28", leitura: "lendo" });
 
@@ -146,7 +146,7 @@ describe.skipIf(!hasTestDatabase)("a primeira busca", () => {
       ]),
     );
     p = await progresso(desde);
-    expect(p).toMatchObject({ situacao: "pronta", encontradas: 3, lidas: 2, comPrazo: 1 });
+    expect(p).toMatchObject({ situacao: "pronta", encontradas: 3, lidas: 2, faltamLer: 1, comPrazo: 1 });
     const porId = new Map(p.itens.map((i: { id: string }) => [i.id, i]));
     expect(porId.get(a!.id)).toMatchObject({ leitura: "com_prazo", prazo: "Manifestação sobre laudo · 15 dias úteis" });
     expect(porId.get(b!.id)).toMatchObject({ leitura: "sem_prazo" });
