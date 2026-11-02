@@ -1,5 +1,35 @@
 import { describe, expect, test } from "bun:test";
-import { chaveDoAto, conferirSugestao, regraDaContagem, ritoDoProcesso, trechoNaFonte } from "../src/index.ts";
+import { baseLegalDaTabela, chaveDoAto, conferirSugestao, regraDaContagem, ritoDoProcesso, trechoNaFonte } from "../src/index.ts";
+
+describe("base legal pela tabela", () => {
+  test("o ato escrito de vários jeitos leva ao artigo do rito do processo, com os dias e uma explicação simples", () => {
+    expect(baseLegalDaTabela("Contestação", "cpc")).toMatchObject({ ato: "contestação", dias: 15, fundamento: "CPC, art. 335" });
+    expect(baseLegalDaTabela("Apresentar contestação", "cpc")?.fundamento).toBe("CPC, art. 335");
+    expect(baseLegalDaTabela("Embargos de declaração", "cpc")?.fundamento).toBe("CPC, art. 1.023");
+    expect(baseLegalDaTabela("Embargos de declaração", "clt")?.fundamento).toBe("CLT, art. 897-A");
+    expect(baseLegalDaTabela("Contrarrazões de apelação", "cpc")?.fundamento).toBe("CPC, art. 1.003, § 5º");
+    expect(baseLegalDaTabela("Recurso inominado", "jec")).toMatchObject({ dias: 10, fundamento: "Lei 9.099/1995, art. 42" });
+    expect(baseLegalDaTabela("Manifestação sobre laudo pericial", "cpc")?.explicacao).toContain("perito");
+  });
+
+  test("responder à contestação é réplica, não contestação", () => {
+    expect(baseLegalDaTabela("Manifestação sobre a contestação", "cpc")?.fundamento).toBe("CPC, arts. 350 e 351");
+    expect(baseLegalDaTabela("Réplica à contestação", "cpc")?.fundamento).toBe("CPC, arts. 350 e 351");
+  });
+
+  test("a tabela não sabe: ato fora dela, rito sem o ato ou texto vazio", () => {
+    expect(baseLegalDaTabela("Juntar procuração", "cpc")).toBeNull();
+    expect(baseLegalDaTabela("Apelação", "clt")).toBeNull();
+    expect(baseLegalDaTabela("Recurso de revista", "cpc")).toBeNull();
+    expect(baseLegalDaTabela("  ", "cpc")).toBeNull();
+  });
+
+  test("pagar custas ou preparo não é o pagamento da condenação", () => {
+    expect(baseLegalDaTabela("Pagamento da condenação", "cpc")?.fundamento).toBe("CPC, art. 523");
+    expect(baseLegalDaTabela("Pagar as custas finais", "cpc")).toBeNull();
+    expect(baseLegalDaTabela("Comprovar o preparo", "cpc")).toBeNull();
+  });
+});
 
 describe("trecho citado pela IA", () => {
   const TEOR = "Intimem-se as partes para, querendo,\nmanifestarem-se sobre o laudo  pericial, no prazo comum de 15 (quinze) dias. Após, voltem conclusos.";

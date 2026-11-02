@@ -87,6 +87,27 @@ function siglaDaNorma(nome: string, numero?: string, ano?: string): string {
 const semPontos = (n: string) => String(Number(n.replace(/\./g, "")));
 const tribunal = (t: string) => t.toUpperCase().replace("-", "");
 
+const NORMA_SOLTA = new RegExp(String.raw`(?<![\p{L}\d])${NORMA}`, "iu");
+
+/**
+ * A base legal de um prazo escrita como a citação espera: "CPC, art. 1.003, § 5º" e
+ * "art. 477, § 1º, CPC" viram "art. 1.003, § 5º do CPC", e "arts. 350 e 351" vira uma
+ * citação para cada artigo. Vazio quando o texto não diz um artigo e uma lei.
+ */
+export function citacaoDaBaseLegal(texto: string): string {
+  const limpo = texto.replace(/\s+/g, " ").trim();
+  if (extrairCitacoes(limpo).length) return limpo;
+  const norma = NORMA_SOLTA.exec(limpo);
+  if (!norma) return "";
+  const resto = `${limpo.slice(0, norma.index)} ${limpo.slice(norma.index + norma[0].length)}`;
+  const artigos = /\barts?\.?\s*(\d.*)/iu.exec(resto)?.[1];
+  if (!artigos) return "";
+  return artigos
+    .split(/\s+e\s+/)
+    .map((a) => `art. ${a.replace(/[\s,;.]+$/, "")} do ${norma[0]}`)
+    .join("; ");
+}
+
 export function extrairCitacoes(texto: string): Citacao[] {
   const saida: Citacao[] = [];
   for (const m of texto.matchAll(SUMULA)) {

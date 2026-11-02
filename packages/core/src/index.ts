@@ -26,4 +26,5 @@ export * from "./legal.ts";
 export * from "./auditoria.ts";
 export * from "./automacao.ts";
 export * from "./revisional.ts";
+export * from "./texto-do-campo.ts";
 export * from "./tribunais.ts";
