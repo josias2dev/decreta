@@ -15,20 +15,14 @@ import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
-import { SeletorDeVariante, useVariante } from "@/componentes/variantes";
 import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
-import type { VarianteDePublicacoes } from "@/router";
 import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { atualizarPrazos } from "./prazo";
-import { CaixaComCartao } from "./publicacoes-variantes/a-caixa";
-import { FilaFocada } from "./publicacoes-variantes/b-fila";
-import { TabelaQueAbre } from "./publicacoes-variantes/c-tabela";
-import { TresColunas } from "./publicacoes-variantes/d-colunas";
 
 const ABAS: { id: SituacaoPublicacao; rotulo: string }[] = [
   { id: "nova", rotulo: "Novas" },
@@ -46,7 +40,7 @@ const caixaQuery = (situacao: SituacaoPublicacao) => ({
   refetchInterval: 60_000,
 });
 
-export const publicacaoQuery = (id: string) => ({
+const publicacaoQuery = (id: string) => ({
   queryKey: ["publicacao", id],
   queryFn: () => api<Publicacao>(`/publicacoes/${id}`),
   // Enquanto a IA lê o teor, a tela pergunta de novo; a leitura da sentença chega logo depois (e só se a IA estiver ligada).
@@ -71,7 +65,7 @@ export function proximaBusca(agora = new Date()): string {
   return dia === 0 || (dia >= 1 && dia <= 4) ? "amanhã às 04:30" : "segunda às 04:30";
 }
 
-export function SeloDaLista({ selo }: { selo: Selo }) {
+function SeloDaLista({ selo }: { selo: Selo }) {
   return (
     <span className={cn("dc-pub__selo", `dc-pub__selo--${selo.tipo}`)}>
       {selo.tipo === "sem_teor" || selo.tipo === "recusa" || selo.tipo === "erro" || selo.tipo === "sem_ia" ? <CircleAlert /> : selo.tipo === "lendo" ? <LoaderCircle className="animate-spin" /> : <MarcaIa />}
@@ -80,7 +74,7 @@ export function SeloDaLista({ selo }: { selo: Selo }) {
   );
 }
 
-export function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePublicacoes["itens"][number]; ligado?: boolean; celular: boolean; aoEscolher?: () => void }) {
+function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePublicacoes["itens"][number]; ligado?: boolean; celular: boolean; aoEscolher?: () => void }) {
   const miolo = (
     <>
       <span className="dc-pub__topo">
@@ -118,38 +112,10 @@ function useBuscarAgora() {
   });
 }
 
-/** Tudo que uma variação da tela recebe: a lista, as abas e como escolher e seguir para a próxima. */
-export interface CaixaNaTela {
-  /** undefined enquanto carrega. */
-  itens: CaixaDePublicacoes["itens"] | undefined;
-  abas: { id: SituacaoPublicacao; rotulo: string; n?: number }[];
-  situacao: SituacaoPublicacao;
-  irPara: (s: SituacaoPublicacao) => void;
-  /** A do endereço, se houver. */
-  aberta: string | undefined;
-  /** A do endereço ou, sem ela, a primeira da lista. */
-  selecionada: string | undefined;
-  escolher: (id: string | undefined) => void;
-  proxima: () => void;
-  vazio: ReactNode;
-}
-
-const VARIANTES: { id: VarianteDePublicacoes; rotulo: string }[] = [
-  { id: "a", rotulo: "A" },
-  { id: "b", rotulo: "B" },
-  { id: "c", rotulo: "C" },
-  { id: "d", rotulo: "D" },
-];
-
 export function PublicacoesPage() {
   const celular = useCelular();
   const search = useSearch({ from: "/app/publicacoes" });
   const navigate = useNavigate({ from: "/publicacoes" });
-  const [variante, setVariante] = useVariante("publicacoes", VARIANTES, search.variante);
-  const trocarVariante = (v: VarianteDePublicacoes) => {
-    setVariante(v);
-    void navigate({ search: (s) => ({ ...s, variante: v === "a" ? undefined : v }), replace: true, resetScroll: false });
-  };
   const situacao: SituacaoPublicacao = search.situacao ?? "nova";
   const eu = useQuery(euQuery);
   const caixa = useQuery(caixaQuery(situacao));
@@ -166,7 +132,7 @@ export function PublicacoesPage() {
       ? `${c.contagens.nova} ${c.contagens.nova === 1 ? "nova" : "novas"} do DJEN, capturadas ${diaDoInstante(capturada.em) === eu.data?.hoje ? "hoje" : `em ${diaCurto(diaDoInstante(capturada.em))}`} às ${capturada.hora} · próxima busca ${proximaBusca()}`
       : `Nenhuma busca no DJEN ainda · próxima ${proximaBusca()}`;
   const abas = c ? ABAS.map((a) => ({ ...a, n: c.contagens[a.id] || undefined })) : ABAS;
-  const irPara = (s: SituacaoPublicacao) => void navigate({ search: (x) => ({ situacao: s === "nova" ? undefined : s, variante: x.variante }) });
+  const irPara = (s: SituacaoPublicacao) => void navigate({ search: { situacao: s === "nova" ? undefined : s } });
   const vazio = (
     <Vazio titulo={situacao === "nova" ? "Nenhuma publicação nova" : situacao === "pendente" ? "Nada pendente" : "Nada aqui ainda"}>
       {situacao === "nova" ? `O Decreta lê o DJEN de madrugada e busca pelas OABs da equipe. Próxima busca ${proximaBusca()}.` : null}
@@ -237,7 +203,6 @@ export function PublicacoesPage() {
     const i = itens.findIndex((x) => x.id === selecionada);
     escolher(itens[i + 1]?.id ?? itens[i - 1]?.id);
   };
-  const caixaNaTela: CaixaNaTela = { itens: c?.itens, abas, situacao, irPara, aberta: search.id, selecionada, escolher, proxima, vazio };
 
   return (
     <Pagina cheia>
@@ -253,7 +218,6 @@ export function PublicacoesPage() {
         }
         acoes={
           <>
-            <SeletorDeVariante opcoes={VARIANTES} valor={variante} aoMudar={trocarVariante} />
             <Botao onClick={() => setColar(true)}>
               <ClipboardPaste /> Colar publicação
             </Botao>
@@ -265,19 +229,37 @@ export function PublicacoesPage() {
       />
       {falhou}
       {avisoDaCaptura}
-      {variante === "b" ? <FilaFocada caixa={caixaNaTela} /> : variante === "c" ? <TabelaQueAbre caixa={caixaNaTela} /> : variante === "d" ? <TresColunas caixa={caixaNaTela} /> : <CaixaComCartao caixa={caixaNaTela} />}
+      <div className="dc-caixa">
+        <section className="dc-painel dc-caixa__lista">
+          <Abas abas={abas} ativa={situacao} aoMudar={irPara} />
+          {!c ? (
+            <div className="p-4">
+              <Carregando linhas={3} />
+            </div>
+          ) : c.itens.length ? (
+            <Rolagem id="publicacoes" className="dc-linhas">
+              {c.itens.map((i) => (
+                <ItemDaCaixa key={i.id} item={i} celular={false} ligado={i.id === selecionada} aoEscolher={() => escolher(i.id)} />
+              ))}
+            </Rolagem>
+          ) : (
+            vazio
+          )}
+        </section>
+        {selecionada && <Selecionada key={selecionada} id={selecionada} aoTerminar={proxima} />}
+      </div>
       <ColarPublicacao aberto={colar} aoFechar={() => setColar(false)} />
       {dialogoDaCaptura}
     </Pagina>
   );
 }
 
-export function ComPublicacao({ id, children }: { id: string; children: (pub: Publicacao) => ReactNode }) {
+function Selecionada({ id, aoTerminar }: { id: string; aoTerminar: () => void }) {
   const q = useQuery(publicacaoQuery(id));
   if (!q.data) {
-    return <section className="dc-painel p-4">{q.error ? <FalhaAoCarregar erro={q.error} sumiu="Publicação não encontrada" aoTentar={() => void q.refetch()} /> : <Carregando />}</section>;
+    return <section className="dc-painel dc-caixa__carregando p-4">{q.error ? <FalhaAoCarregar erro={q.error} sumiu="Publicação não encontrada" aoTentar={() => void q.refetch()} /> : <Carregando />}</section>;
   }
-  return <>{children(q.data)}</>;
+  return <VerPublicacao pub={q.data} celular={false} aoTerminar={aoTerminar} />;
 }
 
 /** Tela própria no celular. No computador, a mesma publicação abre dentro da caixa. */
@@ -315,29 +297,8 @@ export function PublicacaoPage() {
 }
 
 type Modo = "prazo" | "audiencia" | "sem_prazo" | "feito";
-export type AcaoDaPublicacao = { rotulo: string; icone?: ReactNode; fazer: () => void; ocupado?: boolean; desligado?: boolean };
 
-/** Os botões da decisão: o principal, o secundário e os discretos. `invertido` deixa o principal na ponta direita. */
-export function BotoesDaDecisao({ acoes, ocupado, invertido }: { acoes: AcaoDaPublicacao[]; ocupado: boolean; invertido?: boolean }) {
-  const botoes = acoes.map((a, i) => (
-    <Botao key={a.rotulo} variante={i === 0 ? "primaria" : i === 1 ? "secundaria" : "fantasma"} onClick={a.fazer} ocupado={a.ocupado} disabled={a.desligado || ocupado}>
-      {i < 2 && a.icone} {a.rotulo}
-    </Botao>
-  ));
-  return <>{invertido ? botoes.reverse() : botoes}</>;
-}
-
-/** "Vence 24/11 · 15 dias úteis · Beatriz": a decisão numa linha. */
-export function resumoDaDecisao(c: Sugestao | null, responsavel: Pessoa | null): string | null {
-  if (!c) return null;
-  if (c.audiencia) return `Audiência em ${diaCurto(c.audiencia.data)} às ${c.audiencia.hora} · ${c.audiencia.porVideo ? "por vídeo" : "presencial"}`;
-  if (!c.geraPrazo || !c.dias) return "A IA não viu prazo para o escritório";
-  const conta = c.contagemCalculada;
-  return [conta ? `Vence ${diaCurto(conta.fim)}` : "Falta o processo para contar", prazoEmDias(c.dias, c.contagem), responsavel?.apelido ?? "Sem responsável"].join(" · ");
-}
-
-/** O que toda forma de mostrar a publicação precisa: os dados, as ações, os diálogos e os pedaços prontos da tela. */
-export function usePublicacaoNaTela(pub: Publicacao, celular: boolean, aoTerminar: () => void) {
+function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publicacao; celular: boolean; aoTerminar: () => void; titulo?: string; sobre?: string }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
@@ -445,7 +406,7 @@ export function usePublicacaoNaTela(pub: Publicacao, celular: boolean, aoTermina
   // Cliente que recusou a IA: a rotina de fundo não lê, e a pessoa cria o prazo à mão.
   const semIa = !!pub.processo?.semIa;
   const iaAqui = !!eu.data?.ia && !semIa;
-  const blocoIa = (conteudo: ReactNode) => (
+  const ia = (
     <BlocoIa
       titulo={tituloIa}
       analise={s}
@@ -455,7 +416,7 @@ export function usePublicacaoNaTela(pub: Publicacao, celular: boolean, aoTermina
       rodape={s ? "Gerado por IA. Confira nos autos." : !iaAqui ? undefined : pub.leituraParada ? "Sem leitura da IA." : "A IA está lendo o teor."}
     >
       {c ? (
-        conteudo
+        <FatosDaSugestao c={c} responsavel={s!.responsavel} />
       ) : !iaAqui ? (
         <p className="m-0 dc-t-corpo">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
       ) : pub.leituraParada ? (
@@ -490,7 +451,8 @@ export function usePublicacaoNaTela(pub: Publicacao, celular: boolean, aoTermina
   const lida = modo === "sem_prazo" && pub.situacao === "lida" && <Faixa tipo="ok">Marcada como lida, sem prazo.</Faixa>;
 
   // Ações: [principal, secundária, terciária, extra]
-  const acoes: AcaoDaPublicacao[] =
+  type Acao = { rotulo: string; icone?: ReactNode; fazer: () => void; ocupado?: boolean; desligado?: boolean };
+  const acoes: Acao[] =
     modo === "prazo"
       ? [
           // Confiança baixa: não confirma num clique; abre o ajuste com os motivos no topo.
@@ -525,27 +487,8 @@ export function usePublicacaoNaTela(pub: Publicacao, celular: boolean, aoTermina
     </>
   );
 
-  return {
-    s,
-    c,
-    modo,
-    ocupado,
-    acoes,
-    dialogos,
-    processo,
-    teor,
-    cancelada,
-    feito,
-    lida,
-    blocoIa,
-    ia: blocoIa(c && <FatosDaSugestao c={c} responsavel={s!.responsavel} />),
-    prova: c && <ProvaDaSugestao c={c} />,
-    leituraDaDecisao: pub.decisao && <LeituraDaDecisao pub={pub} />,
-  };
-}
-
-export function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publicacao; celular: boolean; aoTerminar: () => void; titulo?: string; sobre?: string }) {
-  const { acoes, ocupado, dialogos, processo, teor, cancelada, feito, lida, ia, prova, leituraDaDecisao } = usePublicacaoNaTela(pub, celular, aoTerminar);
+  const prova = c && <ProvaDaSugestao c={c} />;
+  const leituraDaDecisao = pub.decisao && <LeituraDaDecisao pub={pub} />;
 
   if (celular) {
     const [a1, a2, a3] = acoes;
@@ -599,27 +542,33 @@ export function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub
   }
 
   return (
-    <section className="dc-painel dc-decisao">
-      <div className="dc-decisao__topo">{processo}</div>
-      <Rolagem id="publicacao" className="dc-decisao__corpo">
-        {cancelada}
-        {feito || lida}
-        <div className="dc-decisao__grade">
-          <div className="dc-decisao__leitura">
-            {teor}
-            {prova}
+    <>
+      <section className="dc-painel dc-caixa__teor">
+        <div className="dc-caixa__topo">{processo}</div>
+        <Rolagem id="publicacao" className="dc-caixa__leitura">
+          {cancelada}
+          {teor}
+          {prova}
+          {leituraDaDecisao}
+        </Rolagem>
+      </section>
+      <aside className="dc-painel dc-caixa__decisao">
+        <div className="dc-caixa__fatos">
+          {feito || lida}
+          {ia}
+        </div>
+        {acoes.length > 0 && (
+          <div className="dc-caixa__botoes">
+            {acoes.map((a, i) => (
+              <Botao key={a.rotulo} variante={i === 0 ? "primaria" : i === 1 ? "secundaria" : "fantasma"} onClick={a.fazer} ocupado={a.ocupado} disabled={a.desligado || ocupado}>
+                {i < 2 && a.icone} {a.rotulo}
+              </Botao>
+            ))}
           </div>
-          <aside className="dc-decisao__fatos">{ia}</aside>
-        </div>
-        {leituraDaDecisao}
-      </Rolagem>
-      {acoes.length > 0 && (
-        <div className="dc-painel__acoes">
-          <BotoesDaDecisao acoes={acoes} ocupado={ocupado} />
-        </div>
-      )}
+        )}
+      </aside>
       {dialogos}
-    </section>
+    </>
   );
 }
 

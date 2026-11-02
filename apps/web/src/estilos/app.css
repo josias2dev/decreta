@@ -196,11 +196,11 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-opcao { display: flex; align-items: center; gap: var(--space-2-half); font: 400 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); cursor: pointer; }
 .dc-interruptor { position: relative; width: 32px; height: 18px; flex: none; appearance: none; border-radius: var(--radius-pill); background: var(--borda-forte); cursor: pointer; transition: background var(--transicao); }
 .dc-interruptor::after { content: ""; position: absolute; top: var(--space-half); left: var(--space-half); width: var(--space-3-half); height: var(--space-3-half); border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform var(--transicao); }
-.dc-interruptor:checked { background: var(--primaria); }
-.dc-interruptor:checked::after { transform: translateX(var(--space-3-half)); }
+.dc-interruptor:checked, [aria-checked="true"] > .dc-interruptor { background: var(--primaria); }
+.dc-interruptor:checked::after, [aria-checked="true"] > .dc-interruptor::after { transform: translateX(var(--space-3-half)); background: var(--on-primaria); }
 
 /* ---------- Diálogo (centro no computador, folha de baixo no celular) ---------- */
-.dc-veu-dialogo { position: fixed; inset: 0; z-index: 50; background: rgba(17, 17, 20, 0.32); }
+.dc-veu-dialogo { position: fixed; inset: 0; z-index: 50; background: var(--veu); }
 .dc-dialogo { position: fixed; z-index: 51; left: 50%; top: 10vh; transform: translateX(-50%); width: min(520px, calc(100vw - 32px)); max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); box-shadow: var(--sombra-flutuante); outline: none; }
 .dc-dialogo__titulo { margin: 0; font: 600 var(--texto-titulo)/var(--linha-titulo) var(--font-sans); letter-spacing: -0.01em; color: var(--tinta); }
 .dc-dialogo__texto { margin: 0; font: 400 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta-2); }
@@ -220,7 +220,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-avisos { position: fixed; z-index: 60; left: 50%; bottom: var(--space-5); transform: translateX(-50%); display: flex; flex-direction: column; gap: var(--space-1-half); width: min(420px, calc(100vw - 32px)); pointer-events: none; }
 .dc-celular .dc-avisos, .dc-avisos.dc-celular { bottom: calc(140px + env(safe-area-inset-bottom)); }
 .dc-aviso { display: flex; align-items: center; gap: var(--space-2-half); padding: var(--space-2-half) var(--space-3-half); border-radius: var(--radius-md); background: var(--primaria); color: var(--on-primaria); font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); box-shadow: var(--sombra-flutuante); pointer-events: auto; }
-.dc-aviso--erro { background: var(--vencido); color: #fff; }
+.dc-aviso--erro { background: var(--vencido); color: var(--on-vencido); }
 .dc-aviso svg { width: 16px; height: 16px; flex: none; }
 
 /* ---------- Folha da peça ---------- */
@@ -299,7 +299,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-celular .dc-dados { grid-template-columns: 112px minmax(0, 1fr); gap: var(--space-2-half) var(--space-3); }
 
 /* ---------- Publicações: lista à esquerda, a selecionada à direita ---------- */
-.dc-caixa { display: grid; grid-template-columns: var(--layout-caixa) minmax(0, 1fr); gap: var(--vao-bloco); align-items: stretch; }
+/* A lista, o teor no meio e a decisão à direita: cada coluna rola por si, e tudo fica à vista sem rolar a página. */
+.dc-caixa { --largura-lista: calc(340px * var(--escala-coluna)); --largura-decisao: calc(340px * var(--escala-coluna)); display: grid; grid-template-columns: var(--largura-lista) minmax(0, 1fr) var(--largura-decisao); gap: var(--vao-bloco); align-items: stretch; }
 .dc-caixa__lista { position: sticky; top: var(--space-4); max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; }
 .dc-caixa__lista > .dc-abas { padding: 0 var(--space-2-half); flex: none; }
 .dc-caixa__lista > .dc-linhas { overflow-y: auto; }
@@ -513,7 +514,6 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 /* Publicações: a lista e a publicação aberta rolam cada uma por si; as ações da publicação ficam à vista. */
 .dc-pagina--cheia > .dc-caixa { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); }
 .dc-pagina--cheia .dc-caixa__lista { position: static; max-height: 100%; }
-.dc-caixa__detalhe { display: flex; flex-direction: column; min-height: 0; max-height: 100%; overflow: hidden; }
 
 /* Documentos: a lista e, com um aberto, o arquivo à direita (5 para 7), cada um rolando por si.
    Aberto, a lista fica só com o nome (de quem é e o dia embaixo): o resto está no painel. */
@@ -1139,10 +1139,10 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
    Um cartão só: três linhas da mesma altura. As colunas são neutras e a etapa é um ponto discreto, do
    vazado ao grafite, na ordem em que o trabalho anda. Só "parado" leva âmbar. */
 .dc-etapa { --etapa: var(--borda-forte); }
-.dc-etapa--novo, .dc-etapa--triagem { --etapa: #c4bfb3; }
-.dc-etapa--aguardando_saque { --etapa: #a19d93; }
-.dc-etapa--sacado { --etapa: #7c7a73; }
-.dc-etapa--repassado { --etapa: #54534e; }
+.dc-etapa--novo, .dc-etapa--triagem { --etapa: var(--etapa-1); }
+.dc-etapa--aguardando_saque { --etapa: var(--etapa-2); }
+.dc-etapa--sacado { --etapa: var(--etapa-3); }
+.dc-etapa--repassado { --etapa: var(--etapa-4); }
 .dc-etapa--finalizado, .dc-etapa--concluido { --etapa: var(--tinta); }
 .dc-etapa--desistiu { --etapa: transparent; --etapa-borda: var(--borda-forte); }
 
@@ -1290,30 +1290,41 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-texto-longo { max-width: 92ch; }
 .dc-painel__corpo > .dc-texto-longo + .dc-linha-acoes { margin-top: var(--space-2); }
 
-/* Tela média: o lado desce, o subtítulo ganha a linha dele e a lista de publicações encolhe. */
+/* Tela média: o lado desce e o subtítulo ganha a linha dele. */
 @media (max-width: 1180px) {
   .dc-colunas:not(.dc-colunas--meio):not(.dc-colunas--esquerda) { grid-template-columns: minmax(0, 1fr); }
   .dc-cabecalho__texto { flex-direction: column; gap: 0; }
   .dc-cabecalho .dc-sub { white-space: normal; }
-  .dc-caixa { grid-template-columns: 320px minmax(0, 1fr); }
 }
 
 /* Abas do celular de ponta a ponta. */
 .dc-sangria { margin-inline: calc(-1 * var(--respiro-pagina)); padding-inline: var(--respiro-pagina); }
 
-/* ---------- O cartão de decisão da publicação ----------
-   Em cima o processo, no meio duas colunas que rolam juntas: à esquerda o que se lê (teor, contagem e trecho), à direita
-   os fatos que se decidem, com a data em destaque. Embaixo, sempre à vista, os botões. No celular é uma coluna, com a data primeiro. */
-.dc-decisao { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; overflow: hidden; container-type: inline-size; }
-.dc-decisao > * { flex: none; }
-.dc-decisao__topo { padding: var(--space-3) var(--respiro-painel); border-bottom: 1px solid var(--borda); }
-.dc-decisao > .dc-decisao__corpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--vao-bloco); padding: var(--respiro-painel); }
-.dc-decisao__grade { display: grid; grid-template-columns: minmax(0, 1fr) var(--layout-fatos); gap: var(--space-6); align-items: start; }
-.dc-decisao__leitura { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
-.dc-decisao__fatos { position: sticky; top: 0; min-width: 0; }
-@container (max-width: 680px) {
-  .dc-decisao__grade { grid-template-columns: minmax(0, 1fr); }
-  .dc-decisao__fatos { position: static; order: -1; }
+/* ---------- A publicação aberta ----------
+   No meio, o que se lê: teor, contagem e trecho. À direita, a decisão: a sugestão da IA de cima a baixo, com a data em destaque,
+   e os botões sempre à vista. No celular é uma coluna só, com a data primeiro. */
+.dc-caixa__carregando { grid-column: 2 / -1; }
+.dc-caixa__teor, .dc-caixa__decisao { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dc-caixa__topo { flex: none; padding: var(--space-3) var(--respiro-painel); border-bottom: 1px solid var(--borda); }
+.dc-caixa__teor > .dc-caixa__leitura { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-5); padding: var(--respiro-painel) var(--space-5) var(--space-5); }
+.dc-caixa__fatos { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.dc-caixa__fatos > .dc-faixa { flex: none; margin: var(--space-3) var(--respiro-painel) 0; }
+.dc-caixa__fatos > .dc-ia { flex: 1 0 auto; display: flex; flex-direction: column; border: 0; border-radius: 0; }
+.dc-caixa__fatos > .dc-faixa + .dc-ia { margin-top: var(--space-3); border-top: 1px solid var(--acento-borda); }
+.dc-caixa__fatos > .dc-ia .dc-ia__pe { margin-top: auto; }
+.dc-caixa__fatos > .dc-ia .dc-ia__fonte { margin-left: 0; flex-basis: 100%; }
+.dc-caixa__botoes { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); padding: var(--space-3) var(--respiro-painel) var(--respiro-painel); border-top: 1px solid var(--borda); }
+.dc-caixa__botoes > .dc-btn { padding-inline: var(--space-1); }
+.dc-caixa__botoes > :nth-child(-n + 2), .dc-caixa__botoes > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+/* Abaixo de 1500 px as colunas de fora encolhem, para o teor ter onde ler; abaixo de 1200 a decisão desce para baixo dele. */
+@media (max-width: 1500px) {
+  .dc-caixa { --largura-lista: calc(320px * var(--escala-coluna)); --largura-decisao: calc(304px * var(--escala-coluna)); }
+}
+@media (max-width: 1199px) {
+  .dc-caixa { grid-template-columns: var(--largura-lista) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .dc-caixa__lista { grid-row: 1 / -1; }
+  .dc-caixa__decisao { grid-column: 2; max-height: 52vh; }
+  .dc-caixa__carregando { grid-column: 2; }
 }
 /* Uma seção de leitura: o título, o que vem junto dele e o texto em 14 px. */
 .dc-lido { display: flex; flex-direction: column; gap: var(--space-1-half); }
@@ -1331,7 +1342,6 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-fatos .dc-dados dt { color: var(--tinta-2); }
 .dc-fatos__nota { margin: 0; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
 .dc-fatos__nota--lista { padding-left: var(--space-4); list-style: disc; }
-.dc-decisao__fatos .dc-ia__fonte { margin-left: 0; flex-basis: 100%; }
 .dc-celular .dc-ia .dc-fatos .dc-dados { grid-template-columns: 112px minmax(0, 1fr); }
 
 /* A pessoa no pé do menu: abre o menu rápido. */
@@ -1352,3 +1362,8 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-menu-flutuante__item > svg { width: var(--icone-botao); height: var(--icone-botao); flex: none; color: var(--tinta-3); }
 .dc-menu-flutuante__marca { margin-left: auto; color: var(--tinta); }
 .dc-menu-flutuante__item > .dc-menu-flutuante__marca svg { display: block; width: var(--icone-botao); height: var(--icone-botao); }
+
+/* Papel: a folha da peça e o arquivo aberto continuam brancos também no escuro, com a tinta de sempre. */
+.dc-folha, .dc-ver__folha { color-scheme: light; --tinta: #1d1d20; --tinta-2: #4e4d52; --tinta-3: #6d6b70; --borda: #e6e2d9; --borda-forte: #d2ccc0; --superficie: #fff; --superficie-2: #f3f1ec; color: var(--tinta); }
+.dc-aparencia { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.dc-aparencia--chave { width: 100%; min-height: var(--altura-controle); padding: 0; flex-wrap: nowrap; background: none; border: 0; border-radius: var(--radius-md); text-align: left; cursor: pointer; }

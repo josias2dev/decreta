@@ -33,6 +33,7 @@ import { ApiError } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { aplicarDensidade, densidadeDaPessoa } from "@/lib/densidade";
+import { useTemaDoApp } from "@/lib/tema";
 import { numero } from "@/lib/formato";
 import type { Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -112,6 +113,7 @@ const SEM_NAVEGACAO = [/^\/prazos\/[^/]+$/, /^\/publicacoes\/[^/]+$/, /^\/pecas/
 export function AppLayout() {
   const eu = useQuery(euQuery);
   const caminho = useRouterState({ select: (s) => s.location.pathname });
+  useTemaDoApp(eu.data?.usuario.id);
   if (eu.isPending) return <Esperando />;
   if (eu.error instanceof ApiError && eu.error.status === 401) return <IrParaEntrar />;
   if (eu.error instanceof ApiError && eu.error.status === 403) return <SemEscritorio />;

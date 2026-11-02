@@ -137,7 +137,8 @@ a.dc-contador:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--f
 .dc-menu__escritorio { display: flex; align-items: center; gap: var(--space-2); min-height: var(--altura-controle); padding: 0 var(--space-half) 0 var(--space-1); }
 .dc-menu__escritorio-logo { display: grid; place-items: center; width: var(--altura-controle-sm); height: var(--altura-controle-sm); border-radius: var(--radius-md); background: var(--primaria); color: var(--on-primaria); font: 600 var(--texto-legenda)/1 var(--font-sans); flex: none; }
 .dc-menu__escritorio-logo svg { width: var(--space-3-half); height: var(--space-3-half); stroke-width: 1.75; }
-.dc-menu__escritorio-logo--imagem { background: var(--superficie); box-sizing: border-box; padding: var(--space-half); object-fit: contain; box-shadow: 0 0 0 1px var(--menu-borda); }
+/* O logo do escritório fica sempre numa plaquinha branca: não se sabe a cor dele. */
+.dc-menu__escritorio-logo--imagem { background: #fff; box-sizing: border-box; padding: var(--space-half); object-fit: contain; box-shadow: 0 0 0 1px var(--menu-borda); }
 /* O nome do escritório quebra em até duas linhas em vez de ser cortado. */
 .dc-menu__escritorio strong { flex: 1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font: 600 var(--texto-meta)/var(--linha-meta) var(--font-sans); letter-spacing: -0.01em; color: var(--tinta); }
 .dc-menu__recolher { display: grid; place-items: center; flex: none; width: var(--altura-controle-sm); height: var(--altura-controle-sm); padding: 0; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--menu-icone); cursor: pointer; transition: background-color var(--transicao), color var(--transicao); }

@@ -15,6 +15,7 @@ import { authCall, authClient } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import { DENSIDADES, useDensidade } from "@/lib/densidade";
+import { useTema } from "@/lib/tema";
 import { telefone } from "@/lib/formato";
 import { equipeQuery } from "./equipe";
 
@@ -41,7 +42,7 @@ export function ContaPage() {
         )}
       </div>
       <div className="dc-pilha">
-        <DensidadeDaTela usuarioId={u.id} />
+        <Aparencia usuarioId={u.id} />
         <UsoDaIaHoje />
         {!demonstracao && <ConectorMcp />}
         {!demonstracao && <DuasEtapas ligada={!!(sessao.data?.user as { twoFactorEnabled?: boolean } | undefined)?.twoFactorEnabled} />}
@@ -70,18 +71,21 @@ export function ContaPage() {
   );
 }
 
-/** Compacto é o padrão; confortável tem letra maior e ainda mais espaço. Vale para esta pessoa, neste navegador. */
-function DensidadeDaTela({ usuarioId }: { usuarioId: string }) {
-  const [densidade, escolher] = useDensidade(usuarioId);
+/** O modo escuro e a densidade: valem para esta pessoa, neste navegador. No computador também estão no menu rápido. */
+function Aparencia({ usuarioId }: { usuarioId: string }) {
+  const [tema, escolherTema] = useTema(usuarioId);
+  const [densidade, escolherDensidade] = useDensidade(usuarioId);
   return (
-    <Painel titulo="Densidade da tela">
-      <div className="flex flex-col items-start gap-2">
-        <Segmentos
-          rotulo="Densidade da tela"
-          opcoes={DENSIDADES}
-          valor={densidade}
-          aoMudar={escolher}
-        />
+    <Painel titulo="Aparência">
+      <div className="dc-form">
+        <button type="button" role="switch" aria-checked={tema === "escuro"} className="dc-aparencia dc-aparencia--chave" onClick={() => escolherTema(tema === "escuro" ? "claro" : "escuro")}>
+          <span className="dc-rotulo">Modo escuro</span>
+          <span className="dc-interruptor" aria-hidden />
+        </button>
+        <div className="dc-aparencia">
+          <span className="dc-rotulo">Densidade</span>
+          <Segmentos rotulo="Densidade da tela" opcoes={DENSIDADES} valor={densidade} aoMudar={escolherDensidade} />
+        </div>
         <p className="dc-nota m-0">Confortável tem a letra um pouco maior e mais espaço entre as coisas. Fica guardado neste navegador.</p>
       </div>
     </Painel>

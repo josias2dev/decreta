@@ -1,15 +1,16 @@
 /**
- * O menu rápido da pessoa, no pé do menu lateral: a conta, a densidade da tela
- * ali mesmo, as configurações, a página de segurança e sair. Abre para cima, ou
+ * O menu rápido da pessoa, no pé do menu lateral: a conta, a densidade e o modo
+ * escuro trocados ali mesmo, as configurações, a página de segurança e sair. Abre para cima, ou
  * ao lado com o menu recolhido, quando o cartão vira só a foto. No celular a
  * conta continua no botão de foto do topo.
  */
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, ChevronsUpDown, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
+import { Check, ChevronsUpDown, LogOut, Moon, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { authCall, authClient } from "@/lib/auth";
 import { DENSIDADES, useDensidade, type Densidade } from "@/lib/densidade";
+import { useTema } from "@/lib/tema";
 import type { Eu } from "@/lib/tipos";
 import { Avatar } from "./ui";
 
@@ -30,7 +31,8 @@ export function useSair() {
 
 export function MenuDaConta({ eu, recolhido }: { eu: Eu; recolhido: boolean }) {
   const sessao = useQuery(sessaoQuery);
-  const [densidade, escolher] = useDensidade(eu.usuario.id);
+  const [densidade, escolherDensidade] = useDensidade(eu.usuario.id);
+  const [tema, escolherTema] = useTema(eu.usuario.id);
   const sair = useSair();
   return (
     <Menu.Root>
@@ -55,7 +57,7 @@ export function MenuDaConta({ eu, recolhido }: { eu: Eu; recolhido: boolean }) {
             </Link>
           </Menu.Item>
           <Menu.Label className="dc-menu-conta__rotulo">Densidade da tela</Menu.Label>
-          <Menu.RadioGroup value={densidade} onValueChange={(d) => escolher(d as Densidade)}>
+          <Menu.RadioGroup value={densidade} onValueChange={(d) => escolherDensidade(d as Densidade)}>
             {DENSIDADES.map((d) => (
               // Troca ali mesmo: o menu fica aberto, para ver a tela mudar.
               <Menu.RadioItem key={d.id} value={d.id} className="dc-menu-flutuante__item" onSelect={(e) => e.preventDefault()}>
@@ -66,6 +68,19 @@ export function MenuDaConta({ eu, recolhido }: { eu: Eu; recolhido: boolean }) {
               </Menu.RadioItem>
             ))}
           </Menu.RadioGroup>
+          <Menu.Separator className="dc-menu-flutuante__sep" />
+          <Menu.Item
+            role="switch"
+            aria-checked={tema === "escuro"}
+            className="dc-menu-flutuante__item"
+            onSelect={(e) => {
+              e.preventDefault();
+              escolherTema(tema === "escuro" ? "claro" : "escuro");
+            }}
+          >
+            <Moon aria-hidden /> Modo escuro
+            <span className="dc-interruptor dc-menu-flutuante__marca" aria-hidden />
+          </Menu.Item>
           <Menu.Separator className="dc-menu-flutuante__sep" />
           <Menu.Item asChild className="dc-menu-flutuante__item">
             <Link to="/configuracoes">

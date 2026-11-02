@@ -32,9 +32,6 @@ import { SegurancaPage } from "./paginas/seguranca";
 import { TermosPage } from "./paginas/termos";
 
 const QUANDO: readonly Quando[] = ["hoje", "semana", "vencidos", "abertos", "cumpridos"];
-/** Enquanto o dono do produto escolhe a forma da tela de Publicações. */
-export type VarianteDePublicacoes = "a" | "b" | "c" | "d";
-const VARIANTES_DE_PUBLICACOES: readonly string[] = ["a", "b", "c", "d"];
 const SITUACOES: readonly SituacaoPublicacao[] = ["nova", "pendente", "lida", "vinculada"];
 const texto = (v: unknown, max = 200) => (typeof v === "string" && v.length <= max ? v : undefined);
 
@@ -88,10 +85,9 @@ const prazoRoute = createRoute({ getParentRoute: () => appRoute, path: "/prazos/
 const publicacoesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/publicacoes",
-  validateSearch: (s: Record<string, unknown>): { situacao?: SituacaoPublicacao; id?: string; variante?: VarianteDePublicacoes } => ({
+  validateSearch: (s: Record<string, unknown>): { situacao?: SituacaoPublicacao; id?: string } => ({
     ...(SITUACOES.includes(s.situacao as SituacaoPublicacao) && s.situacao !== "nova" ? { situacao: s.situacao as SituacaoPublicacao } : {}),
     ...(texto(s.id, 40) ? { id: texto(s.id, 40) } : {}),
-    ...(VARIANTES_DE_PUBLICACOES.includes(s.variante as string) ? { variante: s.variante as VarianteDePublicacoes } : {}),
   }),
   component: PublicacoesPage,
 });

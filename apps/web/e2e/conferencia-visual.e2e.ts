@@ -1,8 +1,9 @@
 /**
  * Conferência visual: em 1366×768 e 390×844, todo texto na tela usa um dos seis
- * tamanhos da escala (estilos/tokens.css) e as listas mostram o que prometem.
- * Não compara imagens, porque a fonte renderiza diferente no CI: é a garantia de
- * que ninguém volta a pôr tamanho solto.
+ * tamanhos da escala (estilos/tokens.css), as linhas têm o respiro combinado e
+ * toda tela começa e termina nas mesmas margens. Não compara imagens, porque a
+ * fonte renderiza diferente no CI: é a garantia de que ninguém volta a pôr tamanho
+ * solto nem margem própria.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -41,6 +42,8 @@ const TELAS_DO_APP = [
   `/perguntar/${ids.conversaSemana}`,
   "/comecar",
 ];
+/** O Perguntar ocupa a folha inteira, e o /comecar fica sem o menu em volta. */
+const TELAS_COM_A_MARGEM_DA_PAGINA = TELAS_DO_APP.filter((r) => !r.startsWith("/perguntar") && r !== "/comecar");
 
 /** Os tamanhos de letra de todo texto visível; o conteúdo de um arquivo aberto e o rótulo desenhado dos ícones não são da interface. */
 function tamanhosNaTela(page: Page) {
@@ -98,6 +101,36 @@ test.describe("no computador", () => {
     });
   }
 
+  for (const largura of [1366, 1710]) {
+    test(`toda tela começa e termina nas mesmas margens em ${largura} px`, async ({ page }) => {
+      test.setTimeout(90_000);
+      await page.setViewportSize({ width: largura, height: 880 });
+      const medidas = new Map<string, number[]>();
+      for (const rota of TELAS_COM_A_MARGEM_DA_PAGINA) {
+        await abrir(page, rota);
+        await telaPronta(page);
+        const m = await page.evaluate(() => {
+          const folha = document.querySelector(".dc-conteudo")!.getBoundingClientRect();
+          const pagina = document.querySelector("main.dc-pagina")!;
+          const dentro = { esquerda: folha.left + 1, direita: folha.right - 1 };
+          // O cabeçalho e o topo do detalhe vão de ponta a ponta (0); o resto começa e termina na margem.
+          const filhos = [...pagina.children].map((f) => f.getBoundingClientRect()).filter((r) => r.width > 0);
+          return {
+            margem: Number.parseFloat(getComputedStyle(pagina).paddingLeft),
+            direita: Number.parseFloat(getComputedStyle(pagina).paddingRight),
+            esquerdas: filhos.map((r) => Math.round(r.left - dentro.esquerda)),
+            direitas: filhos.map((r) => Math.round(dentro.direita - r.right)),
+          };
+        });
+        expect(m.margem, rota).toBe(24);
+        expect(m.direita, rota).toBe(24);
+        for (const lado of [...m.esquerdas, ...m.direitas]) expect([0, 24], `${rota}: ${m.esquerdas} | ${m.direitas}`).toContain(lado);
+        medidas.set(rota, m.esquerdas);
+      }
+      expect(medidas.size).toBe(TELAS_COM_A_MARGEM_DA_PAGINA.length);
+    });
+  }
+
   test("um diálogo aberto também fica na escala", async ({ page }) => {
     const prazo = amostras.prazo!.corpo;
     const previa = { publicacao: prazo.publicadoEm, inicio: prazo.inicio, fim: prazo.fim, dias: prazo.dias, contagem: prazo.contagem, desconsiderados: [], prorrogadoDe: null, explicacao: prazo.conta.explicacao, pelo: "publicacao", outra: null, calendarioCompleto: true, diaDigitado: null };
@@ -108,33 +141,66 @@ test.describe("no computador", () => {
     await conferirEscala(page, ESCALA_DO_COMPUTADOR);
   });
 
-  test("Hoje: cerca de 12 linhas à vista, com o cabeçalho e os números em uma linha", async ({ page }) => {
+  test("Hoje: linhas com respiro, cabeçalho e números em uma linha", async ({ page }) => {
     const painel = amostras.hoje!.corpo;
     await abrir(page, "/hoje", new ApiFalsa().responder("/hoje", { ...painel, itens: repetir(painel.itens, 24) }));
     await telaPronta(page);
-    expect(await linhasInteiras(page, ".dc-colunas > .dc-painel .dc-tabela tbody tr")).toBeGreaterThanOrEqual(12);
+    const linha = page.locator(".dc-colunas > .dc-painel .dc-tabela tbody tr");
+    const altura = (await linha.first().boundingBox())!.height;
+    expect(altura).toBeGreaterThanOrEqual(54);
+    expect(altura).toBeLessThanOrEqual(58);
+    // Bem mais do que as 5 de antes, sem apertar: é a letra menor e a informação organizada que abrem espaço.
+    expect(await linhasInteiras(page, ".dc-colunas > .dc-painel .dc-tabela tbody tr")).toBeGreaterThanOrEqual(7);
     const cabecalho = (await page.locator(".dc-cabecalho").boundingBox())!;
-    expect(cabecalho.height).toBeLessThanOrEqual(52);
+    expect(cabecalho.height).toBeGreaterThanOrEqual(56);
+    expect(cabecalho.height).toBeLessThanOrEqual(60);
     const numeros = (await page.getByLabel("Números do dia").boundingBox())!;
-    expect(numeros.height).toBeLessThanOrEqual(44);
+    expect(numeros.height).toBeGreaterThanOrEqual(56);
+    expect(numeros.height).toBeLessThanOrEqual(60);
     expect((await page.locator(".dc-menu").boundingBox())!.width).toBe(208);
   });
 
-  test("Publicações: cerca de 12 itens à vista, cada um em duas linhas", async ({ page }) => {
+  test("Publicações: as partes numa linha inteira, três colunas e a decisão com a data em destaque", async ({ page }) => {
     const caixa = amostras.publicacoes!.corpo;
-    await abrir(page, "/publicacoes", new ApiFalsa().responder("/publicacoes", { ...caixa, itens: repetir(caixa.itens, 24) }));
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`, new ApiFalsa().responder("/publicacoes", { ...caixa, itens: repetir(caixa.itens, 24) }));
     await telaPronta(page);
-    expect(await linhasInteiras(page, ".dc-pub")).toBeGreaterThanOrEqual(12);
-    expect((await page.locator(".dc-pub").first().boundingBox())!.height).toBeLessThanOrEqual(56);
+    const item = page.locator(".dc-pub").first();
+    const altura = (await item.boundingBox())!.height;
+    expect(altura).toBeGreaterThanOrEqual(68);
+    expect(altura).toBeLessThanOrEqual(76);
+    expect(await linhasInteiras(page, ".dc-pub")).toBeGreaterThanOrEqual(7);
+    // O nome das partes é o que se procura: não divide a linha com o selo.
+    const partes = await page.locator(".dc-pub__partes").first().evaluate((e) => ({ largura: e.getBoundingClientRect().width, pai: e.parentElement!.clientWidth, corte: e.scrollWidth > e.clientWidth }));
+    expect(partes.corte).toBe(false);
+    // Lista, teor e decisão lado a lado, da mesma altura, cada um rolando por si.
+    const colunas = await Promise.all([".dc-caixa__lista", ".dc-caixa__teor", ".dc-caixa__decisao"].map(async (s) => (await page.locator(s).boundingBox())!));
+    expect(colunas[0]!.x + colunas[0]!.width).toBeLessThan(colunas[1]!.x);
+    expect(colunas[1]!.x + colunas[1]!.width).toBeLessThan(colunas[2]!.x);
+    expect(new Set(colunas.map((c) => Math.round(c.height))).size).toBe(1);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight)).toBe(0);
+    await expect(page.locator(".dc-fatos__data")).toHaveText("23/11/2026");
+    await expect(page.locator(".dc-caixa__botoes").getByRole("button", { name: "Confirmar prazo" })).toBeInViewport();
   });
 
-  test("Prazos, Processos e Clientes: as linhas têm duas linhas de texto e até 56 px", async ({ page }) => {
+  test("Publicações abaixo de 1200 px: a decisão desce para baixo do teor", async ({ page }) => {
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`);
+    await telaPronta(page);
+    const teor = (await page.locator(".dc-caixa__teor").boundingBox())!;
+    const decisao = (await page.locator(".dc-caixa__decisao").boundingBox())!;
+    expect(decisao.y).toBeGreaterThanOrEqual(teor.y + teor.height);
+    expect(decisao.x).toBe(teor.x);
+    await expect(page.locator(".dc-caixa__botoes").getByRole("button", { name: "Confirmar prazo" })).toBeInViewport();
+  });
+
+  test("Prazos, Processos e Clientes: as linhas ficam perto de 56 px", async ({ page }) => {
     for (const rota of ["/prazos", "/processos", "/clientes"]) {
       await abrir(page, rota);
       await telaPronta(page);
       const alturas = await page.locator(".dc-tabela tbody tr[data-link]").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
       expect(alturas.length).toBeGreaterThan(0);
-      expect(Math.max(...alturas), rota).toBeLessThanOrEqual(56);
+      expect(Math.min(...alturas), rota).toBeGreaterThanOrEqual(54);
+      expect(Math.max(...alturas), rota).toBeLessThanOrEqual(58);
     }
   });
 
@@ -152,6 +218,8 @@ test.describe("no computador", () => {
     expect(alvaras.fundos).toBe(1);
     expect(negocios.fundos).toBe(1);
     expect(negocios.altura).toBe(alvaras.altura);
+    // Doze de respiro em volta das três linhas do cartão.
+    expect(alvaras.altura).toBeGreaterThanOrEqual(80);
   });
 
   test("os totais dos alvarás usam a mesma faixa dos números do Hoje", async ({ page }) => {
@@ -159,7 +227,7 @@ test.describe("no computador", () => {
     await telaPronta(page);
     const totais = page.getByLabel("Totais dos alvarás");
     await expect(totais.locator(".dc-contador")).toHaveCount(3);
-    expect((await totais.boundingBox())!.height).toBeLessThanOrEqual(44);
+    expect((await totais.boundingBox())!.height).toBeLessThanOrEqual(60);
   });
 
   test("o azul é da IA: filtro ligado, item ativo e botão principal ficam em grafite", async ({ page }) => {
@@ -172,6 +240,19 @@ test.describe("no computador", () => {
     expect(ativo).toBe(await page.locator(".dc-h1").evaluate((e) => getComputedStyle(e).color));
     // A marca da IA continua com o acento.
     expect(await cor(".dc-ia__marca")).not.toBe(grafite);
+  });
+
+  test("datas e valores na Geist, com os números alinhados: nada de fonte mono na interface", async ({ page }) => {
+    await abrir(page, "/alvaras");
+    await telaPronta(page);
+    const valor = await page.locator(".dc-cartao-quadro__valor").first().evaluate((e) => getComputedStyle(e));
+    expect(valor.fontFamily).toContain("Geist");
+    expect(valor.fontFamily).not.toContain("Mono");
+    await abrir(page, "/prazos");
+    await telaPronta(page);
+    const cnj = page.locator(".dc-cnj").first();
+    expect(await cnj.evaluate((e) => getComputedStyle(e).fontFamily)).not.toMatch(/mono/i);
+    expect(await cnj.evaluate((e) => getComputedStyle(e).fontVariantNumeric)).toContain("tabular-nums");
   });
 
   test("o menu recolhe para 52 px, os nomes continuam para o leitor de tela e a escolha fica", async ({ page }) => {
@@ -209,9 +290,12 @@ test.describe("no computador", () => {
       await expect(raiz).toHaveAttribute("data-densidade", "confortavel");
       expect(await titulo(), rota).toBe("17px");
     }
-    const linha = (await page.goto("/prazos"), page.locator(".dc-tabela tbody tr[data-link]").first());
+    await page.goto("/prazos");
+    const linha = page.locator(".dc-tabela tbody tr[data-link]").first();
     await expect(linha).toBeVisible();
-    expect((await linha.boundingBox())!.height).toBeGreaterThan(52);
+    expect((await linha.boundingBox())!.height).toBeGreaterThanOrEqual(64);
+    const botao = (await page.getByRole("button", { name: "Novo prazo" }).boundingBox())!;
+    expect(botao.height).toBe(36);
   });
 
   test("densidade é por pessoa: outra conta no mesmo navegador abre compacta", async ({ page }) => {
@@ -224,6 +308,78 @@ test.describe("no computador", () => {
     await page.goto("/hoje");
     await telaPronta(page);
     await expect(page.locator("html")).toHaveAttribute("data-densidade", "compacto");
+  });
+});
+
+test.describe("menu rápido da pessoa", () => {
+  test.use({ viewport: COMPUTADOR });
+  const cartao = (page: Page) => page.getByRole("button", { name: /Menu da conta de/ });
+
+  test("abre para cima com nome e e-mail, e os itens na ordem combinada", async ({ page }) => {
+    await abrir(page, "/hoje");
+    await telaPronta(page);
+    const posicao = (await cartao(page).boundingBox())!;
+    await cartao(page).click();
+    const menu = page.getByRole("menu");
+    await expect(menu).toBeVisible();
+    expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual(posicao.y);
+    await expect(menu.getByText("teste@decreta.site")).toBeVisible();
+    const itens = await menu.getByRole("menuitem").allTextContents();
+    expect(itens.map((t) => t.trim())).toEqual(["Minha conta", "Configurações", "Segurança e LGPD", "Sair"]);
+    await expect(menu.getByRole("menuitemradio")).toHaveText(["Compacto", "Confortável"]);
+    await expect(menu.getByRole("switch", { name: "Modo escuro" })).toHaveAttribute("aria-checked", "false");
+    await conferirEscala(page, ESCALA_DO_COMPUTADOR);
+  });
+
+  test("Minha conta navega, e a densidade troca ali mesmo sem fechar o menu", async ({ page }) => {
+    await abrir(page, "/hoje");
+    await telaPronta(page);
+    await cartao(page).click();
+    await page.getByRole("menuitemradio", { name: "Confortável" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-densidade", "confortavel");
+    await expect(page.getByRole("menu")).toBeVisible();
+    await expect(page.getByRole("menuitemradio", { name: "Confortável" })).toBeChecked();
+    await page.getByRole("menuitem", { name: "Minha conta" }).click();
+    await expect(page).toHaveURL(/\/conta$/);
+    await expect(page.getByRole("radio", { name: "Confortável" })).toBeChecked();
+  });
+
+  test("pelo teclado: abre, anda com as setas, Esc fecha e o foco volta ao cartão", async ({ page }) => {
+    await abrir(page, "/hoje");
+    await telaPronta(page);
+    await cartao(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("menu")).toBeVisible();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("menuitem", { name: "Minha conta" }).or(page.getByRole("menuitemradio", { name: "Compacto" })).first()).toBeVisible();
+    const focado = () => page.evaluate(() => document.activeElement?.textContent?.trim());
+    const antes = await focado();
+    await page.keyboard.press("ArrowDown");
+    expect(await focado()).not.toBe(antes);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(cartao(page)).toBeFocused();
+  });
+
+  test("Sair encerra a sessão pelo mesmo caminho de /conta", async ({ page }) => {
+    const api = await abrir(page, "/hoje");
+    await telaPronta(page);
+    await cartao(page).click();
+    api.logado = false;
+    await page.getByRole("menuitem", { name: "Sair" }).click();
+    await expect(page).toHaveURL(/\/entrar/);
+    expect(api.pedidos.some((p) => p.metodo === "POST" && p.caminho === "/sign-out")).toBe(true);
+  });
+
+  test("com o menu recolhido, o cartão é só a foto e o menu abre ao lado", async ({ page }) => {
+    await abrir(page, "/hoje");
+    await telaPronta(page);
+    await page.getByRole("button", { name: "Recolher o menu" }).click();
+    const foto = (await cartao(page).boundingBox())!;
+    expect(foto.width).toBeLessThanOrEqual(36);
+    await cartao(page).click();
+    const menu = (await page.getByRole("menu").boundingBox())!;
+    expect(menu.x).toBeGreaterThanOrEqual(foto.x + foto.width);
   });
 });
 
@@ -255,6 +411,15 @@ test.describe("no celular", () => {
     const tamanhos = await campos.evaluateAll((els) => els.map((e) => getComputedStyle(e).fontSize));
     expect(tamanhos.length).toBeGreaterThan(0);
     expect(new Set(tamanhos)).toEqual(new Set(["16px"]));
+  });
+
+  test("publicação: uma coluna, com a data antes do teor", async ({ page }) => {
+    await abrir(page, `/publicacoes/${ids.publicacao}`);
+    await telaPronta(page);
+    const data = (await page.locator(".dc-fatos__data").boundingBox())!;
+    const teor = (await page.getByRole("heading", { name: "Teor da intimação" }).boundingBox())!;
+    expect(data.y).toBeLessThan(teor.y);
+    expect(await sobraNaLateral(page)).toBe(0);
   });
 
   test("densidade: Confortável também vale no celular e sobrevive a recarregar", async ({ page }) => {
