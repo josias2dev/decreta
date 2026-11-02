@@ -24,6 +24,7 @@ const ORDEM: EtapaAlvara[] = ["novo", "aguardando_saque", "sacado", "repassado",
 const proxima = (e: EtapaAlvara) => ORDEM[ORDEM.indexOf(e) + 1];
 
 /** A data que levou o alvará à etapa e o rótulo dela. */
+const NENHUM: Record<EtapaAlvara, string> = { novo: "Nenhum alvará expedido", aguardando_saque: "Nenhum alvará aguardando saque", sacado: "Nenhum alvará sacado", repassado: "Nenhum alvará repassado", finalizado: "Nenhum alvará finalizado" };
 const O_QUE_ENTRA: Record<EtapaAlvara, string> = {
   novo: "O alvará expedido pelo juízo entra aqui, com o valor.",
   aguardando_saque: "O alvará à espera de ir ao banco.",
@@ -208,7 +209,7 @@ export function AlvarasPage() {
             Há alvarás em outras etapas: veja os outros filtros acima.
           </Vazio>
         ) : (
-          <Vazio titulo={`Nada em ${ETAPA[etapa].toLocaleLowerCase("pt-BR")}`} acao={!todas.some((e) => e.itens.length) && primeiro}>
+          <Vazio titulo={NENHUM[etapa]} acao={!todas.some((e) => e.itens.length) && primeiro}>
             {O_QUE_ENTRA[etapa]}
             {!pode && <span>{SO_LEITURA}</span>}
           </Vazio>

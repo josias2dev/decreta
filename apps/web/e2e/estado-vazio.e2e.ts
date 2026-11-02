@@ -550,10 +550,25 @@ test.describe("no celular", () => {
   test("Processos: explica, oferece o cadastro e não rola para o lado", async ({ page }) => {
     const api = new ApiFalsa().responder("/eu", euNovo).responder("GET /processos", PAGINA_VAZIA);
     await abrir(page, "/processos", api);
-    await expect(vazio(page).getByRole("button", { name: "Cadastrar o primeiro processo" })).toBeVisible();
+    const botao = vazio(page).getByRole("button", { name: "Cadastrar o primeiro processo" });
+    await expect(botao).toBeVisible();
+    expect((await botao.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await naEscala(page, [12, 13, 14, 15, 16, 20]);
     expect(await sobraNaLateral(page)).toBe(0);
   });
+
+  for (const [rota, titulo, trocar] of [
+    ["/publicacoes", "Falta a OAB para achar as publicações", (api: ApiFalsa) => api.responder("GET /publicacoes", CAIXA_VAZIA).responder("/equipe", equipeSemOab).responder("/escritorio", ESCRITORIO_COM_BUSCA)],
+    ["/alvaras", "Nenhum alvará aguardando saque", (api: ApiFalsa) => api.responder("GET /alvaras", { totais: { pendente: "0", recebido: "0" }, etapas: ["novo", "aguardando_saque", "sacado", "repassado", "finalizado"].map((etapa) => ({ etapa, total: "0", itens: [] })) })],
+    ["/negocios", "Ninguém em triagem", (api: ApiFalsa) => api.responder("GET /negocios", { contagens: {}, itens: [] })],
+  ] as const) {
+    test(`${rota}: o texto específico da tela e nada de rolar para o lado`, async ({ page }) => {
+      await abrir(page, rota, trocar(new ApiFalsa()));
+      await expect(vazio(page).getByText(titulo)).toBeVisible();
+      await naEscala(page, [12, 13, 14, 15, 16, 20]);
+      expect(await sobraNaLateral(page)).toBe(0);
+    });
+  }
 
   test("Prazos, com filtro: mesmo texto do computador", async ({ page }) => {
     const api = new ApiFalsa().responder("GET /prazos", { ...LISTA_DE_PRAZOS_VAZIA, chips: { ...LISTA_DE_PRAZOS_VAZIA.chips, abertos: 4 } });

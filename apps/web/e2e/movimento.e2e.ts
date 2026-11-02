@@ -54,7 +54,7 @@ test.describe("no computador", () => {
     explica((await movimentos(page))[1]!, "dc-volta-lista");
   });
 
-  test("do Hoje a um processo também é ir mais fundo; a peça vai mais fundo ainda", async ({ page }) => {
+  test("do prazo à peça também é ir mais fundo, mesmo com o endereço mais curto", async ({ page }) => {
     await abrir(page, `/prazos/${ids.prazoComPeca}`);
     await expect(page.locator(".dc-topo-detalhe h1")).toBeVisible();
     await anotar(page);

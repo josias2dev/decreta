@@ -128,6 +128,7 @@
 .dc-vazio strong { font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); }
 .dc-vazio__texto { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); max-width: 56ch; text-wrap: pretty; }
 .dc-vazio__acao { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-2); }
+.dc-celular .dc-vazio__acao .dc-btn { min-height: 44px; }
 .dc-erro-na-tela { display: flex; justify-content: center; padding: var(--space-8) var(--space-4); }
 .dc-esqueleto { border-radius: var(--radius-md); background: linear-gradient(90deg, var(--superficie-2), color-mix(in srgb, var(--superficie-2) 40%, var(--superficie)), var(--superficie-2)); background-size: 200% 100%; animation: dc-brilho 1.4s ease-in-out infinite; }
 @keyframes dc-brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
@@ -630,6 +631,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-pagina--cheia > .dc-caixa { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); }
 /* Sem nada para abrir, a caixa ocupa a largura: o texto do vazio não fica preso na coluna da lista. */
 .dc-caixa.dc-caixa--vazia { grid-template-columns: minmax(0, 1fr); }
+.dc-caixa--vazia .dc-caixa__lista > .dc-abas { justify-content: flex-start; gap: var(--space-5); }
+.dc-caixa--vazia .dc-caixa__lista { grid-row: auto; }
 .dc-pagina--cheia .dc-caixa__lista { position: static; max-height: 100%; }
 
 /* Documentos: a lista e, com um aberto, o arquivo à direita (5 para 7), cada um rolando por si.

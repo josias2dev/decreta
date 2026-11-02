@@ -2,8 +2,9 @@
  * Quanto demora para mudar de tela no build de produção, com a API de mentira. Não é teste (tempo sob carga não
  * dá verde nem vermelho confiável): só roda quando pedido, um de cada vez, e imprime a tabela.
  *
- *   E2E_MEDIR=1 E2E_PORTA=4431 bun run web:e2e -- e2e/tempo-de-tela.e2e.ts --workers=1
+ *   E2E_MEDIR=1 E2E_PORTA=4573 bun run web:e2e -- e2e/tempo-de-tela.e2e.ts --workers=1
  *
+ * A porta tem de ser só desta cópia: o Playwright reaproveita o servidor que encontrar nela, e aí mede o build de outra.
  * Do clique, em dois marcos: "título" (a tela nova à vista, mesmo com o esqueleto) e "conteúdo" (sem esqueleto e
  * com a lista na tela). O "atraso" soma esse tanto a cada pedido à API e a cada arquivo, o que imita a rede de longe.
  * Não cobre: rede de verdade (TLS, perda, banda), o cache do navegador (o Playwright desliga com as rotas), consulta
