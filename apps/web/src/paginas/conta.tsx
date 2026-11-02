@@ -9,11 +9,12 @@ import { ConectorMcp } from "@/componentes/conector-mcp";
 import { Dialogo } from "@/componentes/dialogo";
 import { UsoDaIaHoje } from "@/componentes/limite-da-ia";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
-import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel } from "@/componentes/ui";
+import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Segmentos } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { authCall, authClient } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
+import { densidadeDaPessoa, escolherDensidade, type Densidade } from "@/lib/densidade";
 import { telefone } from "@/lib/formato";
 import { equipeQuery } from "./equipe";
 
@@ -48,6 +49,7 @@ export function ContaPage() {
         )}
       </div>
       <div className="dc-pilha">
+        <DensidadeDaTela usuarioId={u.id} />
         <UsoDaIaHoje />
         {!demonstracao && <ConectorMcp />}
         {!demonstracao && <DuasEtapas ligada={!!(sessao.data?.user as { twoFactorEnabled?: boolean } | undefined)?.twoFactorEnabled} />}
@@ -73,6 +75,32 @@ export function ContaPage() {
       <Cabecalho titulo="Minha conta" sub={sub} />
       {corpo}
     </Pagina>
+  );
+}
+
+const DENSIDADES: { id: Densidade; rotulo: string }[] = [
+  { id: "compacto", rotulo: "Compacto" },
+  { id: "confortavel", rotulo: "Confortável" },
+];
+
+/** Compacto cabe mais na tela; confortável tem letra maior e mais ar. Vale para esta pessoa, neste navegador. */
+function DensidadeDaTela({ usuarioId }: { usuarioId: string }) {
+  const [densidade, setDensidade] = useState(() => densidadeDaPessoa(usuarioId));
+  return (
+    <Painel titulo="Densidade da tela">
+      <div className="flex flex-col items-start gap-2">
+        <Segmentos
+          rotulo="Densidade da tela"
+          opcoes={DENSIDADES}
+          valor={densidade}
+          aoMudar={(d) => {
+            setDensidade(d);
+            escolherDensidade(usuarioId, d);
+          }}
+        />
+        <p className="dc-nota m-0">Compacto cabe mais na tela. Confortável tem letra maior e mais espaço. Fica guardado neste navegador.</p>
+      </div>
+    </Painel>
   );
 }
 
@@ -247,7 +275,7 @@ function DuasEtapas({ ligada }: { ligada: boolean }) {
           <div className="dc-form">
             <div className="flex flex-col items-center gap-2">
               <img src={qr.imagem} alt="Código QR para o app autenticador" width={200} height={200} className="rounded-md bg-white p-1" />
-              <a href={qr.uri} className="dc-link text-[13px]">
+              <a href={qr.uri} className="dc-link">
                 Abrir no app autenticador deste celular
               </a>
               <span className="dc-nota text-center">
@@ -259,7 +287,7 @@ function DuasEtapas({ ligada }: { ligada: boolean }) {
             </Campo>
             <div className="flex flex-col gap-1">
               <span className="dc-rotulo">Códigos de recuperação (guarde num lugar seguro; cada um vale uma vez)</span>
-              <pre className="dc-teor dc-num m-0 select-all text-[13px]">{qr.reserva.join("\n")}</pre>
+              <pre className="dc-teor dc-num m-0 select-all dc-t-meta">{qr.reserva.join("\n")}</pre>
             </div>
           </div>
         )}

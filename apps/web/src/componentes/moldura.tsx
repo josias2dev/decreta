@@ -18,6 +18,8 @@ import {
   Hourglass,
   Inbox,
   LayoutGrid,
+  PanelLeftClose,
+  PanelLeftOpen,
   Search,
   Settings,
   Sparkles,
@@ -27,10 +29,11 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { ApiError } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
+import { aplicarDensidade, densidadeDaPessoa } from "@/lib/densidade";
 import { numero } from "@/lib/formato";
 import type { Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -47,7 +50,7 @@ interface ItemDoMenu {
   rotulo: string;
   icone: LucideIcon;
   n?: (m: Eu["menu"]) => { n: number; hoje?: boolean } | null;
-  /** A IA: o ícone fica em azul-tinta. */
+  /** A IA: o ícone fica no acento. */
   ia?: boolean;
 }
 
@@ -92,6 +95,16 @@ const NAV_CELULAR: { to: Destino | "/mais"; rotulo: string; icone: LucideIcon }[
 
 /** O atalho da busca como o teclado da pessoa mostra: ⌘K no Mac, Ctrl K no resto. */
 const ATALHO_BUSCA = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
+
+/** O menu recolhido é escolha deste navegador. */
+const MENU_RECOLHIDO = "decreta:menu-recolhido";
+function menuComecaRecolhido() {
+  try {
+    return localStorage.getItem(MENU_RECOLHIDO) === "1";
+  } catch {
+    return false;
+  }
+}
 
 /** Telas do celular que têm ações próprias embaixo e não mostram a navegação. */
 const SEM_NAVEGACAO = [/^\/prazos\/[^/]+$/, /^\/publicacoes\/[^/]+$/, /^\/pecas/, /^\/perguntar/, /^\/audiencias\//];
@@ -138,6 +151,18 @@ function Moldura({ eu }: { eu: Eu }) {
   const [buscando, setBuscando] = useState(false);
   // Se o arquivo do logo sumir, fica o ícone em vez da imagem quebrada.
   const [semLogo, setSemLogo] = useState(false);
+  const [recolhido, setRecolhido] = useState(menuComecaRecolhido);
+  const alternarMenu = () => {
+    setRecolhido(!recolhido);
+    try {
+      localStorage.setItem(MENU_RECOLHIDO, recolhido ? "0" : "1");
+    } catch {
+      // Navegador sem armazenamento: vale só nesta visita.
+    }
+  };
+
+  // A densidade de quem entrou (a última usada aqui já valeu no primeiro desenho).
+  useLayoutEffect(() => aplicarDensidade(densidadeDaPessoa(eu.usuario.id)), [eu.usuario.id]);
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
@@ -163,11 +188,11 @@ function Moldura({ eu }: { eu: Eu }) {
         {!semNav && (
           <>
             {doProcesso ? (
-              <Link to="/processos/$id" params={{ id: doProcesso }} search={{ aba: "chat" }} className="dc-perguntar" style={{ textDecoration: "none" }}>
+              <Link to="/processos/$id" params={{ id: doProcesso }} search={{ aba: "chat" }} className="dc-perguntar">
                 <Sparkles /> Perguntar
               </Link>
             ) : (
-              <Link to="/perguntar" className="dc-perguntar" style={{ textDecoration: "none" }}>
+              <Link to="/perguntar" className="dc-perguntar">
                 <Sparkles /> Perguntar
               </Link>
             )}
@@ -190,7 +215,7 @@ function Moldura({ eu }: { eu: Eu }) {
   }
 
   return (
-    <div className="dc dc-app">
+    <div className="dc dc-app" data-menu={recolhido ? "recolhido" : undefined}>
       <nav className="dc-menu" aria-label="Menu principal">
         <div className="dc-menu__escritorio">
           {eu.escritorio.logo && !semLogo ? (
@@ -201,8 +226,11 @@ function Moldura({ eu }: { eu: Eu }) {
             </span>
           )}
           <strong className="min-w-0">{eu.escritorio.nome}</strong>
+          <button type="button" className="dc-menu__recolher" onClick={alternarMenu} aria-label={recolhido ? "Abrir o menu" : "Recolher o menu"} aria-expanded={!recolhido} title={recolhido ? "Abrir o menu" : "Recolher o menu"}>
+            {recolhido ? <PanelLeftOpen /> : <PanelLeftClose />}
+          </button>
         </div>
-        <button type="button" className="dc-menu__busca" onClick={() => setBuscando(true)}>
+        <button type="button" className="dc-menu__busca" onClick={() => setBuscando(true)} title={recolhido ? "Buscar" : undefined}>
           <Search />
           <span>Buscar</span>
           <span className="dc-tecla">{ATALHO_BUSCA}</span>
@@ -214,9 +242,9 @@ function Moldura({ eu }: { eu: Eu }) {
               {g.itens.map((i) => {
                 const n = i.n?.(eu.menu);
                 return (
-                  <Link key={i.to} to={i.to} className={cn(i.ia && "dc-menu__ia")} activeProps={{ className: "is-on" }} activeOptions={{ exact: false }}>
+                  <Link key={i.to} to={i.to} className={cn(i.ia && "dc-menu__ia")} activeProps={{ className: "is-on" }} activeOptions={{ exact: false }} title={recolhido ? i.rotulo : undefined}>
                     <i.icone />
-                    {i.rotulo}
+                    <span className="dc-menu__rotulo">{i.rotulo}</span>
                     {n && <span className={cn("dc-menu__n", n.hoje && "dc-menu__n--hoje")}>{numero(n.n)}</span>}
                   </Link>
                 );
@@ -225,7 +253,7 @@ function Moldura({ eu }: { eu: Eu }) {
           ))}
         </div>
         <div className="dc-menu__pe">
-          <Link to="/conta" className="dc-menu__conta">
+          <Link to="/conta" className="dc-menu__conta" title={recolhido ? eu.usuario.nome : undefined}>
             <Avatar pessoa={eu.usuario} />
             <span className="min-w-0">
               <strong className="truncate">{eu.usuario.nome}</strong>
@@ -322,7 +350,7 @@ export function BotaoBuscar() {
 
 function Esperando() {
   return (
-    <div className="dc" style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
+    <div className="dc dc-esperando">
       <Carregando />
     </div>
   );

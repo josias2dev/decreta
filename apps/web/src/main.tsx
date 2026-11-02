@@ -5,6 +5,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ApiError } from "./lib/api";
+import { aplicarUltimaDensidade } from "./lib/densidade";
 import { router } from "./router";
 
 // Erros das telas no navegador. O DSN entra no build (VITE_SENTRY_DSN no CI); sem ele, nada sai daqui.
@@ -49,6 +50,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Antes do primeiro desenho, para a tela não pular ao recarregar.
+aplicarUltimaDensidade();
 
 createRoot(document.getElementById("root")!, {
   onUncaughtError: Sentry.reactErrorHandler(),

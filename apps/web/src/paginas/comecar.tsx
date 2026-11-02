@@ -12,6 +12,7 @@ import { Marca } from "@/componentes/marca";
 import { OpcoesDeTribunal } from "@/componentes/opcoes-de-tribunal";
 import { Botao, Campo, Carregando, Faixa } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
+import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
 import type { Escritorio, Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -74,6 +75,7 @@ export function TerminarDeConfigurar({ eu }: { eu: Eu | undefined }) {
 }
 
 export function ComecarPage() {
+  const celular = useCelular();
   const eu = useQuery(euQuery);
   const escritorio = useQuery(escritorioQuery);
   const [etapa, setEtapa] = useState<Etapa>("voce");
@@ -81,7 +83,7 @@ export function ComecarPage() {
   const ir = (passo: 1 | -1) => setEtapa(ETAPAS[Math.min(ETAPAS.length - 1, Math.max(0, n + passo))]!.id);
 
   return (
-    <div className="dc dc-comecar">
+    <div className={cn("dc dc-comecar", celular && "dc-celular")}>
       <header className="dc-comecar__topo">
         <Marca />
         {etapa !== "pronto" && (
