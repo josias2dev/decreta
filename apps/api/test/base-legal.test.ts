@@ -14,6 +14,7 @@ import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { criarEscritorio } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
+import { guardarLeisDaTabela } from "../src/servicos/acervo.ts";
 import { SEM_LIMITES, type LimitesDaIa } from "../src/servicos/uso-ia.ts";
 import { iaFalsa } from "./ia-falsa.ts";
 
@@ -196,6 +197,15 @@ describe.skipIf(!hasTestDatabase)("base legal", () => {
       const r = await json(chamar(app, "/base-legal", { fundamento: "art. 1º do CTN" }, cookieDaDemo));
       expect(pedidosAoNormas).toBe(antes);
       expect(r.lei[0]).toMatchObject({ selo: "nao_verificada", texto: null, motivo: "Não está no acervo guardado. Confira na fonte antes de usar." });
+    });
+
+    test("as leis da tabela ficam guardadas de antemão: a demonstração mostra o texto, sem ir à fonte na hora", async () => {
+      await t.owner`delete from acervo_normas`;
+      expect((await json(chamar(app, "/base-legal", { fundamento: "CPC, art. 335" }, cookieDaDemo))).lei[0].texto).toBeNull();
+      expect(await guardarLeisDaTabela({ db: t.db, fetch: normasFalso })).toEqual({ leis: 2 });
+      const antes = pedidosAoNormas;
+      expect((await json(chamar(app, "/base-legal", { fundamento: "CPC, art. 335" }, cookieDaDemo))).lei[0]).toMatchObject({ selo: "verificada", texto: expect.stringContaining("contestação") });
+      expect(pedidosAoNormas).toBe(antes);
     });
   });
 

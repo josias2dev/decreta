@@ -88,6 +88,28 @@ async function guardarNorma(db: Database, sigla: string, n: NormaDoNormasLeg) {
     .onConflictDoUpdate({ target: acervoNormas.sigla, set: { ...valores, capturadoEm: new Date() } });
 }
 
+/** As leis que a tabela de base legal cita (`baseLegalDaTabela`). */
+const LEIS_DA_TABELA = ["CPC", "CLT", "LEI-9099-1995"];
+
+/**
+ * Guarda de antemão as leis da tabela: a demonstração não vai às fontes, e a primeira
+ * pessoa a abrir um prazo não espera o download. Uma lei que falhar fica para a próxima carga.
+ */
+export async function guardarLeisDaTabela(deps: DepsDoAcervo): Promise<{ leis: number }> {
+  let leis = 0;
+  for (const sigla of LEIS_DA_TABELA) {
+    try {
+      const n = await baixarNorma(urnDaNorma(sigla)!, { fetch: deps.fetch });
+      if (!n) continue;
+      await guardarNorma(deps.db, sigla, n);
+      leis++;
+    } catch (e) {
+      deps.log?.("acervo: o normas.leg.br não respondeu", { sigla, erro: String(e) });
+    }
+  }
+  return { leis };
+}
+
 /** A espécie e o órgão no BNP para a citação; `null` se o BNP não tem (súmulas e OJs do TST). */
 function noBnp(c: Citacao): { orgao: string; tipo: string; numero: number; rotulo: string } | null {
   const [tipo, tribunal, numero] = c.chave.split(":") as [string, string, string];

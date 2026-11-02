@@ -34,7 +34,7 @@ import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import type { Mailer } from "./email.ts";
 import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
-import { sincronizarTemasDoStj } from "./servicos/acervo.ts";
+import { guardarLeisDaTabela, sincronizarTemasDoStj } from "./servicos/acervo.ts";
 import { colunasDaAssinatura, estadoDoEscritorio, temAcessoTotal } from "./servicos/assinatura.ts";
 import { enviarAvisosDaAssinatura, reconciliarAssinaturas } from "./servicos/cobranca.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
@@ -405,7 +405,12 @@ export function createFunctions(deps: DepsDasRotinas) {
   // Falhou, o acervo fica com a última versão e o erro vai para o Sentry.
   const temasDoStjFn = inngest.createFunction(
     { id: "acervo-temas-stj", triggers: [{ cron: "TZ=America/Sao_Paulo 15 3 * * 1" }], retries: 3, onFailure: async ({ error }) => reporter.error(error, { funcao: "acervo-temas-stj" }) },
-    async ({ step }) => step.run("temas", () => sincronizarTemasDoStj({ db, fetch: deps.captura.fetch, log })),
+    async ({ step }) => {
+      const temas = await step.run("temas", () => sincronizarTemasDoStj({ db, fetch: deps.captura.fetch, log }));
+      // As leis da tabela de base legal: a demonstração só lê o que já está guardado.
+      const leis = await step.run("leis-da-tabela", () => guardarLeisDaTabela({ db, fetch: deps.captura.fetch, log }));
+      return { ...temas, ...leis };
+    },
   );
 
   // O prazo foi confirmado: a peça sugerida fica pronta em rascunho. Nada é enviado nem protocolado.
