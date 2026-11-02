@@ -47,8 +47,8 @@ export function ProcessoPage() {
   const navigate = useNavigate({ from: "/processos/$id" });
   const celular = useCelular();
   const financeiro = useFinanceiroLiberado();
-  // Os honorários são do Financeiro: quem não o vê cai no resumo.
-  const aba: AbaDoProcesso = search.aba === "honorarios" && !financeiro ? "resumo" : (search.aba ?? "resumo");
+  // Os honorários são do Financeiro: quem não o vê cai no resumo. No celular as quatro abas já enchem a linha: os honorários vêm no fim do resumo.
+  const aba: AbaDoProcesso = search.aba === "honorarios" && (!financeiro || celular) ? "resumo" : (search.aba ?? "resumo");
   const q = useQuery({ queryKey: ["processo", id], queryFn: () => api<Processo>(`/processos/${id}`) });
   const irPara = (a: AbaDoProcesso) => void navigate({ search: { aba: a === "resumo" ? undefined : a }, replace: true });
 
@@ -75,7 +75,7 @@ export function ProcessoPage() {
         { id: "movimentacoes", rotulo: "Movimentações", n: celular ? undefined : p.contadores.movimentacoes },
         { id: "prazos", rotulo: "Prazos", n: celular ? undefined : p.contadores.prazos },
         { id: "documentos", rotulo: "Documentos", n: celular ? undefined : p.contadores.documentos },
-        ...(financeiro ? [{ id: "honorarios" as const, rotulo: "Honorários" }] : []),
+        ...(financeiro && !celular ? [{ id: "honorarios" as const, rotulo: "Honorários" }] : []),
         // No celular o chat abre pelo botão Perguntar, em tela própria; os cálculos ficam no computador.
         ...(celular ? [] : [{ id: "calculos" as const, rotulo: "Cálculos" }, { id: "chat" as const, rotulo: "Chat do processo" }]),
       ]}
@@ -125,6 +125,7 @@ export function ProcessoPage() {
         <AvisoSemHonorario processo={{ id: p.id, titulo: p.titulo, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
         <div className="dc-sangria">{abas}</div>
         {conteudo}
+        {aba === "resumo" && financeiro && <FinanceiroDoCasoPainel tipo="processos" id={p.id} caso={{ processo: { id: p.id, titulo: p.titulo }, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />}
       </TelaCelular>
     );
   }

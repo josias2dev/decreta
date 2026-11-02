@@ -30,6 +30,14 @@ const FORMAS_PARA_ESCOLHER = (Object.keys(FORMAS) as FormaDePagamento[]).filter(
 
 export const TIPO_DE_CONTRATO: Record<TipoDeContrato, string> = { fixo: "Valor fixo", mensal: "Mensal", exito: "Êxito", hibrido: "Híbrido" };
 
+/** De quem é a parcela, numa linha: "Cliente · Processo", sem repetir o cliente quando o título do processo já o traz. */
+export function casoDaParcela(p: Pick<ParcelaDeHonorario, "cliente" | "processo" | "contratoTitulo">): string {
+  const cliente = p.cliente?.nome;
+  const processo = p.processo?.titulo;
+  if (cliente && processo) return processo.includes(cliente) ? processo : `${cliente} · ${processo}`;
+  return cliente ?? processo ?? p.contratoTitulo;
+}
+
 /** O que o selo da parcela diz: a cor só carrega significado (verde pago, âmbar e vermelho atraso). */
 export function seloDaParcela(p: Pick<ParcelaDeHonorario, "situacao" | "vencimento" | "diasEmAtraso" | "falta">, hoje: string): { urgencia: "vencido" | "hoje" | "breve" | "prazo" | "cumprido"; texto: string } {
   switch (p.situacao) {
@@ -154,17 +162,16 @@ export function ParcelaDialogo({ parcela: inicial, hoje, aoFechar }: { parcela: 
         titulo={p.descricao}
         className="dc-dialogo--largo"
         descricao={
-          <>
-            {p.contratoTitulo}
-            {p.cliente && (
-              <>
-                {" · "}
-                <Link to="/clientes/$id" params={{ id: p.cliente.id }} className="dc-link">
-                  {p.cliente.nome}
-                </Link>
-              </>
-            )}
-          </>
+          p.cliente ? (
+            <>
+              <Link to="/clientes/$id" params={{ id: p.cliente.id }} className="dc-link">
+                {p.cliente.nome}
+              </Link>
+              {!p.contratoTitulo.includes(p.cliente.nome) && ` · ${p.contratoTitulo}`}
+            </>
+          ) : (
+            p.contratoTitulo
+          )
         }
         acoes={
           <>

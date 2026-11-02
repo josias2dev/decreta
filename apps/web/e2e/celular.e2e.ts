@@ -260,6 +260,7 @@ const ROTAS = [
   `/audiencias/${ids.audiencia}`,
   "/negocios",
   "/alvaras",
+  "/financeiro",
   "/documentos",
   "/modelos",
   `/publicacoes/${ids.sentenca}#sentenca`,

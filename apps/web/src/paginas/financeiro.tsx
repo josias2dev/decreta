@@ -11,7 +11,7 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { ContaDialogo } from "@/componentes/conta-do-alvara";
 import { Dialogo } from "@/componentes/dialogo";
-import { NovoContrato, ParcelaDialogo, SeloDaParcela, useAtualizarFinanceiro } from "@/componentes/honorarios";
+import { casoDaParcela, NovoContrato, ParcelaDialogo, SeloDaParcela, useAtualizarFinanceiro } from "@/componentes/honorarios";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Segmentos, Vazio } from "@/componentes/ui";
@@ -340,7 +340,7 @@ export function FinanceiroPage() {
                       <button key={p.id} type="button" className="dc-item cursor-pointer text-left" onClick={() => setAberta(p.id)}>
                         <span className="dc-item__titulo">{p.descricao}</span>
                         <SeloDaParcela p={p} hoje={hoje} />
-                        <span className="dc-item__meta">{[p.cliente?.nome, p.processo?.titulo].filter(Boolean).join(" · ") || p.contratoTitulo}</span>
+                        <span className="dc-item__meta">{casoDaParcela(p)}</span>
                         <span className="dc-item__pe">
                           <span className="dc-num font-medium text-[var(--tinta)]">{p.valor === null ? "sem valor ainda" : reais(p.valor)}</span>
                           {p.pago > 0 && p.falta ? <span className="dc-num">· pago {reais(p.pago)}</span> : null}
@@ -376,20 +376,17 @@ export function FinanceiroPage() {
       ) : (
         <>
           <div className="dc-numeros dc-numeros--totais" aria-label="Números do período">
-            <div className="dc-contador">
+            <div className="dc-contador" title={`${n!.nAReceber} ${n!.nAReceber === 1 ? "parcela" : "parcelas"}`}>
               <span className="dc-contador__n">{reais(n!.aReceber)}</span>
               <span className="dc-contador__rotulo">A receber</span>
-              <span className="dc-contador__fim">{n!.nAReceber} {n!.nAReceber === 1 ? "parcela" : "parcelas"}</span>
             </div>
-            <div className={cn("dc-contador", d.resumo.emAtraso > 0 && "dc-contador--vencido")}>
+            <div className={cn("dc-contador", d.resumo.emAtraso > 0 && "dc-contador--vencido")} title={`${d.resumo.parcelasEmAtraso} ${d.resumo.parcelasEmAtraso === 1 ? "parcela" : "parcelas"}`}>
               <span className="dc-contador__n">{reais(d.resumo.emAtraso)}</span>
               <span className="dc-contador__rotulo">Em atraso</span>
-              <span className="dc-contador__fim">{d.resumo.parcelasEmAtraso} {d.resumo.parcelasEmAtraso === 1 ? "parcela" : "parcelas"}</span>
             </div>
-            <div className="dc-contador">
+            <div className="dc-contador" title={`${n!.nRecebidos} ${n!.nRecebidos === 1 ? "pagamento" : "pagamentos"}`}>
               <span className="dc-contador__n">{reais(n!.recebido)}</span>
               <span className="dc-contador__rotulo">Recebido</span>
-              <span className="dc-contador__fim">{n!.nRecebidos} {n!.nRecebidos === 1 ? "pagamento" : "pagamentos"}</span>
             </div>
             <div className="dc-contador">
               <span className="dc-contador__n">{numero(d.alvarasParaPrestar.length)}</span>
@@ -450,7 +447,7 @@ export function FinanceiroPage() {
                                   {p.descricao}
                                 </button>
                               </span>
-                              <span className="dc-celula__2 dc-celula__2--uma">{[p.cliente?.nome, p.processo?.titulo].filter(Boolean).join(" · ") || p.contratoTitulo}</span>
+                              <span className="dc-celula__2 dc-celula__2--uma">{casoDaParcela(p)}</span>
                             </span>
                           </td>
                           <td className="dc-col--valor">

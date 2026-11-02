@@ -41,12 +41,12 @@ export function ConfiguracoesPage() {
       aoMudar={setAba}
       abas={[
         { id: "escritorio", rotulo: "Timbre" },
-        // No celular, rótulos curtos: as abas do sócio cabem ou rolam de lado.
+        // No celular, rótulos curtos: as sete abas do sócio cabem sem rolar. A cobrança do Financeiro, que não cabe como oitava, vem no fim de Avisos.
         { id: "pecas", rotulo: celular ? "Peças" : "Jeito das peças" },
         { id: "avisos", rotulo: celular ? "Avisos" : "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
         ...(socio
-          ? [{ id: "financeiro" as const, rotulo: "Financeiro" }, { id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }, { id: "dados" as const, rotulo: "Dados" }]
+          ? [...(celular ? [] : [{ id: "financeiro" as const, rotulo: "Financeiro" }]), { id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }, { id: "dados" as const, rotulo: "Dados" }]
           : []),
       ]}
     />
@@ -59,7 +59,14 @@ export function ConfiguracoesPage() {
   ) : aba === "pecas" ? (
     <JeitoDasPecas e={e} socio={socio} />
   ) : aba === "avisos" ? (
-    <AbaAvisos e={e} socio={socio} />
+    celular && socio ? (
+      <div className="dc-pilha">
+        <AbaAvisos e={e} socio={socio} />
+        <ConfigDoFinanceiro demonstracao={e.demonstracao} />
+      </div>
+    ) : (
+      <AbaAvisos e={e} socio={socio} />
+    )
   ) : aba === "calendario" ? (
     <AbaCalendario e={e} socio={socio} celular={celular} />
   ) : aba === "financeiro" ? (

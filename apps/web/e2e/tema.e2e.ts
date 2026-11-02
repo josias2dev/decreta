@@ -77,7 +77,7 @@ function contrasteRuim(page: Page) {
   });
 }
 
-const TELAS_PRINCIPAIS = ["/hoje", "/prazos", `/prazos/${ids.prazo}`, "/publicacoes", "/processos", `/processos/${ids.processo}`, "/clientes", "/agenda", "/agenda?vista=mes", "/alvaras", "/negocios", "/documentos", "/modelos", "/equipe", "/configuracoes", "/conta", `/pecas?id=${ids.peca}`, "/perguntar"];
+const TELAS_PRINCIPAIS = ["/hoje", "/prazos", `/prazos/${ids.prazo}`, "/publicacoes", "/processos", `/processos/${ids.processo}`, "/clientes", "/agenda", "/agenda?vista=mes", "/alvaras", "/financeiro", "/negocios", "/documentos", "/modelos", "/equipe", "/configuracoes", "/conta", `/pecas?id=${ids.peca}`, "/perguntar"];
 
 test.describe("no computador, com o sistema pedindo escuro", () => {
   test.use({ viewport: { width: 1366, height: 768 }, colorScheme: "dark" });

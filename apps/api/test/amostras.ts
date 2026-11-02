@@ -84,6 +84,14 @@ try {
   await guardar("agenda", "/agenda");
   await guardar("negocios", "/negocios");
   await guardar("alvaras", "/alvaras");
+  // O Financeiro: a visão geral, a do cliente e a do processo da Marina, a conta do alvará sacado da Ana Lúcia (êxito de 25%) e a cobrança do escritório.
+  await guardar("financeiro", "/financeiro");
+  await guardar("financeiroDoCliente", `/financeiro/clientes/${marinaCliente.id}`);
+  await guardar("financeiroDoProcesso", `/financeiro/processos/${processoId}`);
+  const sacado = (amostras["alvaras"] as { corpo: { etapas: { etapa: string; itens: { id: string }[] }[] } }).corpo.etapas.find((e) => e.etapa === "sacado")!.itens[0]!;
+  await guardar("contaDoAlvara", `/financeiro/alvaras/${sacado.id}/conta`);
+  await guardar("cobranca", "/financeiro/cobranca");
+  await guardar("lembretes", "/financeiro/lembretes");
   await guardar("escritorio", "/escritorio");
   await guardar("equipe", "/equipe");
   await guardar("feriados", "/feriados");

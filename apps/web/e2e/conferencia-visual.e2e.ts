@@ -31,6 +31,7 @@ const TELAS_DO_APP = [
   "/agenda?vista=mes",
   `/audiencias/${ids.audiencia}`,
   "/alvaras",
+  "/financeiro",
   "/negocios",
   "/documentos",
   "/modelos",
