@@ -42,7 +42,7 @@ const todasAchadas = (lei: LeiDaBase[] | undefined) => !!lei?.length && lei.ever
 export function TextoDaLei({ lei, reconhecida, buscando, falhou }: { lei: LeiDaBase[]; reconhecida: boolean; buscando: boolean; falhou: boolean }) {
   return (
     <section className="dc-lei" role="region" aria-label="O que diz a lei" aria-busy={buscando || undefined}>
-      <h4 className="dc-lei__titulo">O que diz a lei</h4>
+      <p className="dc-lei__titulo">O que diz a lei</p>
       {falhou ? (
         <p className="dc-lei__motivo">Não consegui buscar o texto da lei agora. O que está no campo continua valendo.</p>
       ) : buscando && !lei.length ? (
