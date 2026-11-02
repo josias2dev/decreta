@@ -5,8 +5,9 @@ import { useDeferredValue, useState } from "react";
 import { api, mensagemDoErro } from "@/lib/api";
 import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaDaSemana } from "@/lib/formato";
-import type { Contagem, ContagemNaTela, Pagina, ProcessoNaLista } from "@/lib/tipos";
+import type { Contagem, Pagina, PreviaDaConta, ProcessoNaLista } from "@/lib/tipos";
 import { useAviso } from "./avisos";
+import { AvisoSemCalendarioProprio } from "./conta-do-prazo";
 import { Dialogo } from "./dialogo";
 import { Botao, Campo, Faixa } from "./ui";
 
@@ -53,7 +54,7 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
   const dias = Number(f.dias);
   const conta = useQuery({
     queryKey: ["calcular", proc?.id, f.publicadoEm, dias, f.contagem],
-    queryFn: () => api<ContagemNaTela>("/prazos/calcular", { json: { processoId: proc?.id ?? null, publicadoEm: f.publicadoEm, dias, contagem: f.contagem } }),
+    queryFn: () => api<PreviaDaConta>("/prazos/calcular", { json: { processoId: proc?.id ?? null, publicadoEm: f.publicadoEm, dias, contagem: f.contagem } }),
     enabled: aberto && /^\d{4}-\d{2}-\d{2}$/.test(f.publicadoEm) && dias >= 1,
   });
   const criar = useMutation({
@@ -127,6 +128,7 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
             </span>
           </Faixa>
         )}
+        {conta.data?.calendarioCompleto === false && <AvisoSemCalendarioProprio />}
         {criar.error && <Faixa tipo="erro">{mensagemDoErro(criar.error)}</Faixa>}
       </div>
     </Dialogo>

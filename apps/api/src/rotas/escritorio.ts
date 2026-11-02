@@ -1,4 +1,4 @@
-import { automacaoValida, ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, nivelDaAcao, REGRAS_DE_AUTOMACAO, telefoneWhatsapp } from "@decreta/core";
+import { automacaoValida, ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, nivelDaAcao, REGRAS_DE_AUTOMACAO, telefoneWhatsapp, temCalendarioProprio } from "@decreta/core";
 import { documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
 import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { tipoDePeca } from "@decreta/ia";
@@ -216,6 +216,8 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
       return c.json({
         ano,
         tribunal,
+        /** Falso: o tribunal não tem calendário próprio no Decreta, e a lista tem só os feriados nacionais e os do escritório. */
+        calendarioCompleto: temCalendarioProprio(tribunal),
         dias: [
           ...feriadosNacionais(ano).map((f) => ({ ...f, origem: "lei" })),
           ...feriadosForenses(ano, tribunal).map((f) => ({ ...f, origem: tribunal })),

@@ -14,7 +14,7 @@
  */
 import type { Calendario, Feriado } from "./calendario.ts";
 import { regraDaContagem, type Rito } from "./conferencia.ts";
-import { diferencaEmDias, fimDeSemana, formatarDia, somarDias, type Dia } from "./datas.ts";
+import { diferencaEmDias, fimDeSemana, formatarDia, nomeDoDiaDaSemana, somarDias, type Dia } from "./datas.ts";
 
 export type Contagem = "uteis" | "corridos";
 
@@ -38,6 +38,46 @@ function proximo(dia: Dia, ok: (d: Dia) => boolean): Dia {
   // Um ano inteiro sem dia útil é calendário quebrado, não prazo longo.
   for (let i = 0; i < 400; i++, d = somarDias(d, 1)) if (ok(d)) return d;
   throw new Error(`calendário sem dia útil depois de ${dia}`);
+}
+
+/** O primeiro dia depois de `dia` em que um prazo pode começar ou vencer. */
+export function proximoDiaUtil(dia: Dia, cal: Calendario): Dia {
+  return proximo(dia, (d) => podeAbrirOuFechar(d, cal));
+}
+
+export interface AvisoDoDia {
+  /** O dia de que o aviso fala: a tela só o mostra enquanto a data digitada ainda é essa. */
+  dia: Dia;
+  aviso: string;
+  proximoDiaUtil: Dia;
+}
+
+function motivoDoFechamento(f: Feriado): string {
+  if (f.tipo === "nacional") return `feriado (${f.nome})`;
+  if (f.tipo === "local") return `feriado local (${f.nome})`;
+  if (f.tipo === "recesso") return "recesso forense";
+  return `dia sem expediente forense (${f.nome})`;
+}
+
+/**
+ * Para a data final que a pessoa digita: se o prazo não pode vencer no dia,
+ * por quê e qual é o próximo dia útil. "15/11/2026 é domingo e feriado
+ * (Proclamação da República). O próximo dia útil é 16/11/2026." Dia útil: `null`.
+ * É só um aviso: a data digitada continua valendo.
+ */
+export function avisoDoDiaSemExpediente(dia: Dia, cal: Calendario): AvisoDoDia | null {
+  if (podeAbrirOuFechar(dia, cal)) return null;
+  const data = formatarDia(dia);
+  const fechado = cal.semExpediente(dia);
+  const suspenso = cal.suspenso(dia);
+  const reduzido = cal.reduzido(dia);
+  const fechamento = [fimDeSemana(dia) ? nomeDoDiaDaSemana(dia) : null, fechado ? motivoDoFechamento(fechado) : null].filter((p): p is string => p !== null);
+  let motivo: string;
+  if (fechamento.length) motivo = `${data} é ${juntar(fechamento)}.`;
+  else if (suspenso) motivo = `${data} tem expediente, mas o prazo não corre: ${suspenso.nome}.`;
+  else motivo = `${data} tem expediente reduzido: ${reduzido?.nome ?? "expediente encerrado fora da hora normal"}. O prazo não começa nem vence em dia assim (CPC, art. 224, § 1º).`;
+  const seguinte = proximoDiaUtil(dia, cal);
+  return { dia, aviso: `${motivo} O próximo dia útil é ${formatarDia(seguinte)}.`, proximoDiaUtil: seguinte };
 }
 
 /** Data da publicação de algo disponibilizado no diário eletrônico no dia `disponibilizacao`. */

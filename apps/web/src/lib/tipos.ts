@@ -165,6 +165,8 @@ export interface ContaDoPrazo {
   regra: string;
   /** "TJSC, com os feriados cadastrados para a comarca de Joinville". */
   calendario: string;
+  /** Falso: o tribunal não tem calendário próprio no Decreta, e a conta usou só os feriados nacionais e o recesso. */
+  calendarioCompleto: boolean;
   disponibilizadaEm: string | null;
   publicadoEm: string;
   /** Dupla intimação: o dia em que o sistema do tribunal intimou também. */
@@ -192,6 +194,9 @@ export interface ContaDoPrazo {
 export interface PreviaDaConta extends ContagemNaTela {
   pelo: "publicacao" | "sistema";
   outra: { inicio: string; fim: string } | null;
+  calendarioCompleto: boolean;
+  /** A data final digitada cai em dia sem expediente: o motivo e o próximo dia útil. Nulo para dia útil ou sem data digitada. */
+  diaDigitado: { dia: string; aviso: string; proximoDiaUtil: string } | null;
 }
 
 export interface ContagemNaTela {
@@ -736,6 +741,8 @@ export interface Equipe {
 export interface Feriados {
   ano: number;
   tribunal: string;
+  /** Falso: o tribunal não tem calendário próprio no Decreta; a lista tem só os feriados nacionais e os do escritório. */
+  calendarioCompleto: boolean;
   dias: { dia: string; nome: string; tipo: string; origem: string }[];
   suspensaoDeFimDeAno: { de: string; ate: string };
 }

@@ -5,10 +5,12 @@ import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { NiveisDeAutomacao } from "@/componentes/automacao";
 import { useAviso } from "@/componentes/avisos";
+import { AvisoSemCalendarioProprio } from "@/componentes/conta-do-prazo";
 import { DadosDoEscritorio } from "@/componentes/dados-do-escritorio";
 import { Dialogo } from "@/componentes/dialogo";
 import { JeitoDasPecas } from "@/componentes/jeito-das-pecas";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
+import { OpcoesDeTribunal } from "@/componentes/opcoes-de-tribunal";
 import { Abas, Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
@@ -20,11 +22,6 @@ import { Folha } from "./peca";
 
 type Aba = "escritorio" | "pecas" | "avisos" | "calendario" | "ia" | "registro" | "dados";
 const FONTES = ["Arial", "Times New Roman", "Calibri", "Garamond"] as const;
-const TRIBUNAIS = [
-  { id: "TJSC", nome: "TJSC · Justiça estadual de Santa Catarina" },
-  { id: "TRT12", nome: "TRT12 · Justiça do Trabalho em SC" },
-  { id: "TRF4", nome: "TRF4 · Justiça Federal da 4ª Região" },
-];
 const TIPO_DE_SUSPENSAO = { local: "Feriado municipal", forense: "Sem expediente forense", recesso: "Recesso ou suspensão de prazos", reduzido: "Expediente reduzido" } as const;
 const EXEMPLO = "# Excelentíssimo Senhor Doutor Juiz de Direito da 2ª Vara Cível da Comarca de Joinville/SC\n\nProcesso nº 0000000-00.2026.8.24.0038\n\n**FULANA DE TAL**, já qualificada nos autos, vem, por seus procuradores, manifestar-se sobre o laudo pericial.\n\n## 1. Da concordância com o laudo\n\nO perito confirmou o nexo causal e a incapacidade parcial.";
 
@@ -177,11 +174,7 @@ function AbaTimbre({ e, socio, celular }: { e: Escritorio; socio: boolean; celul
           </div>
           <Campo rotulo="Tribunal principal" htmlFor="tb-trib" ajuda="Define o calendário de feriados forenses da contagem dos prazos.">
             <select id="tb-trib" value={tribunal} onChange={(ev) => setTribunal(ev.target.value)} disabled={!socio}>
-              {TRIBUNAIS.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.nome}
-                </option>
-              ))}
+              <OpcoesDeTribunal />
             </select>
           </Campo>
           {socio && (
@@ -314,6 +307,11 @@ function AbaCalendario({ e, socio, celular }: { e: Escritorio; socio: boolean; c
           </div>
         ) : (
           <>
+            {f.calendarioCompleto === false && (
+              <div className="p-4 pb-0">
+                <AvisoSemCalendarioProprio />
+              </div>
+            )}
             <div className="dc-linhas">
               {f.dias.map((d) => (
                 <div key={`${d.dia}-${d.nome}`} className="dc-linhas__item items-center">

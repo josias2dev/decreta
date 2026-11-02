@@ -72,7 +72,7 @@ Das funcionalidades novas recomendadas no documento, ainda não encontrei: expor
 - **ADVBOX:** o workflow conta dias corridos, e os prazos de 5 e 13 dias caíram em sábado e em domingo com feriado. A contagem com feriados só aparece na IA paga, sem teste.
 - **Jurídico AI:** o chat recusa contar, e não há prazo manual sem processo monitorado.
 - **Jus IA:** indica o prazo em dias úteis, não calcula a data sem saber da citação e manda conferir.
-- **Decreta:** mostra a conta, marca a data digitada e aponta quando ela difere da conta ([teste](../../apps/api/test/prazo-auditavel.test.ts)).
+- **Decreta:** mostra a conta, marca a data digitada e aponta quando ela difere da conta ([teste](../../apps/api/test/prazo-auditavel.test.ts)). Desde 02/11/2026 também avisa na hora que a data digitada cai em dia sem expediente, com o motivo e o próximo dia útil ([registro](./18-decreta-no-mesmo-teste.md#o-prazo-em-feriado-e-a-conta-com-2011)).
 
 **Peça a partir da mesma petição fictícia.** A contestação pedida em cada sistema partiu do mesmo PDF. No ADVBOX não foi possível, porque os agentes estão bloqueados no teste.
 
@@ -82,6 +82,7 @@ Das funcionalidades novas recomendadas no documento, ainda não encontrei: expor
 | Projuris ADV | Não | Sim: problema logístico regularizado, suporte prestado, alternativas oferecidas | Certo, porque informei na descrição | Nenhum |
 | Jus IA | Sim | Não | Certo | 4; existem e dizem o que a peça afirma |
 | Jurídico AI | Sim | Uma afirmação: a inicial "distorce a dinâmica da contratação" | Errou; corrigida pelo chat | 2 do STJ; existem, um com uso exagerado |
+| Decreta | Entrada sim: o texto do PDF vai inteiro no pedido à IA. Saída não medida | Não medido. O pedido manda marcar `[COMPLETAR]` e não inventar, mas nada confere por código | Não medido. O pedido traz a ré no polo passivo e a instrução de quem pediu | Não medido. A peça é proibida de citar julgado com número |
 
 **Citações.** Não achamos julgado inventado entre os que conseguimos conferir. Ficaram fora da conferência 10 julgados do TJSP na pesquisa da Jurídico AI, porque os links exigem login. O memorando do Jus IA cita um número que ele mesmo admite não ter localizado. O risco que apareceu nos testes é outro: fato sem base, encaixe fraco e notas internas no corpo da peça.
 

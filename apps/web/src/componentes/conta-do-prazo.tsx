@@ -39,6 +39,21 @@ export function duplaIntimacao(pelo: ContaDoPrazo["pelo"], fim: string, outroFim
   return `Dupla intimação: ${este} vence em ${diaCurto(fim)}; ${outro}, em ${diaCurto(outroFim)}. Vale a data mais cedo enquanto o STJ não decide o Tema 1.180.`;
 }
 
+/** O limite da conta, dito onde a conta aparece: o tribunal não tem calendário próprio no Decreta. */
+export function AvisoSemCalendarioProprio() {
+  return (
+    <Faixa tipo="aviso">
+      <CircleAlert />
+      <span>Este tribunal ainda não tem calendário próprio no Decreta: a conta usou os feriados nacionais e o recesso. Confira as suspensões do tribunal.</span>
+    </Faixa>
+  );
+}
+
+/** A data final digitada, se já está completa. O campo de data passa por anos de um a três dígitos enquanto a pessoa digita o ano. */
+export function diaDigitadoCompleto(valor: string): string | null {
+  return /^\d{4}-\d{2}-\d{2}$/.test(valor) && valor >= "2000-01-01" ? valor : null;
+}
+
 const dia = (d: string) => (
   <span>
     <strong className="dc-num">{diaCompleto(d)}</strong> <span className="text-[var(--tinta-2)]">{diaDaSemana(d)}</span>
@@ -103,6 +118,7 @@ export function PainelDaConta({ conta, contagem, conferencia, aoAjustar }: { con
           </Faixa>
         )}
         <Dados linhas={linhas} />
+        {conta.calendarioCompleto === false && <AvisoSemCalendarioProprio />}
         {conta.outra && (
           <Faixa tipo="ia">
             <span>{duplaIntimacao(conta.pelo, conta.fim, conta.outra.fim)}</span>
@@ -128,16 +144,31 @@ export function CampoIntimacaoNoSistema({ id, valor, aoMudar }: { id: string; va
   );
 }
 
-/** A prévia nos diálogos: a data final, a explicação e, com dupla intimação, a outra conta. */
+/**
+ * A prévia nos diálogos: a data final, a explicação e, com dupla intimação, a
+ * outra conta. Com a data digitada, avisa se ela cai em dia sem expediente
+ * (sem bloquear), e diz quando o tribunal não tem calendário próprio.
+ */
 export function PreviaNoDialogo({ fim, previa, sabeData }: { fim: string; previa: PreviaDaConta | undefined; sabeData: boolean }) {
   const conta = !sabeData ? previa : undefined;
+  // A prévia ainda pode ser a da data anterior enquanto a nova carrega: o aviso só vale para o dia de que fala.
+  const semExpediente = sabeData && previa?.diaDigitado?.dia === fim ? previa.diaDigitado : null;
   return (
-    <Faixa tipo="ia">
-      <span>
-        Vence em <strong className="dc-num">{diaCompleto(fim)}</strong>, {diaDaSemana(fim)}.{conta ? ` ${conta.explicacao}` : ""}
-        {conta?.outra ? ` ${duplaIntimacao(conta.pelo, conta.fim, conta.outra.fim)}` : ""}
-      </span>
-    </Faixa>
+    <>
+      <Faixa tipo="ia">
+        <span>
+          Vence em <strong className="dc-num">{diaCompleto(fim)}</strong>, {diaDaSemana(fim)}.{conta ? ` ${conta.explicacao}` : ""}
+          {conta?.outra ? ` ${duplaIntimacao(conta.pelo, conta.fim, conta.outra.fim)}` : ""}
+        </span>
+      </Faixa>
+      {semExpediente && (
+        <Faixa tipo="aviso">
+          <CircleAlert />
+          <span>{semExpediente.aviso}</span>
+        </Faixa>
+      )}
+      {previa?.calendarioCompleto === false && <AvisoSemCalendarioProprio />}
+    </>
   );
 }
 
