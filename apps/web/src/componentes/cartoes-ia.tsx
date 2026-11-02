@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronRight,
   CircleAlert,
+  CircleDollarSign,
   ExternalLink,
   FileText,
   FolderOpen,
@@ -33,6 +34,7 @@ import {
   Users,
   UsersRound,
   Video,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
@@ -46,9 +48,11 @@ import type {
   ClienteNaIa,
   CitacaoConferida,
   ContagemNaIa,
+  DevedorNaIa,
   DocumentoNaIa,
   FichaDoCliente,
   FichaDoProcesso,
+  HonorarioNaIa,
   Lista,
   NegocioNaIa,
   Panorama,
@@ -87,6 +91,8 @@ const ICONE: Record<string, LucideIcon> = {
   buscarDocumentos: FileText,
   lerDocumento: FileText,
   buscarAlvaras: Banknote,
+  buscarHonorarios: Wallet,
+  buscarDevedores: CircleDollarSign,
   buscarNegocios: UserPlus,
   verEquipe: UsersRound,
   contarPrazo: Hourglass,
@@ -109,6 +115,8 @@ const LENDO: Record<string, string> = {
   buscarDocumentos: "Procurando documentos",
   lerDocumento: "Lendo o documento",
   buscarAlvaras: "Vendo os alvarás",
+  buscarHonorarios: "Vendo os honorários",
+  buscarDevedores: "Vendo quem está devendo",
   buscarNegocios: "Vendo os novos negócios",
   verEquipe: "Vendo a equipe",
   contarPrazo: "Contando o prazo",
@@ -171,6 +179,10 @@ export function rotuloDoPasso(f: Ferramenta, escrevendo = false): string {
       return `Leu · ${(s as unknown as DocumentoNaIa).nome ?? "documento"}`;
     case "buscarAlvaras":
       return total === 0 ? "Nenhum alvará" : plural(total ?? 0, "alvará", "alvarás");
+    case "buscarHonorarios":
+      return total === 0 ? "Nenhum honorário" : `Honorários · ${plural(total ?? 0, "parcela", "parcelas")}`;
+    case "buscarDevedores":
+      return total === 0 ? "Ninguém devendo" : `Devendo · ${plural(total ?? 0, "cliente", "clientes")}`;
     case "buscarNegocios":
       return total === 0 ? "Nenhum negócio" : plural(total ?? 0, "novo negócio", "novos negócios");
     case "verEquipe":
@@ -315,6 +327,10 @@ export function Cartao({ f, onde }: { f: Ferramenta; onde: OndeEsta }) {
       return <CartaoPublicacoes lista={{ total: 1, itens: [s] }} titulo="Publicação lida" lida />;
     case "buscarAlvaras":
       return <CartaoAlvaras lista={s} />;
+    case "buscarHonorarios":
+      return <CartaoHonorarios lista={s} />;
+    case "buscarDevedores":
+      return <CartaoDevedores lista={s} />;
     case "buscarNegocios":
       return <CartaoNegocios lista={s} />;
     case "contarPrazo":
@@ -918,13 +934,67 @@ function CartaoAlvaras({ lista }: { lista: Lista<AlvaraNaIa> & { valorTotal: str
               <span className="dc-cartao-ia__sub">
                 {a.processo.titulo}
                 {a.expedidoEm && ` · expedido em ${diaCurto(a.expedidoEm)}`}
+                {a.diasNaEtapa != null && ` · ${plural(a.diasNaEtapa, "dia", "dias")} na etapa`}
               </span>
             </span>
             <span className="dc-cartao-ia__lado dc-cartao-ia__valor">
               <strong className="dc-num">{dinheiro(a.valor)}</strong>
-              <span className="dc-cartao-ia__marca">{ETAPA_DO_ALVARA[a.etapa] ?? a.etapa}</span>
+              <span className={cn("dc-cartao-ia__marca", a.parado && "is-nova")}>{a.parado ? `Parado · ${ETAPA_DO_ALVARA[a.etapa] ?? a.etapa}` : (ETAPA_DO_ALVARA[a.etapa] ?? a.etapa)}</span>
             </span>
           </Link>
+        )}
+      </Mais>
+    </Moldura>
+  );
+}
+
+/* ---------- Honorários ---------- */
+
+const SITUACAO_DA_PARCELA: Record<HonorarioNaIa["situacao"], string> = { a_vencer: "A vencer", em_atraso: "Em atraso", parcial: "Pago em parte", paga: "Paga", sem_valor: "Aguardando resultado" };
+
+function CartaoHonorarios({ lista }: { lista: Lista<HonorarioNaIa> & { valorTotal: string } }) {
+  return (
+    <Moldura icone={Wallet} titulo="Honorários" n={`${nDeTotal(lista, "parcela", "parcelas")} · ${lista.valorTotal}`} acao={<IrPara to="/financeiro">Financeiro</IrPara>}>
+      <Mais itens={lista.itens}>
+        {(h) => (
+          <Link key={h.id} to="/financeiro" search={h.cliente ? { cliente: h.cliente.id } : h.processo ? { processo: h.processo.id } : {}} className="dc-cartao-ia__linha dc-cartao-ia__linha--link">
+            <span className="dc-celula min-w-0 flex-1">
+              <span className="dc-cartao-ia__titulo">{h.cliente?.nome ?? h.processo?.titulo ?? h.contrato}</span>
+              <span className="dc-cartao-ia__sub">
+                {h.descricao}
+                {h.vencimento && ` · vence em ${diaCurto(h.vencimento)}`}
+              </span>
+            </span>
+            <span className="dc-cartao-ia__lado dc-cartao-ia__valor">
+              <strong className="dc-num">{h.situacao === "paga" ? h.pago : (h.falta ?? "—")}</strong>
+              <span className={cn("dc-cartao-ia__marca", h.situacao === "em_atraso" && "is-nova")}>{h.situacao === "em_atraso" ? `Atrasada há ${plural(h.diasEmAtraso, "dia", "dias")}` : SITUACAO_DA_PARCELA[h.situacao]}</span>
+            </span>
+          </Link>
+        )}
+      </Mais>
+    </Moldura>
+  );
+}
+
+function CartaoDevedores({ lista }: { lista: Lista<DevedorNaIa> & { valorTotal: string } }) {
+  return (
+    <Moldura icone={CircleDollarSign} titulo="Quem está devendo" n={`${nDeTotal(lista, "cliente", "clientes")} · ${lista.valorTotal}`} acao={<IrPara to="/financeiro" search={{ situacao: "atraso" }}>Em atraso</IrPara>}>
+      <Mais itens={lista.itens}>
+        {(d) => (
+          <div key={d.id} className="dc-cartao-ia__linha dc-cartao-ia__linha--quebra">
+            <span className="dc-celula min-w-0 flex-1">
+              <Link to="/financeiro" search={{ cliente: d.id, situacao: "atraso" }} className="dc-cartao-ia__titulo">
+                {d.nome}
+              </Link>
+              <span className="dc-cartao-ia__sub">
+                {plural(d.parcelasEmAtraso, "parcela", "parcelas")} em atraso · a mais antiga há {plural(d.diasDoMaisAntigo, "dia", "dias")}
+                {d.telefone && <span className="dc-cartao-ia__so-estreito dc-num"> · {d.telefone}</span>}
+              </span>
+            </span>
+            <span className="dc-cartao-ia__lado dc-cartao-ia__valor">
+              <strong className="dc-num">{d.emAtraso}</strong>
+            </span>
+          </div>
         )}
       </Mais>
     </Moldura>

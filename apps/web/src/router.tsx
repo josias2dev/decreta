@@ -16,6 +16,7 @@ import { ModelosPage } from "./paginas/modelos";
 import { EnviarDocumentosPage } from "./paginas/enviar";
 import { EntrarPage } from "./paginas/entrar";
 import { EquipePage } from "./paginas/equipe";
+import { FinanceiroPage, SITUACOES_DO_FINANCEIRO, type SituacaoDoFinanceiro } from "./paginas/financeiro";
 import { HojePage } from "./paginas/hoje";
 import { InicioPage } from "./paginas/inicio";
 import { MaisPage } from "./paginas/mais";
@@ -147,6 +148,16 @@ const perguntarRoute = createRoute({
 const conversaRoute = createRoute({ getParentRoute: () => appRoute, path: "/perguntar/$id", component: ConversaPage });
 const negociosRoute = createRoute({ getParentRoute: () => appRoute, path: "/negocios", component: NegociosPage });
 const alvarasRoute = createRoute({ getParentRoute: () => appRoute, path: "/alvaras", component: AlvarasPage });
+const financeiroRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/financeiro",
+  validateSearch: (s: Record<string, unknown>): { situacao?: SituacaoDoFinanceiro; cliente?: string; processo?: string } => ({
+    ...(SITUACOES_DO_FINANCEIRO.includes(s.situacao as SituacaoDoFinanceiro) && s.situacao !== "abertas" ? { situacao: s.situacao as SituacaoDoFinanceiro } : {}),
+    ...(texto(s.cliente, 40) ? { cliente: texto(s.cliente, 40) } : {}),
+    ...(texto(s.processo, 40) ? { processo: texto(s.processo, 40) } : {}),
+  }),
+  component: FinanceiroPage,
+});
 const documentosRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/documentos",
@@ -192,6 +203,7 @@ const routeTree = rootRoute.addChildren([
     conversaRoute,
     negociosRoute,
     alvarasRoute,
+    financeiroRoute,
     documentosRoute,
     modelosRoute,
     equipeRoute,

@@ -1,4 +1,14 @@
 /** Datas e números como o escritório lê: 23/11/2026, 23 nov, R$ 86.400,00. */
+import { centavosDoTexto, formatarBasePontos, formatarCentavos } from "@decreta/core";
+
+/** Dinheiro do Financeiro: sempre em centavos inteiros. 123456 → "R$ 1.234,56". */
+export const reais = (centavos: number | null | undefined) => (centavos == null ? "—" : formatarCentavos(centavos));
+/** O valor no campo de digitar, sem o "R$": 123456 → "1.234,56". */
+export const campoDeCentavos = (centavos: number | null | undefined) => (centavos == null ? "" : formatarCentavos(centavos).replace("R$ ", ""));
+/** O que a pessoa digitou, em centavos; texto que não é dinheiro devolve null. */
+export const centavosDoCampo = centavosDoTexto;
+/** 3000 → "30%"; 1250 → "12,5%". */
+export const percentual = formatarBasePontos;
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const SEMANA = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
 

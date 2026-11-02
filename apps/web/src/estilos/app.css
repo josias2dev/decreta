@@ -543,6 +543,10 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-doc__quando { flex: none; color: var(--tinta-3); }
 .dc-doc__dados--celular { min-height: 0; padding: 0; border: 0; }
 .dc-doc__ver { flex: 1 1 auto; min-height: 0; }
+.dc-doc__assinatura { flex: none; display: flex; flex-direction: column; gap: var(--space-1-half, 6px); padding: var(--space-2) var(--respiro-painel); border-bottom: 1px solid var(--borda); }
+.dc-doc__assinatura-titulo { font: 600 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
+.dc-doc__assinatura-linha { display: flex; align-items: flex-start; gap: var(--space-2); }
+.dc-doc__pessoa { display: flex; flex-direction: column; gap: var(--vao-campos); margin: 0; padding: 0; border: 0; min-width: 0; }
 
 /* O arquivo aberto: folhas brancas sobre o cinza, centradas, na largura do painel. */
 .dc-ver { position: relative; display: flex; flex-direction: column; background: var(--superficie-2); }
@@ -1265,6 +1269,8 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-col--leitura { width: calc(144px * var(--escala-coluna)); }
 .dc-col--acoes { width: calc(84px * var(--escala-coluna)); }
 .dc-col--icone { width: calc(44px * var(--escala-coluna)); }
+.dc-col--valor { width: calc(132px * var(--escala-coluna)); text-align: right; }
+.dc-col--valor .dc-celula { align-items: flex-end; }
 
 /* O que saiu dos estilos soltos das telas. */
 .dc-acento { color: var(--acento); }

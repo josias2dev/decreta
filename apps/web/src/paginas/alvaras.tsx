@@ -1,10 +1,13 @@
 /** Alvarás: do expedido ao repassado para o cliente, com quanto falta receber. */
+import { DIAS_NA_ETAPA_DO_ALVARA } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Plus } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { ContaDoAlvara } from "@/componentes/conta-do-alvara";
 import { Dialogo } from "@/componentes/dialogo";
+import { useFinanceiroLiberado } from "@/componentes/honorarios";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
@@ -29,7 +32,7 @@ const CHEGOU: Record<EtapaAlvara, { rotulo: string; dia: (a: Alvara) => string |
   finalizado: { rotulo: "Repassado", dia: (a) => a.repassadoEm },
 };
 /** Dias na etapa até chamar atenção: dinheiro sacado é do cliente e sai logo. */
-const PARADO: Partial<Record<EtapaAlvara, number>> = { novo: 15, aguardando_saque: 15, sacado: 5 };
+const PARADO: Partial<Record<EtapaAlvara, number>> = DIAS_NA_ETAPA_DO_ALVARA;
 
 const alvaras = (n: number) => `${numero(n)} ${n === 1 ? "alvará" : "alvarás"}`;
 const semAcento = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR");
@@ -114,7 +117,8 @@ export function AlvarasPage() {
   const dialogos = (
     <>
       <NovoAlvara aberto={novo} aoFechar={() => setNovo(false)} />
-      {selecionado && <VerAlvara a={selecionado} aoFechar={() => setAberto(null)} />}
+      {/* Remonta quando a etapa muda: o formulário parte dos dados novos. */}
+      {selecionado && <VerAlvara key={`${selecionado.id}-${selecionado.etapa}`} a={selecionado} aoFechar={() => setAberto(null)} />}
     </>
   );
 
@@ -267,6 +271,7 @@ function VerAlvara({ a, aoFechar }: { a: Alvara & { etapa: EtapaAlvara }; aoFech
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
+  const financeiro = useFinanceiroLiberado();
   const [f, setF] = useState({ valor: valorNoCampo(a.valor), valorRecebido: valorNoCampo(a.valorRecebido), sacadoEm: a.sacadoEm ?? "", repassadoEm: a.repassadoEm ?? "", observacoes: a.observacoes ?? "" });
   const salvar = useMutation({
     mutationFn: (corpo: Record<string, unknown>) => api(`/alvaras/${a.id}`, { method: "PUT", json: corpo }),
@@ -275,7 +280,8 @@ function VerAlvara({ a, aoFechar }: { a: Alvara & { etapa: EtapaAlvara }; aoFech
       void qc.invalidateQueries({ queryKey: ["eu"] });
       void qc.invalidateQueries({ queryKey: ["processo"] });
       avisar(corpo.etapa ? `Agora em ${ETAPA[corpo.etapa as EtapaAlvara].toLocaleLowerCase("pt-BR")}.` : "Alvará atualizado.");
-      aoFechar();
+      // Sacado: quem vê o Financeiro fica no alvará, onde o Decreta mostra a conta do honorário e do cliente.
+      if (!(financeiro && corpo.etapa === "sacado")) aoFechar();
     },
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
@@ -337,6 +343,7 @@ function VerAlvara({ a, aoFechar }: { a: Alvara & { etapa: EtapaAlvara }; aoFech
         <Campo rotulo="Observações" htmlFor="va-obs">
           <textarea id="va-obs" rows={2} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
         </Campo>
+        <ContaDoAlvara alvaraId={a.id} aoMudar={() => void qc.invalidateQueries({ queryKey: ["alvaras"] })} />
       </div>
     </Dialogo>
   );

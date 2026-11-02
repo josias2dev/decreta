@@ -26,6 +26,7 @@ import {
   UserPlus,
   Users,
   UsersRound,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
@@ -44,7 +45,7 @@ import { Marca } from "./marca";
 import { MenuDaConta } from "./menu-da-conta";
 import { Botao, Carregando } from "./ui";
 
-type Destino = "/hoje" | "/prazos" | "/publicacoes" | "/agenda" | "/perguntar" | "/processos" | "/clientes" | "/negocios" | "/alvaras" | "/documentos" | "/modelos" | "/equipe" | "/configuracoes";
+type Destino = "/hoje" | "/prazos" | "/publicacoes" | "/agenda" | "/perguntar" | "/processos" | "/clientes" | "/negocios" | "/alvaras" | "/financeiro" | "/documentos" | "/modelos" | "/equipe" | "/configuracoes";
 
 interface ItemDoMenu {
   to: Destino;
@@ -53,6 +54,8 @@ interface ItemDoMenu {
   n?: (m: Eu["menu"]) => { n: number; hoje?: boolean } | null;
   /** A IA: o ícone fica no acento. */
   ia?: boolean;
+  /** Só quem vê o Financeiro (os sócios e quem eles liberaram) vê o item. */
+  soComFinanceiro?: boolean;
 }
 
 export const MENU: { titulo: string; itens: ItemDoMenu[] }[] = [
@@ -73,6 +76,7 @@ export const MENU: { titulo: string; itens: ItemDoMenu[] }[] = [
       { to: "/clientes", rotulo: "Clientes", icone: Users, n: (m) => ({ n: m.clientes }) },
       { to: "/negocios", rotulo: "Novos negócios", icone: UserPlus, n: (m) => (m.negocios ? { n: m.negocios } : null) },
       { to: "/alvaras", rotulo: "Alvarás", icone: Banknote, n: (m) => (m.alvaras ? { n: m.alvaras } : null) },
+      { to: "/financeiro", rotulo: "Financeiro", icone: Wallet, soComFinanceiro: true, n: (m) => (m.financeiro ? { n: m.financeiro, hoje: true } : null) },
     ],
   },
   {
@@ -85,6 +89,9 @@ export const MENU: { titulo: string; itens: ItemDoMenu[] }[] = [
     ],
   },
 ];
+
+/** Os itens do menu que esta pessoa vê: o Financeiro só para os sócios e quem eles liberaram. */
+export const itensVisiveis = (itens: ItemDoMenu[], eu: Eu) => itens.filter((i) => !i.soComFinanceiro || !!eu.usuario.financeiro);
 
 const NAV_CELULAR: { to: Destino | "/mais"; rotulo: string; icone: LucideIcon }[] = [
   { to: "/hoje", rotulo: "Hoje", icone: Sun },
@@ -200,7 +207,7 @@ function Moldura({ eu }: { eu: Eu }) {
             )}
             <nav className="dc-nav" aria-label="Navegação">
               {NAV_CELULAR.map((i) => {
-                const on = caminho === i.to || caminho.startsWith(`${i.to}/`) || (i.to === "/mais" && ["/publicacoes", "/agenda", "/negocios", "/alvaras", "/documentos", "/equipe", "/configuracoes", "/conta"].some((p) => caminho.startsWith(p)));
+                const on = caminho === i.to || caminho.startsWith(`${i.to}/`) || (i.to === "/mais" && ["/publicacoes", "/agenda", "/negocios", "/alvaras", "/financeiro", "/documentos", "/equipe", "/configuracoes", "/conta"].some((p) => caminho.startsWith(p)));
                 return (
                   <Link key={i.to} to={i.to} className={cn(on && "is-on")} aria-current={on ? "page" : undefined}>
                     <i.icone />
@@ -241,7 +248,7 @@ function Moldura({ eu }: { eu: Eu }) {
           {MENU.map((g) => (
             <div key={g.titulo} className="dc-menu__grupo">
               <span className="dc-menu__titulo">{g.titulo}</span>
-              {g.itens.map((i) => {
+              {itensVisiveis(g.itens, eu).map((i) => {
                 const n = i.n?.(eu.menu);
                 return (
                   <Link key={i.to} to={i.to} className={cn(i.ia && "dc-menu__ia")} activeProps={{ className: "is-on" }} activeOptions={{ exact: false }} title={recolhido ? i.rotulo : undefined}>

@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Download, ExternalLink, Trash2, X } from "lucide-react";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { AssinaturaNoDocumento } from "@/componentes/assinatura-do-documento";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
@@ -100,6 +101,7 @@ export function DocumentosPage() {
                 <LeituraDaIa d={aberto} reler />
               </div>
               <FaixaDoAlerta alertas={aberto.alertas} />
+              <AssinaturaNoDocumento d={aberto} />
               <VerDocumento d={aberto} naPagina pagina={pagina} className="dc-doc__ver" />
             </>
           ) : (
@@ -293,6 +295,7 @@ function DocumentoAberto({ d, pagina, aoFechar, aoApagar }: { d: Documento; pagi
         <LeituraDaIa d={d} reler />
       </div>
       <FaixaDoAlerta alertas={d.alertas} />
+      <AssinaturaNoDocumento d={d} />
       <VerDocumento d={d} pagina={pagina} className="dc-doc__ver" />
     </section>
   );

@@ -5,13 +5,14 @@ import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { NiveisDeAutomacao } from "@/componentes/automacao";
 import { useAviso } from "@/componentes/avisos";
+import { ConfigDoFinanceiro } from "@/componentes/cobranca-config";
 import { AvisoSemCalendarioProprio } from "@/componentes/conta-do-prazo";
 import { DadosDoEscritorio } from "@/componentes/dados-do-escritorio";
 import { Dialogo } from "@/componentes/dialogo";
 import { JeitoDasPecas } from "@/componentes/jeito-das-pecas";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { OpcoesDeTribunal } from "@/componentes/opcoes-de-tribunal";
-import { Abas, Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Vazio } from "@/componentes/ui";
+import { Abas, Botao, Cabecalho, Campo, Carregando, Faixa, Interruptor, Painel, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
@@ -20,7 +21,7 @@ import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora } from "@/lib/f
 import type { Escritorio, Feriados, Registro, RetornosDaIa, Timbre } from "@/lib/tipos";
 import { Folha } from "./peca";
 
-type Aba = "escritorio" | "pecas" | "avisos" | "calendario" | "ia" | "registro" | "dados";
+type Aba = "escritorio" | "pecas" | "avisos" | "calendario" | "financeiro" | "ia" | "registro" | "dados";
 const FONTES = ["Arial", "Times New Roman", "Calibri", "Garamond"] as const;
 const TIPO_DE_SUSPENSAO = { local: "Feriado municipal", forense: "Sem expediente forense", recesso: "Recesso ou suspensão de prazos", reduzido: "Expediente reduzido" } as const;
 const EXEMPLO = "# Excelentíssimo Senhor Doutor Juiz de Direito da 2ª Vara Cível da Comarca de Joinville/SC\n\nProcesso nº 0000000-00.2026.8.24.0038\n\n**FULANA DE TAL**, já qualificada nos autos, vem, por seus procuradores, manifestar-se sobre o laudo pericial.\n\n## 1. Da concordância com o laudo\n\nO perito confirmou o nexo causal e a incapacidade parcial.";
@@ -40,11 +41,13 @@ export function ConfiguracoesPage() {
       aoMudar={setAba}
       abas={[
         { id: "escritorio", rotulo: "Timbre" },
-        // No celular, rótulos curtos: as sete abas do sócio cabem sem rolar.
+        // No celular, rótulos curtos: as abas do sócio cabem ou rolam de lado.
         { id: "pecas", rotulo: celular ? "Peças" : "Jeito das peças" },
         { id: "avisos", rotulo: celular ? "Avisos" : "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
-        ...(socio ? [{ id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }, { id: "dados" as const, rotulo: "Dados" }] : []),
+        ...(socio
+          ? [{ id: "financeiro" as const, rotulo: "Financeiro" }, { id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }, { id: "dados" as const, rotulo: "Dados" }]
+          : []),
       ]}
     />
   );
@@ -59,6 +62,8 @@ export function ConfiguracoesPage() {
     <AbaAvisos e={e} socio={socio} />
   ) : aba === "calendario" ? (
     <AbaCalendario e={e} socio={socio} celular={celular} />
+  ) : aba === "financeiro" ? (
+    <ConfigDoFinanceiro demonstracao={e.demonstracao} />
   ) : aba === "ia" ? (
     <div className="dc-pilha">
       <NiveisDeAutomacao e={e} socio={socio} />
@@ -193,17 +198,6 @@ function AbaTimbre({ e, socio, celular }: { e: Escritorio; socio: boolean; celul
   );
 }
 
-function Interruptor({ rotulo, ajuda, ligado, aoMudar, desligado }: { rotulo: string; ajuda?: string; ligado: boolean; aoMudar: (v: boolean) => void; desligado?: boolean }) {
-  return (
-    <label className="flex cursor-pointer items-start justify-between gap-4">
-      <span className="flex flex-col gap-0.5">
-        <span className="dc-t-corpo font-medium">{rotulo}</span>
-        {ajuda && <span className="dc-nota">{ajuda}</span>}
-      </span>
-      <input type="checkbox" className="dc-interruptor mt-0.5" checked={ligado} onChange={(e) => aoMudar(e.target.checked)} disabled={desligado} />
-    </label>
-  );
-}
 
 function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
   const salvar = useSalvarEscritorio();

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { CamposDoCliente } from "@/componentes/campos-cliente";
 import { ConferenciaDaPasta } from "@/componentes/conferencia";
+import { FinanceiroDoCasoPainel } from "@/componentes/honorarios";
 import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
 import { Dialogo } from "@/componentes/dialogo";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
@@ -222,6 +223,9 @@ export function ClientePage() {
     </Painel>
   );
 
+  // Os honorários do cliente: só para quem vê o Financeiro.
+  const honorarios = !!eu.data?.usuario.financeiro && <FinanceiroDoCasoPainel tipo="clientes" id={c.id} caso={{ cliente: { id: c.id, nome: c.nome } }} />;
+
   const atendimentos = (
     <Painel
       titulo="Atendimentos"
@@ -358,6 +362,7 @@ export function ClientePage() {
           )}
         </div>
         {processos}
+        {honorarios}
         {atendimentos}
         {dados}
         {documentos}
@@ -401,6 +406,7 @@ export function ClientePage() {
       <div className="dc-colunas">
         <div className="dc-pilha">
           {processos}
+          {honorarios}
           {atendimentos}
         </div>
         <div className="dc-pilha">

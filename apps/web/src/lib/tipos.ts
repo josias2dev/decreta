@@ -14,13 +14,15 @@ export type Urgencia = "vencido" | "hoje" | "breve" | "prazo" | "cumprido";
 export type Contagem = "uteis" | "corridos";
 
 export interface Eu {
-  usuario: Pessoa & { cargo: string | null; papel: string };
+  /** `financeiro`: a pessoa vê o Financeiro (os sócios, e quem eles liberaram na Equipe). */
+  usuario: Pessoa & { cargo: string | null; papel: string; financeiro?: boolean };
   /** `onboarding`: a configuração inicial (/comecar) ainda está pendente e esta pessoa, sócia, pode fazê-la. */
   escritorio: { id: string; nome: string; pessoas: number; timezone: string; logo?: boolean; demonstracao?: boolean; onboarding?: boolean };
   hoje: string;
   ia: boolean;
   equipe: (Pessoa & { cargo: string | null; papel: string })[];
-  menu: { prazos: number; prazosHoje: number; publicacoes: number; processos: number; clientes: number; negocios: number; alvaras: number };
+  /** `financeiro`: parcelas de honorários vencidas e não pagas (só para quem vê o Financeiro). */
+  menu: { prazos: number; prazosHoje: number; publicacoes: number; processos: number; clientes: number; negocios: number; alvaras: number; financeiro?: number };
 }
 
 export interface Analise<C = Record<string, unknown>> {
@@ -696,6 +698,8 @@ export interface Escritorio {
   whatsappLigado: boolean;
   /** O número oficial do rodapé das mensagens ao cliente. */
   whatsappOficial: string | null;
+  /** A assinatura eletrônica (ZapSign) do escritório está ligada: o documento oferece "Enviar para assinatura". */
+  assinaturaLigada?: boolean;
   /** Como o escritório faz cada peça, pelo tipo do catálogo; "geral" vale para todas. */
   jeito?: Record<string, JeitoDaPeca>;
   /** O nível de automação que vale em cada ação ("rascunho-da-peca" → "automatico"). */
@@ -730,6 +734,8 @@ export interface PessoaDaEquipe extends Pessoa {
   avisoManha: boolean;
   oabNumero: string | null;
   oabUf: string | null;
+  /** Vê o Financeiro: sempre os sócios; os outros, só se um sócio liberou. */
+  financeiro?: boolean;
 }
 
 export interface Equipe {
@@ -877,7 +883,7 @@ export interface Registro {
 /** Mensagem do escritório ao cliente no WhatsApp: só sai depois que um advogado aprova. */
 export interface MensagemAoCliente {
   id: string;
-  tipo: "decisao" | "documentos";
+  tipo: "decisao" | "documentos" | "cobranca";
   situacao: "rascunho" | "enviando" | "enviada" | "falhou" | "descartada";
   /** Em "enviando" sem resposta do WhatsApp: ninguém sabe se saiu, e o advogado confere. */
   envioIncerto: boolean;
@@ -907,4 +913,212 @@ export interface PedidoDeDocumentos {
   itens: string[];
   validoAte: string;
   recebidos: number;
+}
+
+/* ------------------------------------------------------------------ */
+/* Financeiro: todo valor aqui é um inteiro de centavos                */
+/* ------------------------------------------------------------------ */
+
+export type TipoDeContrato = "fixo" | "mensal" | "exito" | "hibrido";
+export type SituacaoDaParcela = "sem_valor" | "a_vencer" | "em_atraso" | "parcial" | "paga" | "cancelada";
+export type FormaDePagamento = "pix" | "boleto" | "cartao" | "transferencia" | "dinheiro" | "retido_no_alvara" | "outro";
+
+export interface PagamentoDaParcela {
+  id: string;
+  valor: number;
+  pagoEm: string;
+  forma: FormaDePagamento;
+  origem: "manual" | "asaas";
+  observacao: string | null;
+  estornado: boolean;
+  motivoEstorno: string | null;
+}
+
+export interface VencimentoDaCobranca {
+  sugerido: string | null;
+  precisaEscolher: boolean;
+  motivo: string | null;
+}
+
+export interface ParcelaDeHonorario {
+  id: string;
+  contratoId: string;
+  contratoTitulo: string;
+  contratoTipo: TipoDeContrato;
+  contratoSituacao: "ativo" | "encerrado" | "cancelado";
+  tipo: "fixo" | "mensal" | "exito" | "avulso";
+  numero: number;
+  descricao: string;
+  /** Nulo no honorário de êxito que ainda não tem resultado. */
+  valor: number | null;
+  vencimento: string | null;
+  /** A soma dos pagamentos marcados: é o único "recebido" que existe. */
+  pago: number;
+  falta: number | null;
+  situacao: SituacaoDaParcela;
+  diasEmAtraso: number;
+  cliente: { id: string; nome: string } | null;
+  processo: { id: string; titulo: string; cnj: string | null } | null;
+  cobranca: { provedor: string; link: string | null; vencimento: string | null } | null;
+  vencimentoDaCobranca: VencimentoDaCobranca | null;
+  alvaraId: string | null;
+  prestacaoId: string | null;
+  criadaEm: string;
+  pagamentos: PagamentoDaParcela[];
+}
+
+export interface GrupoDoResumo {
+  id: string;
+  aReceber: number;
+  emAtraso: number;
+  recebido: number;
+}
+
+export interface ResumoDoFinanceiro {
+  aReceber: number;
+  aVencer: number;
+  emAtraso: number;
+  parcelasEmAtraso: number;
+  recebido: number;
+  porMes: { mes: string; aReceber: number; emAtraso: number }[];
+  porCliente: GrupoDoResumo[];
+  porProcesso: GrupoDoResumo[];
+}
+
+export interface ContaDoAlvara {
+  base: number;
+  baseEhRecebido: boolean;
+  diferenca: number | null;
+  honorario: number;
+  cliente: number;
+  semContrato: boolean;
+  falta: "valor_recebido" | null;
+}
+
+export interface AlvaraParaPrestar {
+  id: string;
+  descricao: string;
+  valor: number;
+  valorRecebido: number | null;
+  sacadoEm: string | null;
+  processo: { id: string; titulo: string };
+  cliente: { id: string; nome: string } | null;
+  conta: ContaDoAlvara;
+  contratoTitulo: string | null;
+  precisaEscolherContrato: boolean;
+}
+
+export interface FinanceiroGeral {
+  hoje: string;
+  resumo: ResumoDoFinanceiro;
+  parcelas: ParcelaDeHonorario[];
+  alvarasParaPrestar: AlvaraParaPrestar[];
+  semHonorario: { total: number; itens: { id: string; titulo: string; cnj: string | null; cliente: { id: string; nome: string } | null }[] };
+  lembretesParaAprovar: number;
+}
+
+export interface ContratoDeHonorarios {
+  id: string;
+  titulo: string;
+  tipo: TipoDeContrato;
+  situacao: "ativo" | "encerrado" | "cancelado";
+  valorFixo: number | null;
+  mensalidade: number | null;
+  exitoBp: number | null;
+  exitoRotulo: string | null;
+  inicio: string;
+  observacoes: string | null;
+  documentoId: string | null;
+  cliente: { id: string; nome: string } | null;
+  processo: { id: string; titulo: string; cnj: string | null } | null;
+  pixAutomatico: { situacao: string | null; qr: { payload: string; imagem: string | null } | null } | null;
+  totais: { aReceber: number; recebido: number; emAtraso: number };
+  parcelas: ParcelaDeHonorario[];
+}
+
+/** A aba financeira de um cliente ou de um processo. */
+export interface FinanceiroDoCaso {
+  cliente?: { id: string; nome: string };
+  processo?: { id: string; titulo: string };
+  resumo: ResumoDoFinanceiro;
+  contratos: ContratoDeHonorarios[];
+  /** Só no processo: está em andamento, não tem contrato e ninguém dispensou o aviso. */
+  semHonorario?: boolean;
+  dispensado?: boolean;
+}
+
+export interface ContratoCandidato {
+  id: string;
+  titulo: string;
+  exitoBp: number;
+  nivel: "processo" | "cliente";
+}
+
+export interface RepasseDoAlvara {
+  id: string;
+  favorecido: string;
+  favorecidoDocumento: string | null;
+  conta: string;
+  valor: number;
+  repassadoEm: string;
+  observacao: string | null;
+  estornado: boolean;
+}
+
+export interface PrestacaoDeContas {
+  id: string;
+  alvaraId: string;
+  contratoId: string | null;
+  parcelaId: string | null;
+  valorAlvara: number;
+  valorRecebido: number;
+  exitoBp: number | null;
+  honorario: number;
+  cliente: number;
+  semContrato: boolean;
+  retidoNoSaque: boolean;
+  observacao: string | null;
+  confirmadaEm: string;
+  confirmadaPor: string | null;
+  documentoId: string | null;
+  repasses: RepasseDoAlvara[];
+  conferencia: { repassado: number; falta: number; excede: number; completo: boolean };
+}
+
+/** A conta do alvará: o contrato que vale, os números, e a prestação de contas quando já foi confirmada. */
+export interface ContaDoAlvaraNaTela {
+  alvara: { id: string; descricao: string; etapa: EtapaAlvara; valor: number; valorRecebido: number | null; sacadoEm: string | null; processo: { id: string; titulo: string; cnj: string | null }; cliente: { id: string; nome: string } | null };
+  contratos: ContratoCandidato[];
+  contrato: ContratoCandidato | null;
+  precisaEscolherContrato: boolean;
+  conta: ContaDoAlvara;
+  prestacao: PrestacaoDeContas | null;
+  podeConfirmar: boolean;
+  motivo: string | null;
+}
+
+export interface PassoDaRegua {
+  dias: number;
+  texto: string;
+}
+
+export interface EstadoDaCobranca {
+  asaas: { configurado: boolean; ambiente: "sandbox" | "producao" | null; avisoLigado: boolean; conferidaEm: string | null; urlDoAviso: string | null };
+  pixAutomatico: boolean;
+  regua: { ligada: boolean; passos: PassoDaRegua[]; aprovadaPor?: string | null; aprovadaEm?: string | null };
+  zapsign: { configurado: boolean; ligada: boolean; ambiente: "sandbox" | "producao" | null };
+  nfse: { disponivel: false };
+  podeEditar: boolean;
+  cofreLigado: boolean;
+  textosPadrao: PassoDaRegua[];
+}
+
+export interface AssinaturaDoDocumento {
+  id: string;
+  documentoId: string;
+  situacao: "enviada" | "assinada" | "cancelada";
+  signatarios: { nome: string; email?: string; telefone?: string; situacao: string; link?: string }[];
+  enviadaEm: string;
+  assinadaEm: string | null;
+  documentoAssinadoId: string | null;
 }

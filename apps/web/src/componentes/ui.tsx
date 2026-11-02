@@ -324,6 +324,19 @@ export function Campo({ rotulo, ajuda, erro, children, htmlFor }: { rotulo: stri
   );
 }
 
+/** Liga e desliga uma coisa do escritório: o rótulo, o que ela faz e a chave. */
+export function Interruptor({ rotulo, ajuda, ligado, aoMudar, desligado }: { rotulo: string; ajuda?: string; ligado: boolean; aoMudar: (v: boolean) => void; desligado?: boolean }) {
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-4">
+      <span className="flex flex-col gap-0.5">
+        <span className="dc-t-corpo font-medium">{rotulo}</span>
+        {ajuda && <span className="dc-nota">{ajuda}</span>}
+      </span>
+      <input type="checkbox" className="dc-interruptor mt-0.5" checked={ligado} onChange={(e) => aoMudar(e.target.checked)} disabled={desligado} />
+    </label>
+  );
+}
+
 export function Faixa({ tipo, children }: { tipo: "aviso" | "erro" | "ok" | "nota"; children: ReactNode }) {
   return (
     <div className={cn("dc-faixa", `dc-faixa--${tipo}`)} role={tipo === "erro" ? "alert" : undefined}>

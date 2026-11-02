@@ -473,6 +473,10 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
       const lista = await s.json(s.com("beatriz", `/financeiro/parcelas/${c.parcelas[0].id}/lembretes`));
       expect(lista.itens).toHaveLength(1);
       expect((await s.json(s.com("beatriz", "/financeiro"))).lembretesParaAprovar).toBeGreaterThan(0);
+      // A lista dos que esperam aprovação: só para quem vê o Financeiro.
+      const esperando = await s.json(s.com("beatriz", "/financeiro/lembretes"));
+      expect(esperando.itens.find((x: { parcelaId: string }) => x.parcelaId === c.parcelas[0].id)).toMatchObject({ mensagemId: m.id, cliente: { nome: "Marina Duarte" }, descricao: "Honorários" });
+      expect((await s.com("tiago", "/financeiro/lembretes")).status).toBe(403);
       // Parcela paga ou sem valor não tem o que lembrar.
       const exito = await contrato({ tipo: "exito", clienteId: s.souza.clienteId, exitoBp: 1000 });
       expect((await s.com("beatriz", `/financeiro/parcelas/${exito.parcelas[0].id}/lembrete`, { json: {} })).status).toBe(409);

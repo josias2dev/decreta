@@ -57,7 +57,7 @@ export function EquipePage() {
                 {p.id === eu.data?.usuario.id && <span className="ml-1.5 font-normal text-[var(--tinta-3)]">(você)</span>}
                 <span className="dc-selo dc-selo--prazo ml-2 align-[1px]">{papelLabel(p.papel)}</span>
               </span>
-              <span className="dc-celula__2 truncate">{[p.cargo, p.oab].filter(Boolean).join(" · ")}</span>
+              <span className="dc-celula__2 truncate">{[p.cargo, p.oab, socio && !ehSocio(p.papel) && p.financeiro && "vê o Financeiro"].filter(Boolean).join(" · ")}</span>
               {!celular && <span className="dc-celula__2 truncate">{[p.email, p.whatsapp && `WhatsApp ${telefone(p.whatsapp)}${p.avisoManha ? " · resumo da manhã" : ""}`].filter(Boolean).join(" · ")}</span>}
             </span>
             {(socio || p.id === eu.data?.usuario.id) && (
@@ -283,13 +283,16 @@ function EditarPessoa({ p, aoFechar, socio, eu }: { p: PessoaDaEquipe; aoFechar:
     whatsapp: telefone(p.whatsapp),
     avisoManha: p.avisoManha,
     papel: p.papel as Papel,
+    financeiro: p.financeiro ?? false,
   });
+  // O acesso ao Financeiro: os sócios têm sempre; um sócio libera ou tira dos outros.
+  const podeLiberarFinanceiro = socio && p.id !== eu && !ehSocio(p.papel);
   const [removendo, setRemovendo] = useState(false);
   const salvar = useMutation({
     mutationFn: async () => {
       await api(`/equipe/${p.id}`, {
         method: "PUT",
-        json: { apelido: f.apelido.trim() || null, cargo: f.cargo.trim() || null, oabNumero: f.oabNumero.replace(/\D/g, "") || null, oabUf: f.oabNumero ? f.oabUf : null, whatsapp: f.whatsapp.trim() || null, avisoManha: f.avisoManha },
+        json: { apelido: f.apelido.trim() || null, cargo: f.cargo.trim() || null, oabNumero: f.oabNumero.replace(/\D/g, "") || null, oabUf: f.oabNumero ? f.oabUf : null, whatsapp: f.whatsapp.trim() || null, avisoManha: f.avisoManha, ...(podeLiberarFinanceiro ? { financeiro: f.financeiro } : {}) },
       });
       if (socio && membro && f.papel !== p.papel) await authCall(authClient.organization.updateMemberRole({ memberId: membro.id, role: f.papel }));
     },
@@ -370,6 +373,15 @@ function EditarPessoa({ p, aoFechar, socio, eu }: { p: PessoaDaEquipe; aoFechar:
             <input type="checkbox" className="dc-checa" checked={f.avisoManha} onChange={(e) => setF({ ...f, avisoManha: e.target.checked })} />
             Receber de manhã, no WhatsApp, o que vence no dia
           </label>
+          {podeLiberarFinanceiro && (
+            <label className="dc-opcao">
+              <input type="checkbox" className="dc-checa" checked={f.financeiro} onChange={(e) => setF({ ...f, financeiro: e.target.checked })} />
+              <span>
+                Pode ver e mexer no Financeiro
+                <span className="dc-nota block">Honorários, cobrança, prestação de contas e quem está devendo. Os sócios sempre têm acesso.</span>
+              </span>
+            </label>
+          )}
           {socio && p.id !== eu && (
             <Campo rotulo="Papel" htmlFor="ep-papel">
               <select id="ep-papel" value={f.papel} onChange={(e) => setF({ ...f, papel: e.target.value as Papel })} disabled={!membro}>

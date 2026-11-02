@@ -5,8 +5,8 @@
  * Sem chave do Asaas, o Financeiro segue com a baixa manual.
  */
 import { ehDia, hojeEm, PASSOS_PADRAO_DA_REGUA } from "@decreta/core";
-import { cobrancaConfig, lembretesDeCobranca, mensagensCliente, type ReguaDeLembretes } from "@decreta/db";
-import { desc, eq, inArray } from "drizzle-orm";
+import { clientes, cobrancaConfig, lembretesDeCobranca, mensagensCliente, parcelasHonorarios, type ReguaDeLembretes } from "@decreta/db";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
@@ -183,6 +183,23 @@ export function rotasDaCobranca(app: Hono<Ambiente>, deps: DepsDasRotas) {
     });
     await auditar(c, "lembrete.criado", { parcelaId });
     return c.json(mensagem, 201);
+  });
+
+  /** Os lembretes que esperam um advogado aprovar, dos mais antigos para os mais novos: a régua os deixa, e nenhum sai sozinho. */
+  app.get("/financeiro/lembretes", async (c) => {
+    await exigirFinanceiro(c, deps);
+    return tenant(c, deps, async (tx) => {
+      const linhas = await tx
+        .select({ mensagemId: mensagensCliente.id, parcelaId: parcelasHonorarios.id, descricao: parcelasHonorarios.descricao, vencimento: parcelasHonorarios.vencimento, cliente: { id: clientes.id, nome: clientes.nome }, criadaEm: mensagensCliente.createdAt, passo: lembretesDeCobranca.passo })
+        .from(lembretesDeCobranca)
+        .innerJoin(mensagensCliente, eq(mensagensCliente.id, lembretesDeCobranca.mensagemId))
+        .innerJoin(parcelasHonorarios, eq(parcelasHonorarios.id, lembretesDeCobranca.parcelaId))
+        .innerJoin(clientes, eq(clientes.id, mensagensCliente.clienteId))
+        .where(eq(mensagensCliente.situacao, "rascunho"))
+        .orderBy(asc(mensagensCliente.createdAt))
+        .limit(100);
+      return c.json({ itens: linhas.map((l) => ({ ...l, criadaEm: l.criadaEm.toISOString() })) });
+    });
   });
 
   /** Os lembretes de uma parcela, dos mais novos para os mais antigos. */

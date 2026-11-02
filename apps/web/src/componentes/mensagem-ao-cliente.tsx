@@ -13,8 +13,8 @@ import { diaCurto, diaDoInstante, hora } from "@/lib/formato";
 import type { MensagemAoCliente } from "@/lib/tipos";
 
 interface Props {
-  /** De quem são as mensagens: do prazo (decisão) ou do cliente (cobrança). */
-  filtro: { prazo: string } | { cliente: string };
+  /** De quem são as mensagens: do prazo (decisão), do cliente (cobrança de documentos) ou de uma parcela de honorários (lembrete de cobrança). */
+  filtro: { prazo: string } | { cliente: string } | { parcela: string };
   /** Como pedir um rascunho novo. Sem isso, a tela só mostra o que já existe. */
   gerar?: { rotulo: string; caminho: string };
   titulo?: string;
@@ -23,11 +23,12 @@ interface Props {
 export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao cliente" }: Props) {
   const qc = useQueryClient();
   const avisar = useAviso();
-  const busca = "prazo" in filtro ? `prazo=${filtro.prazo}` : `cliente=${filtro.cliente}`;
+  const busca = "prazo" in filtro ? `prazo=${filtro.prazo}` : "parcela" in filtro ? `parcela=${filtro.parcela}` : `cliente=${filtro.cliente}`;
   const chave = ["mensagens-cliente", busca];
   const q = useQuery({
     queryKey: chave,
-    queryFn: () => api<{ itens: MensagemAoCliente[] }>(`/mensagens-cliente?${busca}`),
+    // Os lembretes de cobrança vêm da parcela; as outras mensagens, do prazo ou do cliente.
+    queryFn: () => api<{ itens: MensagemAoCliente[] }>("parcela" in filtro ? `/financeiro/parcelas/${filtro.parcela}/lembretes` : `/mensagens-cliente?${busca}`),
     // Outra pessoa pode estar enviando: a resposta do WhatsApp demora até 20 segundos.
     refetchInterval: (consulta) => (consulta.state.data?.itens.some((m) => m.situacao === "enviando" && !m.envioIncerto) ? 15_000 : false),
   });
@@ -160,7 +161,9 @@ function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void })
         <Faixa tipo="nota">
           {m.tipo === "decisao"
             ? "Rascunho da IA a partir do briefing. Revise: nada sai sem a sua aprovação, e a mensagem não dá parecer sobre o caso."
-            : "Lista do que falta, tirada da conferência da pasta. O link de envio, sem senha e válido por 7 dias, entra quando você aprovar."}
+            : m.tipo === "cobranca"
+              ? "Lembrete de cobrança com o texto que o escritório aprovou. Confira o valor e a data: nada sai sem a sua aprovação."
+              : "Lista do que falta, tirada da conferência da pasta. O link de envio, sem senha e válido por 7 dias, entra quando você aprovar."}
         </Faixa>
       )}
       <Campo rotulo={`Texto para ${m.cliente.nome}`} htmlFor={campo}>

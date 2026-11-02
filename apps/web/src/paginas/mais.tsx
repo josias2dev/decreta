@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, UserRound } from "lucide-react";
-import { MENU, TelaCelular } from "@/componentes/moldura";
+import { itensVisiveis, MENU, TelaCelular } from "@/componentes/moldura";
 import { Avatar } from "@/componentes/ui";
 import { euQuery } from "@/lib/consultas";
 import { numero } from "@/lib/formato";
@@ -16,7 +16,7 @@ export function MaisPage() {
   return (
     <TelaCelular titulo="Mais" sobre={e?.escritorio.nome}>
       {MENU.map((g) => {
-        const itens = g.itens.filter((i) => !NA_NAVEGACAO.has(i.to));
+        const itens = (e ? itensVisiveis(g.itens, e) : g.itens.filter((i) => !i.soComFinanceiro)).filter((i) => !NA_NAVEGACAO.has(i.to));
         if (!itens.length) return null;
         return (
           <section key={g.titulo} className="dc-secao">

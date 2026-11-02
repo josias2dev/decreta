@@ -241,6 +241,22 @@ describe.skipIf(!hasTestDatabase)("do alvará ao honorário e à prestação de 
       expect(contrato.parcelas.map((x: { numero: number }) => x.numero)).toEqual([1, 2]);
     });
 
+    test("depois de confirmada, o valor do alvará e o que caiu na conta não mudam sem desfazer a prestação", async () => {
+      const p = await processoNovo("Valores travados");
+      await contratoDeExito(p, 3000);
+      const a = await alvaraSacado(p, "1000.00");
+      const prestacaoId = (await (await confirmar(a, { honorario: 30_000, cliente: 70_000 })).json()).prestacao.id;
+      for (const corpo of [{ valorRecebido: "900.00" }, { valor: "1100.00" }, { valorRecebido: null }]) {
+        const r = await s.com("beatriz", `/alvaras/${a}`, { metodo: "PUT", json: corpo });
+        expect(r.status).toBe(409);
+        expect((await r.json()).erro).toBe("alvara_com_prestacao");
+      }
+      // O mesmo valor, as datas, a observação e a etapa seguem livres.
+      expect((await s.com("beatriz", `/alvaras/${a}`, { metodo: "PUT", json: { valorRecebido: "1000.00", observacoes: "Conferido", etapa: "repassado" } })).status).toBe(200);
+      await s.com("beatriz", `/financeiro/prestacoes/${prestacaoId}/desfazer`, { json: { motivo: "Valor estava errado." } });
+      expect((await s.com("beatriz", `/alvaras/${a}`, { metodo: "PUT", json: { valorRecebido: "900.00" } })).status).toBe(200);
+    });
+
     test("honorário que arredonda para zero não cria parcela, mas a prestação fica registrada", async () => {
       const p = await processoNovo("Centavo");
       await contratoDeExito(p, 100);

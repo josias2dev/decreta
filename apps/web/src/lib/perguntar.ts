@@ -163,7 +163,39 @@ export interface AlvaraNaIa {
   valorRecebido: string | null;
   etapa: string;
   expedidoEm: string | null;
+  sacadoEm?: string | null;
+  /** Há quantos dias está na etapa (desde a expedição, ou desde o saque); nulo no repassado e no finalizado. */
+  diasNaEtapa?: number | null;
+  parado?: boolean;
   processo: ProcessoCurto;
+}
+/** Uma parcela de honorários, como o buscarHonorarios devolve (valores em centavos e já em texto). */
+export interface HonorarioNaIa {
+  id: string;
+  descricao: string;
+  situacao: "a_vencer" | "em_atraso" | "parcial" | "paga" | "sem_valor";
+  vencimento: string | null;
+  diasEmAtraso: number;
+  valorCentavos: number | null;
+  valor: string | null;
+  pagoCentavos: number;
+  pago: string;
+  faltaCentavos: number | null;
+  falta: string | null;
+  contrato: string;
+  cliente: { id: string; nome: string } | null;
+  processo: ProcessoCurto | null;
+}
+/** Um cliente com honorários vencidos e não pagos, como o buscarDevedores devolve. */
+export interface DevedorNaIa {
+  id: string;
+  nome: string;
+  telefone: string | null;
+  parcelasEmAtraso: number;
+  emAtrasoCentavos: number;
+  emAtraso: string;
+  maisAntigaDesde: string;
+  diasDoMaisAntigo: number;
 }
 export interface NegocioNaIa {
   id: string;

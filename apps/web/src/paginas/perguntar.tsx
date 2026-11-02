@@ -7,7 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import * as Menu from "@radix-ui/react-dropdown-menu";
-import { ArrowLeft, Banknote, Calculator, CalendarDays, Ellipsis, FolderOpen, Hourglass, Inbox, MessageSquare, MessagesSquare, PanelLeft, Pencil, Pin, PinOff, Scale, Search, SquarePen, Trash2, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Banknote, Calculator, CalendarDays, CircleDollarSign, Ellipsis, FolderOpen, Hourglass, Inbox, MessageSquare, MessagesSquare, PanelLeft, Pencil, Pin, PinOff, Scale, Search, SquarePen, Trash2, Wallet, X, type LucideIcon } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Compositor, esquecerEnvio, esquecerNova, IrParaOFim, Mensagens, NestaConversa, useEnviar, useEnvio, useRolagemDaConversa, type Envio } from "@/componentes/conversa-ia";
 import { useAviso } from "@/componentes/avisos";
@@ -343,6 +343,14 @@ function BoasVindas({
           { icone: FolderOpen, titulo: "Em que pé está", texto: "Em que pé está o processo de ", completar: true, ajuda: "Diga o cliente ou o número do processo" },
           { icone: Calculator, titulo: "Contar um prazo", texto: "Publicado hoje, 15 dias úteis vence quando?" },
           { icone: Banknote, titulo: "Alvarás a receber", texto: "Quais alvarás ainda não foram repassados aos clientes?", n: eu.menu.alvaras || null },
+          { icone: Banknote, titulo: "Alvarás parados", texto: "Quais alvarás estão parados? Diga há quantos dias cada um está na etapa" },
+          // Dinheiro do escritório: só para quem vê o Financeiro (sócios e quem eles liberaram). A IA também recusa sem o acesso.
+          ...(eu.usuario.financeiro
+            ? [
+                { icone: CircleDollarSign, titulo: "Quem está devendo", texto: "Quem está devendo honorários ao escritório? Mostre quanto cada cliente deve e desde quando" },
+                { icone: Wallet, titulo: "Honorários do mês", texto: "Quanto tenho a receber de honorários neste mês? Mostre as parcelas por vencimento" },
+              ]
+            : []),
         ];
   return (
     <div className="dc-chat__coluna dc-boas-vindas">

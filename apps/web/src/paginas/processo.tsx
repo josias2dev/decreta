@@ -10,6 +10,7 @@ import { DaReceita, documentoDigitado, useEmpresa, usePreencher } from "@/compon
 import { Conversa } from "@/componentes/conversa";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
+import { AvisoSemHonorario, FinanceiroDoCasoPainel, useFinanceiroLiberado } from "@/componentes/honorarios";
 import { SeloDoAlerta } from "@/componentes/alerta-do-documento";
 import { SEM_IA, SeloSemIa } from "@/componentes/uso-de-ia";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
@@ -25,8 +26,8 @@ import { diaCompleto, diaCurto, diaDoInstante, diaMes, diasDesde, dinheiro, hora
 import type { Conversa as ConversaDaApi, Documento, ListaDePrazos, Movimentacao, Movimentacoes, Parte, Processo, ResumoDosAutos } from "@/lib/tipos";
 import { Situacao } from "./prazos";
 
-export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos" | "calculos" | "chat";
-export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "calculos", "chat"];
+export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos" | "honorarios" | "calculos" | "chat";
+export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "honorarios", "calculos", "chat"];
 
 const POLO = { ativo: "Polo ativo", passivo: "Polo passivo", terceiro: "Terceiro" } as const;
 const SITUACAO = { ativo: "Ativo", suspenso: "Suspenso", arquivado: "Arquivado", encerrado: "Encerrado" } as const;
@@ -45,7 +46,9 @@ export function ProcessoPage() {
   const search = useSearch({ from: "/app/processos/$id" });
   const navigate = useNavigate({ from: "/processos/$id" });
   const celular = useCelular();
-  const aba: AbaDoProcesso = search.aba ?? "resumo";
+  const financeiro = useFinanceiroLiberado();
+  // Os honorários são do Financeiro: quem não o vê cai no resumo.
+  const aba: AbaDoProcesso = search.aba === "honorarios" && !financeiro ? "resumo" : (search.aba ?? "resumo");
   const q = useQuery({ queryKey: ["processo", id], queryFn: () => api<Processo>(`/processos/${id}`) });
   const irPara = (a: AbaDoProcesso) => void navigate({ search: { aba: a === "resumo" ? undefined : a }, replace: true });
 
@@ -72,6 +75,7 @@ export function ProcessoPage() {
         { id: "movimentacoes", rotulo: "Movimentações", n: celular ? undefined : p.contadores.movimentacoes },
         { id: "prazos", rotulo: "Prazos", n: celular ? undefined : p.contadores.prazos },
         { id: "documentos", rotulo: "Documentos", n: celular ? undefined : p.contadores.documentos },
+        ...(financeiro ? [{ id: "honorarios" as const, rotulo: "Honorários" }] : []),
         // No celular o chat abre pelo botão Perguntar, em tela própria; os cálculos ficam no computador.
         ...(celular ? [] : [{ id: "calculos" as const, rotulo: "Cálculos" }, { id: "chat" as const, rotulo: "Chat do processo" }]),
       ]}
@@ -86,6 +90,8 @@ export function ProcessoPage() {
       <AbaPrazos p={p} celular={celular} />
     ) : aba === "documentos" ? (
       <AbaDocumentos p={p} celular={celular} />
+    ) : aba === "honorarios" ? (
+      <FinanceiroDoCasoPainel tipo="processos" id={p.id} caso={{ processo: { id: p.id, titulo: p.titulo }, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
     ) : aba === "calculos" ? (
       <AbaCalculos p={p} />
     ) : (
@@ -116,6 +122,7 @@ export function ProcessoPage() {
             {p.valorCausa && <> · Valor da causa {dinheiro(p.valorCausa)}</>}
           </span>
         </div>
+        <AvisoSemHonorario processo={{ id: p.id, titulo: p.titulo, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
         <div className="dc-sangria">{abas}</div>
         {conteudo}
       </TelaCelular>
@@ -159,6 +166,7 @@ export function ProcessoPage() {
             </>
           }
         />
+        <AvisoSemHonorario processo={{ id: p.id, titulo: p.titulo, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
         {abas}
       </div>
       {conteudo}

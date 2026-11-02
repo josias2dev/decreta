@@ -1,5 +1,5 @@
-import { ehDia } from "@decreta/core";
-import { alvaras, clientes, documentos, negocios, processos } from "@decreta/db";
+import { centavosDoNumeric, ehDia } from "@decreta/core";
+import { alvaras, clientes, documentos, negocios, prestacoesDeContas, processos } from "@decreta/db";
 import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -199,13 +199,20 @@ export function rotasDosNegocios(app: Hono<Ambiente>, deps: DepsDasRotas) {
         observacoes: z.string().max(2000).nullable().optional(),
       }),
     );
-    const r = await tenant(c, deps, (tx) =>
-      tx
+    const r = await tenant(c, deps, async (tx) => {
+      // A prestação de contas confirmada foi calculada sobre estes valores: mudá-los em silêncio deixaria o dinheiro do cliente fora de conta.
+      if (b.valor !== undefined || b.valorRecebido !== undefined) {
+        const [p] = await tx.select({ valorAlvara: prestacoesDeContas.valorAlvara, valorRecebido: prestacoesDeContas.valorRecebido }).from(prestacoesDeContas).where(and(eq(prestacoesDeContas.alvaraId, alvaraId), isNull(prestacoesDeContas.canceladaEm)));
+        if (p && ((b.valor !== undefined && centavosDoNumeric(b.valor) !== p.valorAlvara) || (b.valorRecebido !== undefined && centavosDoNumeric(b.valorRecebido) !== p.valorRecebido))) {
+          falha(409, "alvara_com_prestacao", "A prestação de contas deste alvará já foi confirmada com estes valores. Desfaça a prestação antes de mudar o valor do alvará ou o que caiu na conta.");
+        }
+      }
+      return tx
         .update(alvaras)
         .set(Object.fromEntries(Object.entries(b).filter(([, v]) => v !== undefined)))
         .where(eq(alvaras.id, alvaraId))
-        .returning({ id: alvaras.id }),
-    );
+        .returning({ id: alvaras.id });
+    });
     if (!r.length) falha(404, "nao_encontrado");
     return c.json({ ok: true });
   });
