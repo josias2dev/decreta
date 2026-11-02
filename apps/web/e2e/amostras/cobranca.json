@@ -1,0 +1,41 @@
+{
+  "path": "/financeiro/cobranca",
+  "corpo": {
+    "asaas": {
+      "configurado": false,
+      "ambiente": null,
+      "avisoLigado": false,
+      "conferidaEm": null,
+      "urlDoAviso": null
+    },
+    "pixAutomatico": false,
+    "regua": {
+      "ligada": false,
+      "passos": []
+    },
+    "zapsign": {
+      "configurado": false,
+      "ligada": false,
+      "ambiente": null
+    },
+    "nfse": {
+      "disponivel": false
+    },
+    "podeEditar": true,
+    "cofreLigado": false,
+    "textosPadrao": [
+      {
+        "dias": -3,
+        "texto": "Olá, {cliente}. Passando para lembrar que os honorários ({descricao}), no valor de {valor}, vencem em {vencimento}.\n{link}"
+      },
+      {
+        "dias": 0,
+        "texto": "Olá, {cliente}. Hoje vence o pagamento dos honorários ({descricao}), no valor de {valor}.\n{link}\nQualquer dúvida, é só responder esta mensagem."
+      },
+      {
+        "dias": 3,
+        "texto": "Olá, {cliente}. Não identificamos o pagamento dos honorários ({descricao}), de {valor}, que venceram em {vencimento}. Se já pagou, desconsidere esta mensagem.\n{link}"
+      }
+    ]
+  }
+}

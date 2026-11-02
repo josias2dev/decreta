@@ -1,7 +1,7 @@
 {
-  "path": "/modelos/c239cecf-4041-4c9c-8d3d-e400c6d33738",
+  "path": "/modelos/241f1d6e-4501-4dd4-a53b-fdd147bbaa8b",
   "corpo": {
-    "id": "c239cecf-4041-4c9c-8d3d-e400c6d33738",
+    "id": "241f1d6e-4501-4dd4-a53b-fdd147bbaa8b",
     "titulo": "Contestação · negativa de cobertura de plano de saúde",
     "tipo": "contestacao",
     "tipoNome": "Contestação",
@@ -10,12 +10,12 @@
     "texto": "# Excelentíssimo Senhor Doutor Juiz de Direito\n\nFULANA DE TAL, já qualificada, vem apresentar CONTESTAÇÃO.\n\n## 1. Dos fatos\n\nA autora teve a cirurgia negada sob o argumento de exclusão contratual.\n\n## 2. Do direito\n\nA indicação médica prevalece sobre a cláusula de exclusão (Súmula 102 do TJSP, por analogia).\n\n## 3. Dos pedidos\n\nPede a improcedência.",
     "pecaId": null,
     "criadoPor": {
-      "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+      "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
       "foto": "/demonstracao/beatriz.jpg"
     },
-    "em": "2026-11-01T14:21:14.508Z"
+    "em": "2026-11-02T21:01:27.443Z"
   }
 }

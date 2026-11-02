@@ -2,16 +2,17 @@
   "path": "/eu",
   "corpo": {
     "usuario": {
-      "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+      "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
       "nome": "Beatriz Souza",
       "apelido": "Beatriz",
       "iniciais": "BS",
       "foto": "/demonstracao/beatriz.jpg",
       "cargo": "Advogada",
-      "papel": "owner"
+      "papel": "owner",
+      "financeiro": true
     },
     "escritorio": {
-      "id": "5eb8c10d-ea59-4fbd-961b-a5bc8c69244d",
+      "id": "2ae1b5ca-0c4e-4194-b19a-ff3050ed9bd7",
       "nome": "Souza & Freitas Advocacia",
       "pessoas": 4,
       "timezone": "America/Sao_Paulo",
@@ -23,7 +24,7 @@
     "ia": false,
     "equipe": [
       {
-        "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+        "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -32,7 +33,7 @@
         "papel": "owner"
       },
       {
-        "id": "Z294LZf1cZ0AFVD6sWgtbAZhxXR2f8PP",
+        "id": "My70tOVx8IfIRltr12mK3k84ivigOjNR",
         "nome": "Rafael Freitas",
         "apelido": "Rafael",
         "iniciais": "RF",
@@ -41,7 +42,7 @@
         "papel": "admin"
       },
       {
-        "id": "OZhhVWMaxFl9lW00YaSqlxN8m0tUfuAA",
+        "id": "PffPOUFAQm2rpR511Fd9nHNFlxJFQN4U",
         "nome": "Tiago Martins",
         "apelido": "Tiago",
         "iniciais": "TM",
@@ -50,7 +51,7 @@
         "papel": "member"
       },
       {
-        "id": "dab98gsZt1dfdpyAEvXJq20J4rhry2Np",
+        "id": "pNGTt3mhIguI4wmLUCz2jtztJ1CKsvSR",
         "nome": "Camila Azevedo",
         "apelido": "Camila",
         "iniciais": "CA",
@@ -66,7 +67,8 @@
       "processos": 136,
       "clientes": 128,
       "negocios": 8,
-      "alvaras": 8
+      "alvaras": 8,
+      "financeiro": 4
     }
   }
 }

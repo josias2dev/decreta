@@ -1,0 +1,4609 @@
+{
+  "path": "/financeiro",
+  "corpo": {
+    "hoje": "2026-10-29",
+    "resumo": {
+      "aReceber": 8270000,
+      "aVencer": 7240000,
+      "emAtraso": 1030000,
+      "parcelasEmAtraso": 4,
+      "recebido": 1580000,
+      "porMes": [
+        {
+          "mes": "2026-10",
+          "aReceber": 1030000,
+          "emAtraso": 1030000
+        },
+        {
+          "mes": "2026-11",
+          "aReceber": 1270000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2026-12",
+          "aReceber": 1020000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-01",
+          "aReceber": 720000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-02",
+          "aReceber": 720000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-03",
+          "aReceber": 720000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-04",
+          "aReceber": 630000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-05",
+          "aReceber": 630000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-06",
+          "aReceber": 630000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-07",
+          "aReceber": 450000,
+          "emAtraso": 0
+        },
+        {
+          "mes": "2027-08",
+          "aReceber": 450000,
+          "emAtraso": 0
+        }
+      ],
+      "porCliente": [
+        {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "aReceber": 4950000,
+          "emAtraso": 450000,
+          "recebido": 450000
+        },
+        {
+          "id": "bfa1919c-aa8d-423a-a45e-fff137bde8a4",
+          "aReceber": 900000,
+          "emAtraso": 300000,
+          "recebido": 300000
+        },
+        {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "aReceber": 1620000,
+          "emAtraso": 180000,
+          "recebido": 540000
+        },
+        {
+          "id": "208a1b5d-a4cf-4464-ae6f-c3ff8f522de6",
+          "aReceber": 100000,
+          "emAtraso": 100000,
+          "recebido": 200000
+        },
+        {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "aReceber": 450000,
+          "emAtraso": 0,
+          "recebido": 90000
+        },
+        {
+          "id": "ed131680-3de9-435e-9b32-74d4cf6d3bb1",
+          "aReceber": 250000,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "04736011-54d4-4d59-8d50-e78256292dff",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "0aec0232-1a51-4397-9532-e60d1e2497fd",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "1654894d-8758-49a6-b15f-fe775bb60abe",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "1a5b8e55-6507-437c-bb17-d83c0c090e39",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "213b9bf6-3fbd-4a4f-9cde-bc67fa91da67",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "219324a3-596d-40d0-a8e2-24afb4b387d4",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "21ad00d3-5806-4d44-90ea-46bc8f1fea09",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "220855af-622e-4978-9901-4cc8314e14bd",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "2405c36b-3c67-4c7b-bee1-1c700fb7789e",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "2e4d132f-bc2d-40cd-b0b4-e82616ae2876",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "34a76097-ece2-4a20-b29f-2405b4637a5e",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "3e7128da-efb7-4890-8962-b416914806d8",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "400959bc-b2c0-4768-8ac6-422328456b27",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "4294fd10-f035-4d9a-9bbb-62f73d997b0f",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "42ea45f4-9d50-4f1f-94b7-d8e2eff6179c",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "49cc1dd5-a0ee-4545-a02d-58d05705edaf",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "4a16e91d-8178-4b7b-9c71-83860ff27c34",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "4c245a28-8192-4e73-bfaf-425d32ca4c3a",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "4de775f8-d68e-4647-860e-a8f25f5e9e34",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "4f410391-cb0d-4462-b0d6-f484f02cca3f",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "538034d9-b9df-48d6-8ca0-6cdbedc34557",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "55db417f-b7d9-4b9d-89fc-e5ab82c93ea6",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "57f3d3d7-7b3a-454c-a89e-eae61a5fa27a",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "5a7a90cc-9991-40a4-862d-2671d1f4de50",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "5c0d32ab-c804-4c14-b457-167c36cdeaa5",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "5d2ed078-2503-4bb6-bd6b-3e86119d6b99",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "5f6ae30f-2a40-49e5-9f36-6c90457a422b",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "65825b95-76ea-4d4d-b553-bda43baa65e6",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "67894d8f-dacb-4245-ae31-0000a99266e0",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "68c2d016-4379-4f09-909c-cf0237a86690",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "6a050a18-697f-4af6-982a-0964767a55d6",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "6a5890be-952d-45cf-9a7c-0da70a070612",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "6a8d1a1a-c980-4399-a68e-048239815299",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "6e242e8e-ca40-4131-a739-e60e08ae6bbc",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "6ea79441-209d-4e1c-9de3-0ad2a705f4e6",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "73942162-15a5-4068-a3f3-a377fc6e1c55",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "73b2db64-c097-4346-b962-046788c554ea",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "73c37e5d-b96c-4926-96f4-f9f72860bd57",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "7593b38c-39c6-48dd-9845-af5bae0aa6f9",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "77dc2442-7d5e-460a-9ed8-1bf1f0e3b14a",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "7f2872f6-777f-4fdb-a4ea-b3b3b8145e96",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "82933bd0-c17b-43a9-9a97-682499a00852",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "8385e325-4588-45ca-896f-c08b7c4a2555",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "86463d29-2521-47e0-8f0b-53d9016e1fa7",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "89e98790-0401-4c61-912f-49e9d0ddf9d0",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "9384dc92-8f02-429e-83f7-ab00ba492a52",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "a1400cb0-e07e-4973-ac23-ee1459c15874",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "a7df8032-cbbb-4905-95b6-10a1a253b82b",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "b113b20b-2248-4526-aa37-8ae6f08af449",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "b282f966-5ab0-43a5-9cdb-a7ccf964275d",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "b4221aee-d3f5-45e1-894e-b53b5eb15382",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "b928c662-b436-4a34-a05b-2f268ed50810",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "bb4edf5a-5149-4a40-924d-b3805b5aa2fa",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "be87552b-0087-4ca9-b8bb-fe88179a4d48",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "bfe9ef1a-0973-4ae6-9266-128d9e32e51f",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "c1016c07-fb1e-4f55-bae6-74bd40a322a1",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "c4c32031-85e3-4dab-a6ce-ee7cd4105474",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "c5e3b261-1085-4067-8214-60a5ec01fd4b",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "c91d2816-6828-4517-8c42-8e2b009d00e3",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "cb0f6bfa-acc3-410f-b86e-6caa10ce61d6",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "cb593a81-7aec-4047-be8a-c6225e0d358d",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "cf5efc07-60fa-4dc3-80d1-b98075198386",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "cf811abf-0600-423d-bc1e-f3ba48df51a3",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "d482bf7c-22a7-4cea-9235-5bc89f586cc3",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "d650d81e-b1d6-45e7-97ec-4ed61fbe0a08",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "d78feabb-c76d-4b91-b5fa-a4e639e06d6c",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "d820f6d2-a217-4d79-924c-70ece98dd4fc",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "d87dbb4f-71c5-4ea3-a7dc-ba3cf3e28a92",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "dccecfc5-1922-488e-aa55-6791c375e6fa",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e03ea513-f761-4ca1-ba4a-cc64e0e69de9",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e07ab0ab-4f7c-4876-95e4-e0d937a602ad",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e25ad543-eca0-4103-aff5-3cef0825e5b5",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e446311a-93e4-4d04-94c2-8cf83cd0fa9e",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e573d872-e9ea-446f-a860-0bbfedc506c2",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e69198da-6e1b-4a51-8f8a-d0e8f9c29a6d",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e7adf8b5-5ef1-42c5-a8ca-57a41033a4e2",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e7f63262-e9c5-4913-ae2b-e5d267758943",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "e9186949-e094-4d5f-826a-3d38c81ef019",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "eba40beb-eba4-4763-a25f-b23c6ae5d656",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "f010ba69-890e-438c-99db-3bd5943d7350",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "f09ef385-7a2c-4594-bc62-31e822322705",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "f2d7691d-cfeb-4e8d-ac81-633364faf2c1",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "f3f018d3-d786-4c02-bd3b-57c4cafa855c",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "f47002c8-4d27-4d9c-89ad-a0d5dba7ac18",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "f95965df-7bc0-4e8e-abf6-79c057174422",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "fc534090-c144-4a6b-92d5-b1fbe67ae5e4",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "fe35b56e-e5c5-47e2-9f34-844ac5318a3f",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        }
+      ],
+      "porProcesso": [
+        {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "aReceber": 4950000,
+          "emAtraso": 450000,
+          "recebido": 450000
+        },
+        {
+          "id": "780eee28-0017-4ad9-a126-982ec52b1154",
+          "aReceber": 900000,
+          "emAtraso": 300000,
+          "recebido": 300000
+        },
+        {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "aReceber": 1620000,
+          "emAtraso": 180000,
+          "recebido": 540000
+        },
+        {
+          "id": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1",
+          "aReceber": 100000,
+          "emAtraso": 100000,
+          "recebido": 200000
+        },
+        {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "aReceber": 450000,
+          "emAtraso": 0,
+          "recebido": 90000
+        },
+        {
+          "id": "be63a4c8-0076-4ea9-8535-a4229c3218be",
+          "aReceber": 250000,
+          "emAtraso": 0,
+          "recebido": 0
+        },
+        {
+          "id": "c4f2de12-5447-4129-86b3-b4bc1ee67e30",
+          "aReceber": 0,
+          "emAtraso": 0,
+          "recebido": 0
+        }
+      ]
+    },
+    "parcelas": [
+      {
+        "id": "812c98a4-c48a-4ba0-839b-02aca199d8cb",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 1,
+        "descricao": "Mensalidade · 07/2026",
+        "valor": 180000,
+        "vencimento": "2026-07-21",
+        "pago": 180000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "c7a10fcb-ea07-45f1-bc9e-25b505ad27bd",
+            "valor": 180000,
+            "pagoEm": "2026-07-22",
+            "forma": "pix",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "71971d69-3b83-462a-b5b5-0f6a64befc76",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 2,
+        "descricao": "Mensalidade · 08/2026",
+        "valor": 180000,
+        "vencimento": "2026-08-21",
+        "pago": 180000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "eb0929d6-c51b-459c-b4c9-e0a2b57530e7",
+            "valor": 180000,
+            "pagoEm": "2026-08-22",
+            "forma": "transferencia",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "f47d8cd6-cc75-4c43-aecd-30056808de62",
+        "contratoId": "18a29a5b-6cca-4dea-8ce9-a1bc434853a1",
+        "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 1,
+        "descricao": "Honorários · parcela 1/3",
+        "valor": 100000,
+        "vencimento": "2026-08-26",
+        "pago": 100000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "208a1b5d-a4cf-4464-ae6f-c3ff8f522de6",
+          "nome": "Marina Duarte"
+        },
+        "processo": {
+          "id": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+          "cnj": "5004321-25.2026.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "417df6a8-87b8-4ec4-841b-e80ceb15b901",
+            "valor": 100000,
+            "pagoEm": "2026-08-26",
+            "forma": "pix",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "e1b7cbf7-12f2-40fc-afd4-66d1b5ffca13",
+        "contratoId": "eedc5f2b-7bfa-4f48-ac6f-2a6f908f68f4",
+        "contratoTitulo": "Honorários · Roberto Kühn",
+        "contratoTipo": "fixo",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 1,
+        "descricao": "Honorários · parcela 1/4",
+        "valor": 300000,
+        "vencimento": "2026-09-14",
+        "pago": 300000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bfa1919c-aa8d-423a-a45e-fff137bde8a4",
+          "nome": "Roberto Kühn"
+        },
+        "processo": {
+          "id": "780eee28-0017-4ad9-a126-982ec52b1154",
+          "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
+          "cnj": "5009876-57.2025.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "f24a0dcb-7a46-40bf-a41b-73398159b75d",
+            "valor": 300000,
+            "pagoEm": "2026-09-14",
+            "forma": "pix",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "fe495deb-fdce-4743-817a-a915a4094534",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 3,
+        "descricao": "Mensalidade · 09/2026",
+        "valor": 180000,
+        "vencimento": "2026-09-21",
+        "pago": 180000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "72a90219-ff9c-4710-a51f-64b5c172604f",
+            "valor": 180000,
+            "pagoEm": "2026-09-22",
+            "forma": "pix",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "0bd53701-6fd1-4133-8461-ba42b9f8a2ee",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 1,
+        "descricao": "Mensalidade · 09/2026",
+        "valor": 450000,
+        "vencimento": "2026-09-24",
+        "pago": 450000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "060a8327-2e44-4669-8207-6aefc3469147",
+            "valor": 450000,
+            "pagoEm": "2026-09-24",
+            "forma": "pix",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "ec26e869-d139-43b0-8ee5-963fc9485900",
+        "contratoId": "18a29a5b-6cca-4dea-8ce9-a1bc434853a1",
+        "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 2,
+        "descricao": "Honorários · parcela 2/3",
+        "valor": 100000,
+        "vencimento": "2026-09-26",
+        "pago": 100000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "208a1b5d-a4cf-4464-ae6f-c3ff8f522de6",
+          "nome": "Marina Duarte"
+        },
+        "processo": {
+          "id": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+          "cnj": "5004321-25.2026.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "c133798d-64f4-46c0-8092-3cd3637fa73a",
+            "valor": 100000,
+            "pagoEm": "2026-09-26",
+            "forma": "transferencia",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "970f5f0d-a44f-4b47-b09e-49b949891173",
+        "contratoId": "4d0a7794-f015-48c8-991d-d0ae8bfb8f0e",
+        "contratoTitulo": "Honorários · Eduardo Lima × Unimed Litoral",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 1,
+        "descricao": "Mensalidade · 10/2026",
+        "valor": 90000,
+        "vencimento": "2026-10-09",
+        "pago": 90000,
+        "falta": 0,
+        "situacao": "paga",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "nome": "Eduardo Lima"
+        },
+        "processo": {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "titulo": "Eduardo Lima × Saúde Litoral Planos",
+          "cnj": "5003390-24.2026.8.24.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": [
+          {
+            "id": "9103fec3-b3d0-4575-a830-2b929284cfe2",
+            "valor": 90000,
+            "pagoEm": "2026-10-09",
+            "forma": "pix",
+            "origem": "manual",
+            "observacao": null,
+            "estornado": false,
+            "motivoEstorno": null,
+            "registradoPor": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40"
+          }
+        ]
+      },
+      {
+        "id": "41038bb5-8e82-412e-b544-8600261423b1",
+        "contratoId": "eedc5f2b-7bfa-4f48-ac6f-2a6f908f68f4",
+        "contratoTitulo": "Honorários · Roberto Kühn",
+        "contratoTipo": "fixo",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 2,
+        "descricao": "Honorários · parcela 2/4",
+        "valor": 300000,
+        "vencimento": "2026-10-14",
+        "pago": 0,
+        "falta": 300000,
+        "situacao": "em_atraso",
+        "diasEmAtraso": 15,
+        "cliente": {
+          "id": "bfa1919c-aa8d-423a-a45e-fff137bde8a4",
+          "nome": "Roberto Kühn"
+        },
+        "processo": {
+          "id": "780eee28-0017-4ad9-a126-982ec52b1154",
+          "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
+          "cnj": "5009876-57.2025.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": null,
+          "precisaEscolher": true,
+          "motivo": "O vencimento da parcela (14/10/2026) já passou, e a cobrança precisa de uma data de hoje em diante. Escolha a nova data."
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "09351980-a46e-4c2d-a1bb-200bdce858be",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 4,
+        "descricao": "Mensalidade · 10/2026",
+        "valor": 180000,
+        "vencimento": "2026-10-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "em_atraso",
+        "diasEmAtraso": 8,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": null,
+          "precisaEscolher": true,
+          "motivo": "O vencimento da parcela (21/10/2026) já passou, e a cobrança precisa de uma data de hoje em diante. Escolha a nova data."
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "59ae97fb-fdd6-4fbc-87a2-3e24e66ae692",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 2,
+        "descricao": "Mensalidade · 10/2026",
+        "valor": 450000,
+        "vencimento": "2026-10-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "em_atraso",
+        "diasEmAtraso": 5,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": null,
+          "precisaEscolher": true,
+          "motivo": "O vencimento da parcela (24/10/2026) já passou, e a cobrança precisa de uma data de hoje em diante. Escolha a nova data."
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "34df599e-b455-410d-8cc0-00b88fb66b96",
+        "contratoId": "18a29a5b-6cca-4dea-8ce9-a1bc434853a1",
+        "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 3,
+        "descricao": "Honorários · parcela 3/3",
+        "valor": 100000,
+        "vencimento": "2026-10-26",
+        "pago": 0,
+        "falta": 100000,
+        "situacao": "em_atraso",
+        "diasEmAtraso": 3,
+        "cliente": {
+          "id": "208a1b5d-a4cf-4464-ae6f-c3ff8f522de6",
+          "nome": "Marina Duarte"
+        },
+        "processo": {
+          "id": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+          "cnj": "5004321-25.2026.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": null,
+          "precisaEscolher": true,
+          "motivo": "O vencimento da parcela (26/10/2026) já passou, e a cobrança precisa de uma data de hoje em diante. Escolha a nova data."
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "8ed8e8d9-ac7f-4570-aba7-44721ea9f041",
+        "contratoId": "05b09f44-1574-4d9a-b90c-8bb6a983b6f9",
+        "contratoTitulo": "Honorários · Carlos Henrique Prado × construtora",
+        "contratoTipo": "fixo",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 1,
+        "descricao": "Honorários",
+        "valor": 250000,
+        "vencimento": "2026-11-07",
+        "pago": 0,
+        "falta": 250000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "ed131680-3de9-435e-9b32-74d4cf6d3bb1",
+          "nome": "Carlos Henrique Prado"
+        },
+        "processo": {
+          "id": "be63a4c8-0076-4ea9-8535-a4229c3218be",
+          "titulo": "Carlos Henrique Prado × Construtora Vale Norte",
+          "cnj": "5007745-68.2026.8.24.0008"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-11-07",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "73761c85-855a-46d0-a49d-23cda782a8b2",
+        "contratoId": "4d0a7794-f015-48c8-991d-d0ae8bfb8f0e",
+        "contratoTitulo": "Honorários · Eduardo Lima × Unimed Litoral",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 2,
+        "descricao": "Mensalidade · 11/2026",
+        "valor": 90000,
+        "vencimento": "2026-11-09",
+        "pago": 0,
+        "falta": 90000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "nome": "Eduardo Lima"
+        },
+        "processo": {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "titulo": "Eduardo Lima × Saúde Litoral Planos",
+          "cnj": "5003390-24.2026.8.24.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-11-09",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "2597b54a-6bd5-4f3d-b393-b5d02f331f58",
+        "contratoId": "eedc5f2b-7bfa-4f48-ac6f-2a6f908f68f4",
+        "contratoTitulo": "Honorários · Roberto Kühn",
+        "contratoTipo": "fixo",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 3,
+        "descricao": "Honorários · parcela 3/4",
+        "valor": 300000,
+        "vencimento": "2026-11-14",
+        "pago": 0,
+        "falta": 300000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bfa1919c-aa8d-423a-a45e-fff137bde8a4",
+          "nome": "Roberto Kühn"
+        },
+        "processo": {
+          "id": "780eee28-0017-4ad9-a126-982ec52b1154",
+          "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
+          "cnj": "5009876-57.2025.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-11-14",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "e432f26e-621a-4b36-8c9c-9974dfeb7867",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 5,
+        "descricao": "Mensalidade · 11/2026",
+        "valor": 180000,
+        "vencimento": "2026-11-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-11-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "62f336f8-c52f-4a98-8183-239625589512",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 3,
+        "descricao": "Mensalidade · 11/2026",
+        "valor": 450000,
+        "vencimento": "2026-11-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-11-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "6fdc7f7d-f337-425e-9d35-f8545c227313",
+        "contratoId": "4d0a7794-f015-48c8-991d-d0ae8bfb8f0e",
+        "contratoTitulo": "Honorários · Eduardo Lima × Unimed Litoral",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 3,
+        "descricao": "Mensalidade · 12/2026",
+        "valor": 90000,
+        "vencimento": "2026-12-09",
+        "pago": 0,
+        "falta": 90000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "nome": "Eduardo Lima"
+        },
+        "processo": {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "titulo": "Eduardo Lima × Saúde Litoral Planos",
+          "cnj": "5003390-24.2026.8.24.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-12-09",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b6493c76-6ab7-456a-a22e-57fe0bb6c3e7",
+        "contratoId": "eedc5f2b-7bfa-4f48-ac6f-2a6f908f68f4",
+        "contratoTitulo": "Honorários · Roberto Kühn",
+        "contratoTipo": "fixo",
+        "contratoSituacao": "ativo",
+        "tipo": "fixo",
+        "numero": 4,
+        "descricao": "Honorários · parcela 4/4",
+        "valor": 300000,
+        "vencimento": "2026-12-14",
+        "pago": 0,
+        "falta": 300000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bfa1919c-aa8d-423a-a45e-fff137bde8a4",
+          "nome": "Roberto Kühn"
+        },
+        "processo": {
+          "id": "780eee28-0017-4ad9-a126-982ec52b1154",
+          "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
+          "cnj": "5009876-57.2025.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-12-14",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "47004de6-a3ad-4b2a-86c1-97c29d8b23ed",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 6,
+        "descricao": "Mensalidade · 12/2026",
+        "valor": 180000,
+        "vencimento": "2026-12-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-12-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "2df183a5-dcdc-418a-8ed8-9f73fa2f59ba",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 4,
+        "descricao": "Mensalidade · 12/2026",
+        "valor": 450000,
+        "vencimento": "2026-12-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2026-12-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "c60c0330-5c78-425b-88ad-5b0ff6eb16b2",
+        "contratoId": "4d0a7794-f015-48c8-991d-d0ae8bfb8f0e",
+        "contratoTitulo": "Honorários · Eduardo Lima × Unimed Litoral",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 4,
+        "descricao": "Mensalidade · 01/2027",
+        "valor": 90000,
+        "vencimento": "2027-01-09",
+        "pago": 0,
+        "falta": 90000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "nome": "Eduardo Lima"
+        },
+        "processo": {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "titulo": "Eduardo Lima × Saúde Litoral Planos",
+          "cnj": "5003390-24.2026.8.24.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-01-09",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "d16928c5-4380-4cbb-a2e2-c5a94786d88b",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 7,
+        "descricao": "Mensalidade · 01/2027",
+        "valor": 180000,
+        "vencimento": "2027-01-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-01-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "c658c490-032d-4e77-af1b-fd5d60042072",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 5,
+        "descricao": "Mensalidade · 01/2027",
+        "valor": 450000,
+        "vencimento": "2027-01-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-01-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "21527162-0144-4dad-accc-80b280b77da4",
+        "contratoId": "4d0a7794-f015-48c8-991d-d0ae8bfb8f0e",
+        "contratoTitulo": "Honorários · Eduardo Lima × Unimed Litoral",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 5,
+        "descricao": "Mensalidade · 02/2027",
+        "valor": 90000,
+        "vencimento": "2027-02-09",
+        "pago": 0,
+        "falta": 90000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "nome": "Eduardo Lima"
+        },
+        "processo": {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "titulo": "Eduardo Lima × Saúde Litoral Planos",
+          "cnj": "5003390-24.2026.8.24.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-02-09",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "88b340f4-5721-4561-8456-ce74360c5efd",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 8,
+        "descricao": "Mensalidade · 02/2027",
+        "valor": 180000,
+        "vencimento": "2027-02-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-02-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "c18fd06a-3c82-4b6c-b08d-d6ab87eca62c",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 6,
+        "descricao": "Mensalidade · 02/2027",
+        "valor": 450000,
+        "vencimento": "2027-02-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-02-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "bc3eaf65-50a7-4e16-9b9c-5daeaa0e2b8d",
+        "contratoId": "4d0a7794-f015-48c8-991d-d0ae8bfb8f0e",
+        "contratoTitulo": "Honorários · Eduardo Lima × Unimed Litoral",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 6,
+        "descricao": "Mensalidade · 03/2027",
+        "valor": 90000,
+        "vencimento": "2027-03-09",
+        "pago": 0,
+        "falta": 90000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "nome": "Eduardo Lima"
+        },
+        "processo": {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "titulo": "Eduardo Lima × Saúde Litoral Planos",
+          "cnj": "5003390-24.2026.8.24.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-03-09",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b02f50ed-db02-4c22-af3d-9cd436f28e37",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 9,
+        "descricao": "Mensalidade · 03/2027",
+        "valor": 180000,
+        "vencimento": "2027-03-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-03-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "7256eed0-8f7b-4914-b05e-c7002deae995",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 7,
+        "descricao": "Mensalidade · 03/2027",
+        "valor": 450000,
+        "vencimento": "2027-03-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-03-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "32328838-35c3-4c6b-b923-bf9960e2a449",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 10,
+        "descricao": "Mensalidade · 04/2027",
+        "valor": 180000,
+        "vencimento": "2027-04-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-04-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b33ef936-2985-4c29-98d4-e68ff19a7621",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 8,
+        "descricao": "Mensalidade · 04/2027",
+        "valor": 450000,
+        "vencimento": "2027-04-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-04-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "a248c3cc-0478-452f-b9c6-9eb3cfea49ce",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 11,
+        "descricao": "Mensalidade · 05/2027",
+        "valor": 180000,
+        "vencimento": "2027-05-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-05-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b4114f7d-387b-40c1-9a6e-4f20cd22958c",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 9,
+        "descricao": "Mensalidade · 05/2027",
+        "valor": 450000,
+        "vencimento": "2027-05-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-05-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "0b6f9156-b332-4ce7-8395-0544961a063e",
+        "contratoId": "be04095e-8ef7-4a16-bc70-c3e0c86f0501",
+        "contratoTitulo": "Honorários · Padaria Bom Grão Ltda. × Rodrigo Alves",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 12,
+        "descricao": "Mensalidade · 06/2027",
+        "valor": 180000,
+        "vencimento": "2027-06-21",
+        "pago": 0,
+        "falta": 180000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8eeb6d24-f6fc-4f3d-a191-873b23b8f11f",
+          "nome": "Padaria Bom Grão Ltda."
+        },
+        "processo": {
+          "id": "5f047609-dfc1-4f9a-ba86-f97289ed6866",
+          "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
+          "cnj": "0000812-61.2026.5.12.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-06-21",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "cb8c60df-e128-440c-8950-c9a4eb81d317",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 10,
+        "descricao": "Mensalidade · 06/2027",
+        "valor": 450000,
+        "vencimento": "2027-06-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-06-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "0ddf9390-427d-4788-a324-fb3244ef305b",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 11,
+        "descricao": "Mensalidade · 07/2027",
+        "valor": 450000,
+        "vencimento": "2027-07-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-07-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "0a6adb0c-7550-4589-8a8e-d1fa1061090a",
+        "contratoId": "dba6d0d5-88dc-4d4a-af90-13ae619b5166",
+        "contratoTitulo": "Honorários · Hotel Mar Azul Ltda.",
+        "contratoTipo": "mensal",
+        "contratoSituacao": "ativo",
+        "tipo": "mensal",
+        "numero": 12,
+        "descricao": "Mensalidade · 08/2027",
+        "valor": 450000,
+        "vencimento": "2027-08-24",
+        "pago": 0,
+        "falta": 450000,
+        "situacao": "a_vencer",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bf754fe6-421d-4622-af2e-cdfb7866b841",
+          "nome": "Hotel Mar Azul Ltda."
+        },
+        "processo": {
+          "id": "e6704dee-fd9c-469f-88c4-5612de29bc1f",
+          "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+          "cnj": "0001145-87.2026.5.12.0045"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": {
+          "sugerido": "2027-08-24",
+          "precisaEscolher": false,
+          "motivo": null
+        },
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "87eb9605-04b1-4480-8271-9b6d4611a8ba",
+        "contratoId": "18a29a5b-6cca-4dea-8ce9-a1bc434853a1",
+        "contratoTitulo": "Honorários · Marina Duarte × Seguradora Alfa S.A.",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "208a1b5d-a4cf-4464-ae6f-c3ff8f522de6",
+          "nome": "Marina Duarte"
+        },
+        "processo": {
+          "id": "a4871b6b-ac29-4bfe-b4c8-bc224bff37f1",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A.",
+          "cnj": "5004321-25.2026.8.24.0038"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "bd6e2685-75c9-47a7-98b7-05c52f1ff517",
+        "contratoId": "87156db9-6ef3-4dff-b985-88cc841e6839",
+        "contratoTitulo": "Honorários · Ana Lúcia Ferraz",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "b282f966-5ab0-43a5-9cdb-a7ccf964275d",
+          "nome": "Ana Lúcia Ferraz"
+        },
+        "processo": {
+          "id": "c4f2de12-5447-4129-86b3-b4bc1ee67e30",
+          "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
+          "cnj": "5011873-86.2026.8.24.0023"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "6894a6ba-80f6-4d4b-b870-99f7088ff0b3",
+        "contratoId": "4d0a7794-f015-48c8-991d-d0ae8bfb8f0e",
+        "contratoTitulo": "Honorários · Eduardo Lima × Unimed Litoral",
+        "contratoTipo": "hibrido",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1dcdcfcf-2a36-4aa6-99f0-acb0b9fef123",
+          "nome": "Eduardo Lima"
+        },
+        "processo": {
+          "id": "966b0366-0577-41ba-a3aa-9c9f30277c75",
+          "titulo": "Eduardo Lima × Saúde Litoral Planos",
+          "cnj": "5003390-24.2026.8.24.0005"
+        },
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-11T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b7e8ffc3-f49e-402f-98ba-80f52a997ff0",
+        "contratoId": "8c3d3aec-eae2-4dd5-8f40-9285149060ec",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "d650d81e-b1d6-45e7-97ec-4ed61fbe0a08",
+          "nome": "Maurício Werner"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "645be18c-0da2-4f82-8248-802fe7c7abf7",
+        "contratoId": "06113b22-73db-41aa-ab27-2039f5c1f095",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bb4edf5a-5149-4a40-924d-b3805b5aa2fa",
+          "nome": "Renan Dutra Goulart"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "eae184e4-682b-461e-89e7-b2e58dbe9f61",
+        "contratoId": "ecd9d26b-c553-4c27-b09d-bd99ef76a95a",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "4f410391-cb0d-4462-b0d6-f484f02cca3f",
+          "nome": "Renan Farias Kretzer"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "a6eb5275-b328-4beb-a897-1a60b37ad59b",
+        "contratoId": "dfaf4c2e-8a0d-48fb-81f5-8fdb1fc9dede",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "b4221aee-d3f5-45e1-894e-b53b5eb15382",
+          "nome": "Gustavo Goulart"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "668d1eae-33b3-4489-acee-4cd3c0600599",
+        "contratoId": "bf62987d-eefe-48b0-a7d1-d2ffe691f433",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "c5e3b261-1085-4067-8214-60a5ec01fd4b",
+          "nome": "Restaurante Serra Dourada S.A."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b2f91c5d-fc3d-49f9-85e6-60c7b72213c2",
+        "contratoId": "ee74e49a-c2ec-4829-be1a-ebc4fcae4474",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "cb0f6bfa-acc3-410f-b86e-6caa10ce61d6",
+          "nome": "Ronaldo Pires Wolff"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "5117ef00-cf7b-4bf6-9a20-aa51e03c1003",
+        "contratoId": "262043fd-e277-4b37-bc3a-af10209071a8",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "73942162-15a5-4068-a3f3-a377fc6e1c55",
+          "nome": "Construtora Serra Dourada S.A."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "d9ea6212-8dc1-4f7a-8ed5-61bc76268a45",
+        "contratoId": "89861c0c-e28e-423b-a02a-fdd2700c64fa",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "fc534090-c144-4a6b-92d5-b1fbe67ae5e4",
+          "nome": "Gabriela Pires"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "515d82b7-0fbc-4062-acba-67e154a4fdbc",
+        "contratoId": "8d3643b6-cf44-46f6-bf61-b989eaa69057",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "b113b20b-2248-4526-aa37-8ae6f08af449",
+          "nome": "Caio Silveira"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "43b0aacc-2632-4aed-b27e-910f17dc9fd6",
+        "contratoId": "c63ae030-3aca-4008-bd4c-45f9118dae67",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "5a7a90cc-9991-40a4-862d-2671d1f4de50",
+          "nome": "Adriana Dutra"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "aa2e660d-cf3d-408b-abf0-f0640fe4e102",
+        "contratoId": "87c10542-2e1e-4d59-a9a5-9c1edabd3a1f",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "7593b38c-39c6-48dd-9845-af5bae0aa6f9",
+          "nome": "Panificadora Vento Sul Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "986b7b2d-449e-4080-8ec0-62887940c07f",
+        "contratoId": "2fa35352-4c5e-4df1-b23b-d7740cce7c81",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "5d2ed078-2503-4bb6-bd6b-3e86119d6b99",
+          "nome": "Agropecuária Boa Safra Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "ca5dbe1c-acd0-4768-a0c9-f84d5645ca0a",
+        "contratoId": "afa76db9-6a7b-45fa-a106-97c3b48917c4",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "57f3d3d7-7b3a-454c-a89e-eae61a5fa27a",
+          "nome": "Cláudio Bortolini"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "49e7ae15-c4ff-4c63-b094-cd73e76342d4",
+        "contratoId": "96b2bce7-b1d7-4f03-b934-ae2f24ad349e",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "bfe9ef1a-0973-4ae6-9266-128d9e32e51f",
+          "nome": "Douglas Pires"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "32b638bb-0d1e-485d-bc89-39e314b79cac",
+        "contratoId": "84401a85-07d7-4bdf-8146-2911f84d1540",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "f09ef385-7a2c-4594-bc62-31e822322705",
+          "nome": "Daniel Costa"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "623d2749-0bc8-4345-a3ef-f9040736606f",
+        "contratoId": "f765b07e-927c-4ef2-8f2c-1be902b43fa4",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "4de775f8-d68e-4647-860e-a8f25f5e9e34",
+          "nome": "Fabrício Farias"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "943e00f7-353f-4669-a866-fd286323c9eb",
+        "contratoId": "dda884fa-89ab-4a04-8f24-119038424c89",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "eba40beb-eba4-4763-a25f-b23c6ae5d656",
+          "nome": "Douglas Dalmolin"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "9c42f587-5d5a-4df8-af0a-a3104fb1b83b",
+        "contratoId": "d796d3f9-318f-4ddf-88f3-948dae51693c",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "67894d8f-dacb-4245-ae31-0000a99266e0",
+          "nome": "Jaqueline Kretzer"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "8e8cf583-a2d2-42c8-bd67-8dcec7d4518a",
+        "contratoId": "ccec82c1-8a98-41d4-b199-1a32f1c75fd5",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "f95965df-7bc0-4e8e-abf6-79c057174422",
+          "nome": "Juliano Maas"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "479f2596-0346-49f9-9ea9-9e22045cc995",
+        "contratoId": "0e64b28e-110b-4624-b15a-d4e6851c0a0d",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "c4c32031-85e3-4dab-a6ce-ee7cd4105474",
+          "nome": "Isabela Cardoso Costa"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "cf3820cd-59bc-45fd-bea6-16c9c9d003f1",
+        "contratoId": "2fab711d-fdbe-46a1-82ba-f57a55268dfc",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "5f6ae30f-2a40-49e5-9f36-6c90457a422b",
+          "nome": "Gisele Bittencourt"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "30b07b72-b2bf-4d4a-b2a1-3362dd004664",
+        "contratoId": "8cbfee29-7217-443c-8ba5-802e3898da8f",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "219324a3-596d-40d0-a8e2-24afb4b387d4",
+          "nome": "Nelson Schmitt Reinert"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "8f9dd2b7-f6a3-4162-8618-5ede2e017c86",
+        "contratoId": "7226cf8e-f74f-4ff4-b474-60d4a51886e7",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "cf811abf-0600-423d-bc1e-f3ba48df51a3",
+          "nome": "Distribuidora de Alimentos Recanto Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "55cd21f4-bb1f-42d0-982c-5821dd4c8078",
+        "contratoId": "72d89018-ff09-47fd-84c8-76d74df992ad",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "d87dbb4f-71c5-4ea3-a7dc-ba3cf3e28a92",
+          "nome": "Larissa Reinert"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "16b21b09-ce35-412d-b2b8-fca8ad44b102",
+        "contratoId": "1e176299-889b-4b51-a8b7-85bbb25a9ef8",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "c91d2816-6828-4517-8c42-8e2b009d00e3",
+          "nome": "Priscila Krause"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "85a99092-c976-4e49-9fe4-dd7454ed1290",
+        "contratoId": "3891e121-c374-4a85-af65-38c0ff7ba1cc",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "c1016c07-fb1e-4f55-bae6-74bd40a322a1",
+          "nome": "Alexandre Bortolini Costa"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "343cc321-52ef-44d6-8381-4f57db3581bc",
+        "contratoId": "809c05ed-d053-43a4-9b38-7c08bd1a4b21",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "6a050a18-697f-4af6-982a-0964767a55d6",
+          "nome": "Valter Medeiros"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "416c2aee-4e8c-4060-85a7-7911980b29b6",
+        "contratoId": "f13331c2-c3e7-4afb-94e2-b57760221640",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "0aec0232-1a51-4397-9532-e60d1e2497fd",
+          "nome": "Daniel Bauer Sartori"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "87028904-395f-4fef-8071-6013677c52fc",
+        "contratoId": "9bc28fbe-51d6-4568-a271-65c921009059",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "a1400cb0-e07e-4973-ac23-ee1459c15874",
+          "nome": "Everton Reinert Moura"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "792442c8-b7f1-41c2-8117-699fe65eaca1",
+        "contratoId": "51975858-7e02-448c-ae7a-f68b54ccb081",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "82933bd0-c17b-43a9-9a97-682499a00852",
+          "nome": "Diego Lehmann"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "871b61d7-5482-42ca-b112-8b95357c3eb8",
+        "contratoId": "de84d5f6-eaae-4f34-83c0-ce405523efae",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e573d872-e9ea-446f-a860-0bbfedc506c2",
+          "nome": "Panificadora Pedra Branca Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "f698c364-1363-4f39-bb5b-fc4b0f214052",
+        "contratoId": "66183793-4a3a-4d83-818a-06111cee7b99",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "f010ba69-890e-438c-99db-3bd5943d7350",
+          "nome": "Juliano Krause"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "7ed99fe5-4bb7-437f-9876-c98f641a6b06",
+        "contratoId": "31139cab-0ce1-47c3-aadd-c069640bd7ad",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "2e4d132f-bc2d-40cd-b0b4-e82616ae2876",
+          "nome": "Jussara Junkes Lopes"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "7dc09ebf-53fa-4f52-aff5-fa301ae0e4d1",
+        "contratoId": "d9858480-3951-4259-9dd4-79aa282db345",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "2405c36b-3c67-4c7b-bee1-1c700fb7789e",
+          "nome": "César Cunha"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "84f7e0fb-ad88-48ee-99bb-0d4485430b96",
+        "contratoId": "2258d657-52db-41e7-924f-93c19c28f082",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "d482bf7c-22a7-4cea-9235-5bc89f586cc3",
+          "nome": "Larissa Klein Maas"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "0fd34662-1e75-4d06-af0e-68fb7daf0a7e",
+        "contratoId": "ce788c0b-d621-421c-b344-ce159634ac04",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e446311a-93e4-4d04-94c2-8cf83cd0fa9e",
+          "nome": "Luiz Carlos Lehmann"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "d41a1066-7e82-479a-a62e-2942a46f8eee",
+        "contratoId": "c54c0d37-cc50-4ea6-b939-1e98bbd895dd",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "b928c662-b436-4a34-a05b-2f268ed50810",
+          "nome": "Karina Lopes"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "01de20ec-f271-4d4d-892d-d99e645b4912",
+        "contratoId": "2182f42d-50b7-4d70-8c9a-f5932e05397d",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "42ea45f4-9d50-4f1f-94b7-d8e2eff6179c",
+          "nome": "Panificadora Bela Vista S.A."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "bed8613c-8598-4497-ae25-ce0f5429797c",
+        "contratoId": "cd72b666-1cac-49bf-a273-6c6bd33d2913",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "6ea79441-209d-4e1c-9de3-0ad2a705f4e6",
+          "nome": "Wagner Medeiros Klein"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "f6fcd59e-cbba-4c00-ac9b-e019df1c0594",
+        "contratoId": "6eb10b57-609a-4582-a49d-66de291cc78d",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e7adf8b5-5ef1-42c5-a8ca-57a41033a4e2",
+          "nome": "Bruno Medeiros"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "ec9057b1-8331-4e5e-a558-bca7a2cf40cc",
+        "contratoId": "11a66b22-acff-4a04-8e4f-d43194eedb0e",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "04736011-54d4-4d59-8d50-e78256292dff",
+          "nome": "Karina Nunes"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "e3b3c99d-bc67-418c-9da4-389577d6a5d2",
+        "contratoId": "c821e540-3362-498d-9c7e-2d2620dd9925",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e7f63262-e9c5-4913-ae2b-e5d267758943",
+          "nome": "Mateus Cardoso Schneider"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "83d8d5bf-9163-4f8b-9546-06f8bb4cc413",
+        "contratoId": "cad916d4-73d2-4276-9c1b-ec282ed543e6",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "65825b95-76ea-4d4d-b553-bda43baa65e6",
+          "nome": "Valéria Barbosa Moretti"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "e4bce9c3-87b1-4730-8526-8d7067dc5fe6",
+        "contratoId": "5033c4c4-856b-407e-8fcc-5acb1bb3288c",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "5c0d32ab-c804-4c14-b457-167c36cdeaa5",
+          "nome": "Bianca Bernardi Teixeira"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "abad49aa-15e2-49c8-88b5-f9d033c064f2",
+        "contratoId": "8c7eb09b-1860-4db3-86d9-da8c6b61b0ef",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "6a8d1a1a-c980-4399-a68e-048239815299",
+          "nome": "Farmácia Portal do Sul Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "cbc22fff-41d7-422e-9827-397460bee294",
+        "contratoId": "c6117039-7942-43c7-810d-e494382b8737",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "73c37e5d-b96c-4926-96f4-f9f72860bd57",
+          "nome": "Douglas Werner"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "1ce7116b-3cd2-4fe3-86a0-a4877e66bdf9",
+        "contratoId": "8c88dfad-eca5-49cf-9089-387d2f0fb36f",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "cb593a81-7aec-4047-be8a-c6225e0d358d",
+          "nome": "Wagner Andrade"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "cb024c22-1418-4818-8de8-52a635e607c2",
+        "contratoId": "991e5001-50ff-4eda-9f41-d62cc30bdb0a",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "68c2d016-4379-4f09-909c-cf0237a86690",
+          "nome": "Lucas Moura"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "9d9fec20-673b-468d-a212-bfee54b46a73",
+        "contratoId": "a9fee555-080d-423f-82d4-494302b28c57",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "7f2872f6-777f-4fdb-a4ea-b3b3b8145e96",
+          "nome": "Maurício Dalmolin"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "3fd698ed-dd90-4bea-b90a-3715c8a5e464",
+        "contratoId": "8b950eb4-6085-4580-af2f-af3e6ffdb3d0",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "86463d29-2521-47e0-8f0b-53d9016e1fa7",
+          "nome": "Solange Teixeira Lehmann"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "65bc4ce0-7bf3-42ca-b939-e31bb69343c0",
+        "contratoId": "e28f643c-25a2-4534-aa70-544a7d686332",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "be87552b-0087-4ca9-b8bb-fe88179a4d48",
+          "nome": "Ricardo Campos"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "ae7a50b6-9b82-4c31-b488-06dd0bb3ed31",
+        "contratoId": "43c3def6-d561-4ce5-a64b-d60b08c69dac",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "34a76097-ece2-4a20-b29f-2405b4637a5e",
+          "nome": "Farmácia Boa Safra Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "2b088354-674b-4bda-bd9e-2a5db7bf33a7",
+        "contratoId": "6b840e0d-e0bc-4817-aae0-d4adfc38506a",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e07ab0ab-4f7c-4876-95e4-e0d937a602ad",
+          "nome": "Bruno Cunha Moura"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b4aa5a4c-868a-4cc8-b059-2fe48d39c05c",
+        "contratoId": "e66a1b7e-428d-4c25-82f6-1b4de04cb77b",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "400959bc-b2c0-4768-8ac6-422328456b27",
+          "nome": "Logística Ribeirão Verde Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "f7fc8099-af3d-41d6-b374-76519ed8c145",
+        "contratoId": "8ffee5eb-fca4-4bd9-b019-0dbfc9001983",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e03ea513-f761-4ca1-ba4a-cc64e0e69de9",
+          "nome": "Maurício Bernardi Farias"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "35054776-cb04-4216-adc3-eb4a129090ba",
+        "contratoId": "83b530d4-4a5b-407f-8054-4716ea8d58f3",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "4294fd10-f035-4d9a-9bbb-62f73d997b0f",
+          "nome": "Bianca Kretzer"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "723f2979-f2f3-4400-8e96-40006799883f",
+        "contratoId": "7eebf97b-a81b-45a1-aeb6-95fa9826282e",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "9384dc92-8f02-429e-83f7-ab00ba492a52",
+          "nome": "Vinícius Goulart"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "3c1b6da7-4a14-47bb-a2f2-91cf0a7a2d99",
+        "contratoId": "49afdf00-df88-4c89-891c-7569b31ea068",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "77dc2442-7d5e-460a-9ed8-1bf1f0e3b14a",
+          "nome": "Nelson Ramos"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "343986e2-f5bc-44fa-97cb-47a5296d4ba0",
+        "contratoId": "5a868d71-6515-42e4-9046-b95233fc290a",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1a5b8e55-6507-437c-bb17-d83c0c090e39",
+          "nome": "Gisele Goulart"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "e8e029a6-b99c-450a-9e29-897c36e8f748",
+        "contratoId": "59752c6b-5620-4b7c-a22f-9d7b82096a70",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "6e242e8e-ca40-4131-a739-e60e08ae6bbc",
+          "nome": "Auto Peças Águas Claras Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "3819805f-8058-4c64-b725-57c467a51c4d",
+        "contratoId": "c8e5be7b-7f41-4a42-8f9c-fb718634b62b",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "1654894d-8758-49a6-b15f-fe775bb60abe",
+          "nome": "Jaqueline Schulz Bortolini"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "78463484-0fa3-454a-80d5-a879d8a9867d",
+        "contratoId": "c7d08494-a42e-492f-a894-013cf7687c87",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "89e98790-0401-4c61-912f-49e9d0ddf9d0",
+          "nome": "Sérgio Machado Cunha"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "1bfa436c-2603-42d2-bdc0-8fe50bfa3674",
+        "contratoId": "9644eca4-744e-473e-afc2-20a2d5d56ae9",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e69198da-6e1b-4a51-8f8a-d0e8f9c29a6d",
+          "nome": "Restaurante Nova Aliança Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "260614fc-dd58-473d-87f2-ec919c60b05c",
+        "contratoId": "a1b64739-02cf-4dbc-b03a-5f2475197c8c",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "6a5890be-952d-45cf-9a7c-0da70a070612",
+          "nome": "Malharia Boa Safra Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "65eb0ad3-9d05-4b2a-b6dd-ddd8eae7b146",
+        "contratoId": "2ab72ef9-49af-470c-ba2c-3616ccfec5b1",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "fe35b56e-e5c5-47e2-9f34-844ac5318a3f",
+          "nome": "Débora Amaral"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "5d509258-967b-44f7-a3d2-cc2310ac02c0",
+        "contratoId": "1e415d90-d3f6-4000-ad72-eadae74d0073",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "55db417f-b7d9-4b9d-89fc-e5ab82c93ea6",
+          "nome": "Carla Junkes"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "021b275e-7dd8-49ce-bce3-21f3a1c07a5c",
+        "contratoId": "17020e3d-14f4-48e0-b383-b4dc39cb5a06",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "f3f018d3-d786-4c02-bd3b-57c4cafa855c",
+          "nome": "Caio Teixeira"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "05042329-7b6b-4e18-b959-afb2e01bdac9",
+        "contratoId": "b270131f-f8f3-4cde-ac32-8a32c43b5245",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "d820f6d2-a217-4d79-924c-70ece98dd4fc",
+          "nome": "Maurício Probst Teixeira"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "66242b14-e600-4e46-913d-81f36263b099",
+        "contratoId": "aba0e3d8-300e-4667-b553-7e6c13db7053",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "21ad00d3-5806-4d44-90ea-46bc8f1fea09",
+          "nome": "Caroline Costa Ramos"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "32dff886-52f9-4044-b62f-94ae261fae80",
+        "contratoId": "b2934f09-4506-46c8-ba5a-6af05017d72a",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "49cc1dd5-a0ee-4545-a02d-58d05705edaf",
+          "nome": "Rosângela Boing Campos"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "870cdd20-5326-48ec-bf7b-8966f8c6a7a2",
+        "contratoId": "f23cbbad-3c33-44eb-96b1-b9882c055939",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e25ad543-eca0-4103-aff5-3cef0825e5b5",
+          "nome": "Felipe Pires Cardoso"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "642c9338-1e42-4ee7-9638-ba5b8bf32bfc",
+        "contratoId": "eb1d0a47-9b44-4d9e-9931-b47622328b78",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "f2d7691d-cfeb-4e8d-ac81-633364faf2c1",
+          "nome": "Panificadora Bela Vista Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "2b01bb12-25b6-4957-b23c-54cd27427eec",
+        "contratoId": "3b6a535a-ba28-49c2-abfc-dd66732370a0",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "f47002c8-4d27-4d9c-89ad-a0d5dba7ac18",
+          "nome": "Viviane Campos"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "db721f1d-dfb6-4ab8-a1f6-10a4d79067a0",
+        "contratoId": "7c5fe345-ff0d-47a3-80ec-1e321a9f411c",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "73b2db64-c097-4346-b962-046788c554ea",
+          "nome": "Rosângela Sartori"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "89ae672f-6ce9-4f9d-99f4-733f82896c56",
+        "contratoId": "c5975a96-905a-4575-95e3-71407c6b36e7",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "e9186949-e094-4d5f-826a-3d38c81ef019",
+          "nome": "Ronaldo Pereira Oliveira"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "3590db45-cf03-44af-a7c6-e5648ab355fb",
+        "contratoId": "9da9c28c-6005-4f13-b122-f9169179cca3",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "4c245a28-8192-4e73-bfaf-425d32ca4c3a",
+          "nome": "Sérgio Moretti"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "7828fbf5-3352-4a70-b1e2-36ae6b2fc671",
+        "contratoId": "51524987-bff8-462b-b9ac-592dc8fb678e",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "220855af-622e-4978-9901-4cc8314e14bd",
+          "nome": "Everton Bittencourt Medeiros"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "94c5fc24-37bb-49d9-99ce-5318aaf02b6d",
+        "contratoId": "8a2e76cc-dba5-4dd5-bb7d-904e9fdecce1",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "4a16e91d-8178-4b7b-9c71-83860ff27c34",
+          "nome": "Gabriela Goulart Sartori"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "57a7c49b-dfa1-469f-8545-6dadeba0626c",
+        "contratoId": "66cf1a73-1012-4a26-9cb2-41abc8a275e4",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "d78feabb-c76d-4b91-b5fa-a4e639e06d6c",
+          "nome": "Transportes Lagoa Funda Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "da6e65c8-0462-41c7-972c-e21d65aa1a63",
+        "contratoId": "6f769f3a-cb59-411f-b64b-8c3c31d3e2df",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "538034d9-b9df-48d6-8ca0-6cdbedc34557",
+          "nome": "Luiz Carlos Schmitt Lehmann"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "0ca74b8a-c333-46e7-9433-6b70ba1e9ce4",
+        "contratoId": "68555366-8470-44ab-bb41-9f23e5e844f8",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (30%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "213b9bf6-3fbd-4a4f-9cde-bc67fa91da67",
+          "nome": "Ricardo Schneider"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "b598bc47-2d27-46c7-a525-380dae90df30",
+        "contratoId": "a65543c7-61c6-4f74-86cb-bec2e30cc126",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "a7df8032-cbbb-4905-95b6-10a1a253b82b",
+          "nome": "Lucas Amaral Silveira"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "eb2cdb4f-04d0-442e-b1af-22d627a80032",
+        "contratoId": "a759d0f6-3dae-4e81-862b-2d116f131d2f",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "8385e325-4588-45ca-896f-c08b7c4a2555",
+          "nome": "Felipe Krause Cardoso"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "9a249263-e291-470b-be9e-2c2a6cd59654",
+        "contratoId": "f91dd24f-7d7f-42b8-9cfa-5cc2c9509c3b",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "dccecfc5-1922-488e-aa55-6791c375e6fa",
+          "nome": "Usinagem Ipê Amarelo Ltda."
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "40852f8b-2bca-4f28-8295-157034df135e",
+        "contratoId": "2b56af44-b245-4aaf-846c-4fdeef32ef73",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (25%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "cf5efc07-60fa-4dc3-80d1-b98075198386",
+          "nome": "Wagner Silveira Cardoso"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      },
+      {
+        "id": "e68dd8b3-5450-4420-a8bd-55ab9d2d09cb",
+        "contratoId": "f8495cfa-6644-478a-8a88-83a57d7b03a2",
+        "contratoTitulo": "Honorários de êxito",
+        "contratoTipo": "exito",
+        "contratoSituacao": "ativo",
+        "tipo": "exito",
+        "numero": 1,
+        "descricao": "Honorário de êxito (20%)",
+        "valor": null,
+        "vencimento": null,
+        "pago": 0,
+        "falta": null,
+        "situacao": "sem_valor",
+        "diasEmAtraso": 0,
+        "cliente": {
+          "id": "3e7128da-efb7-4890-8962-b416914806d8",
+          "nome": "Bruna Amaral"
+        },
+        "processo": null,
+        "cobranca": null,
+        "vencimentoDaCobranca": null,
+        "alvaraId": null,
+        "prestacaoId": null,
+        "criadaEm": "2026-07-31T13:00:00.000Z",
+        "pagamentos": []
+      }
+    ],
+    "alvarasParaPrestar": [
+      {
+        "id": "5f8514e0-a3f6-44d4-9cd6-d87ac1ff4299",
+        "descricao": "Depósito judicial do réu",
+        "valor": 418000,
+        "valorRecebido": 418000,
+        "sacadoEm": "2026-10-19",
+        "processo": {
+          "id": "c4f2de12-5447-4129-86b3-b4bc1ee67e30",
+          "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A."
+        },
+        "cliente": {
+          "id": "b282f966-5ab0-43a5-9cdb-a7ccf964275d",
+          "nome": "Ana Lúcia Ferraz"
+        },
+        "conta": {
+          "base": 418000,
+          "baseEhRecebido": true,
+          "diferenca": 0,
+          "honorario": 104500,
+          "cliente": 313500,
+          "semContrato": false,
+          "falta": null
+        },
+        "contratoTitulo": "Honorários · Ana Lúcia Ferraz",
+        "precisaEscolherContrato": false
+      }
+    ],
+    "semHonorario": {
+      "total": 35,
+      "itens": [
+        {
+          "id": "36ddfec2-136a-4344-852b-ad79f0c9ee37",
+          "titulo": "Jussara Pires × César Pires",
+          "cnj": "5037675-41.2026.8.24.0038",
+          "cliente": {
+            "id": "dbee2fe1-c368-4573-aa54-e108d55a80f4",
+            "nome": "Jussara Pires"
+          }
+        },
+        {
+          "id": "65bebe2d-b78e-44ca-8010-4f6103d811e3",
+          "titulo": "Construtora Litoral Norte × Marcos Tavares",
+          "cnj": "5008890-71.2026.8.24.0005",
+          "cliente": {
+            "id": "a261096b-3244-44ec-b0f4-b4f276d08227",
+            "nome": "Marcos Tavares"
+          }
+        },
+        {
+          "id": "9f84d259-c823-4a91-94b6-8e6c1bd8d545",
+          "titulo": "Cooperativa Mista Rio Novo · revisão do estatuto",
+          "cnj": null,
+          "cliente": {
+            "id": "b6bc19bb-665a-4255-b256-a43374137d84",
+            "nome": "Cooperativa Mista Rio Novo"
+          }
+        },
+        {
+          "id": "05cd09a6-5b96-4a39-bcbc-618320c336d5",
+          "titulo": "Simone Gaspar × Condomínio Residencial Atlântico",
+          "cnj": "5004418-25.2026.8.24.0038",
+          "cliente": {
+            "id": "da21c362-ce70-4a22-9ccb-f9ee93ff7a10",
+            "nome": "Simone Gaspar"
+          }
+        },
+        {
+          "id": "3d1fd8f6-262e-4cb1-971f-df7c32325b28",
+          "titulo": "João Pedro Antunes × Banco Horizonte S.A.",
+          "cnj": "5000981-79.2026.8.24.0036",
+          "cliente": {
+            "id": "00f0d25d-a8ef-4ab4-9d12-f53f67a7d12a",
+            "nome": "João Pedro Antunes"
+          }
+        },
+        {
+          "id": "6daf2267-1a88-46ee-9a69-e573ea967633",
+          "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
+          "cnj": "5020176-80.2026.4.04.7201",
+          "cliente": {
+            "id": "92803e5b-f016-44ce-804a-00a02cc61346",
+            "nome": "Vanessa Hoffmann"
+          }
+        },
+        {
+          "id": "ea62ccad-f38f-4e56-aa8d-91d19c4e257b",
+          "titulo": "Mateus Bortolini Schneider × Alexandre Zimmermann",
+          "cnj": "5021135-30.2026.8.24.0033",
+          "cliente": {
+            "id": "10ecf925-724f-4f60-a64c-a523e1f95eed",
+            "nome": "Mateus Bortolini Schneider"
+          }
+        },
+        {
+          "id": "83ea5dec-eecd-4c91-ac04-ef1bafd24dbd",
+          "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
+          "cnj": "0000977-14.2026.5.12.0004",
+          "cliente": {
+            "id": "2b8aaaca-566d-4b0c-8a90-00523915fa7b",
+            "nome": "Jorge Batista"
+          }
+        },
+        {
+          "id": "59f9c23a-5213-4576-8537-6e0c18f0079a",
+          "titulo": "Sandra Petry × Gilmar Petry",
+          "cnj": "5006671-83.2026.8.24.0038",
+          "cliente": {
+            "id": "0b635536-1336-4b8f-a9af-745b442096fa",
+            "nome": "Sandra Petry"
+          }
+        },
+        {
+          "id": "1e31f82e-05d1-4027-a8a8-7867aebec7ef",
+          "titulo": "Gustavo Amaral × Clínica Médica Vento Sul Ltda.",
+          "cnj": "5017733-25.2026.8.24.0005",
+          "cliente": {
+            "id": "f64ed046-e19c-454d-ac51-54cdde23d630",
+            "nome": "Gustavo Amaral"
+          }
+        }
+      ]
+    },
+    "lembretesParaAprovar": 0
+  }
+}

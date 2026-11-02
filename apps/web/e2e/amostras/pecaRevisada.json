@@ -1,9 +1,9 @@
 {
-  "path": "/pecas/478ed2ba-85e8-49ea-a096-fec44356e198?revisada",
+  "path": "/pecas/7bc81200-3884-46a5-89d5-48998e89e292?revisada",
   "corpo": {
-    "id": "478ed2ba-85e8-49ea-a096-fec44356e198",
-    "processoId": "3c433e4b-3ca2-48d8-b1ca-aa1a4b94a7f8",
-    "prazoId": "69ec4e25-f017-4bc6-a051-4d80046c7bef",
+    "id": "7bc81200-3884-46a5-89d5-48998e89e292",
+    "processoId": "780eee28-0017-4ad9-a126-982ec52b1154",
+    "prazoId": "9bc51915-a277-4b35-bcb2-ab0e9b303a16",
     "tipo": "alegacoes-finais",
     "titulo": "Alegações finais · Roberto Kühn",
     "instrucoes": null,
@@ -13,7 +13,7 @@
     "rodape": "Gerado por IA. Confira nos autos.",
     "revisao": {
       "por": {
-        "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+        "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -24,10 +24,10 @@
     "modelos": [],
     "revisoes": [
       {
-        "id": "aac20300-8e7c-4447-9254-a189763b2d0e",
+        "id": "1dd6e7d4-a32b-40ae-bb0f-eb6213695e2f",
         "em": "2026-10-29T12:30:00.000Z",
         "por": {
-          "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+          "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",

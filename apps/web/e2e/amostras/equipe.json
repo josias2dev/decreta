@@ -3,7 +3,7 @@
   "corpo": {
     "pessoas": [
       {
-        "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+        "id": "I8FO3DSowgzr9ULj44WnMeTudIbnjS40",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -15,10 +15,11 @@
         "whatsapp": null,
         "avisoManha": false,
         "oabNumero": "41.233",
-        "oabUf": "SC"
+        "oabUf": "SC",
+        "financeiro": true
       },
       {
-        "id": "Z294LZf1cZ0AFVD6sWgtbAZhxXR2f8PP",
+        "id": "My70tOVx8IfIRltr12mK3k84ivigOjNR",
         "nome": "Rafael Freitas",
         "apelido": "Rafael",
         "iniciais": "RF",
@@ -30,10 +31,11 @@
         "whatsapp": null,
         "avisoManha": false,
         "oabNumero": "45.678",
-        "oabUf": "SC"
+        "oabUf": "SC",
+        "financeiro": true
       },
       {
-        "id": "OZhhVWMaxFl9lW00YaSqlxN8m0tUfuAA",
+        "id": "PffPOUFAQm2rpR511Fd9nHNFlxJFQN4U",
         "nome": "Tiago Martins",
         "apelido": "Tiago",
         "iniciais": "TM",
@@ -45,10 +47,11 @@
         "whatsapp": null,
         "avisoManha": false,
         "oabNumero": "52.104",
-        "oabUf": "SC"
+        "oabUf": "SC",
+        "financeiro": false
       },
       {
-        "id": "dab98gsZt1dfdpyAEvXJq20J4rhry2Np",
+        "id": "pNGTt3mhIguI4wmLUCz2jtztJ1CKsvSR",
         "nome": "Camila Azevedo",
         "apelido": "Camila",
         "iniciais": "CA",
@@ -60,7 +63,8 @@
         "whatsapp": null,
         "avisoManha": false,
         "oabNumero": null,
-        "oabUf": null
+        "oabUf": null,
+        "financeiro": false
       }
     ],
     "convites": [],
