@@ -4,6 +4,7 @@
  * Endereço sem amostra própria usa a do mesmo tipo (qualquer processo abre o
  * processo de amostra). O que muda algo responde "ok" e não guarda nada.
  */
+import { baseLegalDaTabela, citacaoDaBaseLegal, extrairCitacoes } from "@decreta/core";
 import { atenderPerguntar } from "./ia-falsa";
 import { PECA_LONGA } from "./peca-longa";
 
@@ -81,6 +82,12 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
   // O Perguntar: a resposta chega aos poucos, e as conversas novas ficam guardadas enquanto a prévia está aberta.
   const doPerguntar = await atenderPerguntar(metodo, caminho, url.searchParams, pedido, init?.signal);
   if (doPerguntar) return doPerguntar;
+  // A base legal: a tabela é a de verdade; o texto da lei, a prévia não busca, e diz isso.
+  if (metodo === "POST" && caminho === "/base-legal") {
+    const b = (await pedido.clone().json()) as { tipo?: string; fundamento?: string | null };
+    const citacoes = extrairCitacoes(citacaoDaBaseLegal(b.fundamento ?? ""));
+    return json(200, { tabela: baseLegalDaTabela(b.tipo ?? "", "cpc"), semIa: false, reconhecida: citacoes.length > 0, lei: citacoes.map((c) => ({ trecho: c.trecho, selo: "nao_verificada", motivo: "Na prévia, o texto da lei não é buscado na fonte.", texto: null, fonte: null })) });
+  }
   if (metodo !== "GET") return json(200, { ok: true, id: "00000000-0000-4000-8000-000000000001" });
   // Um documento e o arquivo dele, da amostra dos documentos.
   const doc = /^\/documentos\/([0-9a-f-]{36})(\/arquivo)?$/.exec(caminho);

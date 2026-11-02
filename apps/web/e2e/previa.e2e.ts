@@ -39,6 +39,17 @@ function vezesQueOTextoCresceu(page: Page, ms: number) {
 test.describe("a prévia", () => {
   test.skip(!existsSync(ARQUIVO), "rode bun run web:previa antes");
 
+  test("a base legal preenche pela tabela, e a prévia diz que não busca o texto da lei", async ({ page }) => {
+    await abrirPrevia(page, "/publicacoes");
+    await page.getByRole("button", { name: "Ajustar" }).click();
+    const dialogo = page.getByRole("dialog", { name: "Ajustar e confirmar" });
+    await dialogo.getByLabel("O que fazer").fill("Contestação");
+    await dialogo.getByRole("button", { name: "Usar o da tabela: CPC, art. 335" }).click();
+    await expect(dialogo.getByLabel("Base legal")).toHaveValue("CPC, art. 335");
+    await expect(dialogo.getByText("Da tabela do Decreta")).toBeVisible();
+    await expect(dialogo.getByRole("region", { name: "O que diz a lei" })).toContainText("Na prévia, o texto da lei não é buscado na fonte.");
+  });
+
   test("o Perguntar responde aos poucos, com a consulta e o cartão, e a conversa fica no histórico", async ({ page }) => {
     await abrirPrevia(page, "/perguntar");
     await expect(page.getByRole("heading", { name: /Beatriz/ })).toBeVisible();
