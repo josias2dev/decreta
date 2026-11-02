@@ -18,6 +18,7 @@ import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoPrazo } from "@/componentes/novo-prazo";
+import { AvisoDeIncompleto } from "@/componentes/numero-do-processo";
 import { RadarDoProcesso } from "@/componentes/radar-do-processo";
 import { Abas, Avatar, BlocoIa, Botao, Campo, Carregando, Chip, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
@@ -110,7 +111,7 @@ export function ProcessoPage() {
       <TelaCelular titulo="Processos" voltar>
         <div className="flex flex-col gap-1">
           <h1 className="dc-h1">{p.titulo}</h1>
-          <Cnj cnj={p.cnj} className="dc-t-corpo font-medium text-[var(--tinta-2)]" />
+          <Cnj cnj={p.cnj} tipo={p.tipo} className="dc-t-corpo font-medium text-[var(--tinta-2)]" />
           <span className="dc-t-corpo text-[var(--tinta-2)]">{[p.classe, onde, p.tribunal].filter(Boolean).join(" · ")}</span>
           {p.cliente?.semIa && (
             <span className="mt-1">
@@ -122,6 +123,7 @@ export function ProcessoPage() {
             {p.valorCausa && <> · Valor da causa {dinheiro(p.valorCausa)}</>}
           </span>
         </div>
+        <AvisoDeIncompleto processo={p} />
         <AvisoSemHonorario processo={{ id: p.id, titulo: p.titulo, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
         <div className="dc-sangria">{abas}</div>
         {conteudo}
@@ -141,7 +143,7 @@ export function ProcessoPage() {
           titulo={p.titulo}
           sobre={
             <>
-              <Cnj cnj={p.cnj} />
+              <Cnj cnj={p.cnj} tipo={p.tipo} />
               {[p.classe, onde].filter(Boolean).map((x) => ` · ${x}`)}
               {p.situacao !== "ativo" && ` · ${SITUACAO[p.situacao]}`}
               {p.cliente?.semIa && (
@@ -167,6 +169,7 @@ export function ProcessoPage() {
             </>
           }
         />
+        <AvisoDeIncompleto processo={p} />
         <AvisoSemHonorario processo={{ id: p.id, titulo: p.titulo, cliente: p.cliente ? { id: p.cliente.id, nome: p.cliente.nome } : null }} />
         {abas}
       </div>

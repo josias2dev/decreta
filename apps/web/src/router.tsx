@@ -136,9 +136,9 @@ const processosRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/processos",
   // `novo`: abre já com o diálogo de novo processo (o atalho do /comecar).
-  validateSearch: (s: Record<string, unknown>): { busca?: string; situacao?: "arquivados" | "todos"; novo?: true } => ({
+  validateSearch: (s: Record<string, unknown>): { busca?: string; situacao?: "arquivados" | "todos" | "incompletos"; novo?: true } => ({
     ...(texto(s.busca) ? { busca: texto(s.busca) } : {}),
-    ...(s.situacao === "arquivados" || s.situacao === "todos" ? { situacao: s.situacao } : {}),
+    ...(s.situacao === "arquivados" || s.situacao === "todos" || s.situacao === "incompletos" ? { situacao: s.situacao } : {}),
     ...(s.novo === true ? { novo: true } : {}),
   }),
   component: ProcessosPage,

@@ -1,14 +1,14 @@
 {
   "path": "/publicacoes/contas?amostra",
   "corpo": {
-    "691d551a-e890-437f-97f8-47098406bea8": {
+    "2860b08e-e69e-49b0-acba-416524e36103": {
       "prazo": {
-        "id": "a594abab-5a48-47dc-9a2f-2bdeaed44f15",
+        "id": "e6a478a3-e302-4a9c-9362-2b1dd342565c",
         "tipo": "Manifestação sobre laudo pericial",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "71ff11de-0cb0-4dfa-a248-111cab69d0f8",
+          "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         }
       },
@@ -179,14 +179,14 @@
         ]
       }
     },
-    "f92f2d8a-e8ec-4f75-a1c7-6c7280eb4cbb": {
+    "e1cb62bd-830a-4bb5-b9b9-4f8965145954": {
       "prazo": {
-        "id": "92e98696-e7d4-4447-8536-57b2c7983933",
+        "id": "15c035f9-73ec-48fd-9b0b-e003561814a7",
         "tipo": "Apelação",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "52346775-3404-4350-8840-0667312c6514",
+          "id": "3172901f-d4d4-4fcc-9e43-7abf22c7d5cb",
           "titulo": "Lúcia Matos × Instituto de Previdência de Brusque"
         }
       },
@@ -357,14 +357,14 @@
         ]
       }
     },
-    "f9f91e00-a603-4346-8a3b-9fe8ad71ed86": {
+    "358ed54b-daf8-4543-bf35-9255695608e6": {
       "prazo": {
-        "id": "1201a3bb-73ed-47b9-9df5-04364bb1d760",
+        "id": "513376d0-8444-4241-9d4e-f304986c3d56",
         "tipo": "Contestação",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "e69986a2-8682-47b5-8291-fea62b343c94",
+          "id": "3dc3000b-5d3f-4be1-9f0e-8138949d9cb3",
           "titulo": "Construtora Litoral Norte × Marcos Tavares"
         }
       },
@@ -535,14 +535,14 @@
         ]
       }
     },
-    "15743604-6ed4-4e53-8eb1-291a4545cacb": {
+    "6a005705-65e1-4dd4-aa53-53316872d156": {
       "prazo": {
-        "id": "0f2f1edb-ddbf-4f98-b83f-99e927d2b2d1",
+        "id": "c8f60875-9d35-4a3d-ad51-c86720966f7a",
         "tipo": "Rol de testemunhas",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "1efb3eac-3a19-481d-976e-f6b2d87fbe94",
+          "id": "936d7da0-fa4f-4a22-afa7-a2ffa9a3bed0",
           "titulo": "Jorge Batista × Mercado Bom Preço Ltda."
         }
       },

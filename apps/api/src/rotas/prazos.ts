@@ -61,7 +61,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const linhas = await tx
         .select({
           prazo: prazos,
-          processo: { id: processos.id, titulo: processos.titulo, cnj: processos.cnj, orgao: processos.orgao, comarca: processos.comarca },
+          processo: { id: processos.id, titulo: processos.titulo, cnj: processos.cnj, tipo: processos.tipo, orgao: processos.orgao, comarca: processos.comarca },
           disponibilizadaEm: publicacoes.disponibilizadaEm,
         })
         .from(prazos)
@@ -244,7 +244,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         conta: { ...conta, confirmadoPor: resumir(pessoas, prazo.confirmadoPor), confirmadoEm: prazo.confirmadoEm?.toISOString() ?? null },
         interno: prazo.situacao === "aberto" ? prazoInterno({ fatal: prazo.fim, antecedencia: await antecedenciaDoInterno(tx, c.get("orgId")), hoje, calendario: cal }) : null,
         conferencia,
-        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, tribunal: processo.tribunal, poloCliente: processo.poloCliente, semIa: contexto?.semIa ?? false },
+        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, tipo: processo.tipo, orgao: processo.orgao, comarca: processo.comarca, tribunal: processo.tribunal, poloCliente: processo.poloCliente, semIa: contexto?.semIa ?? false },
         publicacao: pub ? { id: pub.id, fonte: pub.fonte, texto: pub.texto, disponibilizadaEm: pub.disponibilizadaEm, publicadaEm: pub.publicadaEm, tipoComunicacao: pub.tipoComunicacao, tipoDocumento: pub.tipoDocumento, link: pub.link, certidao: !!(pub.certidao || pub.hash), cancelada: pub.canceladaEm ? { em: pub.canceladaEm.toISOString(), motivo: pub.motivoCancelamento } : null } : null,
         briefing,
         /** A peça da outra parte lida em pontos a rebater. */

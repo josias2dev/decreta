@@ -233,6 +233,16 @@ test.describe("cartões", () => {
     await expect(linhas.nth(2).locator(".dc-cartao-ia__sub")).not.toContainText("Movimentou");
   });
 
+  test("a data do prazo no cartão abre a conta por cima da folha, e Esc volta para a folha", async ({ page }) => {
+    await abrirResposta(page, [R.ferramenta("p1", "buscarPrazos", R.prazos(2), { situacao: "aberto" })]);
+    const folha = await abrirCartao(page, "Prazos");
+    await folha.locator(".dc-linha-prazo").first().locator(".dc-data-viva").click();
+    await expect(page.getByRole("dialog", { name: "A conta" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "A conta" })).toHaveCount(0);
+    await expect(folha).toBeVisible();
+  });
+
   test("prazo cumprido antes: o selo diz quando foi cumprido e a marca, quando vencia", async ({ page }) => {
     const lista = R.prazos(2);
     lista.itens[0] = { ...lista.itens[0]!, situacao: "cumprido", fim: "2026-11-09", quando: "9 nov", cumpridoEm: "2026-10-29" };

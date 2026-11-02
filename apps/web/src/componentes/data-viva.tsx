@@ -5,7 +5,7 @@
  * computador fica junto da data, no celular é uma folha que sobe de baixo.
  * Data digitada à mão diz que foi digitada, e nenhuma contagem é inventada.
  */
-import type { DiaDaConta } from "@decreta/core";
+import type { DiaDaConta, PrazoInterno } from "@decreta/core";
 import * as Popover from "@radix-ui/react-popover";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -17,7 +17,7 @@ import { diaCompleto, diaCurto, diaDaSemana, prazoEmDias } from "@/lib/formato";
 import type { ContaParaAbrir } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { diasEntre, gradeDoMes, inicioDoMes, nomeDoMes, SEMANA_CURTA, somarMeses } from "./calendario";
-import { AvisoSemCalendarioProprio, DataDoInterno, duplaIntimacao, foraDaConta, MotivosParaConferir } from "./conta-do-prazo";
+import { AvisoSemCalendarioProprio, duplaIntimacao, foraDaConta, MotivosParaConferir } from "./conta-do-prazo";
 import { Dialogo } from "./dialogo";
 import { Botao, Carregando, Dados, Faixa } from "./ui";
 
@@ -89,6 +89,27 @@ function CalendarioDaConta({ linha, fim, interno }: { linha: DiaDaConta[]; fim: 
         <span className="is-vence">{LEGENDA.vence}</span>
       </div>
     </div>
+  );
+}
+
+/** O prazo interno, sempre com a regra à vista; passou de hoje, diz isso. Com `alvo`, a data também abre a conta. */
+export function DataDoInterno({ interno: i, alvo }: { interno: PrazoInterno; alvo?: AlvoDaConta }) {
+  const data = <strong className="dc-num font-semibold">{diaCompleto(i.dia)}</strong>;
+  return (
+    <span className="dc-interno">
+      <span>
+        {alvo ? (
+          <DataViva alvo={alvo} texto>
+            {data}
+          </DataViva>
+        ) : (
+          data
+        )}{" "}
+        <span className="text-[var(--tinta-2)]">{diaDaSemana(i.dia)}</span>
+      </span>
+      <span className="dc-nota">{i.regra}</span>
+      {i.aviso && <span className="dc-interno__aviso">{i.aviso}</span>}
+    </span>
   );
 }
 

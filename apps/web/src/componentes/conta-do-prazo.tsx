@@ -10,7 +10,6 @@ import { useAviso } from "@/componentes/avisos";
 import { API_URL } from "@/lib/api";
 import { Botao, Campo, Dados, Faixa, Painel } from "@/componentes/ui";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, juntar } from "@/lib/formato";
-import type { PrazoInterno } from "@decreta/core";
 import type { Contagem, ContaDoPrazo, PreviaDaConta, SegundaConferencia } from "@/lib/tipos";
 
 const CONFIANCA = { alta: ["dc-selo--ok", "Alta"], media: ["dc-selo--prazo", "Média"], baixa: ["dc-selo--vencido", "Baixa"] } as const;
@@ -65,17 +64,6 @@ export function foraDaConta(conta: Pick<ContaDoPrazo, "desconsiderados">, contag
   const dias = conta.desconsiderados.map((d) => `${diaCurto(d.dia)} (${d.nome})`);
   if (contagem === "uteis") return juntar(["Fins de semana", ...dias]);
   return dias.length ? juntar(dias) : "Nada";
-}
-
-/** O prazo interno, sempre com a regra à vista; passou de hoje, diz isso. */
-export function DataDoInterno({ interno: i }: { interno: PrazoInterno }) {
-  return (
-    <span className="dc-interno">
-      {dia(i.dia)}
-      <span className="dc-nota">{i.regra}</span>
-      {i.aviso && <span className="dc-interno__aviso">{i.aviso}</span>}
-    </span>
-  );
 }
 
 function Tempestividade({ texto, certidaoDe }: { texto: string; certidaoDe: string | null }) {

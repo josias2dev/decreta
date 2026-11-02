@@ -9,7 +9,7 @@ import type { Contagem, Pagina, PreviaDaConta, ProcessoNaLista } from "@/lib/tip
 import { useAviso } from "./avisos";
 import { AvisoSemCalendarioProprio, diaDigitadoCompleto } from "./conta-do-prazo";
 import { Dialogo } from "./dialogo";
-import { Botao, Campo, Faixa } from "./ui";
+import { Botao, Campo, Cnj, Faixa } from "./ui";
 
 export function EscolherProcesso({ valor, aoEscolher }: { valor: { id: string; titulo: string } | null; aoEscolher: (p: { id: string; titulo: string } | null) => void }) {
   const [q, setQ] = useState("");
@@ -34,7 +34,9 @@ export function EscolherProcesso({ valor, aoEscolher }: { valor: { id: string; t
             <button key={p.id} type="button" className="dc-linhas__item w-full cursor-pointer border-0 bg-transparent text-left hover:bg-[var(--superficie-2)]" onClick={() => aoEscolher({ id: p.id, titulo: p.titulo })}>
               <span className="dc-celula">
                 <span className="dc-celula__1">{p.titulo}</span>
-                <span className="dc-celula__2 dc-num">{p.cnj ?? "Extrajudicial"}</span>
+                <span className="dc-celula__2">
+                  <Cnj cnj={p.cnj} tipo={p.tipo} />
+                </span>
               </span>
             </button>
           ))}

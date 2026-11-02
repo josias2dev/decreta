@@ -1,9 +1,9 @@
 {
-  "path": "/ia/conversas/cbb4f7bb-ab32-4eeb-98ac-32b818b5a2f6",
+  "path": "/ia/conversas/1e9fa338-608a-4fe7-bdb8-b3506a0abdbf",
   "corpo": {
     "rodape": "Gerado por IA. Confira nos autos.",
     "conversa": {
-      "id": "cbb4f7bb-ab32-4eeb-98ac-32b818b5a2f6",
+      "id": "1e9fa338-608a-4fe7-bdb8-b3506a0abdbf",
       "titulo": "Negativa de cirurgia e dano moral",
       "modo": "jurisprudencia",
       "fixada": false,
@@ -13,14 +13,14 @@
     },
     "mensagens": [
       {
-        "id": "e350f349-7b27-460a-b8aa-72f6840e639a",
+        "id": "12b67c2c-2d45-40d6-81ce-a60a42fdf837",
         "papel": "pessoa",
         "texto": "Negativa de cirurgia pelo plano de saúde gera dano moral?",
         "partes": null,
         "em": "2026-10-28T20:10:05.000Z"
       },
       {
-        "id": "a9f07772-9757-45b7-a3b0-52196b245a88",
+        "id": "e7609d7b-30ee-4660-9c86-3c5da7af3032",
         "papel": "ia",
         "texto": "Na maioria dos casos, sim, mas o acervo não traz precedente que diga isso com todas as letras. A relação com o plano é de consumo [1], o que ajuda a afastar a cláusula que restringe o tratamento indicado pelo médico. A outra súmula que achei trata do tempo de internação e não sustenta o dano moral pela negativa [2]: não use para isso.\n\n### Onde a tese ganha força\n- **Urgência ou emergência** documentada pelo médico.\n- Negativa baseada em cláusula que **restringe o tratamento indicado**, e não a doença coberta.\n- Demora que piorou o quadro ou obrigou a pagar do próprio bolso.\n\n### Termos para buscar\n- STJ: `\"recusa indevida\" E \"cobertura\" E \"dano moral\" E urgência`\n- TJSC: `\"plano de saúde\" E \"negativa de cirurgia\" E \"dano moral in re ipsa\"`\n\nConfira cada citação na fonte antes de levar para a peça.",
         "partes": [

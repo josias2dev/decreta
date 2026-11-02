@@ -344,7 +344,7 @@ function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; co
       {!compacta && (
         <>
           {" · "}
-          <Cnj cnj={i.processo.cnj} className="whitespace-nowrap" />
+          <Cnj cnj={i.processo.cnj} tipo={i.processo.tipo} className="whitespace-nowrap" />
         </>
       )}
     </span>
@@ -640,7 +640,7 @@ export function AudienciaPage() {
       <Link to="/processos/$id" params={{ id: a.processo.id }} className="text-inherit no-underline hover:underline">
         <strong>{a.processo.titulo}</strong>
       </Link>
-      {celular ? [ondeTramita(a.processo), a.processo.cnj].filter(Boolean).join(" · ") : <> · <Cnj cnj={a.processo.cnj} /> {ondeTramita(a.processo) && `· ${ondeTramita(a.processo)}`}</>}
+      {celular ? [ondeTramita(a.processo), a.processo.cnj].filter(Boolean).join(" · ") : <> · <Cnj cnj={a.processo.cnj} tipo={a.processo.tipo} /> {ondeTramita(a.processo) && `· ${ondeTramita(a.processo)}`}</>}
     </>
   );
   const editar = <EditarAudiencia a={a} aberto={editando} aoFechar={() => setEditando(false)} aoSalvar={atualizar} />;

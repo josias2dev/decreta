@@ -17,6 +17,7 @@ export * from "./pjecalc.ts";
 export * from "./plano.ts";
 export * from "./prazo-interno.ts";
 export * from "./prazos.ts";
+export * from "./processo-incompleto.ts";
 export * from "./previdenciario.ts";
 export * from "./publicacao.ts";
 export * from "./fontes.ts";

@@ -143,7 +143,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         leituraParada: !sugestao && !!deps.ia && leituraParada(pub.createdAt),
         destinatarios: pub.destinatarios,
         advogados: pub.advogados,
-        processo: processo ? { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, classe: processo.classe, orgao: processo.orgao, comarca: processo.comarca, responsavel: resumir(pessoas, processo.responsavelId), semIa: await semIa(tx, { processoId: processo.id }) } : null,
+        processo: processo ? { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, tipo: processo.tipo, classe: processo.classe, orgao: processo.orgao, comarca: processo.comarca, responsavel: resumir(pessoas, processo.responsavelId), semIa: await semIa(tx, { processoId: processo.id }) } : null,
         sugestao: sugestao && { ...sugestao, responsavel: resumir(pessoas, conteudo?.responsavelId ?? processo?.responsavelId) },
         prazo: prazo ? { id: prazo.id, confirmado: !!prazo.confirmadoEm, fim: prazo.fim, tipo: prazo.tipo } : null,
         audiencia: audiencia ? { id: audiencia.id, em: audiencia.em.toISOString(), tipo: audiencia.tipo } : null,

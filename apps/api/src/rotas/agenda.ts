@@ -33,7 +33,7 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return tenant(c, deps, async (tx) => {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const cal = await calendarioDoEscritorio(tx, await tribunalPadrao(tx, c.get("orgId")));
-      const proc = { titulo: processos.titulo, cnj: processos.cnj };
+      const proc = { titulo: processos.titulo, cnj: processos.cnj, tipo: processos.tipo };
       const antecedencia = await antecedenciaDoInterno(tx, c.get("orgId"));
       const calendarioDe = antecedencia ? await calendariosDoEscritorio(tx, c.get("orgId")) : null;
       const [auds, przs, tars] = await Promise.all([
@@ -91,7 +91,7 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
         situacao: a.situacao,
         checklist: a.checklist.map((i) => ({ ...i, texto: itemDoChecklist(i.texto) })),
         responsavel: resumir(pessoas, a.responsavelId),
-        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, semIa: ctx?.semIa ?? false },
+        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, tipo: processo.tipo, orgao: processo.orgao, comarca: processo.comarca, semIa: ctx?.semIa ?? false },
         preparacao: preparacaoNaTela(naTela(await ultimaAnalise(tx, "audiencia", a.id, "preparar-audiencia"), ctx?.base)),
       });
     });

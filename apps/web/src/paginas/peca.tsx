@@ -540,7 +540,7 @@ export function PecaPage() {
           titulo="Gerar peça"
           sobre={
             <>
-              <strong>{p.processo.titulo}</strong> · <Cnj cnj={p.processo.cnj} />
+              <strong>{p.processo.titulo}</strong> · <Cnj cnj={p.processo.cnj} tipo={p.processo.tipo} />
               {p.prazo && (
                 <>
                   {" · vence "}

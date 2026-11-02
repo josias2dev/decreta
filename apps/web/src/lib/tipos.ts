@@ -173,6 +173,8 @@ export interface ProcessoResumido {
   id: string;
   titulo: string;
   cnj: string | null;
+  /** Sem número e judicial: incompleto. Sem número e extrajudicial: não tem número mesmo. */
+  tipo?: "judicial" | "extrajudicial";
   orgao: string | null;
   comarca?: string | null;
   tribunal?: string | null;
@@ -443,7 +445,24 @@ export interface LeituraDaSentenca {
   recusa?: string | null;
 }
 
+/** O processo salvo sem o número: o que falta, e que não está sendo monitorado. */
+export interface ProcessoIncompleto {
+  faltam: string[];
+  monitorado: boolean;
+}
+
+/** Uma publicação já lida que pode trazer o número do processo. */
+export interface CandidatoAoNumero {
+  cnj: string;
+  tribunal: string | null;
+  orgao: string | null;
+  dia: string;
+  /** O nome que combinou, como está no processo. */
+  nome: string;
+}
+
 export interface ProcessoNaLista {
+  incompleto?: ProcessoIncompleto | null;
   id: string;
   titulo: string;
   cnj: string | null;
@@ -574,6 +593,7 @@ export interface ConsultaDaOab {
 }
 
 export interface Processo {
+  incompleto?: ProcessoIncompleto | null;
   id: string;
   titulo: string;
   cnj: string | null;
@@ -715,7 +735,7 @@ export interface Cliente {
   /** O termo de uso de IA assinado, na pasta do cliente. */
   termoIa: { em: string; documento: { id: string; nome: string } } | null;
   criadoEm: string;
-  processos: { id: string; titulo: string; cnj: string | null; orgao: string | null; situacao: string; responsavel: Pessoa | null }[];
+  processos: { id: string; titulo: string; cnj: string | null; tipo?: "judicial" | "extrajudicial"; orgao: string | null; situacao: string; responsavel: Pessoa | null }[];
   atendimentos: { id: string; em: string; canal: Canal; resumo: string; autor: Pessoa | null; processoId: string | null }[];
   documentos: DocumentoDaPasta[];
   conferencia: Analise<Conferencia> | null;
@@ -729,7 +749,7 @@ export interface ItemDaAgenda {
   titulo: string;
   detalhe?: string | null;
   porVideo?: boolean;
-  processo?: { id: string; titulo: string; cnj: string | null } | null;
+  processo?: { id: string; titulo: string; cnj: string | null; tipo?: "judicial" | "extrajudicial" } | null;
   processoId?: string | null;
   responsavel: Pessoa | null;
   situacao?: string;
@@ -1088,7 +1108,7 @@ export interface RetornosDaIa {
 }
 
 export interface Busca {
-  processos: (ProcessoResumido & { tipo?: "judicial" | "extrajudicial" })[];
+  processos: ProcessoResumido[];
   clientes: { id: string; nome: string; documento: string | null; telefone: string | null }[];
   /** Os prazos que esperam confirmação: os mais próximos, ou os que batem com o termo. */
   prazos?: { id: string; tipo: string; fim: string; processo: { id: string; titulo: string } }[];

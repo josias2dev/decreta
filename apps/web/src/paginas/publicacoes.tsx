@@ -434,7 +434,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
         <strong className="dc-t-titulo font-semibold">{pub.processo.titulo}</strong>
         {celular && (pub.processo.classe || onde) && <span className="dc-t-meta text-[var(--tinta-2)]">{[pub.processo.classe, onde].filter(Boolean).join(" · ")}</span>}
         <span className="dc-t-meta text-[var(--tinta-2)]">
-          <Cnj cnj={pub.processo.cnj} />
+          <Cnj cnj={pub.processo.cnj} tipo={pub.processo.tipo} />
           {!celular && [onde, pub.processo.responsavel?.apelido].filter(Boolean).map((x) => ` · ${x}`)}
         </span>
       </div>
