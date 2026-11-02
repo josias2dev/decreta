@@ -6,8 +6,8 @@ export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos"
 export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "honorarios", "calculos", "chat"];
 
 export type AbaDaConfiguracao = "escritorio" | "pecas" | "avisos" | "calendario" | "financeiro" | "ia" | "plano" | "registro" | "dados";
-/** As abas a que um endereço abre direto (o Asaas devolve a pessoa para `?aba=plano`). */
-export const ABAS_DO_ENDERECO: readonly AbaDaConfiguracao[] = ["plano", "dados"];
+/** As abas a que um endereço abre direto (o Asaas devolve a pessoa para `?aba=plano`; a caixa de Publicações, sem busca, manda para `?aba=avisos`). */
+export const ABAS_DO_ENDERECO: readonly AbaDaConfiguracao[] = ["plano", "dados", "avisos"];
 
 /** Os filtros da tela do Financeiro; "abertas" é a de quando não se escolhe nenhuma. */
 export const SITUACOES_DO_FINANCEIRO = ["abertas", "atraso", "pagas", "todas"] as const;

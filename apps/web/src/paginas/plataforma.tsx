@@ -159,7 +159,24 @@ function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined })
             </table>
           </div>
         ) : (
-          <Vazio titulo="Nenhum escritório">{filtro === "todos" && !termo ? "Os escritórios aparecem aqui quando se cadastram." : "Nenhum escritório com esse filtro."}</Vazio>
+          <Vazio
+            titulo={filtro === "todos" && !termo ? "Nenhum escritório ainda" : "Nenhum escritório com esse filtro"}
+            acao={
+              (filtro !== "todos" || !!termo) && (
+                <Botao
+                  pequeno
+                  onClick={() => {
+                    setFiltro("todos");
+                    setBusca("");
+                  }}
+                >
+                  Limpar os filtros
+                </Botao>
+              )
+            }
+          >
+            {filtro === "todos" && !termo ? "Os escritórios aparecem aqui quando se cadastram." : "Tente outro nome ou outra situação."}
+          </Vazio>
         )}
       </Painel>
       <AgirNoEscritorio escritorio={agindo} aoFechar={() => setAgindo(null)} />
@@ -372,7 +389,7 @@ function Acoes() {
           })}
         </div>
       ) : (
-        <Vazio titulo="Nenhuma ação ainda" />
+        <Vazio titulo="Nenhuma ação ainda">O que os operadores fazem nos escritórios fica registrado aqui, com quem fez e o motivo.</Vazio>
       )}
     </Painel>
   );

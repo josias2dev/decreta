@@ -6,10 +6,10 @@ import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Avatar, Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { authCall, authClient, ehSocio, papelLabel, PAPEIS, type Papel } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
-import { equipeQuery, euQuery } from "@/lib/consultas";
+import { equipeQuery, euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaDoInstante, telefone } from "@/lib/formato";
 import type { ConsultaDaOab, PessoaDaEquipe } from "@/lib/tipos";
 
@@ -22,6 +22,7 @@ export function EquipePage() {
   const [convidando, setConvidando] = useState(false);
   const [editando, setEditando] = useState<PessoaDaEquipe | null>(null);
   const socio = ehSocio(eu.data?.usuario.papel);
+  const pode = podeCriar(eu.data);
   const cancelar = useMutation({
     mutationFn: (invitationId: string) => authCall(authClient.organization.cancelInvitation({ invitationId })),
     onSuccess: () => {
@@ -66,6 +67,21 @@ export function EquipePage() {
           </div>
         ))}
       </div>
+      {e.pessoas.length === 1 && !e.convites.length && socio && (
+        <Vazio
+          titulo="Por enquanto, só você"
+          acao={
+            pode && (
+              <Botao pequeno onClick={() => setConvidando(true)}>
+                <MailPlus /> Convidar a equipe
+              </Botao>
+            )
+          }
+        >
+          Cada pessoa entra com a própria conta, e os prazos ganham um responsável. As OABs da equipe guiam a busca no Diário.
+          {!pode && <span>{SO_LEITURA}</span>}
+        </Vazio>
+      )}
     </Painel>
   );
   const convites = e && e.convites.length > 0 && (
@@ -94,7 +110,12 @@ export function EquipePage() {
       </div>
     </Painel>
   );
-  const aviso = e && !e.emailLigado && <Faixa tipo="aviso">O e-mail do Decreta ainda não está ligado: depois de convidar, copie o link e mande para a pessoa.</Faixa>;
+  const aviso = e && (
+    <>
+      {!e.emailLigado && <Faixa tipo="aviso">O e-mail do Decreta ainda não está ligado: depois de convidar, copie o link e mande para a pessoa.</Faixa>}
+      {!e.pessoas.some((p) => p.oabNumero) && <Faixa tipo="aviso">Ninguém da equipe tem OAB cadastrada, e sem ela a busca no DJEN não acha as publicações. {socio ? "Clique em Editar na pessoa e informe a OAB." : "Peça a um sócio para informar a OAB."}</Faixa>}
+    </>
+  );
   const dialogos = (
     <>
       <Convidar aberto={convidando} aoFechar={() => setConvidando(false)} papelDeQuemConvida={eu.data?.usuario.papel} />
@@ -109,7 +130,7 @@ export function EquipePage() {
         sobre={sub}
         voltar
         direita={
-          socio && (
+          socio && pode && (
             <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Convidar" onClick={() => setConvidando(true)}>
               <MailPlus />
             </button>
@@ -129,7 +150,7 @@ export function EquipePage() {
         titulo="Equipe"
         sub={sub}
         acoes={
-          socio && (
+          socio && pode && (
             <Botao variante="primaria" onClick={() => setConvidando(true)}>
               <MailPlus /> Convidar
             </Botao>

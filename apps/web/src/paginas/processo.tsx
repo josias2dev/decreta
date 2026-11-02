@@ -19,9 +19,9 @@ import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoPrazo } from "@/componentes/novo-prazo";
 import { RadarDoProcesso } from "@/componentes/radar-do-processo";
 import { Abas, Avatar, BlocoIa, Botao, Campo, Carregando, Chip, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
-import { API_URL, aosPoucos, api, mensagemDoErro } from "@/lib/api";
+import { API_URL, aosPoucos, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, diaMes, diasDesde, dinheiro, hora, numero, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, tamanho, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { Conversa as ConversaDaApi, Documento, ListaDePrazos, Movimentacao, Movimentacoes, Parte, Processo, ResumoDosAutos } from "@/lib/tipos";
 import type { AbaDoProcesso } from "@/lib/rotas";
@@ -298,7 +298,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
           ))}
         </div>
       ) : (
-        <Vazio titulo="Sem partes">Adicione autor, réu e terceiros.</Vazio>
+        <Vazio titulo="Nenhuma parte cadastrada">Autor, réu e terceiros, com os advogados de cada um. O polo do cliente ajuda a IA a dizer o que fazer em cada prazo.</Vazio>
       )}
     </Painel>
   );
@@ -413,8 +413,24 @@ function ConteudoDoResumo({ c }: { c: ResumoDosAutos }) {
 
 /* ---------------- Movimentações ---------------- */
 
-function ListaDeMovimentacoes({ itens, celular }: { itens: Movimentacao[]; celular: boolean }) {
-  if (!itens.length) return <Vazio titulo="Nenhuma movimentação">As movimentações chegam do DataJud e das publicações do DJEN.</Vazio>;
+const MOVIMENTACAO_NO_FILTRO: Record<Exclude<Filtro, "todas">, string> = { juizo: "Nenhuma movimentação do juízo", partes: "Nenhuma movimentação das partes", documento: "Nenhuma movimentação com documento" };
+
+function ListaDeMovimentacoes({ itens, celular, filtro = "todas", aoLimpar }: { itens: Movimentacao[]; celular: boolean; filtro?: Filtro; aoLimpar?: () => void }) {
+  if (!itens.length && filtro !== "todas") {
+    return (
+      <Vazio
+        titulo={MOVIMENTACAO_NO_FILTRO[filtro]}
+        acao={
+          <Botao pequeno onClick={aoLimpar}>
+            Ver todas
+          </Botao>
+        }
+      >
+        O filtro não achou nada neste processo.
+      </Vazio>
+    );
+  }
+  if (!itens.length) return <Vazio titulo="Nenhuma movimentação ainda">As movimentações chegam do DataJud e das publicações do DJEN. Processo novo leva alguns dias para aparecer no DataJud.</Vazio>;
   if (celular) {
     return (
       <div className="dc-linhas">
@@ -554,7 +570,7 @@ function AbaMovimentacoes({ p, celular }: { p: Processo; celular: boolean }) {
         </div>
       ) : (
         <>
-          <ListaDeMovimentacoes itens={itens} celular={celular} />
+          <ListaDeMovimentacoes itens={itens} celular={celular} filtro={filtro} aoLimpar={() => setFiltro("todas")} />
           {itens.length > 0 && (
             <div className="dc-rodape-lista">
               <span>
@@ -593,6 +609,8 @@ function AbaMovimentacoes({ p, celular }: { p: Processo; celular: boolean }) {
 
 function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
   const navigate = useNavigate();
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const [novo, setNovo] = useState(false);
   const abertos = useQuery({ queryKey: ["prazos", "processo", p.id, "abertos"], queryFn: () => api<ListaDePrazos>(`/prazos?processo=${p.id}&quando=abertos`) });
   const cumpridos = useQuery({ queryKey: ["prazos", "processo", p.id, "cumpridos"], queryFn: () => api<ListaDePrazos>(`/prazos?processo=${p.id}&quando=cumpridos`) });
@@ -605,9 +623,11 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
       <Painel
         titulo="Prazos do processo"
         acao={
-          <Botao pequeno onClick={() => setNovo(true)}>
-            <Plus /> Novo prazo
-          </Botao>
+          pode && (
+            <Botao pequeno onClick={() => setNovo(true)}>
+              <Plus /> Novo prazo
+            </Botao>
+          )
         }
         corpo={false}
       >
@@ -616,7 +636,7 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
             <Carregando linhas={2} />
           </div>
         ) : !itens.length ? (
-          <Vazio titulo="Nenhum prazo">Os prazos chegam das publicações do DJEN. Dá para criar à mão também.</Vazio>
+          <Vazio titulo="Nenhum prazo neste processo">Os prazos chegam das publicações do DJEN, com a conta à mostra. {pode ? "Dá para criar à mão em Novo prazo." : SO_LEITURA}</Vazio>
         ) : celular ? (
           <div className="dc-linhas">
             {itens.map((i) => (
@@ -670,9 +690,11 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
       <Painel
         titulo="Peças"
         acao={
-          <Link to="/pecas" search={{ processo: p.id }} className="dc-btn dc-btn--secundaria dc-btn--sm">
-            <FileText /> Gerar peça
-          </Link>
+          pode && (
+            <Link to="/pecas" search={{ processo: p.id }} className="dc-btn dc-btn--secundaria dc-btn--sm">
+              <FileText /> Gerar peça
+            </Link>
+          )
         }
         corpo={false}
       >
@@ -691,7 +713,7 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
             ))}
           </div>
         ) : (
-          <Vazio titulo="Nenhuma peça ainda" />
+          <Vazio titulo="Nenhuma peça neste processo">A peça sai no timbre do escritório, a partir dos autos e do prazo. {pode ? "Comece em Gerar peça, e confira antes de usar." : SO_LEITURA}</Vazio>
         )}
       </Painel>
       <NovoPrazo aberto={novo} aoFechar={() => setNovo(false)} processo={{ id: p.id, titulo: p.titulo }} />
@@ -819,6 +841,8 @@ function EstadoDaLeitura({ d, reler }: { d: DocumentoLido; reler?: boolean }) {
 }
 
 function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const docs = useQuery({ queryKey: ["documentos", "processo", p.id], queryFn: () => api<{ itens: Documento[] }>(`/documentos?processo=${p.id}`), refetchInterval: enquantoLe });
   const itens = docs.data?.itens ?? [];
   const paginas = itens.reduce((s, d) => s + (d.paginas ?? 0), 0);
@@ -833,7 +857,7 @@ function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
               {paginas ? ` · ${numero(paginas)} páginas` : ""}
             </span>
           )}
-          <Enviar processoId={p.id} />
+          {pode && <Enviar processoId={p.id} />}
         </span>
       }
       corpo={false}
@@ -843,7 +867,7 @@ function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
           <Carregando linhas={3} />
         </div>
       ) : !itens.length ? (
-        <Vazio titulo="Nenhum documento">Envie PDF, DOCX ou imagem. A IA lê o texto e usa no resumo, no briefing e nas peças.</Vazio>
+        <Vazio titulo="Nenhum documento nos autos">{pode ? "Envie PDF, DOCX ou imagem. A IA lê o texto e usa no resumo, no briefing e nas peças." : `A IA lê os documentos dos autos e usa no resumo, no briefing e nas peças. ${SO_LEITURA}`}</Vazio>
       ) : celular ? (
         <div className="dc-linhas">
           {itens.map((d) => (

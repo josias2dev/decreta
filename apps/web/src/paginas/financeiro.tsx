@@ -15,9 +15,9 @@ import { casoDaParcela, NovoContrato, ParcelaDialogo, SeloDaParcela, useAtualiza
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Segmentos, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { numero, reais } from "@/lib/formato";
 import type { SituacaoDoFinanceiro } from "@/lib/rotas";
 import type { AlvaraParaPrestar, FinanceiroGeral, GrupoDoResumo, ParcelaDeHonorario } from "@/lib/tipos";
@@ -84,6 +84,12 @@ function filtrar(parcelas: ParcelaDeHonorario[], situacao: Situacao, busca: stri
   });
 }
 
+const RESUMO_VAZIO: Record<Exclude<Visao, "parcelas">, { titulo: string; texto: string }> = {
+  clientes: { titulo: "Nenhum cliente com honorário", texto: "Cada cliente com contrato aparece aqui, com o que há a receber, em atraso e já recebido." },
+  processos: { titulo: "Nenhum processo com honorário", texto: "Cada processo com contrato aparece aqui, com o que há a receber, em atraso e já recebido." },
+  meses: { titulo: "Nenhum mês com parcela", texto: "As parcelas a receber aparecem aqui, somadas pelo mês de vencimento." },
+};
+
 interface Grupo {
   chave: string;
   titulo: string;
@@ -132,9 +138,10 @@ export function FinanceiroPage() {
   const situacao: Situacao = search.situacao ?? "abertas";
   const irPara = (s: Situacao) => void navigate({ search: (a) => ({ ...a, situacao: s === "abertas" ? undefined : s }), replace: true });
   const soDo = (campo: "cliente" | "processo", id: string | undefined) => void navigate({ search: (a) => ({ ...a, [campo]: id }), replace: true });
+  const pode = podeCriar(eu.data);
 
   if (eu.data && !liberado) {
-    const corpo = <Vazio titulo="O Financeiro é dos sócios">Quem não é sócio entra aqui quando um sócio libera o acesso na tela da Equipe.</Vazio>;
+    const corpo = <Vazio titulo="O Financeiro é dos sócios">Aqui ficam os honorários, o que está em atraso e a prestação de contas dos alvarás. Quem não é sócio entra quando um sócio libera o acesso na tela da Equipe.</Vazio>;
     return celular ? <TelaCelular titulo="Financeiro">{corpo}</TelaCelular> : <Pagina><Cabecalho titulo="Financeiro" />{corpo}</Pagina>;
   }
 
@@ -217,6 +224,53 @@ export function FinanceiroPage() {
     </div>
   );
 
+  const primeiroContrato = pode && (
+    <Botao variante="primaria" pequeno onClick={() => setNovo(true)}>
+      <Plus /> Registrar o primeiro contrato
+    </Botao>
+  );
+  const limparFiltros = () => {
+    setBusca("");
+    void navigate({ search: {}, replace: true });
+  };
+  /** Nenhuma parcela na lista: nunca houve, ou o filtro não achou, ou só não há nada nesta situação. */
+  const semParcelas = !parcelas.length ? (
+    <Vazio titulo="Nenhum honorário registrado" acao={primeiroContrato}>
+      Registre o contrato de cada cliente ou processo: valor fixo, mensal, êxito ou híbrido. O Decreta gera as parcelas, mostra o que está em atraso e, quando o alvará é sacado, calcula a parte do escritório.
+      {!pode && <span>{SO_LEITURA}</span>}
+    </Vazio>
+  ) : busca.trim() || search.cliente || search.processo ? (
+    <Vazio
+      titulo="Nenhuma parcela com esse filtro"
+      acao={
+        <Botao pequeno onClick={limparFiltros}>
+          Limpar os filtros
+        </Botao>
+      }
+    >
+      Tente outra palavra, ou veja as parcelas de todos os clientes.
+    </Vazio>
+  ) : (
+    <Vazio
+      titulo={situacao === "atraso" ? "Nada em atraso" : situacao === "pagas" ? "Nenhuma parcela paga ainda" : "Nenhuma parcela em aberto"}
+      acao={
+        situacao === "abertas" ? (
+          <Botao pequeno onClick={() => irPara("todas")}>
+            Ver todas
+          </Botao>
+        ) : (
+          contagem.abertas > 0 && (
+            <Botao pequeno onClick={() => irPara("abertas")}>
+              Ver as em aberto
+            </Botao>
+          )
+        )
+      }
+    >
+      {situacao === "atraso" ? "Todas as parcelas vencidas foram pagas." : situacao === "pagas" ? "A parcela aparece aqui quando o pagamento é marcado ou quando o Asaas avisa." : "As parcelas do escritório já foram pagas ou canceladas."}
+    </Vazio>
+  );
+
   const dialogos = (
     <>
       <NovoContrato aberto={novo} aoFechar={() => setNovo(false)} />
@@ -240,7 +294,15 @@ export function FinanceiroPage() {
       v === "meses"
         ? d.resumo.porMes.map((m) => ({ id: m.mes, nome: nomeDoMes(m.mes), g: { id: m.mes, aReceber: m.aReceber, emAtraso: m.emAtraso, recebido: 0 } }))
         : (v === "clientes" ? d.resumo.porCliente : d.resumo.porProcesso).map((g) => ({ id: g.id, nome: nomes.get(g.id) ?? "—", g }));
-    if (!linhas.length) return <Vazio titulo="Nada por aqui ainda">Os contratos e as parcelas aparecem aqui.</Vazio>;
+    if (!linhas.length) {
+      const { titulo, texto } = RESUMO_VAZIO[v];
+      return (
+        <Vazio titulo={titulo} acao={!parcelas.length && primeiroContrato}>
+          {texto}
+          {!pode && !parcelas.length && <span>{SO_LEITURA}</span>}
+        </Vazio>
+      );
+    }
     const clicar = (id: string) => {
       if (v === "meses") return;
       soDo(v === "clientes" ? "cliente" : "processo", id);
@@ -280,9 +342,11 @@ export function FinanceiroPage() {
         sobre={sub}
         voltar
         direita={
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo contrato" onClick={() => setNovo(true)}>
-            <Plus />
-          </button>
+          pode && (
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo contrato" onClick={() => setNovo(true)}>
+              <Plus />
+            </button>
+          )
         }
         fixo={
           <div className="flex flex-col gap-2">
@@ -349,7 +413,7 @@ export function FinanceiroPage() {
                 </section>
               ))
             ) : (
-              <Vazio titulo={situacao === "atraso" ? "Nada em atraso" : "Nenhuma parcela aqui"}>{situacao === "atraso" ? "Todas as parcelas vencidas foram pagas." : "Crie um contrato de honorários para começar."}</Vazio>
+              semParcelas
             )}
           </>
         )}
@@ -364,9 +428,11 @@ export function FinanceiroPage() {
         titulo="Financeiro"
         sub={sub}
         acoes={
-          <Botao variante="primaria" onClick={() => setNovo(true)}>
-            <Plus /> Novo contrato
-          </Botao>
+          pode && (
+            <Botao variante="primaria" onClick={() => setNovo(true)}>
+              <Plus /> Novo contrato
+            </Botao>
+          )
         }
       />
       {!d ? (
@@ -464,7 +530,7 @@ export function FinanceiroPage() {
                 </table>
               </Rolagem>
             ) : (
-              <Vazio titulo={situacao === "atraso" ? "Nada em atraso" : "Nenhuma parcela aqui"}>{situacao === "atraso" ? "Todas as parcelas vencidas foram pagas." : "Crie um contrato de honorários para começar: valor fixo, mensal, êxito ou híbrido."}</Vazio>
+              semParcelas
             )}
           </section>
         </>
@@ -529,6 +595,8 @@ function FilaDeLembretes({ aoFechar, aoAbrir }: { aoFechar: () => void; aoAbrir:
     >
       {!q.data ? (
         <Carregando linhas={2} />
+      ) : !q.data.itens.length ? (
+        <Vazio titulo="Nenhum lembrete esperando">Os lembretes já foram aprovados ou descartados. O próximo rascunho aparece aqui quando a régua chegar a ele.</Vazio>
       ) : (
         <div className="dc-painel dc-linhas">
           {q.data.itens.map((l) => (

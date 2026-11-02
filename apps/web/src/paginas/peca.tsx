@@ -195,11 +195,15 @@ export function PecaPage() {
 
   if (!consulta && !search.id) {
     const corpo = (
-      <Vazio titulo="De qual processo é a peça?">
+      <Vazio
+        titulo="De qual processo é a peça?"
+        acao={
+          <Link to="/prazos" className="dc-link">
+            Ir para Prazos
+          </Link>
+        }
+      >
         Abra Gerar peça a partir de um prazo ou de um processo.
-        <Link to="/prazos" className="dc-link">
-          Ir para Prazos
-        </Link>
       </Vazio>
     );
     return celular ? (

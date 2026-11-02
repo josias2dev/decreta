@@ -12,9 +12,9 @@ import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
 import { Botao, Cabecalho, Campo, CampoDeBusca, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diasDesde, dinheiro, haQuanto, numero, paraValor, valorNoCampo } from "@/lib/formato";
 import { cn } from "@/lib/util";
 import type { Alvara, EtapaAlvara, QuadroDeAlvaras } from "@/lib/tipos";
@@ -24,6 +24,13 @@ const ORDEM: EtapaAlvara[] = ["novo", "aguardando_saque", "sacado", "repassado",
 const proxima = (e: EtapaAlvara) => ORDEM[ORDEM.indexOf(e) + 1];
 
 /** A data que levou o alvará à etapa e o rótulo dela. */
+const O_QUE_ENTRA: Record<EtapaAlvara, string> = {
+  novo: "O alvará expedido pelo juízo entra aqui, com o valor.",
+  aguardando_saque: "O alvará à espera de ir ao banco.",
+  sacado: "O dinheiro na conta do escritório, ainda por repassar.",
+  repassado: "O que já foi repassado ao cliente.",
+  finalizado: "O alvará com as contas prestadas e encerrado.",
+};
 const CHEGOU: Record<EtapaAlvara, { rotulo: string; dia: (a: Alvara) => string | null }> = {
   novo: { rotulo: "Expedido", dia: (a) => a.expedidoEm },
   aguardando_saque: { rotulo: "Expedido", dia: (a) => a.expedidoEm },
@@ -109,6 +116,36 @@ export function AlvarasPage() {
     </button>
   );
   const campo = <CampoDeBusca valor={texto} aoMudar={setTexto} rotulo="Buscar alvará" placeholder="Cliente, processo ou descrição" />;
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
+  const limpar = () => {
+    setTexto("");
+    setSoParados(false);
+  };
+  /** Alvará mora em processo: sem nenhum, a primeira ação é cadastrar o processo. */
+  const primeiro =
+    pode &&
+    (eu.data?.menu.processos ? (
+      <Botao pequeno onClick={() => setNovo(true)}>
+        <Plus /> Novo alvará
+      </Botao>
+    ) : (
+      <Link to="/processos" search={{ novo: true }} className="dc-btn dc-btn--secundaria dc-btn--sm">
+        <Plus /> Cadastrar o primeiro processo
+      </Link>
+    ));
+  const nada = (
+    <Vazio
+      titulo={busca ? `Nenhum alvará com “${texto.trim()}”` : "Nenhum alvará parado"}
+      acao={
+        <Botao pequeno onClick={limpar}>
+          {busca ? "Limpar a busca" : "Limpar o filtro"}
+        </Botao>
+      }
+    >
+      {busca ? "Tente o nome do cliente, o número do processo ou a descrição." : "Parado é o alvará que passou do tempo normal na etapa."}
+    </Vazio>
+  );
   const chipParados = parados > 0 && (
     <Chip ligado={soParados} n={parados} onClick={() => setSoParados(!soParados)}>
       Parados
@@ -130,9 +167,11 @@ export function AlvarasPage() {
         sobre={d ? `${dinheiro(d.totais.pendente)} a receber` : " "}
         voltar
         direita={
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo alvará" onClick={() => setNovo(true)}>
-            <Plus />
-          </button>
+          pode && (
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo alvará" onClick={() => setNovo(true)}>
+              <Plus />
+            </button>
+          )
         }
         fixo={
           <div className="dc-filtros">
@@ -155,8 +194,24 @@ export function AlvarasPage() {
             <span className="dc-nota">Total da etapa: {dinheiro(lista.total)}</span>
             {lista.itens.map(cartao)}
           </div>
+        ) : filtrando && !achados ? (
+          nada
+        ) : filtrando ? (
+          <Vazio
+            titulo="Nada nesta etapa com esse filtro"
+            acao={
+              <Botao pequeno onClick={limpar}>
+                Limpar o filtro
+              </Botao>
+            }
+          >
+            Há alvarás em outras etapas: veja os outros filtros acima.
+          </Vazio>
         ) : (
-          <Vazio titulo={busca ? "Nada encontrado nesta etapa" : "Nada nesta etapa"} />
+          <Vazio titulo={`Nada em ${ETAPA[etapa].toLocaleLowerCase("pt-BR")}`} acao={!todas.some((e) => e.itens.length) && primeiro}>
+            {O_QUE_ENTRA[etapa]}
+            {!pode && <span>{SO_LEITURA}</span>}
+          </Vazio>
         )}
         {dialogos}
       </TelaCelular>
@@ -168,9 +223,11 @@ export function AlvarasPage() {
         titulo="Alvarás"
         sub={sub}
         acoes={
-          <Botao variante="primaria" onClick={() => setNovo(true)}>
-            <Plus /> Novo alvará
-          </Botao>
+          pode && (
+            <Botao variante="primaria" onClick={() => setNovo(true)}>
+              <Plus /> Novo alvará
+            </Botao>
+          )
         }
       />
       {!d ? (
@@ -186,13 +243,24 @@ export function AlvarasPage() {
             {campo}
             {chipParados}
           </div>
-          <Quadro id="alvaras">
-            {etapas.map((e) => (
-              <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} className={`dc-etapa dc-etapa--${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
-                {e.itens.length ? e.itens.map(cartao) : <div className="dc-quadro__vazio">{filtrando ? "Nada encontrado" : "Nada aqui"}</div>}
-              </ColunaDoQuadro>
-            ))}
-          </Quadro>
+          {filtrando && !achados ? (
+            <section className="dc-painel">{nada}</section>
+          ) : (
+            <Quadro id="alvaras">
+              {etapas.map((e) => (
+                <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} className={`dc-etapa dc-etapa--${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
+                  {e.itens.length ? (
+                    e.itens.map(cartao)
+                  ) : (
+                    <div className="dc-quadro__vazio">
+                      {filtrando ? "Nada nesta etapa com esse filtro." : O_QUE_ENTRA[e.etapa]}
+                      {e.etapa === "novo" && !achados && primeiro}
+                    </div>
+                  )}
+                </ColunaDoQuadro>
+              ))}
+            </Quadro>
+          )}
         </>
       )}
       {dialogos}

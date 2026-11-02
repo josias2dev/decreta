@@ -377,7 +377,7 @@ function AbaCalendario({ e, socio, celular }: { e: Escritorio; socio: boolean; c
             ))}
           </div>
         ) : (
-          <Vazio titulo="Nenhum dia marcado">Feriado municipal, falha no sistema do tribunal ou suspensão por portaria: marque aqui e a contagem já desconta.</Vazio>
+          <Vazio titulo="Nenhum dia marcado">Feriado municipal, falha no sistema do tribunal ou suspensão por portaria: {socio ? "marque aqui e a contagem já desconta." : "um sócio marca aqui, e a contagem já desconta."}</Vazio>
         )}
       </Painel>
       <NovaSuspensao aberto={nova} aoFechar={() => setNova(false)} />
@@ -522,7 +522,7 @@ function AbaRetorno({ celular }: { celular: boolean }) {
             ))}
           </div>
         ) : (
-          <Vazio titulo="Nada marcado como errado" />
+          <Vazio titulo="Nada marcado como errado">Quando alguém marcar Errado numa leitura da IA ou numa peça, a frase aparece aqui, com o caminho até ela.</Vazio>
         )}
       </Painel>
     </div>
@@ -551,7 +551,7 @@ function AbaRegistro() {
           ))}
         </div>
       ) : (
-        <Vazio titulo="Nada registrado ainda" />
+        <Vazio titulo="Nada registrado ainda">O que muda dados do escritório fica registrado aqui: quem fez, o quê e quando.</Vazio>
       )}
     </Painel>
   );

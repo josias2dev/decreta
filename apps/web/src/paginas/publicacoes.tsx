@@ -8,7 +8,7 @@ import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/rea
 import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
-import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery } from "@/componentes/captura-do-djen";
+import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery, useFaltaParaBuscar, VazioPorFalta } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosDaConferencia, MotivosParaConferir, PreviaNoDialogo, SeloDeConfianca } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
@@ -16,11 +16,11 @@ import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
 import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
-import { API_URL, api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
-import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
+import type { CaixaDePublicacoes, Contagem, Eu, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { atualizarPrazos } from "./prazo";
 
@@ -118,6 +118,7 @@ export function PublicacoesPage() {
   const navigate = useNavigate({ from: "/publicacoes" });
   const situacao: SituacaoPublicacao = search.situacao ?? "nova";
   const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const caixa = useQuery(caixaQuery(situacao));
   const buscar = useBuscarAgora();
   const [colar, setColar] = useState(false);
@@ -133,11 +134,7 @@ export function PublicacoesPage() {
       : `Nenhuma busca no DJEN ainda · próxima ${proximaBusca()}`;
   const abas = c ? ABAS.map((a) => ({ ...a, n: c.contagens[a.id] || undefined })) : ABAS;
   const irPara = (s: SituacaoPublicacao) => void navigate({ search: { situacao: s === "nova" ? undefined : s } });
-  const vazio = (
-    <Vazio titulo={situacao === "nova" ? "Nenhuma publicação nova" : situacao === "pendente" ? "Nada pendente" : "Nada aqui ainda"}>
-      {situacao === "nova" ? `O Decreta lê o DJEN de madrugada e busca pelas OABs da equipe. Próxima busca ${proximaBusca()}.` : null}
-    </Vazio>
-  );
+  const vazio = c && eu.data && <CaixaVazia caixa={c} situacao={situacao} eu={eu.data} alertas={saude.data?.alertas.length ?? 0} irPara={irPara} buscar={() => buscar.mutate()} buscando={buscar.isPending} colar={() => setColar(true)} />;
   const falhou = capturada?.erro && <Faixa tipo="erro">A última busca no DJEN falhou: {capturada.erro}. Tento de novo na próxima.</Faixa>;
   const avisoDaCaptura = (
     <AvisoDaCaptura
@@ -158,12 +155,16 @@ export function PublicacoesPage() {
         sobre={c ? `${c.contagens.nova} ${c.contagens.nova === 1 ? "nova" : "novas"} do DJEN` : " "}
         direita={
           <>
-            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Buscar agora no DJEN" onClick={() => buscar.mutate()} disabled={buscar.isPending}>
-              <RefreshCw className={cn(buscar.isPending && "animate-spin")} />
-            </button>
-            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Colar publicação" onClick={() => setColar(true)}>
-              <Plus />
-            </button>
+            {pode && (
+              <>
+                <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Buscar agora no DJEN" onClick={() => buscar.mutate()} disabled={buscar.isPending}>
+                  <RefreshCw className={cn(buscar.isPending && "animate-spin")} />
+                </button>
+                <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Colar publicação" onClick={() => setColar(true)}>
+                  <Plus />
+                </button>
+              </>
+            )}
             <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Captura do DJEN" onClick={() => setCaptura(true)}>
               <Activity />
             </button>
@@ -217,19 +218,21 @@ export function PublicacoesPage() {
           </>
         }
         acoes={
-          <>
-            <Botao onClick={() => setColar(true)}>
-              <ClipboardPaste /> Colar publicação
-            </Botao>
-            <Botao onClick={() => buscar.mutate()} ocupado={buscar.isPending}>
-              <RefreshCw /> Buscar agora
-            </Botao>
-          </>
+          pode && (
+            <>
+              <Botao onClick={() => setColar(true)}>
+                <ClipboardPaste /> Colar publicação
+              </Botao>
+              <Botao onClick={() => buscar.mutate()} ocupado={buscar.isPending}>
+                <RefreshCw /> Buscar agora
+              </Botao>
+            </>
+          )
         }
       />
       {falhou}
       {avisoDaCaptura}
-      <div className="dc-caixa">
+      <div className={cn("dc-caixa", !selecionada && "dc-caixa--vazia")}>
         <section className="dc-painel dc-caixa__lista">
           <Abas abas={abas} ativa={situacao} aoMudar={irPara} />
           {!c ? (
@@ -251,6 +254,100 @@ export function PublicacoesPage() {
       <ColarPublicacao aberto={colar} aoFechar={() => setColar(false)} />
       {dialogoDaCaptura}
     </Pagina>
+  );
+}
+
+const ABA_VAZIA: Record<Exclude<SituacaoPublicacao, "nova">, { titulo: string; texto: string }> = {
+  pendente: { titulo: "Nada pendente", texto: "Aqui fica a publicação que você quer decidir depois: ao ler, use Deixar pendente, e ela sai das novas sem se perder." },
+  lida: { titulo: "Nenhuma publicação lida", texto: "A publicação que não gera prazo, marcada como lida, fica guardada aqui, para consultar." },
+  vinculada: { titulo: "Nenhuma publicação vinculada", texto: "A publicação que vira prazo ou audiência fica guardada aqui, ligada ao processo." },
+};
+
+/**
+ * A caixa sem nada. Nas novas, nunca diz que não há nada quando a causa pode ser outra: busca desligada, nenhuma OAB,
+ * busca que falhou ou caderno que faltou. Só o que sobra é a caixa em dia.
+ */
+function CaixaVazia({ caixa, situacao, eu, alertas, irPara, buscar, buscando, colar }: { caixa: CaixaDePublicacoes; situacao: SituacaoPublicacao; eu: Eu; alertas: number; irPara: (s: SituacaoPublicacao) => void; buscar: () => void; buscando: boolean; colar: () => void }) {
+  const falta = useFaltaParaBuscar(situacao === "nova");
+  const pode = podeCriar(eu);
+  const c = caixa.contagens;
+  const u = caixa.ultimaCaptura;
+  const buscarAgora = pode && (
+    <Botao pequeno onClick={buscar} ocupado={buscando}>
+      <RefreshCw /> Buscar agora
+    </Botao>
+  );
+  const leitura = !pode && <span>{SO_LEITURA}</span>;
+  if (situacao !== "nova") {
+    const { titulo, texto } = ABA_VAZIA[situacao];
+    return (
+      <Vazio
+        titulo={titulo}
+        acao={
+          c.nova > 0 && (
+            <Botao pequeno onClick={() => irPara("nova")}>
+              Ver {c.nova === 1 ? "a nova" : `as ${c.nova} novas`}
+            </Botao>
+          )
+        }
+      >
+        {texto}
+      </Vazio>
+    );
+  }
+  if (falta === undefined) {
+    return (
+      <div className="p-4">
+        <Carregando linhas={2} />
+      </div>
+    );
+  }
+  if (falta) return <VazioPorFalta falta={falta} eu={eu} />;
+  if (u?.erro) {
+    return (
+      <Vazio titulo="A última busca falhou" acao={buscarAgora}>
+        Pode haver intimação que ainda não chegou. O Decreta tenta de novo {proximaBusca()}.
+        {leitura}
+      </Vazio>
+    );
+  }
+  if (alertas > 0) {
+    return (
+      <Vazio titulo="A captura tem um aviso" acao={buscarAgora}>
+        Um caderno do DJEN faltou ou falhou, então a caixa vazia pode não ser o dia todo. Veja o aviso acima.
+        {leitura}
+      </Vazio>
+    );
+  }
+  if (!u) {
+    return (
+      <Vazio titulo="A primeira busca ainda não rodou" acao={buscarAgora}>
+        O Decreta lê o DJEN de madrugada e busca pelas OABs da equipe. Cada intimação chega aqui explicada, com o prazo sugerido. Próxima busca {proximaBusca()}.
+        {leitura}
+      </Vazio>
+    );
+  }
+  if (!c.nova && !c.pendente && !c.lida && !c.vinculada) {
+    return (
+      <Vazio
+        titulo="Nenhuma publicação até agora"
+        acao={
+          pode && (
+            <Botao pequeno onClick={colar}>
+              <ClipboardPaste /> Colar publicação
+            </Botao>
+          )
+        }
+      >
+        A busca pelas OABs da equipe não achou nada ainda. Cada intimação chega aqui explicada, com o prazo sugerido. Enquanto isso, dá para colar uma que recebeu por outro caminho.
+        {leitura}
+      </Vazio>
+    );
+  }
+  return (
+    <Vazio titulo="Nenhuma publicação nova">
+      Última busca às {u.hora}{diaDoInstante(u.em) === eu.hoje ? "" : ` de ${diaCurto(diaDoInstante(u.em))}`}. Próxima busca {proximaBusca()}.
+    </Vazio>
   );
 }
 

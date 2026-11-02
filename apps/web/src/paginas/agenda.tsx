@@ -28,9 +28,9 @@ import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
 import { Avatar, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Segmentos, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaDaSemana, diaMes, juntar, ondeTramita } from "@/lib/formato";
 import type { VistaDaAgenda } from "@/lib/rotas";
 import type { Agenda, Audiencia, Feriados, ItemDaAgenda, PreparacaoDeAudiencia } from "@/lib/tipos";
@@ -158,6 +158,12 @@ export function AgendaPage() {
     </div>
   );
   const dias = (a?.dias ?? []).filter((d) => p && d.dia >= p.de && d.dia <= p.ate);
+  const pode = podeCriar(eu.data);
+  const novaTarefa = (
+    <Botao pequeno onClick={() => setNova("tarefa")}>
+      <Plus /> Nova tarefa
+    </Botao>
+  );
   const lista = !a ? (
     <Carregando />
   ) : dias.length ? (
@@ -168,12 +174,16 @@ export function AgendaPage() {
       </section>
     ))
   ) : (
-    <Vazio titulo="Nada nestas duas semanas">Audiências e tarefas aparecem aqui, com os vencimentos de prazo.</Vazio>
+    <Vazio titulo="Nada nestas duas semanas" acao={pode && novaTarefa}>
+      As audiências, as tarefas e os vencimentos de prazo aparecem aqui, dia a dia.
+      {!pode && <span>{SO_LEITURA}</span>}
+    </Vazio>
   );
   const doDia = porDia.get(dia) ?? [];
   const vazioDoDia = (
-    <Vazio titulo={feriados.get(dia)?.fechado ? feriados.get(dia)!.nome : "Nada neste dia"}>
-      {dia < hoje ? "Nenhuma audiência, prazo aberto ou tarefa." : `Nenhuma audiência, prazo ou tarefa. ${celular ? "Toque em + para" : "Use Tarefa ou Audiência para"} marcar algo neste dia.`}
+    <Vazio titulo={feriados.get(dia)?.fechado ? feriados.get(dia)!.nome : "Nada neste dia"} acao={pode && dia >= hoje && novaTarefa}>
+      {dia < hoje ? "Nenhuma audiência, prazo aberto ou tarefa." : "Nenhuma audiência, prazo ou tarefa."}
+      {!pode && dia >= hoje && <span>{SO_LEITURA}</span>}
     </Vazio>
   );
 
@@ -246,21 +256,23 @@ export function AgendaPage() {
             <button type="button" className="dc-btn dc-btn--fantasma dc-topo__texto-btn" onClick={() => ir({ dia: hoje })}>
               Hoje
             </button>
-            <Menu.Root>
-              <Menu.Trigger className="dc-btn dc-btn--fantasma" aria-label="Nova tarefa ou audiência">
-                <Plus />
-              </Menu.Trigger>
-              <Menu.Portal>
-                <Menu.Content className="dc-menu-flutuante dc dc-celular" align="end" sideOffset={4}>
-                  <Menu.Item className="dc-menu-flutuante__item" onSelect={() => setNova("tarefa")}>
-                    <ListTodo aria-hidden /> Nova tarefa
-                  </Menu.Item>
-                  <Menu.Item className="dc-menu-flutuante__item" onSelect={() => setNova("audiencia")}>
-                    <Gavel aria-hidden /> Nova audiência
-                  </Menu.Item>
-                </Menu.Content>
-              </Menu.Portal>
-            </Menu.Root>
+            {pode && (
+              <Menu.Root>
+                <Menu.Trigger className="dc-btn dc-btn--fantasma" aria-label="Nova tarefa ou audiência">
+                  <Plus />
+                </Menu.Trigger>
+                <Menu.Portal>
+                  <Menu.Content className="dc-menu-flutuante dc dc-celular" align="end" sideOffset={4}>
+                    <Menu.Item className="dc-menu-flutuante__item" onSelect={() => setNova("tarefa")}>
+                      <ListTodo aria-hidden /> Nova tarefa
+                    </Menu.Item>
+                    <Menu.Item className="dc-menu-flutuante__item" onSelect={() => setNova("audiencia")}>
+                      <Gavel aria-hidden /> Nova audiência
+                    </Menu.Item>
+                  </Menu.Content>
+                </Menu.Portal>
+              </Menu.Root>
+            )}
           </>
         }
         fixo={
@@ -291,14 +303,16 @@ export function AgendaPage() {
         titulo="Agenda"
         sub={resumo}
         acoes={
-          <>
-            <Botao onClick={() => setNova("audiencia")}>
-              <Plus /> Audiência
-            </Botao>
-            <Botao variante="primaria" onClick={() => setNova("tarefa")}>
-              <Plus /> Tarefa
-            </Botao>
-          </>
+          pode && (
+            <>
+              <Botao onClick={() => setNova("audiencia")}>
+                <Plus /> Audiência
+              </Botao>
+              <Botao variante="primaria" onClick={() => setNova("tarefa")}>
+                <Plus /> Tarefa
+              </Botao>
+            </>
+          )
         }
       />
       <div className="dc-agenda-barra">

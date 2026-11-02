@@ -5,13 +5,16 @@
  * um processo.
  */
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { CircleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { Dialogo } from "@/componentes/dialogo";
-import { Botao, Carregando, Faixa } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { Botao, Carregando, Faixa, Vazio } from "@/componentes/ui";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
+import { ehSocio } from "@/lib/auth";
+import { equipeQuery, escritorioQuery, podeCriar } from "@/lib/consultas";
 import { diaCurto, diaDoInstante, hora } from "@/lib/formato";
-import type { DoDjen, SaudeDaCaptura, TribunalNaCaptura } from "@/lib/tipos";
+import type { DoDjen, Eu, SaudeDaCaptura, TribunalNaCaptura } from "@/lib/tipos";
 
 export const saudeDaCapturaQuery = {
   queryKey: ["publicacoes", "saude"],
@@ -102,6 +105,79 @@ export function Cancelada({ cancelada, comPrazo }: { cancelada: NonNullable<DoDj
       <span>
         O tribunal cancelou esta publicação no DJEN{cancelada.motivo ? ` (${cancelada.motivo})` : ""}. {comPrazo ? "Confira se o prazo que ela abriu ainda vale." : "Não conte prazo por ela."}
       </span>
+    </Faixa>
+  );
+}
+
+type Falta = "desligada" | "sem_oab";
+
+const FALTA: Record<Falta, { titulo: string; texto: string; aoSocio: string; aosOutros: string }> = {
+  sem_oab: {
+    titulo: "Falta a OAB para achar as publicações",
+    texto: "O Decreta busca as publicações no DJEN pela OAB da equipe. Sem nenhuma cadastrada, esta caixa pode ficar vazia mesmo quando há intimação.",
+    aoSocio: "Cadastrar a OAB",
+    aosOutros: "Peça a um sócio para cadastrar a OAB na tela da Equipe.",
+  },
+  desligada: {
+    titulo: "A busca no DJEN está desligada",
+    texto: "Com ela desligada, nenhuma publicação chega sozinha: esta caixa fica vazia mesmo quando há intimação.",
+    aoSocio: "Ligar a busca",
+    aosOutros: "Peça a um sócio para ligar a busca em Configurações.",
+  },
+};
+
+/**
+ * O que impede a busca no DJEN: ela desligada ou nenhuma OAB para procurar. Com isso a caixa fica vazia sem estar em
+ * dia, e a tela não pode dizer que não há nada. `undefined` enquanto ainda não dá para saber.
+ */
+export function useFaltaParaBuscar(ligado: boolean): Falta | null | undefined {
+  const escritorio = useQuery({ ...escritorioQuery, enabled: ligado });
+  const equipe = useQuery({ ...equipeQuery, enabled: ligado });
+  if (!escritorio.data || !equipe.data) return undefined;
+  if (!escritorio.data.capturaDjen) return "desligada";
+  return equipe.data.pessoas.some((p) => p.oabNumero) ? null : "sem_oab";
+}
+
+/** Quem pode resolver vai direto: a OAB entra no /comecar enquanto ele está pendente (salvar lá já busca), senão na Equipe. */
+function Resolver({ falta, eu }: { falta: Falta; eu: Eu }) {
+  if (falta === "desligada") {
+    return (
+      <Link to="/configuracoes" search={{ aba: "avisos" }} className="dc-btn dc-btn--primaria dc-btn--sm">
+        {FALTA.desligada.aoSocio}
+      </Link>
+    );
+  }
+  return (
+    <Link to={eu.escritorio.onboarding ? "/comecar" : "/equipe"} className="dc-btn dc-btn--primaria dc-btn--sm">
+      {FALTA.sem_oab.aoSocio}
+    </Link>
+  );
+}
+
+/** A caixa vazia por causa da falta, na tela de Publicações. */
+export function VazioPorFalta({ falta, eu }: { falta: Falta; eu: Eu }) {
+  const pode = podeCriar(eu);
+  const socio = ehSocio(eu.usuario.papel);
+  return (
+    <Vazio titulo={FALTA[falta].titulo} acao={pode && socio && <Resolver falta={falta} eu={eu} />}>
+      {FALTA[falta].texto}
+      {!pode ? <span>{SO_LEITURA}</span> : !socio && <span>{FALTA[falta].aosOutros}</span>}
+    </Vazio>
+  );
+}
+
+/** A mesma falta, em uma faixa: no painel e no cartão do Hoje, onde a caixa não está à vista. */
+export function AvisoDaFalta({ falta, eu }: { falta: Falta; eu: Eu }) {
+  const pode = podeCriar(eu) && ehSocio(eu.usuario.papel);
+  return (
+    <Faixa tipo="aviso">
+      <CircleAlert />
+      <span className="flex-1">{pode ? FALTA[falta].titulo : `${FALTA[falta].titulo}. ${FALTA[falta].aosOutros}`}</span>
+      {pode && (
+        <Link to={falta === "desligada" ? "/configuracoes" : eu.escritorio.onboarding ? "/comecar" : "/equipe"} search={falta === "desligada" ? { aba: "avisos" } : undefined} className="dc-link flex-none">
+          {FALTA[falta].aoSocio}
+        </Link>
+      )}
     </Faixa>
   );
 }

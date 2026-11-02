@@ -12,8 +12,9 @@ import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, numero } from "@/lib/formato";
 import type { Catalogo, Modelo, ModeloNaLista } from "@/lib/tipos";
 
@@ -39,6 +40,8 @@ function OpcoesDeTipo({ catalogo }: { catalogo: Catalogo | undefined }) {
 
 export function ModelosPage() {
   const celular = useCelular();
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const [texto, setTexto] = useState("");
   const [tipo, setTipo] = useState("");
   const busca = useDeferredValue(texto.trim());
@@ -69,15 +72,37 @@ export function ModelosPage() {
     </div>
   );
   const vazio =
-    q.data && !q.data.total ? (
-      <Vazio titulo="Nenhum modelo ainda">
-        Guarde aqui as peças boas do escritório: em Gerar peça, depois de revisar, use Guardar como modelo. Ou envie o DOCX que já está no computador.
-        <Botao variante="primaria" pequeno onClick={() => setNovo(true)}>
-          <Plus /> Novo modelo
-        </Botao>
+    q.data && !q.data.total && !filtrando ? (
+      <Vazio
+        titulo="Nenhum modelo ainda"
+        acao={
+          pode && (
+            <Botao variante="primaria" pequeno onClick={() => setNovo(true)}>
+              <Plus /> Novo modelo
+            </Botao>
+          )
+        }
+      >
+        Guarde aqui as peças boas do escritório: em Gerar peça, depois de revisar, use Guardar como modelo. Ou envie o DOCX que já está no computador. Ao gerar uma peça, a IA segue os dois mais parecidos.
+        {!pode && <span>{SO_LEITURA}</span>}
       </Vazio>
     ) : (
-      <Vazio titulo="Nada encontrado">Tente outra palavra ou outro tipo.</Vazio>
+      <Vazio
+        titulo="Nenhum modelo com esse filtro"
+        acao={
+          <Botao
+            pequeno
+            onClick={() => {
+              setTexto("");
+              setTipo("");
+            }}
+          >
+            Limpar os filtros
+          </Botao>
+        }
+      >
+        Tente outra palavra ou outro tipo.
+      </Vazio>
     );
   const dialogos = (
     <>
@@ -93,9 +118,11 @@ export function ModelosPage() {
         sobre={sub}
         voltar
         direita={
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo modelo" onClick={() => setNovo(true)}>
-            <Plus />
-          </button>
+          pode && (
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo modelo" onClick={() => setNovo(true)}>
+              <Plus />
+            </button>
+          )
         }
         fixo={filtros}
       >
@@ -131,9 +158,11 @@ export function ModelosPage() {
         titulo="Modelos"
         sub={sub}
         acoes={
-          <Botao variante="primaria" onClick={() => setNovo(true)}>
-            <Plus /> Novo modelo
-          </Botao>
+          pode && (
+            <Botao variante="primaria" onClick={() => setNovo(true)}>
+              <Plus /> Novo modelo
+            </Botao>
+          )
         }
       />
       {filtros}

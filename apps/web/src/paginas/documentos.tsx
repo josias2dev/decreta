@@ -15,8 +15,9 @@ import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Rolagem } from "@/componentes/rolagem";
 import { Botao, Cabecalho, CampoDeBusca, Carregando, Faixa, Vazio } from "@/componentes/ui";
 import { abreNoNavegador, urlDoArquivo, VerDocumento } from "@/componentes/ver-documento";
-import { api, mensagemDoErro } from "@/lib/api";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, numero, tamanho } from "@/lib/formato";
 import type { Documento } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -57,6 +58,8 @@ export function DocumentosPage() {
   const celular = useCelular();
   const { doc, pagina } = useSearch({ from: "/app/documentos" });
   const navigate = useNavigate({ from: "/documentos" });
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const [texto, setTexto] = useState("");
   const busca = useDeferredValue(texto.trim());
   const docs = useQuery({ queryKey: ["documentos", "todos", busca], queryFn: () => api<{ itens: Documento[] }>(`/documentos${busca ? `?busca=${encodeURIComponent(busca)}` : ""}`), placeholderData: (a) => a, refetchInterval: enquantoLe });
@@ -74,7 +77,23 @@ export function DocumentosPage() {
 
   const sub = docs.data ? `${numero(itens.length)}${itens.length === 200 ? "+" : ""} ${itens.length === 1 ? "documento" : "documentos"}${busca ? " encontrados" : ", os mais recentes primeiro"}` : " ";
   const campo = <CampoDeBusca valor={texto} aoMudar={setTexto} rotulo="Buscar documento" placeholder="Nome, processo ou cliente" />;
-  const vazio = <Vazio titulo={busca ? "Nada encontrado" : "Nenhum documento ainda"}>{busca ? "Tente outra palavra do nome, do processo ou do cliente." : "Os documentos enviados nos processos e clientes aparecem aqui."}</Vazio>;
+  const vazio = busca ? (
+    <Vazio
+      titulo={`Nenhum documento com “${busca}”`}
+      acao={
+        <Botao pequeno onClick={() => setTexto("")}>
+          Limpar a busca
+        </Botao>
+      }
+    >
+      Tente outra palavra do nome, do processo ou do cliente.
+    </Vazio>
+  ) : (
+    <Vazio titulo="Nenhum documento ainda" acao={pode && <Enviar />}>
+      Os documentos dos autos, os dos clientes e as peças baixadas ficam aqui. Envie PDF, DOCX ou imagem: a IA lê o texto e usa no resumo, no briefing e nas peças.
+      {!pode && <span>{SO_LEITURA}</span>}
+    </Vazio>
+  );
   const dialogo = apagando && <Apagar d={apagando} aoFechar={() => setApagando(null)} aoApagar={() => apagando.id === doc && abrir(undefined)} />;
 
   if (celular) {
@@ -110,7 +129,7 @@ export function DocumentosPage() {
         </TelaCelular>
       );
     return (
-      <TelaCelular titulo="Documentos" sobre={sub} voltar direita={<Enviar />} fixo={campo}>
+      <TelaCelular titulo="Documentos" sobre={sub} voltar direita={pode && <Enviar />} fixo={campo}>
         {!docs.data ? (
           <Carregando />
         ) : itens.length ? (
@@ -139,7 +158,7 @@ export function DocumentosPage() {
   }
   return (
     <Pagina cheia>
-      <Cabecalho titulo="Documentos" sub={sub} acoes={<Enviar />} />
+      <Cabecalho titulo="Documentos" sub={sub} acoes={pode && <Enviar />} />
       <div className="dc-filtros">{campo}</div>
       <div className={cn("dc-docs", doc && "dc-docs--aberto")}>
         <section className="dc-painel dc-docs__lista">

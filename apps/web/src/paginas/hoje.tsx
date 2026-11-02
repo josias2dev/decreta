@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, CircleAlert, FolderPlus, MessageSquarePlus, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { AuditoriaDaCarteira } from "@/componentes/auditoria";
-import { AvisoDaCaptura } from "@/componentes/captura-do-djen";
+import { AvisoDaCaptura, AvisoDaFalta, useFaltaParaBuscar } from "@/componentes/captura-do-djen";
 import { AvisoDoTeste } from "@/componentes/faixa-do-plano";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
@@ -40,6 +40,8 @@ export function HojePage() {
   const [novo, setNovo] = useState<"cliente" | "processo" | "atendimento" | null>(null);
 
   const p = painel.data;
+  // Sem publicação nova à vista: sem OAB ou com a busca desligada, a frase da próxima busca seria falsa.
+  const falta = useFaltaParaBuscar(!!p && !p.publicacoes.length);
   const itens = p?.itens.filter((i) => filtro === "tudo" || i.tipo === filtro) ?? [];
   const conta = (t: Filtro) => (t === "tudo" ? (p?.itens.length ?? 0) : (p?.itens.filter((i) => i.tipo === t).length ?? 0));
   const rotuloDoDia = p ? p.rotulo.charAt(0).toUpperCase() + p.rotulo.slice(1) : "";
@@ -148,6 +150,7 @@ export function HojePage() {
             <Numeros painel={p} celular />
             <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
             <AvisoDaLeitura n={p.contadores.publicacoesSemLeitura} />
+            {falta && eu.data && <AvisoDaFalta falta={falta} eu={eu.data} />}
             {p.contadores.publicacoesNovas > 0 && (
               <Link to="/publicacoes" className="dc-cartao dc-cartao--ia">
                 <MarcaIa />
@@ -251,9 +254,11 @@ export function HojePage() {
                       </Link>
                     )}
                   </div>
-                ) : (
+                ) : falta && eu.data ? (
+                  <AvisoDaFalta falta={falta} eu={eu.data} />
+                ) : falta === null ? (
                   <p className="dc-nota m-0">Nenhuma publicação nova. A próxima busca no DJEN sai no horário de sempre.</p>
-                )}
+                ) : null}
               </Painel>
               <Painel titulo="Por responsável" acao={<span className="dc-nota">Hoje · semana</span>} corpo={false}>
                 {p.porResponsavel.length ? (

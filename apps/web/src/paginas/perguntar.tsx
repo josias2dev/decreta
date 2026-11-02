@@ -132,11 +132,15 @@ function Perguntar({ conversaId }: { conversaId: string | null }) {
   } else if (naoAchou) {
     conversa = (
       <div className="dc-chat__coluna">
-        <Vazio titulo="Conversa não encontrada">
-          Pode ter sido apagada.{" "}
-          <Link to="/perguntar" className="dc-link">
-            Começar uma nova
-          </Link>
+        <Vazio
+          titulo="Conversa não encontrada"
+          acao={
+            <Link to="/perguntar" className="dc-link">
+              Começar uma nova
+            </Link>
+          }
+        >
+          Pode ter sido apagada.
         </Vazio>
       </div>
     );
@@ -459,7 +463,16 @@ function Historico({ conversas, ativa, aoEscolher, aoApagar }: { conversas?: Con
             <Carregando linhas={3} />
           </div>
         ) : !lista.length ? (
-          <p className="dc-historico__vazio">{termo.length >= 2 ? "Nenhuma conversa com isso." : "Suas conversas ficam aqui. Só você vê."}</p>
+          termo.length >= 2 ? (
+            <p className="dc-historico__vazio">
+              Nenhuma conversa com “{termo}”.{" "}
+              <button type="button" className="dc-link" onClick={() => setBusca("")}>
+                Limpar a busca
+              </button>
+            </p>
+          ) : (
+            <p className="dc-historico__vazio">Suas conversas ficam aqui. Só você vê.</p>
+          )
         ) : (
           grupos.map(([nome, ks]) => (
             <section key={nome} className="dc-historico__grupo">

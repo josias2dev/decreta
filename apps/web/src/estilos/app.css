@@ -284,7 +284,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 /* Nome da etapa numa linha só, para os cartões de todas as colunas começarem na mesma altura. */
 .dc-quadro__nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-quadro__n { flex: none; font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); font-variant-numeric: tabular-nums; color: var(--tinta-3); }
-.dc-quadro__vazio { border: 1px dashed var(--borda-forte); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-3); }
+.dc-quadro__vazio { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); border: 1px dashed var(--borda-forte); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-3); }
 
 /* ---------- Entrar ---------- */
 .dc-entrada { min-height: 100dvh; display: grid; place-items: center; padding: var(--space-6) var(--space-4); box-sizing: border-box; background: var(--papel); position: relative; isolation: isolate; }
@@ -620,6 +620,8 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 
 /* Publicações: a lista e a publicação aberta rolam cada uma por si; as ações da publicação ficam à vista. */
 .dc-pagina--cheia > .dc-caixa { flex: 1 1 auto; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+/* Sem nada para abrir, a caixa ocupa a largura: o texto do vazio não fica preso na coluna da lista. */
+.dc-caixa.dc-caixa--vazia { grid-template-columns: minmax(0, 1fr); }
 .dc-pagina--cheia .dc-caixa__lista { position: static; max-height: 100%; }
 
 /* Documentos: a lista e, com um aberto, o arquivo à direita (5 para 7), cada um rolando por si.

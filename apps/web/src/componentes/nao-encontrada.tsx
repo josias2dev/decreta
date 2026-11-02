@@ -29,22 +29,30 @@ export function NaoEncontrada() {
 export function FalhaAoCarregar({ erro, sumiu, aoTentar }: { erro: unknown; sumiu: string; aoTentar?: () => void }) {
   if (erro instanceof ApiError && erro.status === 404) {
     return (
-      <Vazio titulo={sumiu}>
+      <Vazio
+        titulo={sumiu}
+        acao={
+          <Link to="/hoje" className="dc-link">
+            Ir para Hoje
+          </Link>
+        }
+      >
         Pode ter sido apagado ou o link está errado.
-        <Link to="/hoje" className="dc-link">
-          Ir para Hoje
-        </Link>
       </Vazio>
     );
   }
   return (
-    <Vazio titulo="Não consegui carregar">
+    <Vazio
+      titulo="Não consegui carregar"
+      acao={
+        aoTentar && (
+          <Botao pequeno onClick={aoTentar}>
+            Tentar de novo
+          </Botao>
+        )
+      }
+    >
       {mensagemDoErro(erro)}
-      {aoTentar && (
-        <Botao pequeno onClick={aoTentar}>
-          Tentar de novo
-        </Botao>
-      )}
     </Vazio>
   );
 }
@@ -53,16 +61,20 @@ export function FalhaAoCarregar({ erro, sumiu, aoTentar }: { erro: unknown; sumi
 export function ErroNaTela({ reset }: ErrorComponentProps) {
   return (
     <div className="dc-erro-na-tela" role="alert">
-      <Vazio titulo="Algo deu errado nesta tela">
+      <Vazio
+        titulo="Algo deu errado nesta tela"
+        acao={
+          <>
+            <Botao pequeno onClick={reset}>
+              Tentar de novo
+            </Botao>
+            <Link to="/hoje" className="dc-link">
+              Ir para Hoje
+            </Link>
+          </>
+        }
+      >
         Tente de novo. Se continuar, volte para Hoje e abra a tela outra vez.
-        <span className="flex flex-wrap items-center justify-center gap-3">
-          <Botao pequeno onClick={reset}>
-            Tentar de novo
-          </Botao>
-          <Link to="/hoje" className="dc-link">
-            Ir para Hoje
-          </Link>
-        </span>
       </Vazio>
     </div>
   );

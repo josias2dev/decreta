@@ -14,8 +14,8 @@ import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
 import { EscolherCliente } from "@/componentes/novos";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { Botao, Campo, Dados, Faixa, Painel, Segmentos, Selo, Vazio } from "@/componentes/ui";
-import { api, mensagemDoErro } from "@/lib/api";
-import { euQuery } from "@/lib/consultas";
+import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { campoDeCentavos, centavosDoCampo, diaCompleto, diaCurto, percentual, reais } from "@/lib/formato";
 import type { ContratoDeHonorarios, EstadoDaCobranca, FinanceiroDoCaso, FormaDePagamento, ParcelaDeHonorario, TipoDeContrato } from "@/lib/tipos";
 
@@ -586,19 +586,34 @@ export function FinanceiroDoCasoPainel({ tipo, id, caso }: { tipo: "clientes" | 
   const [novo, setNovo] = useState(false);
   const [aberta, setAberta] = useState<ParcelaDeHonorario | null>(null);
   const d = q.data;
+  const pode = podeCriar(eu.data);
   return (
     <Painel
       titulo="Honorários"
       acao={
-        <Botao pequeno variante="secundaria" onClick={() => setNovo(true)}>
-          <Plus /> Novo contrato
-        </Botao>
+        pode && (
+          <Botao pequeno variante="secundaria" onClick={() => setNovo(true)}>
+            <Plus /> Novo contrato
+          </Botao>
+        )
       }
     >
       {!d ? (
         <p className="m-0 dc-nota">Carregando…</p>
       ) : !d.contratos.length ? (
-        <Vazio titulo="Nenhum contrato de honorários">Registre o valor combinado, as parcelas ou o percentual de êxito. O alvará sacado calcula a sua parte daqui.</Vazio>
+        <Vazio
+          titulo={tipo === "processos" ? "Nenhum contrato de honorários neste processo" : "Nenhum contrato de honorários deste cliente"}
+          acao={
+            pode && (
+              <Botao pequeno variante="primaria" onClick={() => setNovo(true)}>
+                <Plus /> Registrar o contrato
+              </Botao>
+            )
+          }
+        >
+          Registre o valor combinado, as parcelas ou o percentual de êxito. O alvará sacado calcula a sua parte daqui.
+          {!pode && <span>{SO_LEITURA}</span>}
+        </Vazio>
       ) : (
         <div className="flex flex-col gap-4">
           <div className="dc-grade-2">
@@ -655,6 +670,8 @@ export function FinanceiroDoCasoPainel({ tipo, id, caso }: { tipo: "clientes" | 
 
 /** O aviso discreto no processo: em andamento, sem contrato de honorários. Dispensa-se de vez. Só para quem vê o Financeiro. */
 export function AvisoSemHonorario({ processo }: { processo: { id: string; titulo: string; cliente?: { id: string; nome: string } | null } }) {
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const liberado = useFinanceiroLiberado();
   const atualizar = useAtualizarFinanceiro();
   const avisar = useAviso();
@@ -670,12 +687,16 @@ export function AvisoSemHonorario({ processo }: { processo: { id: string; titulo
     <>
       <div className="dc-faixa dc-faixa--nota" role="note">
         <span className="flex-1">Este processo ainda não tem honorário registrado.</span>
-        <Botao variante="fantasma" pequeno onClick={() => setNovo(true)}>
-          Adicionar honorário
-        </Botao>
-        <Botao variante="fantasma" pequeno onClick={() => dispensar.mutate()} ocupado={dispensar.isPending}>
-          Dispensar
-        </Botao>
+        {pode && (
+          <>
+            <Botao variante="fantasma" pequeno onClick={() => setNovo(true)}>
+              Adicionar honorário
+            </Botao>
+            <Botao variante="fantasma" pequeno onClick={() => dispensar.mutate()} ocupado={dispensar.isPending}>
+              Dispensar
+            </Botao>
+          </>
+        )}
       </div>
       <NovoContrato aberto={novo} aoFechar={() => setNovo(false)} caso={{ processo: { id: processo.id, titulo: processo.titulo }, cliente: processo.cliente ?? null }} />
     </>

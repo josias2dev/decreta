@@ -199,7 +199,7 @@ function Faturas({ p }: { p: Plano }) {
           })}
         </div>
       ) : (
-        <Vazio titulo="Nenhuma fatura ainda">A primeira aparece aqui quando o escritório assina.</Vazio>
+        <Vazio titulo="Nenhuma fatura ainda">{!p.cobrancaAtiva ? "A cobrança ainda não foi aberta: não há nada a pagar." : p.situacao === "cortesia" ? "Este escritório tem acesso por cortesia: não há nada a pagar." : p.podeAssinar ? "A primeira aparece aqui quando o escritório assina, em Assinar o plano." : "A primeira aparece aqui quando o escritório assina."}</Vazio>
       )}
     </Painel>
   );

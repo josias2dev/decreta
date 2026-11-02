@@ -10,9 +10,9 @@ import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, Campo, Carregando, Chip, Faixa, Vazio } from "@/componentes/ui";
-import { API_URL, api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCurto, diaDoInstante, telefone } from "@/lib/formato";
 import type { EtapaNegocio, Negocio, Pasta, PastaDoNegocio } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -30,10 +30,19 @@ const PASTA: Record<Pasta, { rotulo: string; classe: string }> = {
   sem_pasta: { rotulo: "Sem pasta", classe: "dc-selo--prazo" },
 };
 
+/** O que entra em cada coluna: quadro vazio é o lugar de explicar o caminho. */
+const ETAPA_VAZIA: Record<EtapaNegocio, { titulo: string; texto: string }> = {
+  triagem: { titulo: "Ninguém em triagem", texto: "Quem procura o escritório entra aqui até a pasta ficar pronta." },
+  repassado: { titulo: "Ninguém repassado", texto: "Quem já foi passado a um advogado do escritório." },
+  concluido: { titulo: "Ninguém virou cliente ainda", texto: "Quem virou cliente. A pasta da triagem passa para o cliente." },
+  desistiu: { titulo: "Ninguém desistiu", texto: "Quem não seguiu com o escritório." },
+};
+
 type Lista = { contagens: Partial<Record<EtapaNegocio, number>>; itens: Negocio[] };
 
 export function NegociosPage() {
   const celular = useCelular();
+  const eu = useQuery(euQuery);
   const q = useQuery({ queryKey: ["negocios"], queryFn: () => api<Lista>("/negocios?etapa=todos") });
   const [etapa, setEtapa] = useState<EtapaNegocio>("triagem");
   const [aberto, setAberto] = useState<string | null>(null);
@@ -67,7 +76,18 @@ export function NegociosPage() {
       </button>
     );
   };
-  const vazio = (e: EtapaNegocio) => <Vazio titulo={e === "triagem" ? "Ninguém em triagem" : "Nada aqui"}>{e === "triagem" ? "Quem procura o escritório entra aqui até a pasta ficar pronta." : null}</Vazio>;
+  const pode = podeCriar(eu.data);
+  const botaoNovo = (
+    <Botao pequeno onClick={() => setNovo(true)}>
+      <Plus /> Novo negócio
+    </Botao>
+  );
+  const vazio = (e: EtapaNegocio) => (
+    <Vazio titulo={ETAPA_VAZIA[e].titulo} acao={pode && e === "triagem" && botaoNovo}>
+      {ETAPA_VAZIA[e].texto}
+      {!pode && e === "triagem" && <span>{SO_LEITURA}</span>}
+    </Vazio>
+  );
 
   const dialogos = (
     <>
@@ -84,9 +104,11 @@ export function NegociosPage() {
         sobre={q.data ? `${n("triagem")} em triagem` : " "}
         voltar
         direita={
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo negócio" onClick={() => setNovo(true)}>
-            <Plus />
-          </button>
+          pode && (
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo negócio" onClick={() => setNovo(true)}>
+              <Plus />
+            </button>
+          )
         }
         fixo={
           <div className="dc-chips">
@@ -110,9 +132,11 @@ export function NegociosPage() {
         titulo="Novos negócios"
         sub={sub}
         acoes={
-          <Botao variante="primaria" onClick={() => setNovo(true)}>
-            <Plus /> Novo negócio
-          </Botao>
+          pode && (
+            <Botao variante="primaria" onClick={() => setNovo(true)}>
+              <Plus /> Novo negócio
+            </Botao>
+          )
         }
       />
       {!q.data ? (
@@ -123,7 +147,14 @@ export function NegociosPage() {
             const daEtapa = itens.filter((i) => i.etapa === e.id);
             return (
               <ColunaDoQuadro key={e.id} id={`negocios-${e.id}`} className={`dc-etapa dc-etapa--${e.id}`} titulo={e.rotulo} valor={n(e.id)}>
-                {daEtapa.length ? daEtapa.map(cartao) : <div className="dc-quadro__vazio">{e.id === "triagem" ? "Quem procura o escritório entra aqui até a pasta ficar pronta." : "Nada aqui"}</div>}
+                {daEtapa.length ? (
+                  daEtapa.map(cartao)
+                ) : (
+                  <div className="dc-quadro__vazio">
+                    {ETAPA_VAZIA[e.id].texto}
+                    {pode && e.id === "triagem" && botaoNovo}
+                  </div>
+                )}
               </ColunaDoQuadro>
             );
           })}

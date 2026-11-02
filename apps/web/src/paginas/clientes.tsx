@@ -222,13 +222,16 @@ export function ClientePage() {
   const hoje = eu.data?.hoje;
   const sobre = [c.documento && formatarDocumento(c.documento), telefone(c.whatsapp ?? c.telefone), c.email].filter(Boolean).join(" · ");
 
+  const pode = podeCriar(eu.data);
   const processos = (
     <Painel
       titulo="Processos"
       acao={
-        <Botao variante="fantasma" pequeno onClick={() => setDialogo("processo")}>
-          <FolderPlus /> Novo
-        </Botao>
+        pode && (
+          <Botao variante="fantasma" pequeno onClick={() => setDialogo("processo")}>
+            <FolderPlus /> Novo
+          </Botao>
+        )
       }
       corpo={false}
     >
@@ -249,7 +252,7 @@ export function ClientePage() {
           ))}
         </div>
       ) : (
-        <Vazio titulo="Nenhum processo" />
+        <Vazio titulo="Nenhum processo deste cliente">{pode ? "Cadastre em Novo: o processo já nasce ligado a este cliente." : SO_LEITURA}</Vazio>
       )}
     </Painel>
   );
@@ -261,9 +264,11 @@ export function ClientePage() {
     <Painel
       titulo="Atendimentos"
       acao={
-        <Botao variante="fantasma" pequeno onClick={() => setDialogo("atendimento")}>
-          <MessageSquarePlus /> Novo
-        </Botao>
+        pode && (
+          <Botao variante="fantasma" pequeno onClick={() => setDialogo("atendimento")}>
+            <MessageSquarePlus /> Novo
+          </Botao>
+        )
       }
       corpo={false}
     >
@@ -282,7 +287,7 @@ export function ClientePage() {
           ))}
         </div>
       ) : (
-        <Vazio titulo="Nenhum atendimento">Registre a conversa com o cliente. Dá para colar o áudio transcrito e a IA organiza.</Vazio>
+        <Vazio titulo="Nenhum atendimento registrado">{pode ? "Registre a conversa com o cliente. Dá para colar o áudio transcrito e a IA organiza." : `A conversa registrada com o cliente fica aqui. ${SO_LEITURA}`}</Vazio>
       )}
     </Painel>
   );
@@ -305,7 +310,7 @@ export function ClientePage() {
   );
 
   const documentos = (
-    <Painel titulo="Documentos" acao={<Enviar clienteId={c.id} />} corpo={false}>
+    <Painel titulo="Documentos" acao={pode && <Enviar clienteId={c.id} />} corpo={false}>
       {c.documentos.length ? (
         <div className="dc-linhas">
           {c.documentos.map((d) => (
@@ -322,7 +327,7 @@ export function ClientePage() {
           ))}
         </div>
       ) : (
-        <Vazio titulo="Nenhum documento">RG, comprovantes, procuração.</Vazio>
+        <Vazio titulo="Nenhum documento deste cliente">RG, comprovantes e procuração ficam aqui, e a IA confere se a pasta está completa.{!pode && ` ${SO_LEITURA}`}</Vazio>
       )}
     </Painel>
   );

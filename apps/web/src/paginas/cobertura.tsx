@@ -76,7 +76,14 @@ export function CoberturaPage() {
               const doRamo = lista.filter((t) => t.ramo === r.id);
               return doRamo.length ? <Grupo key={r.id} rotulo={r.rotulo} linhas={doRamo} /> : null;
             })}
-            {!lista.length && <p>Nenhum tribunal com esse nome.</p>}
+            {!lista.length && (
+              <p>
+                Nenhum tribunal com “{busca.trim()}”.{" "}
+                <button type="button" className="dc-link" onClick={() => setBusca("")}>
+                  Limpar a busca
+                </button>
+              </p>
+            )}
           </>
         )}
       </SecaoLegal>
