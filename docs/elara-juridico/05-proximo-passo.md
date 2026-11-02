@@ -1,0 +1,3 @@
+# Próximo passo
+
+O passo mais importante nesse momento seria um processo de validação de viabilidade econômica. De uma forma simples, seria uma pesquisa de mercado direta, falando com escritórios de advocacia pra entender se já utilizam alguma plataforma similar, quanto pagam, se estão satisfeitas e se teriam pretensão de migrar para o ELARA considerando os diferenciais propostos. Esta pesquisa deve ser quantitativa com uma amostragem razoável pra se chegar a um possível padrão de comportamento, com os números levantados na pesquisa e com base nos dados disponíveis de mercado potencial pode-se estimar a viabilidade econômica e a capacidade de escala do projeto
