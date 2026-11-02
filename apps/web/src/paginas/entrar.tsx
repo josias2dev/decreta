@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { FundoAscii, useCorDaBarra } from "@/componentes/fundo-ascii";
 import { LogoCompleta } from "@/componentes/marca";
+import { LinksLegais } from "@/componentes/pagina-legal";
 import { Botao, Campo, Faixa } from "@/componentes/ui";
 import { authCall, authClient } from "@/lib/auth";
 import { euQuery } from "@/lib/consultas";
@@ -38,6 +39,7 @@ export function CaixaDeEntrada({ titulo, sub, children, pe }: { titulo: string; 
           <Lock aria-hidden />
           Conexão segura · verificação em duas etapas
         </span>
+        <LinksLegais />
         <span>© 2026 Decreta</span>
       </footer>
     </div>

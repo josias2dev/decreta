@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
 import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { organization, twoFactor } from "better-auth/plugins";
+import { VERSAO_DOS_TERMOS } from "@decreta/core";
 import { registrar } from "./auditoria.ts";
 import { ehContaDaDemonstracao } from "./demonstracao/slug.ts";
 import { PAPEL, type Mailer } from "./email.ts";
@@ -16,6 +17,9 @@ const FIXOS_NA_DEMONSTRACAO = new Set(["/change-password", "/change-email", "/tw
 
 /** Convite vale uma semana; depois, quem é sócio reenvia pela tela da Equipe. */
 export const DIAS_DO_CONVITE = 7;
+
+/** O que o cadastro e o convite respondem quando a pessoa não aceitou os termos (ou aceitou uma versão que não é a atual). */
+export const AVISO_DO_ACEITE = "Aceite os Termos de Uso e a Política de Privacidade para criar a conta.";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
@@ -72,9 +76,14 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
           return;
         }
         if (ctx.path !== "/sign-up/email") return;
-        const email = String((ctx.body as { email?: unknown } | undefined)?.email ?? "").trim().toLowerCase();
+        const corpo = (ctx.body ?? {}) as { email?: unknown; termosVersao?: unknown };
+        const email = String(corpo.email ?? "").trim().toLowerCase();
         if (!email || !(await temConvite(db, email))) {
           throw new APIError("FORBIDDEN", { code: "SEM_CONVITE", message: "Conta nova só por convite do escritório." });
+        }
+        // Quem entra por convite também aceita os Termos de Uso e a Política de Privacidade, na versão que a tela mostrou.
+        if (corpo.termosVersao !== VERSAO_DOS_TERMOS) {
+          throw new APIError("BAD_REQUEST", { code: "SEM_ACEITE", message: AVISO_DO_ACEITE });
         }
       }),
       after: createAuthMiddleware(async (ctx) => {
@@ -113,7 +122,22 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
         invitation: schema.invitation,
       },
     }),
+    user: {
+      // O aceite dos termos: a versão vem do pedido (e é conferida acima); a data, nunca.
+      additionalFields: {
+        termosVersao: { type: "string", required: false, input: true },
+        termosAceitosEm: { type: "date", required: false, input: false },
+      },
+    },
     databaseHooks: {
+      user: {
+        create: {
+          before: async (pessoa) => {
+            const { termosVersao, termosAceitosEm } = pessoa as { termosVersao?: string | null; termosAceitosEm?: Date | null };
+            return termosVersao && !termosAceitosEm ? { data: { ...pessoa, termosAceitosEm: new Date() } } : undefined;
+          },
+        },
+      },
       session: {
         create: {
           // Quem entra já cai no próprio escritório: a sessão nasce com ele ativo.

@@ -39,8 +39,8 @@ test("segurança: a landing leva à página aberta, com a retenção de cada for
   await expect(page.getByText("Nenhum fornecedor de IA usa os textos do escritório para treinar modelos.")).toBeVisible();
   await expect(page.getByText(/Pela Anthropic, que responde pelos modelos Claude, o pedido fica guardado por até 30 dias/)).toBeVisible();
   const fornecedores = page.getByRole("table", { name: "Fornecedores que tratam dados" });
-  await expect(fornecedores.getByRole("row")).toHaveCount(6);
-  for (const nome of ["Anthropic", "OpenRouter", "Cloudflare R2", "Resend", "WhatsApp (Meta)"]) await expect(fornecedores.getByRole("cell", { name: nome, exact: true })).toBeVisible();
+  await expect(fornecedores.getByRole("row")).toHaveCount(7);
+  for (const nome of ["Anthropic", "OpenRouter", "Cloudflare R2", "Resend", "WhatsApp (Meta)", "Sentry"]) await expect(fornecedores.getByRole("cell", { name: nome, exact: true })).toBeVisible();
 });
 
 test("landing: a tela do produto no topo é imagem e a roda do mouse em cima dela rola a página", async ({ page }) => {

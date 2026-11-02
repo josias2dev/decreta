@@ -5,6 +5,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { randomBytes } from "node:crypto";
+import { VERSAO_DOS_TERMOS } from "@decreta/core";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
 import { createApp } from "../src/app.ts";
@@ -51,8 +52,9 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });
   const beatriz = { nome: "Beatriz Souza", email: "Beatriz@Souza.adv.br", senha: "senha-bem-longa-123", escritorio: "Souza & Mendes Advocacia" };
 
-  const cadastrar = (json: unknown, ip = "203.0.113.7") =>
-    app.request("/api/cadastro", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, "x-forwarded-for": ip }, body: JSON.stringify(json) });
+  // Com o aceite dos termos, que é o que a tela manda; o teste do aceite é o de termos.test.ts.
+  const cadastrar = (json: object, ip = "203.0.113.7") =>
+    app.request("/api/cadastro", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, "x-forwarded-for": ip }, body: JSON.stringify({ termos: VERSAO_DOS_TERMOS, ...json }) });
   const comSessao = (cookie: string, path: string, init: RequestInit = {}) => app.request(`/api/app${path}`, { ...init, headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, cookie } });
   const cookieDe = (r: Response) => r.headers.get("set-cookie")?.split(";")[0] ?? "";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -5,6 +5,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { randomBytes } from "node:crypto";
+import { VERSAO_DOS_TERMOS } from "@decreta/core";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria, extrairTexto, MIME_DOCX } from "@decreta/documentos";
 import { createApp } from "../src/app.ts";
@@ -114,7 +115,7 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
       app.request("/api/auth/sign-up/email", {
         method: "POST",
         headers: { "content-type": "application/json", origin: env.WEB_ORIGIN },
-        body: JSON.stringify({ email, password: "senha-bem-longa-123", name: "Rafael Lima" }),
+        body: JSON.stringify({ email, password: "senha-bem-longa-123", name: "Rafael Lima", termosVersao: VERSAO_DOS_TERMOS }),
       });
     expect((await cadastro("rafael@souza.adv.br")).status).toBe(403);
 

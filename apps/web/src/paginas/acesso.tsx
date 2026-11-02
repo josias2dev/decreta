@@ -1,7 +1,9 @@
 /** Aceitar convite (criando a conta, se for o caso) e redefinir a senha pelo link do e-mail. */
+import { VERSAO_DOS_TERMOS } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
+import { AceiteDosTermos } from "@/componentes/aceite-dos-termos";
 import { Botao, Campo, Carregando, Faixa } from "@/componentes/ui";
 import { API_URL } from "@/lib/api";
 import { authCall, authClient, papelLabel } from "@/lib/auth";
@@ -24,6 +26,7 @@ export function ConvitePage() {
   });
   const sessao = useQuery({ queryKey: ["sessao"], queryFn: () => authCall(authClient.getSession()), retry: false });
   const [f, setF] = useState({ nome: "", senha: "", repetir: "" });
+  const [aceito, setAceito] = useState(false);
 
   const aceitar = async () => {
     const r = await authCall(authClient.organization.acceptInvitation({ invitationId: id }));
@@ -35,7 +38,9 @@ export function ConvitePage() {
   const entrarNaEquipe = useMutation({ mutationFn: aceitar });
   const criarConta = useMutation({
     mutationFn: async () => {
-      await authCall(authClient.signUp.email({ email: convite.data!.email, password: f.senha, name: f.nome.trim() }));
+      // `termosVersao`: o aceite dos Termos de Uso e da Política de Privacidade, que a API confere e grava com a data.
+      const pessoa = { email: convite.data!.email, password: f.senha, name: f.nome.trim(), termosVersao: VERSAO_DOS_TERMOS };
+      await authCall(authClient.signUp.email(pessoa));
       await aceitar();
     },
   });
@@ -132,8 +137,9 @@ export function ConvitePage() {
         <Campo rotulo="Repita a senha" htmlFor="cv-repetir" erro={diferente ? "Não confere" : null}>
           <input id="cv-repetir" type="password" autoComplete="new-password" value={f.repetir} onChange={(e) => setF({ ...f, repetir: e.target.value })} />
         </Campo>
+        <AceiteDosTermos marcado={aceito} aoMudar={setAceito} />
         {criarConta.error && <Faixa tipo="erro">{criarConta.error.message}</Faixa>}
-        <Botao type="submit" variante="primaria" bloco ocupado={criarConta.isPending} disabled={f.nome.trim().length < 2 || f.senha.length < 10 || f.senha !== f.repetir}>
+        <Botao type="submit" variante="primaria" bloco ocupado={criarConta.isPending} disabled={f.nome.trim().length < 2 || f.senha.length < 10 || f.senha !== f.repetir || !aceito}>
           Criar conta e entrar
         </Botao>
       </form>

@@ -26,8 +26,10 @@ import { PrazoPage } from "./paginas/prazo";
 import { PrazosPage } from "./paginas/prazos";
 import { ProcessoPage, type AbaDoProcesso, ABAS_DO_PROCESSO } from "./paginas/processo";
 import { ProcessosPage } from "./paginas/processos";
+import { PrivacidadePage } from "./paginas/privacidade";
 import { PublicacaoPage, PublicacoesPage } from "./paginas/publicacoes";
 import { SegurancaPage } from "./paginas/seguranca";
+import { TermosPage } from "./paginas/termos";
 
 const QUANDO: readonly Quando[] = ["hoje", "semana", "vencidos", "abertos", "cumpridos"];
 const SITUACOES: readonly SituacaoPublicacao[] = ["nova", "pendente", "lida", "vinculada"];
@@ -61,6 +63,9 @@ const redefinirRoute = createRoute({
 const inicioRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: InicioPage });
 // Segurança e LGPD, aberta: o termo de uso de IA e a política interna apontam para cá.
 const segurancaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/seguranca", component: SegurancaPage });
+// Termos de Uso e Política de Privacidade, abertos: o cadastro e o convite pedem o aceite deles.
+const termosRoute = createRoute({ getParentRoute: () => rootRoute, path: "/termos", component: TermosPage });
+const privacidadeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/privacidade", component: PrivacidadePage });
 
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
@@ -162,6 +167,8 @@ const maisRoute = createRoute({ getParentRoute: () => appRoute, path: "/mais", c
 const routeTree = rootRoute.addChildren([
   inicioRoute,
   segurancaRoute,
+  termosRoute,
+  privacidadeRoute,
   entrarRoute,
   cadastroRoute,
   conviteRoute,

@@ -18,7 +18,8 @@ export interface EscritorioNovo {
   timezone?: string;
   /** Pelo cadastro aberto: o escritório nasce em avaliação e a configuração inicial das telas fica pendente (`onboarding_concluido_em` nulo). */
   cadastroAberto?: boolean;
-  dono: { email: string; nome: string; senha: string; apelido?: string; cargo?: string; oabNumero?: string; oabUf?: string; whatsapp?: string };
+  /** `termosVersao`: a versão dos Termos de Uso que a pessoa aceitou (só o cadastro aberto pede o aceite). */
+  dono: { email: string; nome: string; senha: string; apelido?: string; cargo?: string; oabNumero?: string; oabUf?: string; whatsapp?: string; termosVersao?: string };
 }
 
 /** O endereço curto a partir do nome: "Souza & Mendes Advocacia" → "souza-mendes-advocacia". */
@@ -54,7 +55,7 @@ export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNov
   const ctx = await auth.$context;
   let [pessoa] = await db.select({ id: user.id }).from(user).where(eq(user.email, email));
   if (!pessoa) {
-    const criado = await ctx.internalAdapter.createUser({ email, name: e.dono.nome, emailVerified: true }, { method: "email-password" });
+    const criado = await ctx.internalAdapter.createUser({ email, name: e.dono.nome, emailVerified: true, ...(e.dono.termosVersao ? { termosVersao: e.dono.termosVersao, termosAceitosEm: new Date() } : {}) }, { method: "email-password" });
     await ctx.internalAdapter.linkAccount({ userId: criado.id, providerId: "credential", accountId: criado.id, password: await ctx.password.hash(e.dono.senha) });
     pessoa = { id: criado.id };
   }

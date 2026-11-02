@@ -1,3 +1,4 @@
+import { VERSAO_DOS_TERMOS } from "@decreta/core";
 import { invitation, organization, user, type Database } from "@decreta/db";
 import { eq, sql } from "drizzle-orm";
 import { Hono, type Context } from "hono";
@@ -8,7 +9,7 @@ import { HTTPException } from "hono/http-exception";
 import { join, resolve, sep } from "node:path";
 import { z } from "zod";
 import { registrar } from "./auditoria.ts";
-import type { Auth } from "./auth.ts";
+import { AVISO_DO_ACEITE, type Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { criarEscritorio, slugUnico } from "./escritorio-novo.ts";
 import { ipDoPedido, limitarPorIp } from "./limitador.ts";
@@ -114,6 +115,8 @@ const CADASTRO = z.object({
   email: z.string().trim().toLowerCase().email("Confira o e-mail.").max(200),
   senha: z.string().min(10, "A senha precisa ter pelo menos 10 caracteres.").max(128, "A senha pode ter até 128 caracteres."),
   escritorio: z.string().trim().min(2, "Diga o nome do escritório.").max(120),
+  /** O aceite: a versão dos Termos de Uso e da Política de Privacidade que a tela mostrou. Sem ela, ou com outra, não há conta. */
+  termos: z.literal(VERSAO_DOS_TERMOS, { error: AVISO_DO_ACEITE }),
 });
 
 /**
@@ -130,8 +133,8 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
   if (jaTem) return c.json({ erro: "email_em_uso", detalhe: "Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova." }, 409);
 
   const slug = await slugUnico(db, b.escritorio);
-  const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, dono: { email: b.email, nome: b.nome, senha: b.senha } });
-  await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug }, ip: ipDoPedido(c) }, log);
+  const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, dono: { email: b.email, nome: b.nome, senha: b.senha, termosVersao: b.termos } });
+  await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug, termos: b.termos }, ip: ipDoPedido(c) }, log);
 
   // A sessão abre pelo mesmo caminho do login (com o registro de "entrou"): o cookie vai na resposta.
   const headers = new Headers({ "content-type": "application/json" });

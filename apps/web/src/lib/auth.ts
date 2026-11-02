@@ -23,6 +23,7 @@ const MENSAGENS: Record<string, string> = {
   INVALID_EMAIL: "Confira o e-mail.",
   INVALID_TOKEN: "Este link não vale mais. Peça um novo.",
   SEM_CONVITE: "Conta nova só com convite do escritório. Peça para um sócio te convidar.",
+  SEM_ACEITE: "Aceite os Termos de Uso e a Política de Privacidade para criar a conta.",
   USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION: "Esta pessoa já está na equipe.",
   USER_IS_ALREADY_INVITED_TO_THIS_ORGANIZATION: "Já existe um convite para este e-mail.",
   YOU_ARE_NOT_ALLOWED_TO_INVITE_USERS_TO_THIS_ORGANIZATION: "Só sócios convidam pessoas.",

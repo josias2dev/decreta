@@ -20,12 +20,15 @@ test("criar conta: os quatro campos, o pedido ao /api/cadastro e a chegada ao /c
   await expect(page.getByText("Pelo menos 10 caracteres").first()).toBeVisible();
   await page.getByLabel("Senha").fill("senha-bem-longa-123");
   await page.getByLabel("Nome do escritório").fill("Souza & Mendes Advocacia");
+  // Com os quatro campos e sem o aceite dos termos, a conta não se cria.
+  await expect(criar).toBeDisabled();
+  await page.getByLabel(/Li e aceito os Termos de Uso e a Política de Privacidade/).check();
   await expect(criar).toBeEnabled();
   // Depois do cadastro a sessão existe: o /eu passa a responder o escritório novo.
   api.responder("/eu", euPendente).responder("/escritorio", escritorioNovo);
   await criar.click();
   await expect(page).toHaveURL(/\/comecar$/);
-  expect(api.mudancas("/cadastro")[0]!.corpo).toEqual({ nome: "Beatriz Souza", email: "beatriz@souza.adv.br", senha: "senha-bem-longa-123", escritorio: "Souza & Mendes Advocacia" });
+  expect(api.mudancas("/cadastro")[0]!.corpo).toEqual({ nome: "Beatriz Souza", email: "beatriz@souza.adv.br", senha: "senha-bem-longa-123", escritorio: "Souza & Mendes Advocacia", termos: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) });
   await expect(page.getByRole("heading", { name: /^Olá, / })).toBeVisible();
   expect(await sobraNaLateral(page)).toBe(0);
 });
@@ -39,6 +42,7 @@ test("criar conta: e-mail já cadastrado mostra o aviso e fica na tela", async (
   await page.getByLabel("E-mail").fill("beatriz@souza.adv.br");
   await page.getByLabel("Senha").fill("senha-bem-longa-123");
   await page.getByLabel("Nome do escritório").fill("Souza & Mendes Advocacia");
+  await page.getByLabel(/Li e aceito/).check();
   await page.getByRole("button", { name: "Criar conta" }).click();
   await expect(page.getByRole("alert")).toHaveText("Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova.");
   await expect(page).toHaveURL(/\/cadastro$/);
