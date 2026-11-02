@@ -126,6 +126,8 @@
 .dc-par { display: flex; flex-direction: column; gap: var(--space-half); min-width: 0; }
 .dc-vazio { display: flex; flex-direction: column; align-items: center; gap: var(--space-1-half); padding: var(--space-8) var(--space-4); text-align: center; color: var(--tinta-2); font: 400 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); }
 .dc-vazio strong { font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); }
+.dc-vazio__texto { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); max-width: 56ch; text-wrap: pretty; }
+.dc-vazio__acao { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-2); }
 .dc-erro-na-tela { display: flex; justify-content: center; padding: var(--space-8) var(--space-4); }
 .dc-esqueleto { border-radius: var(--radius-md); background: linear-gradient(90deg, var(--superficie-2), color-mix(in srgb, var(--superficie-2) 40%, var(--superficie)), var(--superficie-2)); background-size: 200% 100%; animation: dc-brilho 1.4s ease-in-out infinite; }
 @keyframes dc-brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }

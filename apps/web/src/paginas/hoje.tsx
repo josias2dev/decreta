@@ -8,9 +8,9 @@ import { AvisoDoTeste } from "@/componentes/faixa-do-plano";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
 import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, Faixa, MarcaIa, Painel, Responsavel, Selo, Vazio } from "@/componentes/ui";
-import { api } from "@/lib/api";
+import { api, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import type { ItemDoDia, PainelDoDia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { TerminarDeConfigurar } from "./comecar";
@@ -62,7 +62,48 @@ export function HojePage() {
     </div>
   );
 
-  const atalhos = (pequeno: boolean) => (
+  const pode = podeCriar(eu.data);
+  const NOME_DO_FILTRO = { prazo: "Nenhum prazo vence hoje", audiencia: "Nenhuma audiência hoje", tarefa: "Nenhuma tarefa para hoje" } as const;
+  const semItens =
+    !p || itens.length > 0 ? null : p.itens.length > 0 && filtro !== "tudo" ? (
+      <Vazio
+        titulo={NOME_DO_FILTRO[filtro]}
+        acao={
+          <Botao pequeno onClick={() => setFiltro("tudo")}>
+            Ver tudo
+          </Botao>
+        }
+      >
+        O dia tem {plural(p.itens.length, "item", "itens")} em outros filtros.
+      </Vazio>
+    ) : eu.data?.menu.processos ? (
+      <Vazio
+        titulo="Nada para hoje"
+        acao={
+          <Link to="/prazos" className="dc-link">
+            Ver os próximos prazos
+          </Link>
+        }
+      >
+        Nenhum prazo, audiência ou tarefa no dia.
+      </Vazio>
+    ) : (
+      <Vazio
+        titulo="Aqui fica o trabalho de cada dia"
+        acao={
+          pode && (
+            <Botao variante="primaria" pequeno onClick={() => setNovo("processo")}>
+              <FolderPlus /> Cadastrar o primeiro processo
+            </Botao>
+          )
+        }
+      >
+        Os prazos que vencem, as audiências e as tarefas do dia entram nesta lista, com o responsável de cada um. Comece pelo processo: digite o número CNJ e o Decreta busca as partes, a classe e os andamentos.
+        {!pode && <span>{SO_LEITURA}</span>}
+      </Vazio>
+    );
+
+  const atalhos = (pequeno: boolean) => pode && (
     <>
       <Botao pequeno={pequeno} onClick={() => setNovo("cliente")}>
         <UserPlus /> Cliente
@@ -128,14 +169,16 @@ export function HojePage() {
               </div>
               {chips}
               <div className="dc-lista">
-                {itens.length ? itens.map((i) => <CartaoDoDia key={`${i.tipo}-${i.id}`} item={i} />) : <Vazio titulo="Nada para hoje">Nenhum prazo, audiência ou tarefa no dia.</Vazio>}
+                {itens.length ? itens.map((i) => <CartaoDoDia key={`${i.tipo}-${i.id}`} item={i} />) : semItens}
               </div>
             </section>
             {p.auditoria && <AuditoriaDaCarteira auditoria={p.auditoria} />}
-            <section className="dc-secao">
-              <h2 className="dc-secao__titulo">Atalhos</h2>
-              <div className="dc-linha-acoes">{atalhos(true)}</div>
-            </section>
+            {pode && (
+              <section className="dc-secao">
+                <h2 className="dc-secao__titulo">Atalhos</h2>
+                <div className="dc-linha-acoes">{atalhos(true)}</div>
+              </section>
+            )}
           </>
         )}
         {dialogos}
@@ -175,7 +218,7 @@ export function HojePage() {
                   </table>
                 </div>
               ) : (
-                <Vazio titulo="Nada para hoje">Nenhum prazo, audiência ou tarefa no dia.</Vazio>
+                semItens
               )}
             </Painel>
             <aside className="dc-pilha">
@@ -213,25 +256,29 @@ export function HojePage() {
                 )}
               </Painel>
               <Painel titulo="Por responsável" acao={<span className="dc-nota">Hoje · semana</span>} corpo={false}>
-                <div className="dc-tabela-caixa">
-                  <table className="dc-tabela">
-                    <tbody>
-                      {p.porResponsavel.map((r) => (
-                        <tr key={r.pessoa?.id ?? "sem"}>
-                          <td>
-                            <Responsavel pessoa={r.pessoa} />
-                          </td>
-                          <td className={cn("dc-direita dc-num dc-col--n-curto", r.hoje ? "dc-hoje" : "dc-apagado")}>
-                            {r.hoje}
-                          </td>
-                          <td className="dc-direita dc-num dc-col--n-curto">
-                            {r.semana}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {p.porResponsavel.length ? (
+                  <div className="dc-tabela-caixa">
+                    <table className="dc-tabela">
+                      <tbody>
+                        {p.porResponsavel.map((r) => (
+                          <tr key={r.pessoa?.id ?? "sem"}>
+                            <td>
+                              <Responsavel pessoa={r.pessoa} />
+                            </td>
+                            <td className={cn("dc-direita dc-num dc-col--n-curto", r.hoje ? "dc-hoje" : "dc-apagado")}>
+                              {r.hoje}
+                            </td>
+                            <td className="dc-direita dc-num dc-col--n-curto">
+                              {r.semana}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="dc-nota m-0 p-[var(--respiro-painel)]">A carga de cada pessoa aparece aqui quando houver prazo aberto.</p>
+                )}
               </Painel>
             </aside>
           </div>

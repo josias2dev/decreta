@@ -16,11 +16,11 @@ import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos"
 import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
 import { UsoDeIa } from "@/componentes/uso-de-ia";
 import { Botao, Cabecalho, CampoDeBusca, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, Painel, Responsavel, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
-import { API_URL, api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
 import { useBuscaNaUrl } from "@/lib/busca";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, hora, numero, tamanho, telefone } from "@/lib/formato";
 import type { Canal, Cliente, ClienteNaLista, Pagina as PaginaDaApi } from "@/lib/tipos";
 import { enquantoLe, Enviar, LeituraDaIa } from "./processo";
@@ -34,6 +34,8 @@ export function ClientesPage() {
   const navigate = useNavigate({ from: "/clientes" });
   const [texto, setTexto] = useBuscaNaUrl(search.busca, (busca) => void navigate({ search: { busca }, replace: true }));
   const [novo, setNovo] = useState(false);
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const lista = useInfiniteQuery({
     queryKey: ["clientes", search.busca ?? ""],
     queryFn: ({ pageParam }) => api<PaginaDaApi<ClienteNaLista>>(`/clientes?${new URLSearchParams({ pagina: String(pageParam), ...(search.busca ? { busca: search.busca } : {}) })}`),
@@ -45,7 +47,32 @@ export function ClientesPage() {
   const total = lista.data?.pages[0]?.total ?? 0;
   const sub = lista.data ? `${numero(total)} ${total === 1 ? "cliente" : "clientes"}` : " ";
   const busca = <CampoDeBusca valor={texto} aoMudar={setTexto} rotulo="Buscar cliente" placeholder="Nome, CPF, CNPJ ou telefone" />;
-  const vazio = <Vazio titulo={search.busca ? "Nada encontrado" : "Nenhum cliente ainda"}>{search.busca ? "Tente parte do nome ou só os números do CPF." : "Cadastre o primeiro cliente."}</Vazio>;
+  const vazio = search.busca ? (
+    <Vazio
+      titulo={`Nenhum cliente com “${search.busca}”`}
+      acao={
+        <Botao pequeno onClick={() => setTexto("")}>
+          Limpar a busca
+        </Botao>
+      }
+    >
+      Tente parte do nome ou só os números do CPF.
+    </Vazio>
+  ) : (
+    <Vazio
+      titulo="Nenhum cliente ainda"
+      acao={
+        pode && (
+          <Botao variante="primaria" pequeno onClick={() => setNovo(true)}>
+            <Plus /> Cadastrar o primeiro cliente
+          </Botao>
+        )
+      }
+    >
+      O cliente guarda o contato, os documentos, os atendimentos e os processos dele. Digite o CNPJ e o resto vem da Receita; de pessoa física, o CEP traz a rua.
+      {!pode && <span>{SO_LEITURA}</span>}
+    </Vazio>
+  );
   const mais = lista.hasNextPage && (
     <Botao pequeno onClick={() => void lista.fetchNextPage()} ocupado={lista.isFetchingNextPage}>
       Carregar mais
@@ -59,9 +86,11 @@ export function ClientesPage() {
         titulo="Clientes"
         sobre={sub}
         direita={
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo cliente" onClick={() => setNovo(true)}>
-            <Plus />
-          </button>
+          pode && (
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo cliente" onClick={() => setNovo(true)}>
+              <Plus />
+            </button>
+          )
         }
         fixo={busca}
       >
@@ -93,9 +122,11 @@ export function ClientesPage() {
         titulo="Clientes"
         sub={sub}
         acoes={
-          <Botao variante="primaria" onClick={() => setNovo(true)}>
-            <Plus /> Novo cliente
-          </Botao>
+          pode && (
+            <Botao variante="primaria" onClick={() => setNovo(true)}>
+              <Plus /> Novo cliente
+            </Botao>
+          )
         }
       />
       <div className="dc-filtros">{busca}</div>

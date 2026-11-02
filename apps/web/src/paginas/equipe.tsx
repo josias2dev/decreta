@@ -9,11 +9,9 @@ import { Avatar, Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Vazio } fro
 import { api, mensagemDoErro } from "@/lib/api";
 import { authCall, authClient, ehSocio, papelLabel, PAPEIS, type Papel } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { equipeQuery, euQuery } from "@/lib/consultas";
 import { diaCompleto, diaDoInstante, telefone } from "@/lib/formato";
-import type { ConsultaDaOab, Equipe, PessoaDaEquipe } from "@/lib/tipos";
-
-export const equipeQuery = { queryKey: ["equipe"], queryFn: () => api<Equipe>("/equipe") } as const;
+import type { ConsultaDaOab, PessoaDaEquipe } from "@/lib/tipos";
 
 export function EquipePage() {
   const celular = useCelular();

@@ -68,6 +68,9 @@ export async function aosPoucos(path: string, init: Pedido, aoChegar: (texto: st
   return { texto, headers: res.headers };
 }
 
+/** Com a assinatura parada: a tela não oferece criar, e a API recusa com esta mesma frase. */
+export const SO_LEITURA = "O escritório está só para leitura: dá para ver tudo, mas não salvar nada novo.";
+
 /** Mensagem que a tela mostra quando a API recusa. */
 export function mensagemDoErro(err: unknown): string {
   if (err instanceof ApiError) {
@@ -90,7 +93,7 @@ export function mensagemDoErro(err: unknown): string {
       whatsapp_invalido: "Confira o número do WhatsApp, com DDD.",
       arquivo_grande: "O arquivo passa do tamanho máximo.",
       tipo_nao_aceito: "Este tipo de arquivo não é aceito. Envie PDF, DOCX, imagem ou texto.",
-      so_leitura: "O escritório está só para leitura: dá para ver tudo, mas não salvar nada novo.",
+      so_leitura: SO_LEITURA,
       escritorio_bloqueado: "O acesso do escritório está bloqueado.",
       logo_png: "O logo precisa ser um PNG.",
       logo_grande: "O logo passa de 1 MB.",

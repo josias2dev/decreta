@@ -7,9 +7,9 @@ import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoPrazo } from "@/componentes/novo-prazo";
 import { Rolagem } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, MarcaIa, Responsavel, Selo, Vazio } from "@/componentes/ui";
-import { API_URL, api, mensagemDoErro } from "@/lib/api";
+import { API_URL, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaDaSemana, diaMes } from "@/lib/formato";
 import type { ListaDePrazos, PrazoNaLista, Quando } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -72,6 +72,7 @@ export function PrazosPage() {
   const quando: Quando = search.quando ?? "abertos";
   const responsavel = search.responsavel;
   const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const qc = useQueryClient();
   const avisar = useAviso();
   const params = new URLSearchParams({ quando, ...(responsavel ? { responsavel } : {}) }).toString();
@@ -97,6 +98,70 @@ export function PrazosPage() {
     void navigate({ search: (s) => ({ ...s, quando: q === "abertos" || q === quando ? undefined : q }) });
   };
   const porPessoa = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, responsavel: id === responsavel ? undefined : id }) });
+  const limparFiltros = () => void navigate({ search: {} });
+  const emAberto = l ? `${l.chips.abertos} em aberto` : "";
+  const verAbertos = (
+    <Botao pequeno onClick={() => ir("abertos")}>
+      Ver os em aberto
+    </Botao>
+  );
+  const vazio = !l ? null : responsavel ? (
+    <Vazio
+      titulo="Nenhum prazo com esse responsável"
+      acao={
+        <Botao pequeno onClick={limparFiltros}>
+          Limpar o filtro
+        </Botao>
+      }
+    >
+      Nada neste filtro para a pessoa escolhida. Sem o filtro, aparecem os prazos da equipe toda.
+    </Vazio>
+  ) : quando === "hoje" ? (
+    <Vazio titulo="Nenhum prazo vence hoje" acao={l.chips.abertos > 0 && verAbertos}>
+      {l.chips.abertos > 0 ? `Os outros prazos seguem na lista: ${emAberto}.` : "Quando houver prazo vencendo no dia, ele aparece aqui."}
+    </Vazio>
+  ) : quando === "semana" ? (
+    <Vazio titulo="Nenhum prazo vence nesta semana" acao={l.chips.abertos > 0 && verAbertos}>
+      {l.chips.abertos > 0 ? `Os outros prazos vencem depois: ${emAberto}.` : "Quando houver prazo vencendo nos próximos 7 dias, ele aparece aqui."}
+    </Vazio>
+  ) : quando === "vencidos" ? (
+    <Vazio titulo="Nenhum prazo vencido" acao={l.chips.abertos > 0 && verAbertos}>
+      {l.chips.abertos > 0 ? `Os prazos abertos estão dentro da data: ${emAberto}.` : "Prazo que passa da data sem ser cumprido aparece aqui, em vermelho."}
+    </Vazio>
+  ) : quando === "cumpridos" ? (
+    <Vazio titulo="Nenhum prazo cumprido ainda" acao={l.chips.abertos > 0 && verAbertos}>
+      O prazo marcado como cumprido sai da lista e fica guardado aqui.
+    </Vazio>
+  ) : l.chips.cumpridos > 0 ? (
+    <Vazio
+      titulo="Nenhum prazo em aberto"
+      acao={
+        <Botao pequeno onClick={() => ir("cumpridos")}>
+          Ver os cumpridos
+        </Botao>
+      }
+    >
+      Os prazos do escritório já foram cumpridos. O próximo chega das publicações do DJEN, com a conta à mostra.
+    </Vazio>
+  ) : (
+    <Vazio
+      titulo="Nenhum prazo ainda"
+      acao={
+        !pode ? null : eu.data?.menu.processos ? (
+          <Botao variante="primaria" pequeno onClick={() => setNovo(true)}>
+            <Plus /> Novo prazo
+          </Botao>
+        ) : (
+          <Link to="/processos" search={{ novo: true }} className="dc-btn dc-btn--primaria dc-btn--sm">
+            <Plus /> Cadastrar o primeiro processo
+          </Link>
+        )
+      }
+    >
+      Os prazos nascem das publicações do DJEN: a IA sugere, e você confere a conta antes de confirmar. Também dá para criar à mão, dentro de um processo.
+      {!pode && <span>{SO_LEITURA}</span>}
+    </Vazio>
+  );
   const vencidos = l?.chips.vencidos ? ` · ${l.chips.vencidos} ${l.chips.vencidos === 1 ? "vencido" : "vencidos"}` : "";
   const sub = l ? `${l.chips.abertos} em aberto · ${l.chips.semana} vencem nesta semana${vencidos}` : " ";
 
@@ -144,9 +209,11 @@ export function PrazosPage() {
         direita={
           <>
             <BotaoBuscar />
-            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo prazo" onClick={() => setNovo(true)}>
-              <Plus />
-            </button>
+            {pode && (
+              <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo prazo" onClick={() => setNovo(true)}>
+                <Plus />
+              </button>
+            )}
           </>
         }
         fixo={
@@ -184,7 +251,7 @@ export function PrazosPage() {
                 </section>
               ))
             ) : (
-              <Vazio titulo={quando === "cumpridos" ? "Nenhum prazo cumprido" : "Nenhum prazo aqui"}>{quando === "vencidos" ? "Nada vencido. Bom trabalho." : "Os prazos novos chegam das publicações do DJEN."}</Vazio>
+              vazio
             )}
           </>
         )}
@@ -205,9 +272,11 @@ export function PrazosPage() {
             <a className="dc-btn dc-btn--secundaria dc-btn--md" href={`${API_URL}/api/app/prazos/exportar?${params}`} download>
               <Download /> Exportar
             </a>
-            <Botao variante="primaria" onClick={() => setNovo(true)}>
-              <Plus /> Novo prazo
-            </Botao>
+            {pode && (
+              <Botao variante="primaria" onClick={() => setNovo(true)}>
+                <Plus /> Novo prazo
+              </Botao>
+            )}
           </>
         }
       />
@@ -293,7 +362,7 @@ export function PrazosPage() {
                 </table>
               </Rolagem>
             ) : (
-              <Vazio titulo={quando === "cumpridos" ? "Nenhum prazo cumprido" : "Nenhum prazo aqui"}>{quando === "vencidos" ? "Nada vencido." : "Os prazos novos chegam das publicações do DJEN."}</Vazio>
+              vazio
             )}
             {selecao.size > 0 && (
               <div className="dc-selecao">

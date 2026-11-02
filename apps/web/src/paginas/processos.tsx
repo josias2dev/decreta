@@ -1,5 +1,5 @@
 import { tribunalDoCnj } from "@decreta/core";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -7,9 +7,10 @@ import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoProcesso } from "@/componentes/novos";
 import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Responsavel, Selo, Vazio } from "@/componentes/ui";
-import { api } from "@/lib/api";
+import { api, SO_LEITURA } from "@/lib/api";
 import { useBuscaNaUrl } from "@/lib/busca";
 import { useCelular } from "@/lib/celular";
+import { euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaDoInstante, haQuanto, numero, ondeTramita } from "@/lib/formato";
 import type { Pagina as PaginaDaApi, ProcessoNaLista } from "@/lib/tipos";
 
@@ -33,6 +34,8 @@ export function ProcessosPage() {
   const celular = useCelular();
   const search = useSearch({ from: "/app/processos" });
   const navigate = useNavigate({ from: "/processos" });
+  const eu = useQuery(euQuery);
+  const pode = podeCriar(eu.data);
   const situacao: Situacao = search.situacao ?? "ativos";
   const [texto, setTexto] = useBuscaNaUrl(search.busca, (busca) => void navigate({ search: (s) => ({ ...s, busca }), replace: true }));
   const [novo, setNovo] = useState(!!search.novo);
@@ -63,7 +66,57 @@ export function ProcessosPage() {
       </div>
     </div>
   );
-  const vazio = <Vazio titulo={search.busca ? "Nada encontrado" : "Nenhum processo aqui"}>{search.busca ? "Confira o número ou tente o nome de uma das partes." : "Cadastre o primeiro processo pelo número CNJ."}</Vazio>;
+  // Lista sem nada nos ativos: pode ser o escritório novo ou só que todos foram arquivados. Só nesse caso pergunta.
+  const semAtivos = !!lista.data && !total && situacao === "ativos" && !search.busca;
+  const todos = useQuery({ queryKey: ["processos", "ha-algum"], queryFn: () => api<PaginaDaApi<ProcessoNaLista>>("/processos?situacao=todos"), enabled: semAtivos });
+  const vazio = search.busca ? (
+    <Vazio
+      titulo={`Nenhum processo com “${search.busca}”`}
+      acao={
+        <Botao pequeno onClick={() => setTexto("")}>
+          Limpar a busca
+        </Botao>
+      }
+    >
+      Confira o número ou tente o nome de uma das partes.{situacao === "todos" ? "" : ` A busca olhou só os ${situacao}.`}
+    </Vazio>
+  ) : situacao === "arquivados" ? (
+    <Vazio
+      titulo="Nenhum processo arquivado"
+      acao={
+        <Botao pequeno onClick={() => ir("ativos")}>
+          Ver os ativos
+        </Botao>
+      }
+    >
+      Processo arquivado ou encerrado sai da lista de ativos e fica guardado aqui, com os documentos e o histórico.
+    </Vazio>
+  ) : semAtivos && todos.data?.total ? (
+    <Vazio
+      titulo="Nenhum processo ativo"
+      acao={
+        <Botao pequeno onClick={() => ir("todos")}>
+          Ver todos
+        </Botao>
+      }
+    >
+      Os processos do escritório estão arquivados ou encerrados.
+    </Vazio>
+  ) : (
+    <Vazio
+      titulo="Nenhum processo ainda"
+      acao={
+        pode && (
+          <Botao variante="primaria" pequeno onClick={() => setNovo(true)}>
+            <Plus /> Cadastrar o primeiro processo
+          </Botao>
+        )
+      }
+    >
+      Cada processo reúne prazos, publicações, documentos e peças. Digite o número CNJ e o Decreta busca as partes, a classe e os andamentos.
+      {!pode && <span>{SO_LEITURA}</span>}
+    </Vazio>
+  );
   const mais = lista.hasNextPage && (
     <Botao pequeno onClick={() => void lista.fetchNextPage()} ocupado={lista.isFetchingNextPage}>
       Carregar mais
@@ -78,9 +131,11 @@ export function ProcessosPage() {
         titulo="Processos"
         sobre={sub}
         direita={
-          <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo processo" onClick={() => setNovo(true)}>
-            <Plus />
-          </button>
+          pode && (
+            <button type="button" className="dc-btn dc-btn--fantasma" aria-label="Novo processo" onClick={() => setNovo(true)}>
+              <Plus />
+            </button>
+          )
         }
         fixo={filtros}
       >
@@ -121,9 +176,11 @@ export function ProcessosPage() {
         titulo="Processos"
         sub={sub}
         acoes={
-          <Botao variante="primaria" onClick={() => setNovo(true)}>
-            <Plus /> Novo processo
-          </Botao>
+          pode && (
+            <Botao variante="primaria" onClick={() => setNovo(true)}>
+              <Plus /> Novo processo
+            </Botao>
+          )
         }
       />
       {filtros}

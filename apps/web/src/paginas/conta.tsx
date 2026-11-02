@@ -13,11 +13,10 @@ import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Segmentos } from "@
 import { api, mensagemDoErro } from "@/lib/api";
 import { authCall, authClient } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { equipeQuery, euQuery } from "@/lib/consultas";
 import { DENSIDADES, useDensidade } from "@/lib/densidade";
 import { useTema } from "@/lib/tema";
 import { telefone } from "@/lib/formato";
-import { equipeQuery } from "./equipe";
 
 export function ContaPage() {
   const celular = useCelular();

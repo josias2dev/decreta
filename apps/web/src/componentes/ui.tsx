@@ -278,11 +278,17 @@ export function Dados({ linhas }: { linhas: [ReactNode, ReactNode][] }) {
   );
 }
 
-export function Vazio({ titulo, children }: { titulo: string; children?: ReactNode }) {
+/**
+ * A tela ou a lista sem nada: o que é, para que serve e a primeira ação. Quando quem olha não pode agir (o escritório
+ * está só para leitura, ou é coisa de sócio), a tela não passa `acao` e o texto diz por quê. Filtro que não achou
+ * nada é outro caso: diz isso, e a ação é limpar o filtro.
+ */
+export function Vazio({ titulo, acao, children }: { titulo: string; acao?: ReactNode; children?: ReactNode }) {
   return (
     <div className="dc-vazio">
       <strong>{titulo}</strong>
-      {children}
+      {children && <div className="dc-vazio__texto">{children}</div>}
+      {acao && <div className="dc-vazio__acao">{acao}</div>}
     </div>
   );
 }
