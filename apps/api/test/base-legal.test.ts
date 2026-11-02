@@ -232,7 +232,8 @@ describe.skipIf(!hasTestDatabase)("base legal", () => {
     test("cliente que recusou a IA: 403, mesmo pela publicação, sem chamar o modelo", async () => {
       const [pub] = await t.owner<{ id: string }[]>`insert into publicacoes (organization_id, fonte, id_externo, disponibilizada_em, publicada_em, processo_id, texto) values (${orgId}, 'manual', 'teste-2', '2026-10-28', '2026-10-29', ${processoSemIa}, 'Teor.') returning id`;
       ia.chamadas.length = 0;
-      for (const corpo of [{ tipo: "Exibir documento", processoId: processoSemIa }, { tipo: "Exibir documento", publicacaoId: pub!.id }]) {
+      // A publicação de quem recusou não entra de carona num processo de quem aceitou.
+      for (const corpo of [{ tipo: "Exibir documento", processoId: processoSemIa }, { tipo: "Exibir documento", publicacaoId: pub!.id }, { tipo: "Exibir documento", processoId: processoCivel, publicacaoId: pub!.id }]) {
         const r = await sugerir(corpo);
         expect(r.status).toBe(403);
         expect((await json(r)).erro).toBe("cliente_sem_ia");

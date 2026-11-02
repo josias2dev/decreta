@@ -4,10 +4,12 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ExternalLink, FileText, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { CampoBaseLegal } from "@/componentes/base-legal";
 import { Cancelada } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -116,7 +118,7 @@ export function PrazoPage() {
   const contraria = <PecaContraria prazoId={p.id} processoId={p.processo.id} analise={p.pecaContraria ?? null} comIa={ia && p.situacao === "aberto"} />;
   // "O que isso significa para você": a IA escreve a partir do briefing pronto; o advogado aprova antes de sair.
   const paraOCliente = b?.situacao === "pronto" && (
-    <MensagensAoCliente filtro={{ prazo: p.id }} gerar={ia ? { rotulo: "Escrever ao cliente o que isso significa", caminho: `/prazos/${p.id}/mensagem-cliente` } : undefined} titulo="Para o cliente" />
+    <MensagensAoCliente filtro={{ prazo: p.id }} gerar={ia ? { rotulo: "Escrever ao cliente o que isso significa", caminho: `/prazos/${p.id}/mensagem-cliente` } : undefined} titulo="Para o cliente" semIa={p.processo.semIa} />
   );
 
   const dados = (
@@ -440,6 +442,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
       aoFechar={aoFechar}
       titulo="Ajustar prazo"
       descricao="Mudou os dias, a contagem ou a data da publicação? O Decreta conta de novo."
+      className="dc-dialogo--largo"
       acoes={
         <>
           <Botao variante="fantasma" onClick={aoFechar}>
@@ -469,21 +472,19 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
           <Campo rotulo="Publicado em" htmlFor="aj-pub">
             <input id="aj-pub" type="date" value={f.publicadoEm} onChange={(e) => setF({ ...f, publicadoEm: e.target.value })} />
           </Campo>
-          <Campo rotulo="Base legal" htmlFor="aj-fund">
-            <input id="aj-fund" value={f.fundamento} onChange={(e) => setF({ ...f, fundamento: e.target.value })} placeholder="art. 477, § 1º, CPC" />
+          <Campo rotulo="Responsável" htmlFor="aj-resp">
+            <select id="aj-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
+              <option value="">Sem responsável</option>
+              {eu.data?.equipe.map((pp) => (
+                <option key={pp.id} value={pp.id}>
+                  {pp.nome}
+                </option>
+              ))}
+            </select>
           </Campo>
         </div>
+        <CampoBaseLegal id="aj-fund" valor={f.fundamento} aoMudar={(fundamento) => setF((atual) => ({ ...atual, fundamento }))} tipo={f.tipo} processoId={prazo.processo.id} semIa={prazo.processo.semIa} placeholder="art. 477, § 1º, CPC" />
         <CampoIntimacaoNoSistema id="aj-sistema" valor={f.intimadoNoSistemaEm} aoMudar={(v) => setF({ ...f, intimadoNoSistemaEm: v })} />
-        <Campo rotulo="Responsável" htmlFor="aj-resp">
-          <select id="aj-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
-            <option value="">Sem responsável</option>
-            {eu.data?.equipe.map((pp) => (
-              <option key={pp.id} value={pp.id}>
-                {pp.nome}
-              </option>
-            ))}
-          </select>
-        </Campo>
         <label className="dc-opcao">
           <input type="checkbox" className="dc-checa" checked={f.sabeData} onChange={(e) => setF({ ...f, sabeData: e.target.checked })} />
           Sei a data final (suspensão que o Decreta não conhece)
@@ -494,7 +495,9 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
           </Campo>
         )}
         <Campo rotulo="Observações" htmlFor="aj-obs">
-          <textarea id="aj-obs" rows={2} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
+          <IaNoCampo campo="observacoes" alvo={{ prazoId: prazo.id }} semIa={prazo.processo.semIa} valor={f.observacoes} aoUsar={(observacoes) => setF({ ...f, observacoes })}>
+            <textarea id="aj-obs" rows={2} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
+          </IaNoCampo>
         </Campo>
         {fim && <PreviaNoDialogo fim={fim} previa={conta.data} sabeData={f.sabeData} />}
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}

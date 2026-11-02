@@ -3,10 +3,12 @@
  * na pasta) aparece para o advogado revisar, com a prévia de como o cliente
  * vai ler. Nada sai sem o clique em "Aprovar e enviar".
  */
+import { contarACompletar } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, MessageCircle, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { Botao, Campo, Faixa, Painel } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { diaCurto, diaDoInstante, hora } from "@/lib/formato";
@@ -18,9 +20,11 @@ interface Props {
   /** Como pedir um rascunho novo. Sem isso, a tela só mostra o que já existe. */
   gerar?: { rotulo: string; caminho: string };
   titulo?: string;
+  /** O cliente recusou a IA: o campo fica sem o botão da IA. */
+  semIa?: boolean;
 }
 
-export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao cliente" }: Props) {
+export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao cliente", semIa }: Props) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const busca = "prazo" in filtro ? `prazo=${filtro.prazo}` : "parcela" in filtro ? `parcela=${filtro.parcela}` : `cliente=${filtro.cliente}`;
@@ -61,7 +65,7 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
           <EmEnvio key={m.id} m={m} aoMudar={atualizar} />
         ))}
         {rascunho ? (
-          <Rascunho key={rascunho.id} m={rascunho} aoMudar={atualizar} />
+          <Rascunho key={rascunho.id} m={rascunho} semIa={semIa} aoMudar={atualizar} />
         ) : (
           gerar && (
             <div className="flex flex-col items-start gap-2">
@@ -128,7 +132,7 @@ function EmEnvio({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void }) 
   );
 }
 
-function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void }) {
+function Rascunho({ m, semIa, aoMudar }: { m: MensagemAoCliente; semIa?: boolean; aoMudar: () => void }) {
   const avisar = useAviso();
   const [texto, setTexto] = useState(m.texto);
   useEffect(() => setTexto(m.texto), [m.texto]);
@@ -167,7 +171,14 @@ function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void })
         </Faixa>
       )}
       <Campo rotulo={`Texto para ${m.cliente.nome}`} htmlFor={campo}>
-        <textarea id={campo} rows={6} value={texto} onChange={(e) => setTexto(e.target.value)} />
+        {/* O lembrete de cobrança é o texto que o escritório aprovou, com o valor e a data: a IA fica de fora. */}
+        {m.tipo === "cobranca" ? (
+          <textarea id={campo} rows={6} value={texto} onChange={(e) => setTexto(e.target.value)} />
+        ) : (
+          <IaNoCampo campo="mensagem-cliente" alvo={{ mensagemId: m.id }} semIa={semIa} valor={texto} aoUsar={setTexto}>
+            <textarea id={campo} rows={6} value={texto} onChange={(e) => setTexto(e.target.value)} />
+          </IaNoCampo>
+        )}
       </Campo>
       <div className="flex flex-col gap-1.5">
         <span className="dc-t-meta font-medium text-[var(--tinta-2)]">Como o cliente vai ler{m.para ? ` (${m.para})` : ""}</span>
@@ -177,7 +188,7 @@ function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void })
       </div>
       {!m.numeroOficial && <Faixa tipo="aviso">Cadastre o WhatsApp oficial do escritório nas configurações: ele vai no rodapé contra o golpe do falso advogado.</Faixa>}
       <div className="flex flex-wrap gap-2">
-        <Botao variante="primaria" onClick={() => enviar.mutate()} ocupado={enviar.isPending} disabled={texto.trim().length < 2}>
+        <Botao variante="primaria" onClick={() => enviar.mutate()} ocupado={enviar.isPending} disabled={texto.trim().length < 2 || contarACompletar(texto) > 0}>
           <Send /> Aprovar e enviar
         </Botao>
         <Botao variante="fantasma" onClick={() => descartar.mutate()} ocupado={descartar.isPending}>

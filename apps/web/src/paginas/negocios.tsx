@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { Dialogo } from "@/componentes/dialogo";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
@@ -280,7 +281,19 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
         </div>
         {n.etapa !== "concluido" && <ArquivosDaPasta negocioId={n.id} />}
         <Campo rotulo="Observações" htmlFor="vn-obs">
-          <textarea id="vn-obs" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={() => obs !== (n.observacoes ?? "") && mudar.mutate({ observacoes: obs || null })} />
+          {/* Aqui não há botão de salvar: o clique em Usar também grava. */}
+          <IaNoCampo
+            campo="observacoes"
+            alvo={{ negocioId: n.id }}
+            semIa={n.semIa}
+            valor={obs}
+            aoUsar={(texto) => {
+              setObs(texto);
+              mudar.mutate({ observacoes: texto || null });
+            }}
+          >
+            <textarea id="vn-obs" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={() => obs !== (n.observacoes ?? "") && mudar.mutate({ observacoes: obs || null })} />
+          </IaNoCampo>
         </Campo>
       </div>
     </Dialogo>

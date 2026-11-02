@@ -662,6 +662,7 @@ export interface ClienteNaLista {
   email: string | null;
   processos: number;
   ultimoAtendimento: string | null;
+  semIa?: boolean;
 }
 
 export type Canal = "presencial" | "telefone" | "whatsapp" | "video" | "email";
@@ -749,6 +750,8 @@ export interface Negocio {
   observacoes: string | null;
   responsavel: Pessoa | null;
   clienteId: string | null;
+  /** Já virou cliente, e ele recusou a IA. */
+  semIa?: boolean;
   em: string;
 }
 
@@ -765,6 +768,7 @@ export interface Alvara {
   observacoes: string | null;
   processo: { id: string; titulo: string; cnj: string | null };
   cliente: string | null;
+  semIa?: boolean;
 }
 
 export interface QuadroDeAlvaras {
@@ -1301,3 +1305,43 @@ export interface AssinaturaDoDocumento {
   assinadaEm: string | null;
   documentoAssinadoId: string | null;
 }
+
+/** De quem é o campo em que a IA ajuda: a API lê o contexto a partir daqui. */
+export interface AlvoDoCampo {
+  publicacaoId?: string;
+  prazoId?: string;
+  processoId?: string;
+  clienteId?: string;
+  mensagemId?: string;
+  negocioId?: string;
+  alvaraId?: string;
+  tipoDePeca?: string;
+}
+
+export type RespostaDoCampo =
+  | { id: string; situacao: "pronto"; texto: string | null; dicas: string[]; trocados: string[]; aCompletar: number }
+  | { id: string; situacao: "recusa"; motivo: string };
+
+/** O que a lei diz para o artigo que está no campo Base legal; sem o texto, `motivo` diz por quê. */
+export type LeiDaBase = Pick<CitacaoVerificada, "trecho" | "selo" | "motivo" | "texto" | "fonte">;
+
+export interface TabelaDaBaseLegal {
+  ato: string;
+  dias: number;
+  fundamento: string;
+  explicacao: string;
+}
+
+export interface ConsultaDaBaseLegal {
+  tabela: TabelaDaBaseLegal | null;
+  /** O cliente do processo recusou a IA. */
+  semIa: boolean;
+  /** O texto do campo diz um artigo e uma lei. */
+  reconhecida: boolean;
+  lei: LeiDaBase[];
+}
+
+export type RespostaDaBaseLegal =
+  | { id: string; situacao: "pronto"; fundamento: string; explicacao: string; reconhecida: boolean; lei: LeiDaBase[] }
+  | { id: string; situacao: "recusa"; motivo: string }
+  | { situacao: "tabela"; tabela: TabelaDaBaseLegal; reconhecida: boolean; lei: LeiDaBase[] };

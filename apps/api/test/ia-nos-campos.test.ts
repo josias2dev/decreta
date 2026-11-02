@@ -210,6 +210,30 @@ describe.skipIf(!hasTestDatabase)("IA nos campos de texto", () => {
       await t.owner`update negocios set cliente_id = null where id = ${negocioId}`;
     });
 
+    test("alvos de donos diferentes: o de quem recusou não entra de carona no de quem aceitou", async () => {
+      const [outro] = await t.owner<{ id: string }[]>`select p.id from processos p where p.organization_id = ${orgId} and p.cliente_id <> ${clienteId} limit 1`;
+      const [pubDoOutro] = await t.owner<{ id: string }[]>`insert into publicacoes (organization_id, fonte, id_externo, disponibilizada_em, publicada_em, processo_id, texto) values (${orgId}, 'manual', 'carona', '2026-10-28', '2026-10-29', ${outro!.id}, 'Teor do outro.') returning id`;
+      const [m] = await t.owner<{ id: string }[]>`insert into mensagens_cliente (organization_id, cliente_id, processo_id, prazo_id, tipo, texto) values (${orgId}, ${clienteId}, ${processoId}, ${prazoId}, 'documentos', 'Lista.') returning id`;
+      await t.owner`update clientes set sem_ia = true where id = ${clienteId}`;
+      await t.owner`update negocios set cliente_id = ${clienteId} where id = ${negocioId}`;
+      await t.owner`update alvaras set processo_id = ${processoId} where id = ${alvaraId}`;
+      ia.chamadas.length = 0;
+      for (const alvo of [
+        { publicacaoId: pubDoOutro!.id, prazoId },
+        { publicacaoId: pubDoOutro!.id, alvaraId },
+        { publicacaoId: pubDoOutro!.id, negocioId },
+        { publicacaoId: pubDoOutro!.id, mensagemId: m!.id },
+        { processoId: outro!.id, publicacaoId },
+        { processoId: outro!.id, clienteId },
+      ]) {
+        const r = await pedir({ campo: "observacoes", modo: "escrever", texto: "algo", alvo });
+        expect(r.status).toBe(403);
+      }
+      expect(ia.chamadas).toEqual([]);
+      await t.owner`update clientes set sem_ia = false where id = ${clienteId}`;
+      await t.owner`update negocios set cliente_id = null where id = ${negocioId}`;
+    });
+
     test("IA desligada no servidor: diz isso", async () => {
       const r = await chamar(semIaLigada, beatriz, "/ia/campo", { campo: "observacoes", modo: "melhorar", texto: "algo" });
       expect(r.status).toBe(503);

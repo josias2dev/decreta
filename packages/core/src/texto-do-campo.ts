@@ -5,7 +5,7 @@
  * garante é o código. O que ele não pega: número por extenso ("quinze dias") e
  * nome de uma palavra só no começo da frase.
  */
-import { datasDe, valoresDe } from "./conferencia-dos-fatos.ts";
+import { datasDe, valoresDe, type DataNoTexto } from "./conferencia-dos-fatos.ts";
 
 /** Os campos que têm IA: uma rota e um componente só, e o campo diz o contexto e o prompt. */
 export const CAMPOS_COM_IA = ["resultado-decisao", "mensagem-cliente", "instrucoes-peca", "resumo-atendimento", "observacoes"] as const;
@@ -41,21 +41,28 @@ export function pedacosDoTexto(texto: string): PedacoDoTexto[] {
 export const contarACompletar = (texto: string) => [...texto.matchAll(MARCA)].length;
 
 const LINK = /https?:\/\/\S*[\w/]|www\.\S*\w|\b[\w-]+\.(?:com|net|org|ly)(?:\.br)?\b(?:\/\S*\w)?/giu;
-const ARTIGO = /\barts?\.?\s{0,3}\d[\d.]*[º°]?(?:-[A-Z])?(?:\s{0,3},\s{0,3}§\s{0,3}\d+[º°]?)?(?:,(?=\s+d[oa]\s))?/giu;
+const ARTIGO = /\barts?\.?\s{0,3}\d+(?:\.\d+)*[º°]?(?:-[A-Z])?(?:\s{0,3},\s{0,3}§\s{0,3}\d+[º°]?)?(?:,(?=\s+d[oa]\s))?/giu;
 const HORA = /(?<![\d:/.-])(\d{1,2})(?::(\d{2})|h(\d{2})?(?:min)?)(?![\p{L}\d])/giu;
+const DATA_CURTA = /(?<![\d/.-])(\d{1,2})\/(\d{1,2})(?![\d/])/g;
+/** "15 dias", "15 (quinze) dias": o fato que mais pesa, e por isso só vale escrito assim na fonte. */
+const DIAS = /(?<![\d.,/-])(\d+)\s{0,3}(?:\([^)\n]{1,40}\)\s{0,3})?dias?(?![\p{L}\d])/giu;
+const VALOR_EM_REAIS = /R\$\s*[\d.,]+/g;
+const POR_CENTO = /(\d+(?:,\d+)?)\s{0,3}por\s+cento/giu;
 const NUMERO = /\d+(?:[.,/:-]\d+)*/gu;
-/** "1." e "2)" no começo da linha são numeração de lista. */
-const ITEM_DE_LISTA = /^\s*\d{1,2}[.)]\s/;
+/** Data inteira: os pedaços dela não provam um número solto, só o ano. */
+const FORMATO_DE_DATA = /^(?:\d{1,2}\/\d{1,2}(?:\/\d{2,4})?|\d{1,2}[.-]\d{1,2}[.-]\d{2,4}|\d{4}-\d{2}-\d{2})$/;
+/** Ordinal de uso comum: não é fato do caso. */
+const ORDINAL_COMUM = /^[º°ªao]?\s{1,3}(?:grau|via|inst[âa]ncia)(?![\p{L}\d])/iu;
 
 const PALAVRA = String.raw`\p{Lu}[\p{Ll}'’-]+`;
-const NOME = new RegExp(String.raw`(?<![\p{L}\d])${PALAVRA}(?:\s+(?:(?:de|da|do|dos|das|e)\s+)?${PALAVRA})*(?![\p{L}\d])`, "gu");
+const NOME = new RegExp(String.raw`(?<![\p{L}\d])${PALAVRA}(?:[^\S\n]+(?:(?:de|da|do|dos|das|e)[^\S\n]+)?${PALAVRA})*(?![\p{L}\d])`, "gu");
 const SO_AS_PALAVRAS = new RegExp(PALAVRA, "gu");
-const COMECO_DE_FRASE = /(?:^|[.!?:;\n]\s*|^\s*[-*•]\s*)$/;
+const COMECO_DE_FRASE = /(?:^|[.!?:;)("“'‘\n]\s*|^\s*[-*•]\s*)$/;
 
 /** O que se escreve com letra maiúscula sem ser nome de gente ou de empresa. Comparado sem acento e em minúsculas. */
 const COMUNS = new Set(
-  `tribunal tribunais justica vara civel criminal trabalho federal estadual superior supremo regional comarca juiz juiza juizo juizado especial turma camara
-  ministerio publico defensoria procuradoria fazenda codigo civil processo penal consumidor constituicao lei decreto sumula tema artigo
+  `tribunal tribunais justica vara civel criminal trabalho federal estadual superior supremo regional comarca juiz juiza juizo juizado especial turma camara desembargador desembargadora relator relatora ministro ministra
+  ministerio publico publica defensoria procuradoria fazenda previdencia social secretaria cartorio forum codigo civil processo penal consumidor constituicao lei decreto sumula tema artigo
   recurso apelacao agravo embargos contestacao replica sentenca acordao decisao despacho intimacao audiencia perito pericia laudo peticao
   advogado advogada escritorio cliente autor autora reu parte partes senhor senhora doutor doutora dr dra sr sra excelentissimo prezado prezada ola bom boa dia tarde noite atenciosamente
   whatsapp decreta pix resumo pedidos documentos pendentes proximos passos diario oficial uniao estado municipio nacional
@@ -71,15 +78,41 @@ const semAcento = (t: string) =>
 
 const semZeros = (d: string) => d.replace(/^0+(?=\d)/, "");
 
-/** Os números da fonte, como dígitos: inteiros, com o que vem antes dos centavos e cada parte de uma data. */
+const digitos = (t: string) => semZeros(t.replace(/\D/g, ""));
+
+/** Os números da fonte, cada um inteiro: com e sem os centavos. De uma data, só o ano; de uma hora, nada: os pedaços não provam outro número. */
 function numerosDe(fonte: string): Set<string> {
   const numeros = new Set<string>();
-  for (const [token] of fonte.matchAll(NUMERO)) {
-    numeros.add(semZeros(token.replace(/\D/g, "")));
-    numeros.add(semZeros(token.replace(/,\d{1,2}$/, "").replace(/\D/g, "")));
-    for (const parte of token.split(/[.,/:-]/)) numeros.add(semZeros(parte));
+  for (const [token] of fonte.replace(HORA, " ").matchAll(NUMERO)) {
+    if (FORMATO_DE_DATA.test(token)) {
+      const ano = /\d{4}/.exec(token);
+      if (ano) numeros.add(ano[0]);
+      continue;
+    }
+    numeros.add(digitos(token));
+    numeros.add(digitos(token.replace(/[,.]\d{1,2}$/, "")));
   }
   return numeros;
+}
+
+/** Todas as datas, também o dd/mm sem preposição antes: "Prevista para 20/05" é data. */
+function todasAsDatas(t: string): DataNoTexto[] {
+  const curtas = [...t.matchAll(DATA_CURTA)].filter((m) => Number(m[1]) >= 1 && Number(m[1]) <= 31 && Number(m[2]) >= 1 && Number(m[2]) <= 12);
+  return [...datasDe(t), ...curtas.map((m) => ({ texto: m[0], inicio: m.index, dia: Number(m[1]), mes: Number(m[2]), ano: null }))];
+}
+
+/** As chaves dos valores da fonte, entendendo "30 por cento" como 30%. */
+function valoresDaFonte(fonte: string): Set<string> {
+  const porCento = [...fonte.matchAll(POR_CENTO)].map((m) => `p:${Number(m[1]!.replace(",", "."))}`);
+  return new Set([...valoresDe(fonte).map((v) => v.chave), ...porCento]);
+}
+
+/** "R$ 1.200" quando o rascunho diz só "1.200". Número pequeno não conta: "15" pode ser qualquer outra coisa. */
+function valorEscritoSemOSimbolo(valor: string, soltos: Set<string>): boolean {
+  const [inteiro, centavos] = valor.replace(/^R\$\s*/, "").split(",");
+  const semCentavos = digitos(inteiro!);
+  if (semCentavos.length < 3) return false;
+  return soltos.has(digitos(valor)) || ((!centavos || /^0+$/.test(centavos)) && soltos.has(semCentavos));
 }
 
 const horaDe = (m: RegExpMatchArray) => `${semZeros(m[1]!)}:${m[2] ?? m[3] ?? "00"}`;
@@ -108,13 +141,15 @@ interface Achado {
 export function conferirTextoDoCampo(bruto: string, fontes: { rascunho: string; contexto?: string }): TextoConferido {
   const texto = bruto.replace(MARCA_DO_MODELO, A_COMPLETAR);
   const fonte = `${fontes.rascunho}\n${fontes.contexto ?? ""}`;
-  const datas = datasDe(fonte);
-  const valores = new Set(valoresDe(fonte).map((v) => v.chave));
+  const datas = todasAsDatas(fonte);
+  const valores = valoresDaFonte(fonte);
   const numeros = numerosDe(fonte);
+  const numerosSemReais = numerosDe(fonte.replace(VALOR_EM_REAIS, " "));
+  const diasDaFonte = new Set([...fonte.matchAll(DIAS)].map((m) => semZeros(m[1]!)));
   const horas = horasDe(fonte);
   const palavras = palavrasDe(fonte);
   const rascunho = semAcento(fontes.rascunho);
-  const estaNaFonte = (trecho: string) => (trecho.match(/\d+/g) ?? []).every((d) => numeros.has(semZeros(d)));
+  const estaNaFonte = (trecho: string) => (trecho.match(NUMERO) ?? []).every((n) => numeros.has(digitos(n)));
 
   // Os mais específicos primeiro: o que já foi achado não é lido de novo como número solto.
   const achados: Achado[] = [];
@@ -128,12 +163,15 @@ export function conferirTextoDoCampo(bruto: string, fontes: { rascunho: string; 
 
   for (const m of texto.matchAll(LINK)) achar(m.index, m[0], rascunho.includes(semAcento(m[0])));
   for (const m of texto.matchAll(ARTIGO)) achar(m.index, m[0], estaNaFonte(m[0]));
-  for (const d of datasDe(texto)) achar(d.inicio, d.texto, datas.some((o) => o.dia === d.dia && o.mes === d.mes && (d.ano === null || o.ano === null || o.ano === d.ano)));
-  for (const v of valoresDe(texto)) achar(v.inicio, v.texto, valores.has(v.chave));
+  for (const d of todasAsDatas(texto)) achar(d.inicio, d.texto, datas.some((o) => o.dia === d.dia && o.mes === d.mes && (d.ano === null || o.ano === null || o.ano === d.ano)));
+  for (const v of valoresDe(texto)) achar(v.inicio, v.texto, valores.has(v.chave) || (v.chave.startsWith("r:") && valorEscritoSemOSimbolo(v.texto, numerosSemReais)));
   for (const m of texto.matchAll(HORA)) achar(m.index, m[0], horas.has(horaDe(m)));
+  for (const m of texto.matchAll(DIAS)) achar(m.index, m[1]!, diasDaFonte.has(semZeros(m[1]!)));
   for (const m of texto.matchAll(NUMERO)) {
-    const inicioDaLinha = texto.lastIndexOf("\n", m.index) + 1;
-    if (ITEM_DE_LISTA.test(texto.slice(inicioDaLinha, m.index + m[0].length + 2))) continue;
+    const depois = texto.slice(m.index + m[0].length, m.index + m[0].length + 16);
+    // "1." e "2)" no começo da linha são numeração de lista.
+    const noComecoDaLinha = !texto.slice(texto.lastIndexOf("\n", m.index) + 1, m.index).trim();
+    if ((noComecoDaLinha && /^[.)]\s/.test(depois)) || ORDINAL_COMUM.test(depois)) continue;
     achar(m.index, m[0], estaNaFonte(m[0]));
   }
   for (const m of texto.matchAll(NOME)) {

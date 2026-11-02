@@ -14,6 +14,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { EstrategiaDaPecaEditor } from "@/componentes/estrategia-da-peca";
 import { DialogoDoFato, FatosDaPeca } from "@/componentes/fatos-da-peca";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { JulgadosDaPeca } from "@/componentes/julgados-da-peca";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -276,14 +277,16 @@ export function PecaPage() {
     </ul>
   );
   const campoInstrucoes = (
-    <textarea
-      aria-label="Instruções para a IA"
-      rows={4}
-      value={instrucoes}
-      onChange={(e) => setInstrucoes(e.target.value)}
-      placeholder="Concordar com o laudo e pedir o julgamento. Rebater a falta de vistoria."
-      className="w-full"
-    />
+    <IaNoCampo campo="instrucoes-peca" alvo={{ processoId: p.processo.id, prazoId: p.prazo?.id, tipoDePeca: tipo || undefined }} semIa={p.processo.semIa} valor={instrucoes} aoUsar={setInstrucoes}>
+      <textarea
+        aria-label="Instruções para a IA"
+        rows={4}
+        value={instrucoes}
+        onChange={(e) => setInstrucoes(e.target.value)}
+        placeholder="Concordar com o laudo e pedir o julgamento. Rebater a falta de vistoria."
+        className="w-full"
+      />
+    </IaNoCampo>
   );
   const botaoGerar = (bloco: boolean) => (
     <Botao variante={texto || iaLigada ? "secundaria" : "primaria"} bloco={bloco} onClick={() => void gerar(salva?.estrategia ?? null)} ocupado={gerando} disabled={!iaLigada || !tipo || conferindo}>

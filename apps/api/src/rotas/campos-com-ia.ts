@@ -48,6 +48,8 @@ export function rotasDosCamposComIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   /** Falha da IA: o teto do dia diz que é o teto; o resto fica anotado, e a tela avisa que o campo continua igual. */
   const falhaDaIa = async (c: C, campo: string, modo: string, dono: { processoId: string | null; clienteId: string | null }, chamadas: ChamadaDaIa[], err: unknown): Promise<never> => {
     if (ehTetoDoGateway(err)) throw new LimiteDaIa(AVISOS.gateway);
+    // A pessoa cancelou ou fechou a tela: não é falha, e ninguém espera a resposta.
+    if (c.req.raw.signal.aborted) falha(503, "ia_cancelada");
     const erro = (err instanceof Error ? err.message : String(err)).slice(0, 500);
     deps.log("IA do campo falhou", { campo, modo, error: erro });
     await registrar(c, campo, modo, dono, chamadas, { situacao: "erro", conteudo: {}, erro });
@@ -120,7 +122,9 @@ export function rotasDosCamposComIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     if (b.publicacaoId && !pub) falha(404, "nao_encontrado");
     const processoId = b.processoId ?? pub?.processoId ?? null;
     const quem = await processoDaBase(c, processoId);
-    if (quem.semIa) throw new ClienteSemIa();
+    // A publicação pode ser de outro processo que o pedido: a recusa do dono dela vale também, porque o teor vai ao modelo.
+    const pubDeQuemRecusou = !!pub?.processoId && pub.processoId !== processoId && (await tenant(c, deps, (tx) => semIa(tx, { processoId: pub.processoId })));
+    if (quem.semIa || pubDeQuemRecusou) throw new ClienteSemIa();
     const tabela = baseLegalDaTabela(b.tipo, quem.rito);
     if (tabela) return c.json({ situacao: "tabela" as const, tabela, ...(await textoDaLei(c, tabela.fundamento)) });
     const dono = { processoId, clienteId: null };

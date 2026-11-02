@@ -53,38 +53,45 @@ export async function materialDoCampo(tx: Tx, campo: CampoComIa, alvo: AlvoDoCam
   const partes: string[] = [];
   let processoId = alvo.processoId ?? null;
   let clienteId = alvo.clienteId ?? null;
+  /** Cada coisa lida passa pela recusa do próprio dono: um alvo de outro cliente não entra de carona. */
+  const doDono = async <T extends { processoId?: string | null; clienteId?: string | null }>(linha: T | undefined): Promise<T> => {
+    const l = achado(linha);
+    if (await semIa(tx, { processoId: l.processoId, clienteId: l.clienteId })) throw new ClienteSemIa();
+    return l;
+  };
 
   if (alvo.publicacaoId) {
-    const pub = achado((await tx.select({ texto: publicacoes.texto, disponibilizadaEm: publicacoes.disponibilizadaEm, processoId: publicacoes.processoId }).from(publicacoes).where(eq(publicacoes.id, alvo.publicacaoId)))[0]);
+    const pub = await doDono((await tx.select({ texto: publicacoes.texto, disponibilizadaEm: publicacoes.disponibilizadaEm, processoId: publicacoes.processoId }).from(publicacoes).where(eq(publicacoes.id, alvo.publicacaoId)))[0]);
     processoId ??= pub.processoId;
     partes.push(`## Publicação disponibilizada em ${formatarDia(pub.disponibilizadaEm)}\n${cortado(pub.texto, "publicação")}`);
   }
   if (alvo.prazoId) {
-    const p = achado((await tx.select({ tipo: prazos.tipo, fim: prazos.fim, fundamento: prazos.fundamento, processoId: prazos.processoId }).from(prazos).where(eq(prazos.id, alvo.prazoId)))[0]);
+    const p = await doDono((await tx.select({ tipo: prazos.tipo, fim: prazos.fim, fundamento: prazos.fundamento, processoId: prazos.processoId }).from(prazos).where(eq(prazos.id, alvo.prazoId)))[0]);
     processoId ??= p.processoId;
     partes.push(`## Prazo\n${p.tipo}, vence em ${formatarDia(p.fim)}${p.fundamento ? ` (${p.fundamento})` : ""}.`);
   }
   if (alvo.mensagemId) {
-    const m = achado((await tx.select({ tipo: mensagensCliente.tipo, clienteId: mensagensCliente.clienteId, processoId: mensagensCliente.processoId, prazoId: mensagensCliente.prazoId }).from(mensagensCliente).where(eq(mensagensCliente.id, alvo.mensagemId)))[0]);
+    const m = await doDono((await tx.select({ tipo: mensagensCliente.tipo, clienteId: mensagensCliente.clienteId, processoId: mensagensCliente.processoId, prazoId: mensagensCliente.prazoId }).from(mensagensCliente).where(eq(mensagensCliente.id, alvo.mensagemId)))[0]);
     if (m.tipo === "cobranca" && !quem.veCobranca) falha(403, "sem_acesso_financeiro", "O Financeiro é dos sócios e de quem eles liberarem na Equipe.");
     clienteId ??= m.clienteId;
     processoId ??= m.processoId;
     if (m.prazoId) partes.push(...(await daDecisao(tx, m.prazoId)));
   }
   if (alvo.negocioId) {
-    const n = achado((await tx.select({ nome: negocios.nome, assunto: negocios.assunto, area: negocios.area, clienteId: negocios.clienteId }).from(negocios).where(eq(negocios.id, alvo.negocioId)))[0]);
+    const n = await doDono((await tx.select({ nome: negocios.nome, assunto: negocios.assunto, area: negocios.area, clienteId: negocios.clienteId }).from(negocios).where(eq(negocios.id, alvo.negocioId)))[0]);
     clienteId ??= n.clienteId;
     partes.push(`## Novo negócio, ainda na triagem\nPessoa: ${n.nome}\nAssunto: ${n.assunto}${n.area ? `\nÁrea: ${n.area}` : ""}`);
   }
   if (alvo.alvaraId) {
-    const a = achado((await tx.select({ descricao: alvaras.descricao, valor: alvaras.valor, processoId: alvaras.processoId }).from(alvaras).where(eq(alvaras.id, alvo.alvaraId)))[0]);
+    const a = await doDono((await tx.select({ descricao: alvaras.descricao, valor: alvaras.valor, processoId: alvaras.processoId }).from(alvaras).where(eq(alvaras.id, alvo.alvaraId)))[0]);
     processoId ??= a.processoId;
     partes.push(`## Alvará\n${a.descricao}, no valor de R$ ${a.valor}.`);
   }
   const peca = alvo.tipoDePeca ? tipoDePeca(alvo.tipoDePeca) : undefined;
   if (peca) partes.push(`## Peça que será redigida\n${peca.nome}. Como costuma ser: ${peca.estrutura}`);
 
-  // A recusa do cliente vale antes de ler qualquer coisa dele, mesmo o que este campo não leria.
+  // O processo e o cliente pedidos também: a recusa vale mesmo para o que este campo não leria.
+  if (alvo.processoId && processoId !== alvo.processoId && (await semIa(tx, { processoId: alvo.processoId }))) throw new ClienteSemIa();
   if (clienteId) {
     const cl = achado((await tx.select({ nome: clientes.nome }).from(clientes).where(eq(clientes.id, clienteId)))[0]);
     if (await semIa(tx, { clienteId })) throw new ClienteSemIa();

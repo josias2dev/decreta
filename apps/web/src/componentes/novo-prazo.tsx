@@ -7,6 +7,7 @@ import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaDaSemana } from "@/lib/formato";
 import type { Contagem, Pagina, PreviaDaConta, ProcessoNaLista } from "@/lib/tipos";
 import { useAviso } from "./avisos";
+import { CampoBaseLegal } from "./base-legal";
 import { AvisoSemCalendarioProprio } from "./conta-do-prazo";
 import { Dialogo } from "./dialogo";
 import { Botao, Campo, Faixa } from "./ui";
@@ -76,6 +77,7 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
       aberto={aberto}
       aoFechar={aoFechar}
       titulo="Novo prazo"
+      className="dc-dialogo--largo"
       acoes={
         <>
           <Botao variante="fantasma" onClick={aoFechar}>
@@ -107,20 +109,18 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
           <Campo rotulo="Publicado em" htmlFor="np-pub">
             <input id="np-pub" type="date" value={f.publicadoEm} onChange={(e) => setF({ ...f, publicadoEm: e.target.value })} />
           </Campo>
-          <Campo rotulo="Base legal" htmlFor="np-fund">
-            <input id="np-fund" value={f.fundamento} onChange={(e) => setF({ ...f, fundamento: e.target.value })} placeholder="art. 351, CPC" />
+          <Campo rotulo="Responsável" htmlFor="np-resp">
+            <select id="np-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
+              <option value="">Quem cuida do processo</option>
+              {eu.data?.equipe.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
           </Campo>
         </div>
-        <Campo rotulo="Responsável" htmlFor="np-resp">
-          <select id="np-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
-            <option value="">Quem cuida do processo</option>
-            {eu.data?.equipe.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome}
-              </option>
-            ))}
-          </select>
-        </Campo>
+        <CampoBaseLegal id="np-fund" valor={f.fundamento} aoMudar={(fundamento) => setF((atual) => ({ ...atual, fundamento }))} tipo={f.tipo} processoId={proc?.id} placeholder="art. 351, CPC" />
         {conta.data && (
           <Faixa tipo="nota">
             <span>

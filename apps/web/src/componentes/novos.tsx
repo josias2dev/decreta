@@ -10,6 +10,7 @@ import type { Canal, ClienteNaLista, ConsultaDoCnj, Pagina } from "@/lib/tipos";
 import { useAviso } from "./avisos";
 import { CamposDoCliente, fichaVazia } from "./campos-cliente";
 import { Dialogo } from "./dialogo";
+import { IaNoCampo, useIaDisponivel } from "./ia-no-campo";
 import { Botao, Campo, Dados, Faixa } from "./ui";
 
 /** Nome de empresa: termina em Ltda., S.A., ME, EIRELI. */
@@ -74,7 +75,7 @@ export function NovoCliente({ aberto, aoFechar, aoCriar, nomeInicial }: { aberto
 }
 
 /** Escolher um cliente já cadastrado pelo nome (ou cadastrar um novo ali mesmo). */
-export function EscolherCliente({ valor, aoEscolher }: { valor: { id: string; nome: string } | null; aoEscolher: (c: { id: string; nome: string } | null) => void }) {
+export function EscolherCliente({ valor, aoEscolher }: { valor: { id: string; nome: string } | null; aoEscolher: (c: { id: string; nome: string; semIa?: boolean } | null) => void }) {
   const [q, setQ] = useState("");
   const [novo, setNovo] = useState(false);
   const termo = useDeferredValue(q.trim());
@@ -95,7 +96,7 @@ export function EscolherCliente({ valor, aoEscolher }: { valor: { id: string; no
       {termo.length >= 2 && (
         <div className="dc-painel dc-linhas dc-linhas--rola">
           {r.data?.itens.slice(0, 6).map((c) => (
-            <button key={c.id} type="button" className="dc-linhas__item w-full cursor-pointer border-0 bg-transparent text-left hover:bg-[var(--superficie-2)]" onClick={() => aoEscolher({ id: c.id, nome: c.nome })}>
+            <button key={c.id} type="button" className="dc-linhas__item w-full cursor-pointer border-0 bg-transparent text-left hover:bg-[var(--superficie-2)]" onClick={() => aoEscolher({ id: c.id, nome: c.nome, semIa: c.semIa })}>
               <span className="dc-celula">
                 <span className="dc-celula__1">{c.nome}</span>
                 {c.documento && <span className="dc-celula__2 dc-num">{c.documento}</span>}
@@ -397,13 +398,12 @@ const CANAIS: { id: Canal; rotulo: string }[] = [
 export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { aberto: boolean; aoFechar: () => void; cliente?: { id: string; nome: string; semIa?: boolean } | null; processoId?: string | null }) {
   const qc = useQueryClient();
   const avisar = useAviso();
-  const eu = useQuery(euQuery);
-  const [cli, setCli] = useState<{ id: string; nome: string } | null>(cliente ?? null);
+  const [cli, setCli] = useState<{ id: string; nome: string; semIa?: boolean } | null>(cliente ?? null);
   const [canal, setCanal] = useState<Canal>("presencial");
   const [resumo, setResumo] = useState("");
-  const [organizando, setOrganizando] = useState(false);
   const entradaDoAudio = useRef<HTMLInputElement>(null);
-  /** O áudio da conversa vira texto no campo; daí a pessoa confere e, se quiser, a IA organiza. */
+  const iaAqui = useIaDisponivel(cli?.semIa);
+  /** O áudio da conversa vira texto no campo; daí a pessoa confere e, se quiser, a IA organiza pelo botão do campo. */
   const transcrever = useMutation({
     mutationFn: (audio: File) => {
       const form = new FormData();
@@ -426,24 +426,6 @@ export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { abe
       aoFechar();
     },
   });
-  /** A IA arruma o que foi anotado às pressas em resumo, pedidos e próximos passos. */
-  const organizar = async () => {
-    setOrganizando(true);
-    try {
-      const r = await api<{ situacao: "pronto" | "recusa"; conteudo: { resumo: string; pedidos: string[]; documentosPendentes: string[]; proximosPassos: string[]; recusa?: string } }>("/ia/atendimento", { json: { transcricao: resumo, clienteId: cli?.id ?? null } });
-      const c = r.conteudo;
-      if (r.situacao === "recusa") {
-        avisar(c.recusa ?? "A IA não conseguiu organizar este texto.", { erro: true });
-        return;
-      }
-      const bloco = (t: string, l: string[]) => (l.length ? `\n\n${t}:\n${l.map((x) => `- ${x}`).join("\n")}` : "");
-      setResumo(`${c.resumo}${bloco("Pedidos", c.pedidos)}${bloco("Documentos pendentes", c.documentosPendentes)}${bloco("Próximos passos", c.proximosPassos)}`);
-    } catch (err) {
-      avisar(mensagemDoErro(err), { erro: true });
-    } finally {
-      setOrganizando(false);
-    }
-  };
   return (
     <Dialogo
       aberto={aberto}
@@ -472,9 +454,11 @@ export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { abe
           ))}
         </div>
         <Campo rotulo="O que foi conversado" htmlFor="at-resumo">
-          <textarea id="at-resumo" rows={6} value={resumo} onChange={(e) => setResumo(e.target.value)} placeholder={eu.data?.ia && !cliente?.semIa ? "Anote do jeito que vier. A IA organiza em resumo, pedidos e próximos passos." : "Anote do jeito que vier."} />
+          <IaNoCampo campo="resumo-atendimento" alvo={{ clienteId: cli?.id, processoId: processoId ?? undefined }} semIa={cli?.semIa} valor={resumo} aoUsar={setResumo}>
+            <textarea id="at-resumo" rows={6} value={resumo} onChange={(e) => setResumo(e.target.value)} placeholder={iaAqui ? "Anote do jeito que vier. No botão IA, ela organiza em resumo, pedidos e próximos passos." : "Anote do jeito que vier."} />
+          </IaNoCampo>
         </Campo>
-        {eu.data?.ia && !cliente?.semIa && (
+        {iaAqui && (
           <div className="dc-linha-acoes">
             <input
               ref={entradaDoAudio}
@@ -490,9 +474,6 @@ export function NovoAtendimento({ aberto, aoFechar, cliente, processoId }: { abe
             />
             <Botao pequeno onClick={() => entradaDoAudio.current?.click()} ocupado={transcrever.isPending}>
               {transcrever.isPending ? "Transcrevendo…" : "Enviar áudio"}
-            </Botao>
-            <Botao variante="ia" pequeno onClick={organizar} ocupado={organizando} disabled={resumo.trim().length < 20}>
-              Organizar com IA
             </Botao>
           </div>
         )}

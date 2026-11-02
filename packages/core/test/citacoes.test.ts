@@ -21,6 +21,13 @@ describe("a base legal como a citação espera", () => {
     expect(daBase("CPC, arts. 350 e 351")).toEqual(["dispositivo:CPC:art350", "dispositivo:CPC:art351"]);
   });
 
+  test("a citação concorda com a lei, porque aparece na tela", () => {
+    expect(citacaoDaBaseLegal("CPC, art. 335")).toBe("art. 335 do CPC");
+    expect(citacaoDaBaseLegal("CLT, art. 897")).toBe("art. 897 da CLT");
+    expect(citacaoDaBaseLegal("Lei 9.099/1995, art. 42")).toBe("art. 42 da Lei 9.099/1995");
+    expect(citacaoDaBaseLegal("Constituição Federal, art. 5º")).toBe("art. 5º da Constituição Federal");
+  });
+
   test("o que já está no jeito da citação fica como está", () => {
     expect(citacaoDaBaseLegal("art. 5º, LV, da CF")).toBe("art. 5º, LV, da CF");
     expect(daBase("Súmula 297 do STJ")).toEqual(["sumula:STJ:297"]);

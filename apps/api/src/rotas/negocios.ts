@@ -27,15 +27,16 @@ export function rotasDosNegocios(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const contagens = await tx.select({ etapa: negocios.etapa, n: sql<number>`count(*)::int` }).from(negocios).groupBy(negocios.etapa);
       const linhas = await tx
-        .select()
+        .select({ n: negocios, semIa: sql<boolean>`coalesce((select c.sem_ia from clientes c where c.id = ${negocios.clienteId}), false)` })
         .from(negocios)
         .where(etapa === "todos" ? undefined : eq(negocios.etapa, etapa as (typeof negocios.$inferSelect)["etapa"]))
         .orderBy(desc(negocios.createdAt))
         .limit(200);
       return c.json({
         contagens: Object.fromEntries(contagens.map((x) => [x.etapa, x.n])),
-        itens: linhas.map((n) => ({
+        itens: linhas.map(({ n, semIa }) => ({
           id: n.id,
+          semIa,
           nome: n.nome,
           telefone: n.telefone,
           assunto: n.assunto,
@@ -142,7 +143,7 @@ export function rotasDosNegocios(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.get("/alvaras", async (c) =>
     tenant(c, deps, async (tx) => {
       const linhas = await tx
-        .select({ a: alvaras, processo: { id: processos.id, titulo: processos.titulo, cnj: processos.cnj }, cliente: clientes.nome })
+        .select({ a: alvaras, processo: { id: processos.id, titulo: processos.titulo, cnj: processos.cnj }, cliente: clientes.nome, semIa: clientes.semIa })
         .from(alvaras)
         .innerJoin(processos, eq(processos.id, alvaras.processoId))
         .leftJoin(clientes, eq(clientes.id, processos.clienteId))
@@ -157,8 +158,9 @@ export function rotasDosNegocios(app: Hono<Ambiente>, deps: DepsDasRotas) {
           return {
             etapa,
             total: soma(daEtapa, "valor"),
-            itens: daEtapa.map(({ a, processo, cliente }) => ({
+            itens: daEtapa.map(({ a, processo, cliente, semIa }) => ({
               id: a.id,
+              semIa: !!semIa,
               descricao: a.descricao,
               valor: a.valor,
               valorRecebido: a.valorRecebido,

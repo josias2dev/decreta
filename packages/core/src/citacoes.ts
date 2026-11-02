@@ -102,9 +102,10 @@ export function citacaoDaBaseLegal(texto: string): string {
   const resto = `${limpo.slice(0, norma.index)} ${limpo.slice(norma.index + norma[0].length)}`;
   const artigos = /\barts?\.?\s*(\d.*)/iu.exec(resto)?.[1];
   if (!artigos) return "";
+  const de = /^(?:lei|clt|cf|crfb|lindb|constitui|consolida)/iu.test(norma[0]) ? "da" : "do";
   return artigos
     .split(/\s+e\s+/)
-    .map((a) => `art. ${a.replace(/[\s,;.]+$/, "")} do ${norma[0]}`)
+    .map((a) => `art. ${a.replace(/[\s,;.]+$/, "")} ${de} ${norma[0]}`)
     .join("; ");
 }
 

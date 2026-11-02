@@ -86,6 +86,45 @@ function linhasInteiras(page: Page, seletor: string) {
   );
 }
 
+const TEXTO_DA_PREVIA = "Ganhamos a indenização de R$ 80.000,00 e perdemos os danos morais de [a completar].";
+
+/** O diálogo do prazo com a base legal preenchida pela tabela e o texto da lei ao lado. */
+async function abrirIaEBaseLegal(page: Page, botao: RegExp) {
+  const prazo = amostras.prazo!.corpo;
+  const previa = { publicacao: prazo.publicadoEm, inicio: prazo.inicio, fim: prazo.fim, dias: prazo.dias, contagem: prazo.contagem, desconsiderados: [], prorrogadoDe: null, explicacao: prazo.conta.explicacao, pelo: "publicacao", outra: null, calendarioCompleto: true, diaDigitado: null };
+  const lei = { trecho: "art. 335 do CPC", selo: "verificada", motivo: "Em vigor.", texto: "O réu poderá oferecer contestação, por petição, no prazo de 15 (quinze) dias.", fonte: { nome: "normas.leg.br (Congresso Nacional)", url: "https://normas.leg.br/", capturadoEm: "2026-10-20T12:00:00.000Z" } };
+  const api = new ApiFalsa()
+    .responder("/eu", { ...amostras.eu!.corpo, ia: true })
+    .responder("POST /prazos/calcular", previa)
+    .responder("POST /base-legal", { tabela: { ato: "contestação", dias: 15, fundamento: "CPC, art. 335", explicacao: "A resposta de quem está sendo processado." }, semIa: false, reconhecida: true, lei: [lei] })
+    .responder("POST /ia/campo", { id: "00000000-0000-4000-8000-0000000000d1", situacao: "pronto", texto: TEXTO_DA_PREVIA, dicas: [], trocados: [], aCompletar: 1 });
+  await abrir(page, "/prazos", api);
+  await telaPronta(page);
+  await page.getByRole("button", { name: botao }).first().click();
+  const dialogo = page.getByRole("dialog", { name: "Novo prazo" });
+  await dialogo.getByLabel("O que fazer").fill("Contestação");
+  await expect(dialogo.getByRole("region", { name: "O que diz a lei" })).toBeVisible();
+}
+
+/** A prévia da IA, aberta no campo de resultado da sentença: a mesma escala, com respiro. */
+async function conferirIaNoCampo(page: Page, escala: number[]) {
+  await page.goto(`/publicacoes/${ids.sentenca}`);
+  await page.getByRole("button", { name: "Corrigir" }).click();
+  const dialogo = page.getByRole("dialog", { name: "Resultado da decisão" });
+  const botao = dialogo.getByRole("button", { name: "Pedir ajuda da IA neste campo" });
+  await botao.click();
+  await conferirEscala(page, escala);
+  await dialogo.getByRole("button", { name: /^Escrever/ }).click();
+  const previa = dialogo.getByRole("region", { name: "Prévia da IA" });
+  await expect(previa).toContainText("Ganhamos a indenização");
+  await conferirEscala(page, escala);
+  // Respiro: o painel não cola na borda, e o texto do campo não passa por baixo do botão.
+  const respiro = await previa.evaluate((e) => Number.parseFloat(getComputedStyle(e).paddingLeft));
+  expect(respiro).toBeGreaterThanOrEqual(12);
+  const folga = await dialogo.getByLabel("Em poucas palavras").evaluate((e) => Number.parseFloat(getComputedStyle(e).paddingRight));
+  expect(folga).toBeGreaterThanOrEqual((await botao.boundingBox())!.width);
+}
+
 /** A mesma lista mais comprida que a tela, para medir quantas linhas cabem. */
 function repetir<T extends { id: string }>(itens: T[], n: number): T[] {
   return Array.from({ length: n }, (_, i) => ({ ...itens[i % itens.length]!, id: `${itens[i % itens.length]!.id}-${i}` }));
@@ -141,6 +180,12 @@ test.describe("no computador", () => {
     await page.getByRole("button", { name: "Novo prazo" }).click();
     await expect(page.getByRole("dialog", { name: "Novo prazo" })).toBeVisible();
     await conferirEscala(page, ESCALA_DO_COMPUTADOR);
+  });
+
+  test("a IA no campo e a base legal ficam na escala, sem apertar", async ({ page }) => {
+    await abrirIaEBaseLegal(page, /Novo prazo/);
+    await conferirEscala(page, ESCALA_DO_COMPUTADOR);
+    await conferirIaNoCampo(page, ESCALA_DO_COMPUTADOR);
   });
 
   test("Hoje: linhas com respiro, cabeçalho e números em uma linha", async ({ page }) => {
@@ -436,6 +481,13 @@ test.describe("no celular", () => {
     });
   }
 
+  test("a IA no campo e a base legal ficam na escala do celular, sem rolar para o lado", async ({ page }) => {
+    await abrirIaEBaseLegal(page, /Novo prazo|Criar prazo/);
+    await conferirEscala(page, ESCALA_DO_CELULAR);
+    expect(await sobraNaLateral(page)).toBe(0);
+    await conferirIaNoCampo(page, ESCALA_DO_CELULAR);
+  });
+
   test("alvos de toque de 44 px e campos de 16 px", async ({ page }) => {
     await abrir(page, "/processos");
     await telaPronta(page);
@@ -488,7 +540,7 @@ test.describe("no código", () => {
   const arquivos = andar(SRC);
 
   test("nenhum tamanho de letra solto no CSS do app", () => {
-    for (const nome of ["estilos/app.css", "estilos/componentes.css"]) {
+    for (const nome of ["estilos/app.css", "estilos/componentes.css", "estilos/ia-no-campo.css"]) {
       const css = readFileSync(new URL(nome, SRC), "utf8");
       expect(css.match(/font-size:\s*[\d.]+(px|em|rem)/g), nome).toBeNull();
       expect(css.match(/\bfont:\s*\d+\s+[\d.]+(px|em|rem)/g), nome).toBeNull();

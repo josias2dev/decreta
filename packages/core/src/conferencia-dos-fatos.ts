@@ -95,7 +95,8 @@ export interface ValorNoTexto {
 
 export function valoresDe(texto: string): ValorNoTexto[] {
   const saida: ValorNoTexto[] = [];
-  for (const m of texto.matchAll(/R\$\s*(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?/g)) {
+  // O banco escreve com ponto ("R$ 80000.50"); o texto, com vírgula. O mesmo valor tem a mesma chave.
+  for (const m of texto.matchAll(/R\$\s*(\d{1,3}(?:\.\d{3})+|\d+)(?:[,.](\d{1,2})(?!\d))?/g)) {
     const centavos = Number(m[1]!.replace(/\./g, "")) * 100 + Number((m[2] ?? "0").padEnd(2, "0"));
     saida.push({ texto: m[0], inicio: m.index!, chave: `r:${centavos}` });
   }

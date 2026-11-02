@@ -1,0 +1,76 @@
+/* A IA nos campos de texto e a base legal que se explica. Azul só no que é da IA; âmbar no que falta completar. */
+
+.dc-ia-campo { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.dc-ia-campo__caixa { position: relative; display: flex; min-width: 0; }
+/* O canto de cima fica para o botão: o texto não passa por baixo dele. */
+.dc-ia-campo__caixa > textarea { padding-right: calc(var(--altura-controle-sm) + var(--space-3)); }
+.dc-ia-campo__botao { position: absolute; top: var(--space-1); right: var(--space-1); display: inline-flex; align-items: center; justify-content: center; min-width: var(--altura-controle-sm); height: var(--altura-controle-sm); padding: 0 var(--space-1-half); box-sizing: border-box; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--acento); font: 600 var(--texto-legenda)/1 var(--font-sans); letter-spacing: 0.04em; cursor: pointer; transition: background-color var(--transicao), border-color var(--transicao); }
+.dc-ia-campo__botao:hover { background: var(--acento-suave); border-color: var(--acento-borda); }
+.dc-ia-campo__botao:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
+.dc-ia-campo__botao.is-on { background: var(--acento); border-color: var(--acento); color: var(--on-acento); }
+
+.dc-ia-campo__falta { margin: 0; font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--breve); }
+.dc-ia-campo__voltar { align-self: flex-start; font-size: var(--texto-meta); line-height: var(--linha-meta); }
+
+.dc-ia-campo__painel { padding: var(--space-3) var(--space-3-half) var(--space-3-half); gap: var(--space-3); scroll-margin: var(--space-4); }
+/* Os botões do diálogo e o rodapé do celular ficam por cima da rolagem: o painel para antes deles. */
+.dc-dialogo .dc-ia-campo__painel, .dc-dialogo .dc-base-legal__sugestao { scroll-margin-bottom: 88px; }
+.dc-celular .dc-ia-campo__painel, .dc-celular .dc-base-legal__sugestao { scroll-margin-bottom: 136px; }
+.dc-ia-campo__fechar { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; width: var(--altura-controle-sm); height: var(--altura-controle-sm); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--tinta-2); cursor: pointer; }
+.dc-ia-campo__fechar:hover { background: var(--acento-borda); }
+.dc-ia-campo__fechar:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
+.dc-ia-campo__fechar svg { width: var(--space-3-half); height: var(--space-3-half); }
+
+.dc-ia-campo__modos { display: flex; flex-direction: column; gap: var(--space-1); margin: 0 calc(-1 * var(--space-1-half)); }
+.dc-ia-campo__modo { display: flex; flex-direction: column; gap: var(--space-half); padding: var(--space-2) var(--space-1-half); border: 0; border-radius: var(--radius-md); background: transparent; color: var(--tinta); text-align: left; cursor: pointer; transition: background-color var(--transicao); }
+.dc-ia-campo__modo strong { font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); }
+.dc-ia-campo__modo span { font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
+.dc-ia-campo__modo:hover:not(:disabled) { background: var(--acento-borda); }
+.dc-ia-campo__modo:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
+.dc-ia-campo__modo:disabled { cursor: not-allowed; }
+.dc-ia-campo__modo:disabled strong { color: var(--tinta-3); }
+
+.dc-ia-campo__texto { margin: 0; font: 400 var(--texto-leitura)/var(--linha-leitura) var(--font-sans); color: var(--tinta); white-space: pre-wrap; overflow-wrap: anywhere; }
+.dc-ia-campo__dicas { margin: 0; padding-left: var(--space-4); list-style: disc; font: 400 var(--texto-leitura)/var(--linha-leitura) var(--font-sans); color: var(--tinta); overflow-wrap: anywhere; }
+.dc-ia-campo__dicas li + li { margin-top: var(--space-1); }
+.dc-ia-campo__nota { margin: 0; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
+.dc-ia-campo__erro { margin: 0; font: 400 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--vencido); }
+.dc-ia-campo__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.dc-ia-campo__quantos { margin-left: auto; font: 600 var(--texto-meta)/var(--linha-meta) var(--font-sans); font-variant-numeric: tabular-nums; color: var(--breve); }
+
+.dc-a-completar { padding: 0 var(--space-half); border-radius: var(--radius-sm); background: var(--breve-suave); color: var(--breve); font-weight: 600; }
+
+/* ---------- Base legal ---------- */
+.dc-base-legal { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.dc-base-legal__colunas { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3) var(--space-4); align-items: start; }
+/* Com o texto da lei, o campo de um lado e a lei do outro. */
+.dc-base-legal__colunas.tem-lei { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dc-celular .dc-base-legal__colunas.tem-lei { grid-template-columns: minmax(0, 1fr); }
+.dc-base-legal__campo { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.dc-base-legal__usar { align-self: flex-start; font-size: var(--texto-meta); line-height: var(--linha-meta); text-align: left; }
+.dc-base-legal__explica { margin: 0; font: 400 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); overflow-wrap: anywhere; }
+.dc-base-legal__nota { margin: 0; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
+.dc-base-legal__marca { display: inline-flex; align-items: center; align-self: flex-start; gap: var(--space-1); min-height: var(--altura-selo); padding: var(--space-half) var(--space-2); box-sizing: border-box; border-radius: var(--radius-sm); font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); }
+.dc-base-legal__marca--tabela { background: var(--superficie-2); color: var(--tinta-2); }
+.dc-base-legal__marca--sugerida { background: var(--acento-suave); color: var(--acento); }
+.dc-base-legal__marca--achada { background: var(--acento-suave); color: var(--acento); }
+.dc-base-legal__marca svg { width: var(--space-3); height: var(--space-3); flex: none; }
+
+.dc-lei { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3); border: 1px solid var(--borda); border-radius: var(--radius-md); background: var(--superficie-2); }
+.dc-lei__titulo { margin: 0; font: 600 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
+.dc-lei__item { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.dc-lei__item + .dc-lei__item { padding-top: var(--space-2); border-top: 1px solid var(--borda); }
+.dc-lei__artigo { font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); }
+.dc-lei__texto { margin: 0; font: 400 var(--texto-leitura)/var(--linha-leitura) var(--font-sans); color: var(--tinta); overflow-wrap: anywhere; }
+.dc-lei__motivo { margin: 0; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); overflow-wrap: anywhere; }
+.dc-lei__fonte { display: inline-flex; align-items: center; align-self: flex-start; gap: var(--space-1); font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); text-decoration: underline; text-decoration-color: var(--borda-forte); text-underline-offset: var(--space-half); overflow-wrap: anywhere; }
+.dc-lei__fonte:hover { text-decoration-color: currentColor; }
+.dc-lei__fonte svg { width: var(--space-3); height: var(--space-3); flex: none; }
+
+.dc-base-legal__sugestao { padding: var(--space-3) var(--space-3-half) var(--space-3-half); gap: var(--space-3); }
+
+/* A base legal lida da publicação, na coluna da decisão. */
+.dc-base-lida { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1-half); min-width: 0; }
+.dc-base-lida__linha { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); min-width: 0; }
+.dc-base-lida .dc-link { font-size: var(--texto-meta); line-height: var(--linha-meta); }
+.dc-base-lida .dc-lei { align-self: stretch; }

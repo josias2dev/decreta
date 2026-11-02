@@ -8,6 +8,7 @@ import { useAviso } from "@/componentes/avisos";
 import { ContaDoAlvara } from "@/componentes/conta-do-alvara";
 import { Dialogo } from "@/componentes/dialogo";
 import { useFinanceiroLiberado } from "@/componentes/honorarios";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
 import { ColunaDoQuadro, Quadro } from "@/componentes/rolagem";
@@ -341,7 +342,9 @@ function VerAlvara({ a, aoFechar }: { a: Alvara & { etapa: EtapaAlvara }; aoFech
           </Campo>
         </div>
         <Campo rotulo="Observações" htmlFor="va-obs">
-          <textarea id="va-obs" rows={2} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
+          <IaNoCampo campo="observacoes" alvo={{ alvaraId: a.id }} semIa={a.semIa} valor={f.observacoes} aoUsar={(observacoes) => setF({ ...f, observacoes })}>
+            <textarea id="va-obs" rows={2} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
+          </IaNoCampo>
         </Campo>
         <ContaDoAlvara alvaraId={a.id} aoMudar={() => void qc.invalidateQueries({ queryKey: ["alvaras"] })} />
       </div>

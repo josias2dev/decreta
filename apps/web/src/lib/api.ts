@@ -37,8 +37,8 @@ function opcoes(init: Pedido): RequestInit {
 async function request<T>(path: string, init: Pedido): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, opcoes(init));
   if (res.status === 204) return undefined as T;
-  const body = (await res.json().catch(() => null)) as { erro?: string; detalhe?: string; motivo?: string } | null;
-  if (!res.ok) throw new ApiError(res.status, body?.erro ?? `http_${res.status}`, body?.detalhe ?? body?.motivo);
+  const body = (await res.json().catch(() => null)) as { erro?: string; detalhe?: string; motivo?: string; passaLogo?: boolean } | null;
+  if (!res.ok) throw new ApiError(res.status, body?.erro ?? `http_${res.status}`, body?.detalhe ?? body?.motivo, body?.passaLogo);
   return body as T;
 }
 
