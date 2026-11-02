@@ -58,6 +58,20 @@ describe("DOCX no timbre", () => {
     expect(zip).toContain("word/header1.xml");
   });
 
+  test("sai limpo: a comprovar vira completar, sem marca interna e sem nome de arquivo", async () => {
+    const bytes = await gerarDocx({
+      titulo: "Contestação",
+      texto: 'A ré entregou o produto [A COMPROVAR: comprovante de entrega].\n\nNesse sentido, <mention id="j1">o STJ</mention> decidiu (evento 87, fl. 3). A compra foi em 10/09 (documento "peticao.pdf", fl. 1).',
+      timbre: { nome: "Souza & Mendes Advocacia" },
+    });
+    const texto = await extrairTexto(bytes, MIME_DOCX);
+    expect(texto).toContain("[COMPLETAR: comprovante de entrega]");
+    expect(texto).not.toContain("A COMPROVAR");
+    expect(texto).not.toContain("mention");
+    expect(texto).toContain("o STJ decidiu (evento 87, fl. 3)");
+    expect(texto).not.toContain("peticao.pdf");
+  });
+
   test("nome do arquivo", () => {
     expect(nomeDoArquivo('Réplica: "Banco" / Ana')).toBe("Réplica Banco Ana.docx");
   });
