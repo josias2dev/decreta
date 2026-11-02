@@ -7,6 +7,7 @@ import { createAuth } from "./auth.ts";
 import { createLogMailer, createResendMailer } from "./email.ts";
 import { readEnv } from "./env.ts";
 import { createFunctions, eventoDoPedido, inngest } from "./inngest.ts";
+import { candidatoDoPrazo } from "./servicos/observacao.ts";
 import { rotasDoEnvioPeloCliente } from "./rotas/envio-pelo-cliente.ts";
 import { rotasDoMcp } from "./rotas/mcp.ts";
 import { createRotas } from "./rotas/index.ts";
@@ -19,15 +20,15 @@ const reporter = startSentry(env.SENTRY_DSN, { log });
 const { db } = createDatabase(env.DATABASE_URL);
 
 // Sem a chave do projeto no gateway, a IA fica desligada e as telas dizem isso; o resto funciona.
-const ia = env.LLM_API_KEY
-  ? createGatewayIa({
-      baseUrl: env.LLM_BASE_URL,
-      apiKey: env.LLM_API_KEY,
-      modelos: { juridico: env.MODELO_JURIDICO, autos: env.MODELO_AUTOS, documentos: env.MODELO_DOCUMENTOS, pdf: env.MODELO_PDF, vision: env.MODELO_VISION },
-      modeloTranscricao: env.MODELO_TRANSCRICAO,
-      log,
-    })
-  : null;
+const gateway = {
+  baseUrl: env.LLM_BASE_URL,
+  apiKey: env.LLM_API_KEY,
+  modelos: { juridico: env.MODELO_JURIDICO, autos: env.MODELO_AUTOS, documentos: env.MODELO_DOCUMENTOS, pdf: env.MODELO_PDF, vision: env.MODELO_VISION },
+  modeloTranscricao: env.MODELO_TRANSCRICAO,
+  log,
+};
+const ia = env.LLM_API_KEY ? createGatewayIa(gateway) : null;
+const observacao = env.LLM_API_KEY && env.MODELO_OBSERVAR ? { ia: createGatewayIa({ ...gateway, modelos: { ...gateway.modelos, juridico: env.MODELO_OBSERVAR } }), ...candidatoDoPrazo(env.MODELO_OBSERVAR) } : undefined;
 const arquivos = armazenamentoDoEnv(env);
 const wameow = env.WAMEOW_URL && env.WAMEOW_TOKEN ? { url: env.WAMEOW_URL, token: env.WAMEOW_TOKEN } : undefined;
 const captura = { db, datajudKey: env.DATAJUD_API_KEY, log };
@@ -72,7 +73,7 @@ const app = createApp({
   rotas,
   envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log }),
   mcp: rotasDoMcp({ db, log }),
-  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites }) }),
+  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao }) }),
   log,
   reporter,
 });

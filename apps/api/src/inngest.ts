@@ -3,6 +3,7 @@
  *
  *   04:30 (dias úteis) ── capturar-cadernos-djen (todos os escritórios) ──► publicação nova ──► sugerir-prazo
  *   de hora em hora ── reler-publicacoes (o que a IA não conseguiu ler) ──► sugerir-prazo
+ *   sugerir-prazo, com um candidato no MODELO_OBSERVAR ── o candidato lê também, sem efeito no escritório (bun run observacao)
  *   publicação nova ── guardar-certidao (a prova da data, do DJEN, guardada com o escritório)
  *   12:40, 18:40 (dias úteis) ── capturar-djen (por OAB, reforço do mesmo dia) ──► publicação nova
  *   05:00 (todo dia) ── atualizar-datajud ──► processo.datajud (no ritmo que o DataJud aguenta)
@@ -32,6 +33,7 @@ import { cruzarRadar, sincronizarPrecedentesDoBnp } from "./servicos/radar.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
 import { ClienteSemIa } from "./servicos/contexto.ts";
+import { observarPrazo, type Observacao } from "./servicos/observacao.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
 import { publicacoesParaReler } from "./servicos/publicacoes.ts";
 import { rascunhoDoPrazo } from "./servicos/rascunho.ts";
@@ -77,6 +79,8 @@ export interface DepsDasRotinas {
   reporter?: Reporter;
   /** O preço de referência do gasto e os tetos que valem para a leitura dos arquivos enviados. */
   limites?: LimitesDaIa;
+  /** O modelo ou prompt candidato que lê as publicações em paralelo. */
+  observacao?: Observacao;
 }
 
 /** Os escritórios das rotinas. A demonstração fica de fora: nada dela sai para o DJEN, o DataJud ou o WhatsApp. */
@@ -149,8 +153,8 @@ export function createFunctions(deps: DepsDasRotinas) {
       retries: 2,
       onFailure: async ({ event, error }) => reporter.error(error, { funcao: "sugerir-prazo", ...(event.data.event.data as Org) }),
     },
-    async ({ event, step }) =>
-      step.run("ler", async () => {
+    async ({ event, step }) => {
+      const situacao = await step.run("ler", async () => {
         try {
           const a = await sugerirPrazoDaPublicacao({ ...deps, ia: iaDo(event.data.organizationId, "fundo") }, event.data.organizationId, event.data.publicacaoId);
           return a?.situacao ?? "sem-publicacao";
@@ -160,7 +164,13 @@ export function createFunctions(deps: DepsDasRotinas) {
           if (err instanceof ClienteSemIa) return "cliente-sem-ia";
           throw err;
         }
-      }),
+      });
+      const { observacao } = deps;
+      if (observacao && (situacao === "pronto" || situacao === "recusa")) {
+        await step.run("observar", () => observarPrazo({ db, log, preco: limites.preco }, observacao, event.data.organizationId, event.data.publicacaoId));
+      }
+      return situacao;
+    },
   );
 
   const relerFn = inngest.createFunction(

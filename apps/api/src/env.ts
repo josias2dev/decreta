@@ -25,6 +25,8 @@ const schema = z.object({
   MODELO_PDF: z.string().default("pdf"),
   MODELO_VISION: z.string().default("vision"),
   MODELO_TRANSCRICAO: z.string().default("openai/whisper-1"),
+  /** Alias do gateway que o modo observar testa na sugestão de prazo. Vazio: ninguém observa, nada a mais é gasto. */
+  MODELO_OBSERVAR: z.string().default(""),
   /**
    * Limites da IA nas telas (0 desliga cada um). O dia vira à meia-noite de
    * Brasília. O teto do site fica abaixo do teto do projeto no gateway (US$ 5)

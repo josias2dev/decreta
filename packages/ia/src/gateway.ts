@@ -48,6 +48,7 @@ export const METODOS = [
   "ler-peca-contraria",
   "mensagem-cliente",
   "conferir-citacao",
+  "observar-prazo",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -70,15 +71,17 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "ler-peca-contraria": "juridico",
   "mensagem-cliente": "juridico",
   "conferir-citacao": "juridico",
+  "observar-prazo": "juridico",
 };
 
 /**
  * Ações que o gateway conhece por outro nome: contam à parte no uso_ia, mas vão
  * ao gateway como uma que ele já tem. O título da conversa vai como o chat; a
  * leitura da peça contrária, como o briefing do prazo (o mesmo tipo de leitura);
- * a conferência de uma citação (o trecho sustenta a afirmação?), como a jurisprudência.
+ * a conferência de uma citação (o trecho sustenta a afirmação?), como a jurisprudência;
+ * a leitura em observação de um candidato, como a sugestão de prazo.
  */
-const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar", "ler-peca-contraria": "briefing-prazo", "mensagem-cliente": "briefing-prazo", "conferir-citacao": "jurisprudencia" };
+const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar", "ler-peca-contraria": "briefing-prazo", "mensagem-cliente": "briefing-prazo", "conferir-citacao": "jurisprudencia", "observar-prazo": "sugerir-prazo" };
 
 /** O teto do dia não passa em segundos: a AI SDK não deve pedir de novo (a pessoa esperava o aviso uns 2 s a mais). */
 function semNovaTentativaNoTeto(err: unknown): never {
@@ -129,6 +132,7 @@ type Esforco = "low" | "medium" | "high";
  */
 const ESFORCO: Record<MetodoIa, Esforco> = {
   "sugerir-prazo": "high",
+  "observar-prazo": "high",
   "briefing-prazo": "medium",
   "resumo-autos": "medium",
   "chat-processo": "medium",

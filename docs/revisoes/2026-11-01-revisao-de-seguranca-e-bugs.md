@@ -143,6 +143,19 @@ Em aberto:
 - **Baixo — fora do registro:** o Perguntar, a leitura de documentos, a conferência de citações e a transcrição de áudio ainda não guardam a procedência.
 - **Baixo — resultados antigos:** o que foi gerado antes desta mudança fica sem procedência.
 
+## 2.5. Testar modelo ou prompt novo sem risco (modo observar)
+
+Trocar o modelo da sugestão de prazo era aposta: a régua fixa do conjunto-ouro não cobre o que chega de verdade. Com `MODELO_OBSERVAR` preenchido, o candidato lê as mesmas publicações em paralelo, depois da leitura atual. A leitura dele fica em `observacoes_da_ia`, sem virar prazo nem aparecer em tela, e `bun run observacao` compara as duas com o que as pessoas decidiram (só contagens). Para testar um prompt novo, preencha `INSTRUCOES_DO_PRAZO_EM_OBSERVACAO` em `packages/ia/src/acoes.ts`.
+
+Vem desligado. Cliente que recusou a IA e a demonstração nunca vão ao candidato.
+
+Em aberto:
+
+- **Médio — mesmo teto:** a observação gasta do teto do projeto no gateway, o mesmo que lê os prazos de verdade. O limite é de 30 leituras por escritório por dia e o gasto fica à parte em `uso_ia` (`observar-prazo`), mas um teto apertado no gateway pode ser consumido por ela.
+- **Médio — outro fornecedor:** o teor das publicações e o contexto do processo vão também ao modelo candidato. Confira a política de dados dele (ZDR) antes de ligar.
+- **Baixo — só o prazo:** o resumo, o briefing e a peça não têm observação.
+- **Baixo — o que é acerto:** o placar compara se gera prazo, os dias e a contagem. O descarte de um prazo conta como "não gera", mesmo quando o motivo foi outro.
+
 ## 3. Depende de você
 
 - **Cobrança e duração do acesso de contas novas:** hoje o cadastro não tem período de teste nem pagamento, e o escritório em avaliação fica assim até alguém liberar à mão.
