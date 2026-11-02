@@ -14,9 +14,9 @@ test("landing: sem sessão fica na página, mostra as seções e Entrar abre o l
   const api = new ApiFalsa();
   api.logado = false;
   await abrir(page, "/", api);
-  await expect(page.getByRole("heading", { level: 1, name: "Todo prazo com a conta à mostra." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /O escritório em dia\./ })).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
-  for (const titulo of ["Faça o teste do feriado.", "Da publicação à peça, em seis passos.", "O que vem, e o que ainda não vem."]) {
+  for (const titulo of [/A publicação chega\./, "Cada intimação já chega explicada", "O sigilo do escritório vem antes de tudo", "Um plano, com tudo incluído"]) {
     await expect(page.getByRole("heading", { name: titulo })).toBeAttached();
   }
   await expect(page.locator("#acesso").getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro");
@@ -32,7 +32,7 @@ test("segurança: a landing leva à página aberta, com a retenção de cada for
   api.logado = false;
   await abrir(page, "/", api);
   await expect(page.getByText("retenção zero")).toHaveCount(0);
-  await page.locator("#sigilo").getByRole("link", { name: "Os detalhes e os fornecedores" }).click();
+  await page.locator("#seguranca").getByRole("link", { name: "Os detalhes e os fornecedores" }).click();
   await expect(page).toHaveURL(/\/seguranca$/);
   await expect(page.getByRole("heading", { name: "Como o Decreta cuida dos dados do escritório" })).toBeVisible();
   await expect(page.getByText("Nenhum fornecedor de IA usa os textos do escritório para treinar modelos.")).toBeVisible();

@@ -152,6 +152,8 @@ O problema é real, e o código mostra onde está. Alvarás e Novos negócios us
 
 ### A landing, seção por seção
 
+**Revisão de 02/11/2026:** esta estrutura foi ao ar e o dono do produto não gostou: muita coisa, fonte com serifa e sem o hero anterior. A landing voltou ao desenho anterior, só com fonte sem serifa e **sem componente interativo**. Saíram a conta aberta (2.2), o teste do feriado e a tela que muda ao rolar. A ordem agora é hero, prazos, IA, celular, segurança, planos, dúvidas e chamada final. As tabelas abaixo ficam como registro do plano original.
+
 **Hoje:** 11 seções, 10.787 px no computador e 16.081 px no celular. Meta: cerca de 7.000 e 10.000 px.
 
 A nova ordem segue as perguntas de quem avalia: o que é, funciona mesmo, como fica meu dia, a IA inventa, o que falta, é seguro, quanto custa e como começo.
