@@ -115,7 +115,7 @@ export function ConvitePage() {
       pe={
         <span>
           Já tem conta no Decreta?{" "}
-          <Link to="/entrar" search={{ email: c.email, redirect: `/convite/${id}` }} className="dc-link text-[13px]">
+          <Link to="/entrar" search={{ email: c.email, redirect: `/convite/${id}` }} className="dc-link">
             Entrar
           </Link>
         </span>

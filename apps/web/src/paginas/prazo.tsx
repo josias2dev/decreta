@@ -109,7 +109,7 @@ export function PrazoPage() {
         <FontesDoProcesso processoId={p.processo.id}>
           <ConteudoDoBriefing c={b.conteudo} />
         </FontesDoProcesso>
-      ) : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não leu este prazo. Gere o briefing para ver o que o juízo decidiu e o que fazer.</p>}
+      ) : <p className="m-0 dc-t-corpo text-[var(--tinta-2)]">A IA ainda não leu este prazo. Gere o briefing para ver o que o juízo decidiu e o que fazer.</p>}
     </BlocoIa>
   );
 
@@ -229,7 +229,7 @@ export function PrazoPage() {
               </>
             }
           />
-          <span className="dc-pessoa text-[14px] text-[var(--tinta-2)]">
+          <span className="dc-pessoa dc-t-corpo text-[var(--tinta-2)]">
             <Avatar pessoa={p.responsavel} />
             {p.responsavel?.apelido ?? <span className="text-[var(--vencido)]">Sem responsável</span>} · {POLO_DO_CLIENTE[p.processo.poloCliente]}
           </span>
@@ -351,7 +351,7 @@ function Teor({ publicacao }: { publicacao: NonNullable<Prazo["publicacao"]> }) 
   return (
     <Painel titulo={titulo} acao={<span className="dc-nota">Publicada em {diaCompleto(publicacao.publicadaEm)}</span>}>
       {publicacao.cancelada && <Cancelada cancelada={publicacao.cancelada} comPrazo />}
-      <p className="m-0 whitespace-pre-wrap text-[14px] leading-[24px]">{longo && !inteiro ? `${publicacao.texto.slice(0, 1200).trimEnd()}…` : publicacao.texto}</p>
+      <p className="m-0 whitespace-pre-wrap dc-t-leitura">{longo && !inteiro ? `${publicacao.texto.slice(0, 1200).trimEnd()}…` : publicacao.texto}</p>
       <div className="dc-linha-acoes">
         {longo && (
           <button type="button" className="dc-link" onClick={() => setInteiro(!inteiro)}>

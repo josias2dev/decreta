@@ -64,7 +64,7 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
         ) : (
           gerar && (
             <div className="flex flex-col items-start gap-2">
-              <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">Você revisa o texto antes: nada sai no WhatsApp sem a sua aprovação.</p>
+              <p className="m-0 dc-t-corpo text-[var(--tinta-2)]">Você revisa o texto antes: nada sai no WhatsApp sem a sua aprovação.</p>
               <Botao onClick={() => novo.mutate()} ocupado={novo.isPending}>
                 <MessageCircle /> {gerar.rotulo}
               </Botao>
@@ -72,7 +72,7 @@ export function MensagensAoCliente({ filtro, gerar, titulo = "Mensagem ao client
           )
         )}
         {enviadas.map((m) => (
-          <p key={m.id} className="m-0 flex items-start gap-1.5 text-[13px] leading-[20px] text-[var(--tinta-2)]">
+          <p key={m.id} className="m-0 flex items-start gap-1.5 dc-t-meta text-[var(--tinta-2)]">
             <Check className="mt-0.5 size-3.5 flex-none" />
             <span>
               Enviada{m.aprovadaPor ? ` por ${m.aprovadaPor.apelido}` : ""} em {diaCurto(diaDoInstante(m.enviadaEm ?? m.criadaEm))} às {hora(m.enviadaEm ?? m.criadaEm)}
@@ -112,7 +112,7 @@ function EmEnvio({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void }) 
       <Faixa tipo="aviso">
         Não conseguimos confirmar se esta mensagem saiu. Confira a conversa com {m.cliente.nome} no WhatsApp{m.para ? ` (${m.para})` : ""}: o Decreta não manda de novo sem você dizer.
       </Faixa>
-      <div aria-label="Mensagem a conferir" className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[var(--borda)] bg-[var(--superficie-2)] p-3 text-[14px] leading-[21px]">
+      <div aria-label="Mensagem a conferir" className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[var(--borda)] bg-[var(--superficie-2)] p-3 dc-t-leitura">
         {m.previa}
       </div>
       <div className="flex flex-wrap gap-2">
@@ -167,8 +167,8 @@ function Rascunho({ m, aoMudar }: { m: MensagemAoCliente; aoMudar: () => void })
         <textarea id={campo} rows={6} value={texto} onChange={(e) => setTexto(e.target.value)} />
       </Campo>
       <div className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-[var(--tinta-2)]">Como o cliente vai ler{m.para ? ` (${m.para})` : ""}</span>
-        <div aria-label="Prévia da mensagem" className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[var(--borda)] bg-[var(--superficie-2)] p-3 text-[14px] leading-[21px]">
+        <span className="dc-t-meta font-medium text-[var(--tinta-2)]">Como o cliente vai ler{m.para ? ` (${m.para})` : ""}</span>
+        <div aria-label="Prévia da mensagem" className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[var(--borda)] bg-[var(--superficie-2)] p-3 dc-t-leitura">
           {previa}
         </div>
       </div>

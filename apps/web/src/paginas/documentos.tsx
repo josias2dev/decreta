@@ -200,16 +200,16 @@ function Lista({ itens, aberto, busca, abrir, apagar }: { itens: Documento[]; ab
           <thead>
             <tr>
               <th>Documento</th>
-              <th className="dc-docs__col" style={{ width: 260 }}>
+              <th className="dc-docs__col dc-col--documento">
                 De
               </th>
-              <th className="dc-docs__col" style={{ width: 112 }}>
+              <th className="dc-docs__col dc-col--data">
                 Enviado
               </th>
-              <th className="dc-docs__col" style={{ width: 150 }}>
+              <th className="dc-docs__col dc-col--leitura">
                 Leitura da IA
               </th>
-              <th className="dc-docs__col" style={{ width: 84 }} />
+              <th className="dc-docs__col dc-col--acoes" />
             </tr>
           </thead>
           <tbody>

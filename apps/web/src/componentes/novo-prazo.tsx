@@ -29,7 +29,7 @@ export function EscolherProcesso({ valor, aoEscolher }: { valor: { id: string; t
     <div className="flex flex-col gap-1">
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Número, parte ou cliente" aria-label="Buscar processo" autoComplete="off" />
       {termo.length >= 2 && !!r.data?.itens.length && (
-        <div className="dc-painel dc-linhas" style={{ maxHeight: 200, overflowY: "auto" }}>
+        <div className="dc-painel dc-linhas dc-linhas--rola">
           {r.data.itens.slice(0, 6).map((p) => (
             <button key={p.id} type="button" className="dc-linhas__item w-full cursor-pointer border-0 bg-transparent text-left hover:bg-[var(--superficie-2)]" onClick={() => aoEscolher({ id: p.id, titulo: p.titulo })}>
               <span className="dc-celula">

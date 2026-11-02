@@ -26,10 +26,10 @@ export function MaisPage() {
                 {itens.map((i) => {
                   const n = e && i.n?.(e.menu);
                   return (
-                    <Link key={i.to} to={i.to} className="dc-linhas__item items-center" style={{ minHeight: 48 }}>
+                    <Link key={i.to} to={i.to} className="dc-linhas__item dc-linhas__item--toque items-center">
                       <i.icone className="size-5 flex-none text-[var(--tinta-2)]" />
-                      <span className="flex-1 text-[16px]">{i.rotulo}</span>
-                      {n && <span className="dc-num text-[14px] text-[var(--tinta-2)]">{numero(n.n)}</span>}
+                      <span className="flex-1 dc-t-titulo">{i.rotulo}</span>
+                      {n && <span className="dc-num dc-t-corpo text-[var(--tinta-2)]">{numero(n.n)}</span>}
                       <ChevronRight className="size-4 text-[var(--tinta-3)]" />
                     </Link>
                   );
@@ -42,10 +42,10 @@ export function MaisPage() {
       <section className="dc-secao">
         <span className="dc-rotulo uppercase tracking-[0.08em]">Conta</span>
         <div className="dc-painel">
-          <Link to="/conta" className="dc-linhas__item items-center" style={{ minHeight: 56 }}>
+          <Link to="/conta" className="dc-linhas__item dc-linhas__item--toque items-center">
             {e ? <Avatar pessoa={e.usuario} grande /> : <UserRound className="size-5" />}
             <span className="dc-celula min-w-0 flex-1">
-              <span className="dc-celula__1 text-[16px]">{e?.usuario.nome ?? "Minha conta"}</span>
+              <span className="dc-celula__1 dc-t-titulo">{e?.usuario.nome ?? "Minha conta"}</span>
               <span className="dc-celula__2">{e?.usuario.cargo ?? "Perfil, senha e verificação em duas etapas"}</span>
             </span>
             <ChevronRight className="size-4 text-[var(--tinta-3)]" />

@@ -196,7 +196,7 @@ export function EntrarPage() {
       pe={
         <span>
           Escritório novo?{" "}
-          <Link to="/cadastro" className="dc-link text-[13px]">
+          <Link to="/cadastro" className="dc-link">
             Criar conta
           </Link>
         </span>

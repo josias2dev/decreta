@@ -349,12 +349,12 @@ function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; co
     <span className={cn("dc-celula__2", compacta && "truncate")}>{i.detalhe}</span>
   ) : null;
   const pessoa = i.responsavel ? (
-    <span className="dc-pessoa flex-none text-[13px] text-[var(--tinta-2)]" title={i.responsavel.nome}>
+    <span className="dc-pessoa flex-none dc-t-meta text-[var(--tinta-2)]" title={i.responsavel.nome}>
       <Avatar pessoa={i.responsavel} />
       {!compacta && <span className="max-md:hidden">{i.responsavel.apelido}</span>}
     </span>
   ) : compacta ? null : (
-    <span className="flex-none text-[13px] text-[var(--tinta-3)] max-md:hidden">Sem responsável</span>
+    <span className="flex-none dc-t-meta text-[var(--tinta-3)] max-md:hidden">Sem responsável</span>
   );
   const marcador = cn("flex-none", compacta ? "w-[64px]" : "w-[64px] md:w-[76px]");
   if (i.tipo === "tarefa") {
@@ -388,7 +388,7 @@ function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; co
         <span className="dc-celula__1">
           {i.titulo}
           {i.aConfirmar && <span className="dc-selo dc-selo--ia ml-2">a confirmar</span>}
-          {i.situacao && i.situacao !== "marcada" && <span className="ml-2 text-[13px] font-normal text-[var(--tinta-2)]">{SITUACAO[i.situacao as keyof typeof SITUACAO]}</span>}
+          {i.situacao && i.situacao !== "marcada" && <span className="ml-2 dc-t-meta font-normal text-[var(--tinta-2)]">{SITUACAO[i.situacao as keyof typeof SITUACAO]}</span>}
         </span>
         {processo}
       </span>
@@ -577,7 +577,7 @@ export function AudienciaPage() {
   const ia = !!eu.data?.ia && !a.processo.semIa;
   const preparacao = (pr || ia) && (
     <BlocoIa titulo="Preparação da audiência" analise={pr} aoRefazer={ia ? () => preparar.mutate() : undefined} refazendo={preparar.isPending} avisoDesatualizada="Chegou novidade nos autos depois desta preparação.">
-      {pr?.situacao === "pronto" ? <ConteudoDaPreparacao c={pr.conteudo} /> : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA lê os autos e monta o que é a audiência, o objetivo, os pontos controvertidos e o checklist.</p>}
+      {pr?.situacao === "pronto" ? <ConteudoDaPreparacao c={pr.conteudo} /> : <p className="m-0 dc-t-corpo text-[var(--tinta-2)]">A IA lê os autos e monta o que é a audiência, o objetivo, os pontos controvertidos e o checklist.</p>}
     </BlocoIa>
   );
   const checklist = (
@@ -592,7 +592,7 @@ export function AudienciaPage() {
                 checked={item.feito}
                 onChange={(e) => mudar.mutate({ checklist: a.checklist.map((x, k) => (k === n ? { ...x, feito: e.target.checked } : x)) })}
               />
-              <span className={cn("text-[14px]", item.feito && "text-[var(--tinta-3)] line-through")}>{item.texto}</span>
+              <span className={cn("dc-t-corpo", item.feito && "text-[var(--tinta-3)] line-through")}>{item.texto}</span>
             </label>
           ))}
         </div>

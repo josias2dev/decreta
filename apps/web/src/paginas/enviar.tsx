@@ -52,15 +52,15 @@ export function EnviarDocumentosPage() {
         ) : (
           <>
             <header className="flex flex-col gap-1">
-              <span className="text-[13px] font-medium uppercase tracking-wide text-[var(--tinta-3)]">{p.escritorio}</span>
+              <span className="dc-t-meta font-medium uppercase tracking-wide text-[var(--tinta-3)]">{p.escritorio}</span>
               <h1 className="dc-h1 m-0">Olá, {p.cliente}. Faltam estes documentos:</h1>
             </header>
-            <ul className="m-0 flex flex-col gap-1.5 pl-5 text-[15px] leading-[23px]">
+            <ul className="m-0 flex flex-col gap-1.5 pl-5 dc-t-leitura">
               {p.itens.map((i) => (
                 <li key={i}>{i}</li>
               ))}
             </ul>
-            <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">Tire uma foto bem iluminada de cada documento, ou mande o PDF. O link vale até {diaCompleto(p.validoAte)}.</p>
+            <p className="m-0 dc-t-leitura text-[var(--tinta-2)]">Tire uma foto bem iluminada de cada documento, ou mande o PDF. O link vale até {diaCompleto(p.validoAte)}.</p>
             <input
               ref={entrada}
               type="file"
@@ -87,7 +87,7 @@ export function EnviarDocumentosPage() {
                 </span>
               </Faixa>
             ))}
-            <p className="m-0 text-[13px] leading-[20px] text-[var(--tinta-3)]">Este escritório nunca pede Pix para liberar valores. Na dúvida, ligue para o número oficial do escritório.</p>
+            <p className="m-0 dc-t-meta text-[var(--tinta-3)]">Este escritório nunca pede Pix para liberar valores. Na dúvida, ligue para o número oficial do escritório.</p>
           </>
         )}
       </main>

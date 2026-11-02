@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 @import "./estilos/tokens.css";
 @import "./estilos/componentes.css";
 @import "./estilos/app.css";
@@ -13,6 +14,7 @@
  */
 @theme inline {
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --color-papel: var(--papel);
   --color-superficie: var(--superficie);
   --color-superficie-2: var(--superficie-2);
@@ -37,12 +39,12 @@ body {
   background: var(--papel);
   color: var(--tinta);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 21px;
+  font-size: var(--texto-corpo);
+  line-height: var(--linha-corpo);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
 
 a {
-  color: var(--acento);
+  color: var(--tinta);
 }

@@ -86,7 +86,7 @@ function Copia({ c }: { c: Exportacao }) {
   if (c.situacao === "falhou") return <Faixa tipo="erro">A cópia pedida em {pedida} não deu certo{c.erro ? ` (${c.erro})` : ""}. Peça de novo.</Faixa>;
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-[var(--borda)] p-3">
-      <p className="m-0 text-[14px] font-medium">Cópia pronta · pedida em {pedida}</p>
+      <p className="m-0 dc-t-corpo font-medium">Cópia pronta · pedida em {pedida}</p>
       <p className="dc-nota m-0">
         {c.documentos} {c.documentos === 1 ? "arquivo guardado" : "arquivos guardados"} e as planilhas
         {c.expiraEm ? `. Disponível até ${diaCompleto(diaDoInstante(c.expiraEm))}.` : "."}
@@ -150,7 +150,7 @@ function Encerrar({ nome, demonstracao }: { nome: string; demonstracao: boolean 
           </>
         }
       >
-        <ul className="m-0 flex list-disc flex-col gap-2 pl-5 text-[14px] text-[var(--tinta-2)]">
+        <ul className="m-0 flex list-disc flex-col gap-2 pl-5 dc-t-corpo text-[var(--tinta-2)]">
           <li>Na hora, ninguém mais entra no Decreta, nem você, e as sessões abertas caem. A busca no DJEN e no DataJud e o WhatsApp do escritório param.</li>
           <li>
             Em {DIAS_ATE_APAGAR} dias os dados são apagados de vez: clientes, processos, prazos, publicações, documentos e peças. Depois disso não há como recuperar.

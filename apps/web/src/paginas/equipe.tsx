@@ -145,7 +145,7 @@ export function EquipePage() {
           {convites}
         </div>
         <Painel titulo="Como funciona">
-          <div className="flex flex-col gap-2 text-[14px] leading-[21px] text-[var(--tinta-2)]">
+          <div className="flex flex-col gap-2 dc-t-corpo text-[var(--tinta-2)]">
             <p className="m-0">
               <strong className="text-[var(--tinta)]">Sócio</strong> muda tudo: timbre, avisos, convites e papéis.
             </p>

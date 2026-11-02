@@ -30,7 +30,7 @@ export const Botao = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButt
 
 export function Avatar({ pessoa, grande }: { pessoa: Pick<Pessoa, "iniciais" | "foto"> | null | undefined; grande?: boolean }) {
   return (
-    <span className="dc-avatar" style={grande ? { width: 36, height: 36, fontSize: 13 } : undefined} aria-hidden>
+    <span className={cn("dc-avatar", grande && "dc-avatar--grande")} aria-hidden>
       {pessoa?.foto ? <img src={pessoa.foto} alt="" /> : (pessoa?.iniciais ?? "—")}
     </span>
   );
@@ -161,14 +161,14 @@ export function BlocoIa({
       )}
       {refazendo ? (
         <div className="flex flex-col gap-2" aria-label="A IA está lendo">
-          <div className="dc-ia__linha" style={{ width: "92%" }} />
-          <div className="dc-ia__linha" style={{ width: "78%" }} />
-          <div className="dc-ia__linha" style={{ width: "64%" }} />
+          <div className="dc-ia__linha dc-ia__linha--1" />
+          <div className="dc-ia__linha dc-ia__linha--2" />
+          <div className="dc-ia__linha dc-ia__linha--3" />
         </div>
       ) : recusa ? (
-        <p className="m-0 text-[14px] leading-[22px]">{String((analise?.conteudo as { recusa?: string })?.recusa ?? "A IA não conseguiu ler o material.")}</p>
+        <p className="m-0 dc-t-corpo">{String((analise?.conteudo as { recusa?: string })?.recusa ?? "A IA não conseguiu ler o material.")}</p>
       ) : erro ? (
-        <p className="m-0 text-[14px] leading-[22px] text-[var(--vencido)]">A IA não respondeu agora. Tente de novo em instantes.</p>
+        <p className="m-0 dc-t-corpo text-[var(--vencido)]">A IA não respondeu agora. Tente de novo em instantes.</p>
       ) : (
         children
       )}
@@ -360,14 +360,16 @@ export function Trilha({ children }: { children: ReactNode }) {
   );
 }
 
-/** Topo das telas de detalhe: selos, título, de qual processo é e as ações. */
+/** Topo das telas de detalhe: título e selos na mesma linha, de qual processo é e as ações. */
 export function TopoDoDetalhe({ selos, titulo, sobre, acoes }: { selos?: ReactNode; titulo: ReactNode; sobre?: ReactNode; acoes?: ReactNode }) {
   return (
     <div className="dc-topo-detalhe">
-      {selos && <div className="dc-topo-detalhe__selos">{selos}</div>}
       <div className="dc-topo-detalhe__linha">
         <div className="dc-topo-detalhe__texto">
-          <h1 className="dc-h1">{titulo}</h1>
+          <div className="dc-topo-detalhe__titulo">
+            <h1 className="dc-h1">{titulo}</h1>
+            {selos && <div className="dc-topo-detalhe__selos">{selos}</div>}
+          </div>
           {sobre && <p className="dc-topo-detalhe__sobre">{sobre}</p>}
         </div>
         {acoes && <div className="dc-acoes">{acoes}</div>}

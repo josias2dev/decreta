@@ -80,7 +80,7 @@ export function Conversa({
         {pergunta && <Mensagem papel="ia" texto={resposta || ""} escrevendo />}
         <div ref={fim} />
       </div>
-      {erro && <p className="m-0 text-[13px] text-[var(--vencido)]">{erro}</p>}
+      {erro && <p className="m-0 dc-t-meta text-[var(--vencido)]">{erro}</p>}
       <div className={cn("flex flex-col gap-2", fixo && "dc-conversa__campo-fixo")}>
         {sugestoes.length > 0 && mensagens.length < 2 && !ocupado && (
           <div className="dc-chips">

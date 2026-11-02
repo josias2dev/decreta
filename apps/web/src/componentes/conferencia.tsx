@@ -45,7 +45,7 @@ export function ConferenciaDaPasta({
     >
       {c ? (
         <>
-          <p className="m-0 text-[14px] leading-[21px]">{c.resumo}</p>
+          <p className="m-0 dc-t-leitura">{c.resumo}</p>
           <div className="dc-conferencia">
             {c.itens.map((i) => {
               const Icone = ICONE[i.situacao];
@@ -69,7 +69,7 @@ export function ConferenciaDaPasta({
           )}
         </>
       ) : !analise ? (
-        <p className="m-0 text-[14px] leading-[21px]">
+        <p className="m-0 dc-t-corpo">
           {semDocumentos
             ? "Envie os documentos da pasta (PDF, DOCX ou foto). A IA confere procuração, comprovante de residência, documento com foto, CPF, hipossuficiência, honorários e se já há processo igual."
             : "A IA confere procuração, comprovante de residência, documento com foto, CPF, hipossuficiência, contrato de honorários e se já há processo igual."}

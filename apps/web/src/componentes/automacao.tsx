@@ -28,7 +28,7 @@ export function NiveisDeAutomacao({ e, socio }: { e: Escritorio; socio: boolean 
   return (
     <Painel titulo="Automação da IA">
       <div className="dc-form">
-        <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">Escolha o que a IA faz sozinha e o que fica esperando alguém pedir. Prazo, mensagem ao cliente e valores sempre exigem confirmação.</p>
+        <p className="m-0 dc-t-corpo text-[var(--tinta-2)]">Escolha o que a IA faz sozinha e o que fica esperando alguém pedir. Prazo, mensagem ao cliente e valores sempre exigem confirmação.</p>
         {REGRAS_DE_AUTOMACAO.map((r) => {
           const nivel = atual(r.id);
           return (

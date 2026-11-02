@@ -104,14 +104,14 @@ export function ProcessoPage() {
       <TelaCelular titulo="Processos" voltar>
         <div className="flex flex-col gap-1">
           <h1 className="dc-h1">{p.titulo}</h1>
-          <Cnj cnj={p.cnj} className="text-[14px] font-medium text-[var(--tinta-2)]" />
-          <span className="text-[14px] leading-[20px] text-[var(--tinta-2)]">{[p.classe, onde, p.tribunal].filter(Boolean).join(" · ")}</span>
+          <Cnj cnj={p.cnj} className="dc-t-corpo font-medium text-[var(--tinta-2)]" />
+          <span className="dc-t-corpo text-[var(--tinta-2)]">{[p.classe, onde, p.tribunal].filter(Boolean).join(" · ")}</span>
           {p.cliente?.semIa && (
             <span className="mt-1">
               <SeloSemIa />
             </span>
           )}
-          <span className="dc-pessoa mt-1 text-[14px] text-[var(--tinta-2)]">
+          <span className="dc-pessoa mt-1 dc-t-corpo text-[var(--tinta-2)]">
             <Avatar pessoa={p.responsavel} /> {p.responsavel?.apelido ?? "Sem responsável"}
             {p.valorCausa && <> · Valor da causa {dinheiro(p.valorCausa)}</>}
           </span>
@@ -209,7 +209,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
         <FontesDoProcesso processoId={p.id}>
           <ConteudoDoResumo c={r.conteudo} />
         </FontesDoProcesso>
-      ) : <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">A IA ainda não resumiu este processo. Gere o resumo para ver o que fazer, os pontos de atenção e a estratégia.</p>}
+      ) : <p className="m-0 dc-t-corpo text-[var(--tinta-2)]">A IA ainda não resumiu este processo. Gere o resumo para ver o que fazer, os pontos de atenção e a estratégia.</p>}
     </BlocoIa>
   );
 
@@ -325,7 +325,7 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
     <Painel
       titulo="Últimas movimentações"
       acao={
-        <button type="button" className="dc-link inline-flex items-center gap-1 text-[13px]" onClick={() => irPara("movimentacoes")}>
+        <button type="button" className="dc-link inline-flex items-center gap-1" onClick={() => irPara("movimentacoes")}>
           Ver as {numero(p.contadores.movimentacoes)} <ArrowRight className="size-3.5" />
         </button>
       }
@@ -391,7 +391,7 @@ function ConteudoDoResumo({ c }: { c: ResumoDosAutos }) {
         </SecaoIa>
       </div>
       {c.ultimoAto && (
-        <div className="dc-ia__duas" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
+        <div className="dc-ia__duas dc-ia__duas--uma">
           <SecaoIa titulo="Último ato do juízo">
             <p>
               <TextoComFontes texto={c.ultimoAto} />
@@ -422,7 +422,7 @@ function ListaDeMovimentacoes({ itens, celular }: { itens: Movimentacao[]; celul
               </span>
               {m.descricao && <span className="dc-celula__2">{m.descricao}</span>}
               {m.documento && (
-                <a href={arquivo(m.documento.id)} className="dc-link mt-1 inline-flex items-center gap-1 text-[14px]">
+                <a href={arquivo(m.documento.id)} className="dc-link mt-1 inline-flex items-center gap-1 dc-t-corpo">
                   <IconeDoArquivo nome={m.documento.nome} pequeno /> {m.documento.nome}
                   {m.documento.paginas ? ` · ${m.documento.paginas} p.` : ""}
                 </a>
@@ -438,9 +438,9 @@ function ListaDeMovimentacoes({ itens, celular }: { itens: Movimentacao[]; celul
       <table className="dc-tabela">
         <thead>
           <tr>
-            <th style={{ width: 120 }}>Data</th>
+            <th className="dc-col--data">Data</th>
             <th>Movimentação</th>
-            <th style={{ width: 200 }}>Documento</th>
+            <th className="dc-col--documento">Documento</th>
           </tr>
         </thead>
         <tbody>
@@ -628,10 +628,10 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
             <table className="dc-tabela">
               <thead>
                 <tr>
-                  <th style={{ width: 124 }}>Vence</th>
+                  <th className="dc-col--quando">Vence</th>
                   <th>Prazo</th>
-                  <th style={{ width: 136 }}>Responsável</th>
-                  <th style={{ width: 176 }}>Situação</th>
+                  <th className="dc-col--pessoa">Responsável</th>
+                  <th className="dc-col--situacao">Situação</th>
                 </tr>
               </thead>
               <tbody>
@@ -857,10 +857,10 @@ function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
             <thead>
               <tr>
                 <th>Documento</th>
-                <th style={{ width: 112 }}>Juntado</th>
-                <th style={{ width: 80, textAlign: "right" }}>Páginas</th>
-                <th style={{ width: 150 }}>Leitura da IA</th>
-                <th style={{ width: 44 }} />
+                <th className="dc-col--data">Juntado</th>
+                <th className="dc-col--n dc-direita">Páginas</th>
+                <th className="dc-col--leitura">Leitura da IA</th>
+                <th className="dc-col--icone" />
               </tr>
             </thead>
             <tbody>
@@ -878,7 +878,7 @@ function AbaDocumentos({ p, celular }: { p: Processo; celular: boolean }) {
                     </span>
                   </td>
                   <td className="dc-num">{diaCompleto(diaDoInstante(d.em))}</td>
-                  <td className="dc-num" style={{ textAlign: "right" }}>
+                  <td className="dc-num dc-direita">
                     {d.paginas ?? "—"}
                   </td>
                   <td>

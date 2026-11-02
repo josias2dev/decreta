@@ -150,9 +150,9 @@ export function ModelosPage() {
               <thead>
                 <tr>
                   <th>Modelo</th>
-                  <th style={{ width: 220 }}>Tipo</th>
-                  <th style={{ width: 180 }}>Assunto</th>
-                  <th style={{ width: 150 }}>Atualizado</th>
+                  <th className="dc-col--tipo">Tipo</th>
+                  <th className="dc-col--assunto">Assunto</th>
+                  <th className="dc-col--data">Atualizado</th>
                 </tr>
               </thead>
               <tbody>
@@ -272,7 +272,7 @@ function VerModelo({ id, aoFechar }: { id: string; aoFechar: () => void }) {
             <span className="flex items-baseline justify-between gap-2">
               <label>Texto</label>
               {m.pecaId && (
-                <Link to="/pecas" search={{ id: m.pecaId }} className="dc-link text-[13px]">
+                <Link to="/pecas" search={{ id: m.pecaId }} className="dc-link">
                   Abrir a peça de origem
                 </Link>
               )}

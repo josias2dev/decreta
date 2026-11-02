@@ -330,7 +330,7 @@ export function PecaPage() {
         {citacoes}
         <section className="dc-secao">
           <span className="dc-rotulo">Tipo de peça</span>
-          <div className="dc-cartao" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <div className="dc-cartao dc-cartao--linha">
             <span className="flex min-w-0 flex-col">
               <span className="dc-cartao__titulo">{nomeDoTipo}</span>
               <span className="dc-cartao__linha">{sobreOPrazo}</span>
@@ -445,7 +445,7 @@ export function PecaPage() {
               )}
             </span>
             {revisada && quemRevisou && !gerando && (
-              <span className="inline-flex items-center gap-1.5 text-[13px] text-[var(--tinta-2)]">
+              <span className="inline-flex items-center gap-1.5 dc-t-meta text-[var(--tinta-2)]">
                 <Check className="size-3.5 text-[var(--acento)]" /> {quemRevisou}
               </span>
             )}

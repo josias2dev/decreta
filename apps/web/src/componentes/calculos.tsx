@@ -75,7 +75,7 @@ export function AbaCalculos({ p }: { p: Processo }) {
                   <span className="dc-celula__1">{k.titulo}</span>
                   <span className="dc-celula__2">{[TIPO[k.tipo], diaCurto(diaDoInstante(k.criadoEm)), k.documentoId && k.tipo !== "pjecalc" && "anexado ao processo"].filter(Boolean).join(" · ")}</span>
                 </span>
-                {k.total !== null && <span className="dc-num text-[14px] font-semibold">{dinheiro(k.total)}</span>}
+                {k.total !== null && <span className="dc-num dc-t-corpo font-semibold">{dinheiro(k.total)}</span>}
               </button>
             ))}
           </div>
@@ -404,7 +404,7 @@ function Previdenciario({ processoId }: { processoId: string }) {
       ) : (
         <div className="flex flex-col gap-4">
           {d.parametros && (
-            <p className="text-[14px] leading-[20px] text-[var(--tinta-2)]">
+            <p className="dc-t-corpo text-[var(--tinta-2)]">
               Em {ano}: teto do INSS de <strong className="dc-num">{dinheiro(d.parametros.teto)}</strong> e salário mínimo de <strong className="dc-num">{dinheiro(d.parametros.salarioMinimo)}</strong>.
             </p>
           )}
@@ -414,7 +414,7 @@ function Previdenciario({ processoId }: { processoId: string }) {
                 data: diaCompleto(m.data),
                 titulo: MARCO[m.tipo],
                 detalhe: (
-                  <span className="block text-[13px] text-[var(--tinta-2)]">
+                  <span className="block dc-t-meta text-[var(--tinta-2)]">
                     {[m.nome, m.evento != null && `evento ${m.evento}`, !m.dataNoTexto && "data do envio"].filter(Boolean).join(" · ")}
                     {m.trecho && <span className="block">{m.trecho}</span>}
                   </span>

@@ -58,7 +58,7 @@ export function CadastroPage() {
       titulo="Criar conta no Decreta"
       sub="O escritório e a sua conta de sócio, em um minuto. A equipe entra depois, por convite."
       pe={
-        <Link to="/entrar" className="dc-link text-[13px]">
+        <Link to="/entrar" className="dc-link">
           Já tenho conta
         </Link>
       }

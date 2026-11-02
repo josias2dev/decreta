@@ -38,7 +38,7 @@ export function Busca({ aberta, aoFechar }: { aberta: boolean; aoFechar: () => v
           <D.Description className="sr-only">Processos e clientes do escritório</D.Description>
           <div className="dc-busca-campo">
             {celular ? (
-              <button type="button" className="dc-btn dc-btn--fantasma" style={{ width: 44, padding: 0, marginLeft: -12 }} aria-label="Fechar" onClick={aoFechar}>
+              <button type="button" className="dc-btn dc-btn--fantasma dc-busca-campo__fechar" aria-label="Fechar" onClick={aoFechar}>
                 <ArrowLeft />
               </button>
             ) : (
@@ -46,9 +46,9 @@ export function Busca({ aberta, aoFechar }: { aberta: boolean; aoFechar: () => v
             )}
             <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Número do processo, parte, cliente, CPF ou telefone" aria-label="Buscar" />
           </div>
-          <div className="overflow-y-auto" style={{ maxHeight: celular ? undefined : "60vh" }}>
-            {termo.length < 2 && <p className="dc-nota" style={{ padding: "14px 16px", margin: 0 }}>Digite pelo menos 2 letras ou números.</p>}
-            {nada && <p className="dc-nota" style={{ padding: "14px 16px", margin: 0 }}>Nada encontrado para “{termo}”.</p>}
+          <div className={cn("overflow-y-auto", !celular && "dc-busca-lista")}>
+            {termo.length < 2 && <p className="dc-nota dc-busca-nota">Digite pelo menos 2 letras ou números.</p>}
+            {nada && <p className="dc-nota dc-busca-nota">Nada encontrado para “{termo}”.</p>}
             {!!r.data?.processos.length && (
               <div className="dc-busca-grupo">
                 <div className="dc-busca-grupo__titulo">Processos</div>

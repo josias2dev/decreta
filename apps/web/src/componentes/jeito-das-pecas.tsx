@@ -38,7 +38,7 @@ export function JeitoDasPecas({ e, socio }: { e: Escritorio; socio: boolean }) {
   return (
     <Painel titulo="Jeito do escritório">
       <div className="dc-form">
-        <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">
+        <p className="m-0 dc-t-corpo text-[var(--tinta-2)]">
           Conte como o escritório faz cada peça. A IA segue o geral em todas e o do tipo na peça daquele tipo. Ela não inventa fato para encaixar uma tese.
         </p>
         <Campo rotulo="Peça" htmlFor="jt-tipo">

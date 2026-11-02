@@ -93,7 +93,7 @@ export function EscolherCliente({ valor, aoEscolher }: { valor: { id: string; no
     <div className="flex flex-col gap-1">
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, CPF ou telefone" aria-label="Buscar cliente" autoComplete="off" />
       {termo.length >= 2 && (
-        <div className="dc-painel dc-linhas" style={{ maxHeight: 180, overflowY: "auto" }}>
+        <div className="dc-painel dc-linhas dc-linhas--rola">
           {r.data?.itens.slice(0, 6).map((c) => (
             <button key={c.id} type="button" className="dc-linhas__item w-full cursor-pointer border-0 bg-transparent text-left hover:bg-[var(--superficie-2)]" onClick={() => aoEscolher({ id: c.id, nome: c.nome })}>
               <span className="dc-celula">

@@ -159,7 +159,7 @@ function AbaTimbre({ e, socio, celular }: { e: Escritorio; socio: boolean; celul
             <Campo rotulo="Cor do timbre" htmlFor="tb-cor">
               <span className="flex items-center gap-2">
                 <input id="tb-cor" type="color" value={t.cor} onChange={(ev) => setT({ ...t, cor: ev.target.value })} disabled={!socio} className="dc-cor" />
-                <span className="dc-num text-[13px] uppercase text-[var(--tinta-2)]">{t.cor}</span>
+                <span className="dc-num dc-t-meta uppercase text-[var(--tinta-2)]">{t.cor}</span>
               </span>
             </Campo>
             <Campo rotulo="Logo (PNG)" htmlFor="tb-logo" ajuda={e.timbre?.logoDocumentoId ? "Logo guardado" : "Sem logo"}>
@@ -185,7 +185,7 @@ function AbaTimbre({ e, socio, celular }: { e: Escritorio; socio: boolean; celul
         </div>
       </Painel>
       <Painel titulo="Como sai na peça">
-        <div className="dc-folha-fundo" style={{ borderRadius: 8 }}>
+        <div className="dc-folha-fundo dc-folha-fundo--solta">
           <Folha texto={EXEMPLO} timbre={t} />
         </div>
       </Painel>
@@ -197,7 +197,7 @@ function Interruptor({ rotulo, ajuda, ligado, aoMudar, desligado }: { rotulo: st
   return (
     <label className="flex cursor-pointer items-start justify-between gap-4">
       <span className="flex flex-col gap-0.5">
-        <span className="text-[14px] font-medium">{rotulo}</span>
+        <span className="dc-t-corpo font-medium">{rotulo}</span>
         {ajuda && <span className="dc-nota">{ajuda}</span>}
       </span>
       <input type="checkbox" className="dc-interruptor mt-0.5" checked={ligado} onChange={(e) => aoMudar(e.target.checked)} disabled={desligado} />
@@ -482,8 +482,8 @@ function AbaRetorno({ celular }: { celular: boolean }) {
         <div className="dc-linhas">
           {porAcao.map((a) => (
             <div key={a.acao} className="dc-linhas__item items-center">
-              <span className="min-w-0 flex-1 text-[14px] font-medium">{a.rotulo}</span>
-              <span className="dc-num flex-none text-[13px] text-[var(--tinta-2)]">
+              <span className="min-w-0 flex-1 dc-t-corpo font-medium">{a.rotulo}</span>
+              <span className="dc-num flex-none dc-t-meta text-[var(--tinta-2)]">
                 {a.uteis} {a.uteis === 1 ? "útil" : "úteis"} · {a.errados} {a.errados === 1 ? "errado" : "errados"}
               </span>
             </div>
@@ -495,7 +495,7 @@ function AbaRetorno({ celular }: { celular: boolean }) {
           <div className="dc-linhas">
             {errados.map((r) => (
               <div key={r.id} className="dc-linhas__item">
-                <span className="dc-num w-[92px] flex-none text-[13px] text-[var(--tinta-2)]">{diaDoInstante(r.em) === eu.data?.hoje ? hora(r.em) : diaCurto(diaDoInstante(r.em))}</span>
+                <span className="dc-num w-[92px] flex-none dc-t-meta text-[var(--tinta-2)]">{diaDoInstante(r.em) === eu.data?.hoje ? hora(r.em) : diaCurto(diaDoInstante(r.em))}</span>
                 <span className="dc-celula min-w-0 flex-1">
                   <span className="dc-celula__1">{r.rotulo}</span>
                   <span className="dc-celula__2">{[r.comentario ?? "Sem comentário", r.pessoa?.apelido].filter(Boolean).join(" · ")}</span>
@@ -525,7 +525,7 @@ function AbaRegistro() {
         <div className="dc-linhas">
           {q.data.itens.map((r) => (
             <div key={r.id} className="dc-linhas__item">
-              <span className="dc-num w-[92px] flex-none text-[13px] text-[var(--tinta-2)]">{diaDoInstante(r.em) === eu.data?.hoje ? hora(r.em) : `${diaCurto(diaDoInstante(r.em))} ${hora(r.em)}`}</span>
+              <span className="dc-num w-[92px] flex-none dc-t-meta text-[var(--tinta-2)]">{diaDoInstante(r.em) === eu.data?.hoje ? hora(r.em) : `${diaCurto(diaDoInstante(r.em))} ${hora(r.em)}`}</span>
               <span className="dc-celula min-w-0 flex-1">
                 <span className="dc-celula__1">{r.rotulo}</span>
                 <span className="dc-celula__2">{r.nome ?? "Sistema"}</span>

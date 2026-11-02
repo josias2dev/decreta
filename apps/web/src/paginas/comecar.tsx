@@ -154,7 +154,7 @@ function Interruptor({ rotulo, ajuda, ligado, aoMudar, id }: { rotulo: string; a
   return (
     <label className="dc-comecar__opcao" htmlFor={id}>
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-[14px] font-medium">{rotulo}</span>
+        <span className="dc-t-corpo font-medium">{rotulo}</span>
         <span className="dc-nota">{ajuda}</span>
       </span>
       <input id={id} type="checkbox" className="dc-interruptor mt-0.5" checked={ligado} onChange={(e) => aoMudar(e.target.checked)} />

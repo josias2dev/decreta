@@ -47,7 +47,7 @@ export function PecaContraria({ prazoId, processoId, analise, comIa }: { prazoId
           </SecaoIa>
         </FontesDoProcesso>
       )}
-      {!analise && <p className="m-0 text-[14px] leading-[22px] text-[var(--tinta-2)]">Escolha a contestação ou o recurso da outra parte: a IA lista o que precisa de resposta e como rebater, e a peça deste prazo já leva esses pontos.</p>}
+      {!analise && <p className="m-0 dc-t-corpo text-[var(--tinta-2)]">Escolha a contestação ou o recurso da outra parte: a IA lista o que precisa de resposta e como rebater, e a peça deste prazo já leva esses pontos.</p>}
       {comIa && legiveis.length > 0 && (
         <div className="dc-linha-acoes">
           <label className="dc-campo dc-rebater__escolha">

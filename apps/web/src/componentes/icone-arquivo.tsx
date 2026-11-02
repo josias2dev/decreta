@@ -65,7 +65,7 @@ export function IconeDoArquivo({ nome, mime, pequeno, className }: { nome: strin
       ) : (
         <>
           <rect className="dc-arquivo__selo" x="0.5" y="13" width={rotulo.length > 3 ? 21 : 17} height="9" rx="2" />
-          <text className="dc-arquivo__rotulo" x={rotulo.length > 3 ? 11 : 9} y="19.7" textAnchor="middle">
+          <text className="dc-arquivo__rotulo" x={rotulo.length > 3 ? 11 : 9} y="19.7" textAnchor="middle" fontSize="6.4">
             {rotulo}
           </text>
         </>
