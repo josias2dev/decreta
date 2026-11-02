@@ -51,6 +51,8 @@ export interface ClienteAsaas {
   criarLinkDeAssinatura(p: PedidoDeLink): Promise<LinkDeAssinatura>;
   /** Cancela a assinatura (o Asaas apaga também as cobranças pendentes e vencidas). Já cancelada é o mesmo que feito. */
   cancelarAssinatura(assinaturaId: string): Promise<void>;
+  /** Tira o link de pagamento do ar (`DELETE /v3/paymentLinks/{id}`) quando ele já virou uma assinatura: ninguém o preenche de novo. */
+  removerLink(linkId: string): Promise<void>;
   /** Liga a emissão automática de NFS-e a cada mensalidade paga. */
   configurarNotasFiscais(assinaturaId: string, c: ConfigDaNfse): Promise<void>;
 }
@@ -89,6 +91,10 @@ export function criarClienteAsaas(opcoes: { apiKey: string; ambiente: "sandbox" 
       });
       if (!corpo?.id || !corpo.url) throw new ErroDoAsaas(502, "O Asaas não devolveu o link de pagamento.");
       return { id: corpo.id, url: corpo.url };
+    },
+
+    async removerLink(linkId) {
+      await chamar("DELETE", `/paymentLinks/${encodeURIComponent(linkId)}`);
     },
 
     async cancelarAssinatura(assinaturaId) {

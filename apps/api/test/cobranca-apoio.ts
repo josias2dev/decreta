@@ -20,7 +20,7 @@ import { asaasFalso, CHAVE_DO_ASAAS, TOKEN_DO_ASAAS } from "./asaas-falso.ts";
 
 export const SENHA = "senha-bem-longa-123";
 
-export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; token?: string; asaas?: ReturnType<typeof asaasFalso>; nfse?: ConfigDaNfse }) {
+export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; token?: string; asaas?: ReturnType<typeof asaasFalso>; nfse?: ConfigDaNfse; log?: (msg: string, extra?: Record<string, unknown>) => void }) {
   const env = readEnv({
     DATABASE_URL: "postgres://unused@localhost/unused",
     BETTER_AUTH_SECRET: randomBytes(32).toString("hex"),
@@ -44,7 +44,7 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
     captura: { db: t.db, datajudKey: "", cobrancaAtiva: opcoes.ativa },
     maxArquivoBytes: 5e6,
     enfileirar: async (p) => void enfileiradas.push(p),
-    log: () => {},
+    log: opcoes.log ?? (() => {}),
     cobranca: { ativa: opcoes.ativa, asaas: cliente },
     plataformaEmails: operadores,
   });
@@ -56,7 +56,7 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
     plataforma: rotasDaPlataforma({ db: t.db, auth, emails: operadores, log: () => {} }),
     plataformaEmails: operadores,
     cobranca: { ativa: opcoes.ativa, token: opcoes.token === undefined ? TOKEN_DO_ASAAS : opcoes.token, asaas: cliente, nfse: opcoes.nfse ?? null },
-    log: () => {},
+    log: opcoes.log ?? (() => {}),
   });
 
   const json = async <T = any>(r: Response | Promise<Response>): Promise<T> => (await r).json() as Promise<T>;

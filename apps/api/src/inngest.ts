@@ -35,7 +35,7 @@ import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
 import { sincronizarTemasDoStj } from "./servicos/acervo.ts";
 import { colunasDaAssinatura, estadoDoEscritorio, temAcessoTotal } from "./servicos/assinatura.ts";
-import { enviarAvisosDaAssinatura } from "./servicos/cobranca.ts";
+import { enviarAvisosDaAssinatura, reconciliarAssinaturas } from "./servicos/cobranca.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { WHATSAPP_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
 import { apagarEscritoriosEncerrados } from "./servicos/encerramento.ts";
@@ -458,13 +458,17 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  // Toda manhã, os avisos do plano por e-mail aos sócios: o teste a 3 e a 1 dia do fim e ao acabar, e a fatura em atraso. Só com a cobrança ligada.
+  // Toda manhã: acerta a situação de quem assina pelas faturas e pela data (o aviso de atraso do Asaas pode não ter chegado) e manda os avisos
+  // do plano por e-mail aos sócios: o teste a 3 e a 1 dia do fim e ao acabar, e a fatura em atraso. Só com a cobrança ligada.
   const avisosDoPlanoFn = inngest.createFunction(
     { id: "avisos-da-assinatura", triggers: [{ cron: "TZ=America/Sao_Paulo 0 9 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "avisos-da-assinatura" }) },
     async ({ step }) => {
-      if (!cobrancaAtiva || !deps.mailer) return { desligado: true };
+      if (!cobrancaAtiva) return { desligado: true };
+      const { acertados } = await step.run("acertar", () => reconciliarAssinaturas({ db, log }));
+      if (!deps.mailer) return { acertados, emails: "desligado" };
       const mailer = deps.mailer;
-      return step.run("avisar", () => enviarAvisosDaAssinatura({ db, mailer, telas: deps.telas, log }));
+      const { enviados } = await step.run("avisar", () => enviarAvisosDaAssinatura({ db, mailer, telas: deps.telas, log }));
+      return { acertados, enviados };
     },
   );
 

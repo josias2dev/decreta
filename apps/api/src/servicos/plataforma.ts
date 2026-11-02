@@ -23,6 +23,7 @@ import { eq, sql } from "drizzle-orm";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { contarEventos } from "../eventos.ts";
 import { fichaDaLinha } from "./assinatura.ts";
+import { mudancasPelasFaturas } from "./cobranca.ts";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
@@ -234,7 +235,8 @@ export interface PedidoDeAcao {
 export async function agirNoEscritorio(deps: { db: Database; log?: Log; agora?: Date }, p: PedidoDeAcao): Promise<{ antes: SituacaoDoEscritorio; depois: SituacaoDoEscritorio }> {
   const agora = deps.agora ?? new Date();
   return withTenant(deps.db, p.organizationId, async (tx) => {
-    const [o] = await tx.select().from(organization).where(eq(organization.id, p.organizationId));
+    // A linha fica trancada até o fim: um aviso do Asaas que chega no mesmo instante espera a ação e a lê depois.
+    const [o] = await tx.select().from(organization).where(eq(organization.id, p.organizationId)).for("update");
     if (!o) throw new RecusaDaPlataforma(404, "Escritório não encontrado.");
     if (o.slug === SLUG_DA_DEMONSTRACAO) throw new RecusaDaPlataforma(409, "A demonstração é de todos e não muda por aqui.");
     if (o.encerradoEm) throw new RecusaDaPlataforma(409, "O escritório foi encerrado.");
@@ -269,8 +271,14 @@ export async function agirNoEscritorio(deps: { db: Database; log?: Log; agora?: 
       case "reativar": {
         if (o.situacao !== "so_leitura" && o.situacao !== "bloqueado" && o.situacao !== "cortesia") throw new RecusaDaPlataforma(409, "Só se reativa escritório em só leitura, bloqueado ou de cortesia.");
         if (o.asaasAssinaturaId && o.assinouEm && !o.acessoAte) {
-          const atrasadas = (await tx.select({ vencimento: faturas.vencimento }).from(faturas).where(eq(faturas.situacao, "atrasada"))).map((f) => f.vencimento).sort();
-          mudancas = atrasadas[0] ? { situacao: "inadimplente", inadimplenteDesde: atrasadas[0] } : { situacao: "ativo", inadimplenteDesde: null };
+          // Quem assina volta ao que as faturas dizem: ativo, ou inadimplente se há fatura vencida e sem pagamento.
+          const todas = await tx
+            .select({ situacao: faturas.situacao, vencimento: faturas.vencimento, valorCentavos: faturas.valorCentavos, assinaturaId: faturas.assinaturaId })
+            .from(faturas)
+            .where(eq(faturas.organizationId, o.id));
+          const dela = todas.filter((f) => f.assinaturaId === o.asaasAssinaturaId || f.assinaturaId === null);
+          const m = mudancasPelasFaturas({ situacao: "ativo", assinouEm: o.assinouEm }, dela, hoje, agora);
+          mudancas = { situacao: m.situacao ?? "ativo", inadimplenteDesde: m.inadimplenteDesde ?? null };
         } else {
           const testeAte = o.testeAte && o.testeAte >= hoje ? o.testeAte : somarDias(hoje, PLANO.testeDias);
           mudancas = { situacao: "teste", testeAte };

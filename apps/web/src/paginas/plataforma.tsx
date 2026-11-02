@@ -229,6 +229,9 @@ function AgirNoEscritorio({ escritorio, aoFechar }: { escritorio: EscritorioDaPl
                 ))}
               </select>
             </Campo>
+            {escolhida?.id === "reativar" && escritorio?.situacaoGravada === "cortesia" && (
+              <Faixa tipo="aviso">Este escritório é de cortesia e nunca é travado. Reativar abre um teste de 14 dias: se ele não assinar, passa a ser só leitura no fim.</Faixa>
+            )}
             {escolhida?.id === "estender_teste" && (
               <Campo rotulo="Quantos dias a mais" htmlFor="pl-dias" ajuda="De 1 a 60.">
                 <input id="pl-dias" type="number" min={1} max={60} value={dias} onChange={(ev) => setDias(ev.target.value)} />

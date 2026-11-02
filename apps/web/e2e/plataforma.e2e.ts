@@ -156,6 +156,9 @@ test("só as ações que valem aparecem para cada escritório", async ({ page })
   let opcoes = await page.getByLabel("Ação").locator("option").allTextContents();
   // Cortesia: não dá cortesia de novo, não estende teste que não tem, e reativar abre um teste novo.
   expect(opcoes).toEqual(["Pôr em só leitura", "Bloquear", "Reativar"]);
+  // Reativar um escritório de cortesia passa a travá-lo no fim do teste: a tela avisa antes de confirmar.
+  await page.getByLabel("Ação").selectOption("reativar");
+  await expect(page.getByText("Este escritório é de cortesia e nunca é travado. Reativar abre um teste de 14 dias")).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
   await page.getByRole("button", { name: "Agir em Lima Advogados" }).click();
   opcoes = await page.getByLabel("Ação").locator("option").allTextContents();

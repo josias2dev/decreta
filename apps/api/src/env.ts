@@ -87,6 +87,10 @@ const schema = z.object({
   NFSE_ISS_RETIDO: interruptor,
   /** E-mails dos operadores da plataforma (o painel /plataforma), separados por vírgula. Cada um precisa ter a conta criada pela equipe: o cadastro aberto e o convite recusam esses e-mails. */
   PLATAFORMA_EMAILS: z.string().default(""),
+}).superRefine((env, ctx) => {
+  // O token do aviso do Asaas é o que separa um pagamento de uma mentira: longo, e nunca a própria chave de API.
+  if (env.ASAAS_WEBHOOK_TOKEN && env.ASAAS_WEBHOOK_TOKEN.length < 24) ctx.addIssue({ code: "custom", path: ["ASAAS_WEBHOOK_TOKEN"], message: "use um token de pelo menos 24 caracteres (openssl rand -hex 32)" });
+  if (env.ASAAS_WEBHOOK_TOKEN && env.ASAAS_WEBHOOK_TOKEN === env.ASAAS_API_KEY) ctx.addIssue({ code: "custom", path: ["ASAAS_WEBHOOK_TOKEN"], message: "não use a chave de API como token do aviso" });
 });
 
 export type Env = z.infer<typeof schema>;

@@ -17,13 +17,14 @@ export interface ChamadaAoAsaas {
   headers: Headers;
 }
 
-export function asaasFalso(opcoes: { falharNoCancelamento?: boolean; recusarLink?: boolean } = {}) {
+export function asaasFalso(opcoes: { falharNoCancelamento?: boolean; recusarLink?: boolean; falharNaNfse?: boolean } = {}) {
   const chamadas: ChamadaAoAsaas[] = [];
   let links = 0;
   const falso = {
     chamadas,
     falharNoCancelamento: opcoes.falharNoCancelamento ?? false,
     recusarLink: opcoes.recusarLink ?? false,
+    falharNaNfse: opcoes.falharNaNfse ?? false,
     /** As chamadas de um método e caminho (ou parte dele). */
     de: (metodo: string, caminho: string) => chamadas.filter((c) => c.metodo === metodo && c.caminho.includes(caminho)),
     fetch: (async (entrada: string | URL | Request, init?: RequestInit) => {
@@ -46,12 +47,17 @@ export function asaasFalso(opcoes: { falharNoCancelamento?: boolean; recusarLink
         const id = `link_${links}`;
         return json(200, { object: "paymentLink", id, name: corpo!.name, url: `https://sandbox.asaas.com/c/${id}`, active: true, deleted: false, ...corpo });
       }
+      const linkRemovido = /^\/v3\/paymentLinks\/([^/]+)$/.exec(caminho);
+      if (metodo === "DELETE" && linkRemovido) return json(200, { deleted: true, id: linkRemovido[1] });
       const assinatura = /^\/v3\/subscriptions\/([^/]+)$/.exec(caminho);
       if (metodo === "DELETE" && assinatura) {
         if (falso.falharNoCancelamento) return json(500, { errors: [{ code: "internal_error", description: "Erro interno." }] });
         return json(200, { deleted: true, id: assinatura[1] });
       }
-      if (metodo === "POST" && /^\/v3\/subscriptions\/[^/]+\/invoiceSettings$/.test(caminho)) return json(200, { ...corpo });
+      if (metodo === "POST" && /^\/v3\/subscriptions\/[^/]+\/invoiceSettings$/.test(caminho)) {
+        if (falso.falharNaNfse) return json(400, { errors: [{ code: "invalid_municipal_service", description: "O serviço municipal não foi encontrado." }] });
+        return json(200, { ...corpo });
+      }
       return json(404, { errors: [{ code: "invalid_action", description: "Endereço desconhecido." }] });
     }) as typeof fetch,
   };

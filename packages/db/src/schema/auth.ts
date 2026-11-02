@@ -8,6 +8,7 @@
  * saber qual é o escritório ativo. O isolamento por escritório começa no
  * domínio (ver `dominio.ts`).
  */
+import { sql } from "drizzle-orm";
 import { boolean, date, index, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 /** A situação do escritório na assinatura (a mesma lista de `SITUACOES_DO_ESCRITORIO` em @decreta/core; um teste confere). Todo escritório que já existia nasce cortesia. */
@@ -137,7 +138,10 @@ export const organization = pgTable(
     asaasLinkUrl: text("asaas_link_url"),
     asaasLinkValorCentavos: integer("asaas_link_valor_centavos"),
     asaasClienteId: text("asaas_cliente_id"),
+    /** A assinatura viva. Cancelada, volta a nulo e o id passa para `asaasAssinaturasEncerradas`. */
     asaasAssinaturaId: text("asaas_assinatura_id"),
+    /** As assinaturas que já acabaram: um aviso atrasado delas não reabre nada nem desfaz o cancelamento. */
+    asaasAssinaturasEncerradas: text("asaas_assinaturas_encerradas").array().notNull().default(sql`'{}'::text[]`),
     /** Quando a emissão automática de NFS-e foi configurada na assinatura do Asaas (só com `NFSE_ATIVA`). */
     nfseConfiguradaEm: timestamp("nfse_configurada_em", { withTimezone: true }),
   },

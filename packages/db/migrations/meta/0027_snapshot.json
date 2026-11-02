@@ -1,5 +1,5 @@
 {
-  "id": "06519d94-c0e0-4975-82cb-605a8f84d2ab",
+  "id": "8553b7ff-a066-41ba-99d1-4149630baaf7",
   "prevId": "1ac66c68-984a-4f79-b517-710f363cc2c5",
   "version": "7",
   "dialect": "postgresql",
@@ -723,6 +723,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "asaas_assinaturas_encerradas": {
+          "name": "asaas_assinaturas_encerradas",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
         },
         "nfse_configurada_em": {
           "name": "nfse_configurada_em",
@@ -1521,6 +1528,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "assinatura_id": {
+          "name": "assinatura_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "vencimento": {
           "name": "vencimento",

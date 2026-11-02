@@ -22,6 +22,8 @@ export const faturas = pgTable(
     /** O id da cobrança no Asaas (`pay_...`). */
     id: text("id").primaryKey(),
     organizationId: organizationId(),
+    /** A assinatura do Asaas de que a cobrança vem (nula numa cobrança avulsa). Só as da assinatura viva decidem a situação do escritório. */
+    assinaturaId: text("assinatura_id"),
     vencimento: date("vencimento", { mode: "string" }).notNull(),
     valorCentavos: integer("valor_centavos").notNull(),
     situacao: situacaoDaFatura("situacao").notNull().default("pendente"),

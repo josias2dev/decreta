@@ -72,13 +72,14 @@ const SEMPRE_PERMITIDO: RegExp[] = [
   /^POST \/escritorio\/encerrar$/,
 ];
 
-const ESCRITA = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+/** Só estes métodos não escrevem: qualquer outro (inclusive um que ainda não existe) é recusado sem acesso total. */
+const LEITURA = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /** `caminho` é o das rotas das telas, sem o `/api/app` na frente. */
 export function acessoLiberado(acesso: Acesso, metodo: string, caminho: string): boolean {
   if (acesso === "total") return true;
   if (SEMPRE_PERMITIDO.some((r) => r.test(`${metodo} ${caminho}`))) return true;
-  return acesso === "leitura" && !ESCRITA.has(metodo);
+  return acesso === "leitura" && LEITURA.has(metodo);
 }
 
 const ONDE_PAGAR = "Em Configurações, na aba Plano, dá para assinar ou pagar; ver os dados, levar uma cópia deles e encerrar a conta continuam abertos.";

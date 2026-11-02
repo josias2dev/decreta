@@ -21,6 +21,7 @@ ALTER TABLE "eventos_de_cobranca" ENABLE ROW LEVEL SECURITY;--> statement-breakp
 CREATE TABLE "faturas" (
 	"id" text PRIMARY KEY NOT NULL,
 	"organization_id" text NOT NULL,
+	"assinatura_id" text,
 	"vencimento" date NOT NULL,
 	"valor_centavos" integer NOT NULL,
 	"situacao" "situacao_da_fatura" DEFAULT 'pendente' NOT NULL,
@@ -44,6 +45,7 @@ ALTER TABLE "organization" ADD COLUMN "asaas_link_url" text;--> statement-breakp
 ALTER TABLE "organization" ADD COLUMN "asaas_link_valor_centavos" integer;--> statement-breakpoint
 ALTER TABLE "organization" ADD COLUMN "asaas_cliente_id" text;--> statement-breakpoint
 ALTER TABLE "organization" ADD COLUMN "asaas_assinatura_id" text;--> statement-breakpoint
+ALTER TABLE "organization" ADD COLUMN "asaas_assinaturas_encerradas" text[] DEFAULT '{}'::text[] NOT NULL;--> statement-breakpoint
 ALTER TABLE "organization" ADD COLUMN "nfse_configurada_em" timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "auditoria_da_plataforma" ADD CONSTRAINT "auditoria_da_plataforma_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "eventos_de_cobranca" ADD CONSTRAINT "eventos_de_cobranca_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
