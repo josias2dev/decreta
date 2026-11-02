@@ -1,10 +1,11 @@
-/** Configurações do escritório: timbre das peças, o jeito de cada peça, avisos e captura, calendário forense, a IA (política e retorno) e o registro. */
+/** Configurações do escritório: timbre das peças, o jeito de cada peça, avisos e captura, calendário forense, a IA (política e retorno), o registro e os dados (levar tudo e encerrar). */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Download, Plus, Send, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { NiveisDeAutomacao } from "@/componentes/automacao";
 import { useAviso } from "@/componentes/avisos";
+import { DadosDoEscritorio } from "@/componentes/dados-do-escritorio";
 import { Dialogo } from "@/componentes/dialogo";
 import { JeitoDasPecas } from "@/componentes/jeito-das-pecas";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
@@ -17,7 +18,7 @@ import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora } from "@/lib/f
 import type { Escritorio, Feriados, Registro, RetornosDaIa, Timbre } from "@/lib/tipos";
 import { Folha } from "./peca";
 
-type Aba = "escritorio" | "pecas" | "avisos" | "calendario" | "ia" | "registro";
+type Aba = "escritorio" | "pecas" | "avisos" | "calendario" | "ia" | "registro" | "dados";
 const FONTES = ["Arial", "Times New Roman", "Calibri", "Garamond"] as const;
 const TRIBUNAIS = [
   { id: "TJSC", nome: "TJSC · Justiça estadual de Santa Catarina" },
@@ -46,7 +47,7 @@ export function ConfiguracoesPage() {
         { id: "pecas", rotulo: celular ? "Peças" : "Jeito das peças" },
         { id: "avisos", rotulo: celular ? "Avisos" : "Avisos e captura" },
         { id: "calendario", rotulo: "Calendário" },
-        ...(socio ? [{ id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }] : []),
+        ...(socio ? [{ id: "ia" as const, rotulo: "IA" }, { id: "registro" as const, rotulo: "Registro" }, { id: "dados" as const, rotulo: "Dados" }] : []),
       ]}
     />
   );
@@ -67,6 +68,8 @@ export function ConfiguracoesPage() {
       <PoliticaDeIa />
       <AbaRetorno celular={celular} />
     </div>
+  ) : aba === "dados" ? (
+    <DadosDoEscritorio nome={e.nome} demonstracao={e.demonstracao} />
   ) : (
     <AbaRegistro />
   );

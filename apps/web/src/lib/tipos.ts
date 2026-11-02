@@ -700,6 +700,22 @@ export interface Escritorio {
   suspensoes: { id: string; dia: string; motivo: string; tipo: "local" | "forense" | "recesso" | "reduzido"; tribunal: string | null; comarca: string | null }[];
 }
 
+/** Uma cópia dos dados do escritório (planilhas e documentos em ZIP), pedida por um sócio. */
+export interface Exportacao {
+  id: string;
+  situacao: "pedida" | "pronta" | "falhou";
+  pedidaEm: string;
+  prontaEm: string | null;
+  /** Os arquivos saem do servidor depois disto. */
+  expiraEm: string | null;
+  pedidaPor: string | null;
+  /** Quantos arquivos guardados entraram nos ZIP. */
+  documentos: number;
+  erro: string | null;
+  /** Um ZIP por parte: o escritório grande vira mais de um. */
+  partes: { n: number; nome: string; tamanho: number }[];
+}
+
 export interface PessoaDaEquipe extends Pessoa {
   email: string;
   cargo: string | null;
