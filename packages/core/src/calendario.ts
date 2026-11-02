@@ -71,6 +71,12 @@ export function feriadosNacionais(ano: number): Feriado[] {
   return lista.sort((x, y) => x.dia.localeCompare(y.dia));
 }
 
+/** O feriado nacional mais próximo depois de `hoje` (hoje não conta, mesmo sendo feriado). */
+export function proximoFeriadoNacional(hoje: Dia): Feriado {
+  const ano = Number(hoje.slice(0, 4));
+  return [...feriadosNacionais(ano), ...feriadosNacionais(ano + 1)].find((f) => f.dia > hoje)!;
+}
+
 type Regra = (ano: number) => Feriado[];
 
 const forense = (dia: Dia, nome: string): Feriado => ({ dia, nome, tipo: "forense" });
