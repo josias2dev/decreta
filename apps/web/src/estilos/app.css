@@ -1368,3 +1368,19 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-folha, .dc-ver__folha { color-scheme: light; --tinta: #1d1d20; --tinta-2: #4e4d52; --tinta-3: #6d6b70; --borda: #e6e2d9; --borda-forte: #d2ccc0; --superficie: #fff; --superficie-2: #f3f1ec; color: var(--tinta); }
 .dc-aparencia { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .dc-aparencia--chave { width: 100%; min-height: var(--altura-controle); padding: 0; flex-wrap: nowrap; background: none; border: 0; border-radius: var(--radius-md); text-align: left; cursor: pointer; }
+
+/* O primeiro minuto em /comecar: a busca no DJEN, ao vivo, acima da etapa */
+.dc-busca { display: flex; flex-direction: column; gap: var(--space-1); width: min(560px, 100%); padding: var(--space-3) var(--space-4); box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); }
+.dc-busca__titulo { display: flex; align-items: center; gap: var(--space-2); margin: 0; font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); }
+.dc-busca__titulo svg { flex: none; width: var(--space-4); height: var(--space-4); color: var(--tinta-3); }
+.dc-busca__titulo--aviso { align-items: flex-start; font-weight: 500; color: var(--hoje); }
+.dc-busca__titulo--aviso svg { color: var(--hoje); }
+.dc-busca .dc-nota { margin: 0; }
+.dc-busca__lista { display: flex; flex-direction: column; margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+.dc-busca__lista li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--borda); }
+.dc-busca__item { display: flex; min-width: 0; flex-direction: column; }
+.dc-busca__item strong { font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); overflow-wrap: anywhere; }
+.dc-busca__lendo { display: inline-flex; flex: none; align-items: center; gap: var(--space-1); font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--acento); }
+.dc-busca__lendo svg { width: var(--space-3); height: var(--space-3); }
+.dc-busca__abrir { display: inline-flex; align-items: center; gap: var(--space-1); align-self: flex-start; margin-top: var(--space-1); }
+.dc-busca__abrir svg { width: var(--space-3-half); height: var(--space-3-half); }

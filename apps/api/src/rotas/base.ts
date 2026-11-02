@@ -38,6 +38,7 @@ export type C = Context<Ambiente>;
 export type Pedido =
   | { nome: "publicacao.nova"; organizationId: string; publicacaoId: string }
   | { nome: "captura.djen"; organizationId: string }
+  | { nome: "captura.primeira"; organizationId: string }
   | { nome: "processo.datajud"; organizationId: string; processoId: string }
   | { nome: "documento.ler"; organizationId: string; documentoId: string }
   | { nome: "prazo.confirmado"; organizationId: string; prazoId: string }

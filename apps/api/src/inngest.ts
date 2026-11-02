@@ -35,6 +35,7 @@ import { WHATSAPP_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
 import { apagarEscritoriosEncerrados } from "./servicos/encerramento.ts";
 import { apagarExportacoesVencidas, marcarExportacaoFalhou, prepararExportacao } from "./servicos/exportacao.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
+import { executarPrimeiraBusca, LEITURAS_NA_HORA } from "./servicos/primeira-busca.ts";
 import { cruzarRadar, sincronizarPrecedentesDoBnp } from "./servicos/radar.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
@@ -51,6 +52,7 @@ export const inngest = new Inngest({ id: "decreta" });
 
 type Org = { organizationId: string } & Record<string, unknown>;
 export const capturaPedida = eventType("decreta/captura.djen", { schema: staticSchema<Org>() });
+export const primeiraBuscaPedida = eventType("decreta/captura.primeira", { schema: staticSchema<Org>() });
 export const publicacaoNova = eventType("decreta/publicacao.nova", { schema: staticSchema<Org & { publicacaoId: string }>() });
 export const publicacaoParaReler = eventType("decreta/publicacao.reler", { schema: staticSchema<Org & { publicacaoId: string }>() });
 export const datajudDoEscritorio = eventType("decreta/datajud.escritorio", { schema: staticSchema<Org>() });
@@ -66,6 +68,8 @@ export function eventoDoPedido(p: Pedido) {
       return publicacaoNova.create({ organizationId: p.organizationId, publicacaoId: p.publicacaoId });
     case "captura.djen":
       return capturaPedida.create({ organizationId: p.organizationId });
+    case "captura.primeira":
+      return primeiraBuscaPedida.create({ organizationId: p.organizationId });
     case "processo.datajud":
       return processoDataJud.create({ organizationId: p.organizationId, processoId: p.processoId });
     case "documento.ler":
@@ -158,6 +162,29 @@ export function createFunctions(deps: DepsDasRotinas) {
         return capturarDjen(deps.captura, orgId, periodoDaCaptura(hojeEm(org?.tz ?? "America/Sao_Paulo")));
       });
       if (r.novas.length) await step.sendEvent("sugerir", r.novas.map((publicacaoId) => publicacaoNova.create({ organizationId: orgId, publicacaoId })));
+      return { encontradas: r.encontradas, novas: r.novas.length };
+    },
+  );
+
+  // O primeiro minuto: ao informar a OAB, os últimos dias do DJEN na hora. Sem novas tentativas: quem espera
+  // é a pessoa na tela, que vê a falha; a rodada seguinte cobre. Poucas ao mesmo tempo, porque a API do DJEN limita o ritmo.
+  const primeiraBusca = inngest.createFunction(
+    {
+      id: "primeira-busca-djen",
+      triggers: [primeiraBuscaPedida],
+      concurrency: [{ limit: 1, key: "event.data.organizationId" }, { limit: 2 }],
+      retries: 0,
+      onFailure: async ({ event, error }) => reporter.error(error, { funcao: "primeira-busca-djen", organizationId: (event.data.event.data as Org).organizationId }),
+    },
+    async ({ event, step }) => {
+      const orgId = event.data.organizationId;
+      const r = await step.run("buscar", async () => {
+        const [org] = await db.select({ tz: organization.timezone }).from(organization).where(eq(organization.id, orgId));
+        return executarPrimeiraBusca(deps.captura, orgId, hojeEm(org?.tz ?? "America/Sao_Paulo"));
+      });
+      // O resto fica para a rotina de cada hora (reler-publicacoes), que lê o que nunca foi lido.
+      const naHora = r.novas.slice(0, LEITURAS_NA_HORA);
+      if (naHora.length) await step.sendEvent("sugerir", naHora.map((publicacaoId) => publicacaoNova.create({ organizationId: orgId, publicacaoId })));
       return { encontradas: r.encontradas, novas: r.novas.length };
     },
   );
@@ -443,5 +470,5 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn];
+  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn];
 }

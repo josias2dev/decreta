@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight, Check, FolderPlus, Sparkles, Sun, UserPlus, X } 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Marca } from "@/componentes/marca";
 import { OpcoesDeTribunal } from "@/componentes/opcoes-de-tribunal";
+import { BuscaNaoSaiu, PrimeiraBusca, type BuscaPedida } from "@/componentes/primeira-busca";
 import { Botao, Campo, Carregando, Faixa } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
@@ -78,6 +79,8 @@ export function ComecarPage() {
   const eu = useQuery(euQuery);
   const escritorio = useQuery(escritorioQuery);
   const [etapa, setEtapa] = useState<Etapa>("voce");
+  // A busca imediata, que continua à vista nas etapas seguintes.
+  const [busca, setBusca] = useState<BuscaPedida | { erro: string } | null>(null);
   const n = ETAPAS.findIndex((e) => e.id === etapa);
   const ir = (passo: 1 | -1) => setEtapa(ETAPAS[Math.min(ETAPAS.length - 1, Math.max(0, n + passo))]!.id);
 
@@ -100,12 +103,13 @@ export function ComecarPage() {
             </li>
           ))}
         </ol>
+        {busca && ("erro" in busca ? <BuscaNaoSaiu mensagem={busca.erro} /> : <PrimeiraBusca busca={busca} />)}
         {!eu.data || !escritorio.data ? (
           <section className="dc-comecar__cartao">
             <Carregando linhas={3} />
           </section>
         ) : etapa === "voce" ? (
-          <EtapaVoce key="voce" eu={eu.data} n={n} aoSeguir={() => ir(1)} />
+          <EtapaVoce key="voce" eu={eu.data} n={n} aoBuscar={setBusca} aoSeguir={() => ir(1)} />
         ) : etapa === "escritorio" ? (
           <EtapaEscritorio key="escritorio" eu={eu.data} e={escritorio.data} n={n} aoVoltar={() => ir(-1)} aoSeguir={() => ir(1)} />
         ) : etapa === "diario" ? (
@@ -163,8 +167,8 @@ function Interruptor({ rotulo, ajuda, ligado, aoMudar, id }: { rotulo: string; a
   );
 }
 
-/** Etapa 1: cargo, OAB (a que guia a busca no Diário) e o WhatsApp do resumo da manhã. */
-function EtapaVoce({ eu, n, aoSeguir }: { eu: Eu; n: number; aoSeguir: () => void }) {
+/** Etapa 1: cargo, OAB (a que guia a busca no Diário) e o WhatsApp do resumo da manhã. Com a OAB, a busca nos últimos dias já começa. */
+function EtapaVoce({ eu, n, aoBuscar, aoSeguir }: { eu: Eu; n: number; aoBuscar: (b: BuscaPedida | { erro: string }) => void; aoSeguir: () => void }) {
   const qc = useQueryClient();
   const [f, setF] = useState({ cargo: eu.usuario.cargo ?? "", oabNumero: "", oabUf: "SC", whatsapp: "" });
   const semUf = f.oabNumero.trim() !== "" && !f.oabUf;
@@ -180,6 +184,13 @@ function EtapaVoce({ eu, n, aoSeguir }: { eu: Eu; n: number; aoSeguir: () => voi
       }),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["eu"] });
+      // A falha da busca não segura a configuração: a OAB já está salva.
+      if (f.oabNumero.trim()) {
+        await api<{ pedidaEm: string; dias: number }>("/escritorio/primeira-busca", { method: "POST" }).then(
+          (r) => aoBuscar({ pedidaEm: r.pedidaEm, dias: r.dias, oab: `OAB/${f.oabUf} ${f.oabNumero.trim()}` }),
+          (err: unknown) => aoBuscar({ erro: mensagemDoErro(err) }),
+        );
+      }
       aoSeguir();
     },
   });
@@ -205,7 +216,7 @@ function EtapaVoce({ eu, n, aoSeguir }: { eu: Eu; n: number; aoSeguir: () => voi
               ))}
             </select>
           </div>
-          {semUf ? <span className="dc-erro-campo">Informe a UF junto com o número.</span> : <span className="dc-campo__ajuda">É por esta OAB que o Decreta busca as suas publicações no Diário (DJEN), todo dia útil.</span>}
+          {semUf ? <span className="dc-erro-campo">Informe a UF junto com o número.</span> : <span className="dc-campo__ajuda">Opcional. Com ela, o Decreta já busca agora as suas publicações dos últimos dias no Diário (DJEN), e depois todo dia útil.</span>}
         </div>
         <Campo rotulo="WhatsApp (opcional)" htmlFor="co-zap" ajuda="Para o resumo da manhã com os seus prazos do dia.">
           <input id="co-zap" inputMode="tel" autoComplete="tel" placeholder="(47) 99123-4567" value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: e.target.value })} />
