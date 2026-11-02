@@ -6,7 +6,7 @@ import { lerPublicacaoColada, TIPOS_DE_COMUNICACAO } from "@decreta/core";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosDaConferencia, MotivosParaConferir, PreviaNoDialogo, SeloDeConfianca } from "@/componentes/conta-do-prazo";
@@ -20,6 +20,7 @@ import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, 
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
+import { useTeclas } from "@/lib/teclas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -65,6 +66,10 @@ export function proximaBusca(agora = new Date()): string {
   }
   return dia === 0 || (dia >= 1 && dia <= 4) ? "amanhã às 04:30" : "segunda às 04:30";
 }
+
+const NENHUMA: ReadonlySet<string> = new Set();
+/** Depois de abrir um item, um instante em que C e N não valem: duas batidas seguidas não tratam o próximo sem ninguém ter visto. */
+const ESPERA_ANTES_DE_TRATAR = 400;
 
 function SeloDaLista({ selo }: { selo: Selo }) {
   return (
@@ -136,8 +141,12 @@ export function PublicacoesPage() {
   const [colar, setColar] = useState(false);
   const [captura, setCaptura] = useState(false);
   const saude = useQuery(saudeDaCapturaQuery);
+  // As tratadas nesta sequência, pela aba: saem da fila na hora e contam no fim.
+  const [tratadas, setTratadas] = useState<{ situacao: SituacaoPublicacao; ids: ReadonlySet<string> }>({ situacao, ids: new Set() });
+  const tratadasAqui = tratadas.situacao === situacao ? tratadas.ids : NENHUMA;
 
   const c = caixa.data;
+  const itensDaFila = useMemo(() => (c?.itens ?? []).filter((i) => !tratadasAqui.has(i.id)), [c?.itens, tratadasAqui]);
   const capturada = c?.ultimaCaptura;
   const sub = !c
     ? " "
@@ -163,6 +172,26 @@ export function PublicacoesPage() {
     />
   );
   const dialogoDaCaptura = <CapturaDoDjen aberto={captura} aoFechar={() => setCaptura(false)} />;
+
+  const selecionada = search.id ?? itensDaFila[0]?.id;
+  // Escolher na lista não mexe na rolagem: a lista fica onde está e a publicação abre do começo.
+  const escolher = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, id }), replace: true, resetScroll: false });
+  /** Depois de tratar: a próxima da lista. A tratada sai da fila na hora, sem esperar a lista voltar do servidor. */
+  const proxima = () => {
+    const i = itensDaFila.findIndex((x) => x.id === selecionada);
+    if (selecionada) setTratadas({ situacao, ids: new Set(tratadasAqui).add(selecionada) });
+    escolher(itensDaFila[i + 1]?.id ?? itensDaFila[i - 1]?.id);
+  };
+  const andar = (passo: number) => {
+    const alvo = itensDaFila[itensDaFila.findIndex((x) => x.id === selecionada) + passo];
+    if (alvo) escolher(alvo.id);
+  };
+  const zerada = !!c && tratadasAqui.size > 0 && !itensDaFila.length;
+  useTeclas({ j: () => andar(1), k: () => andar(-1) }, !celular);
+  // Andando pelo teclado, o item aberto fica à vista na lista.
+  useEffect(() => {
+    if (!celular) document.querySelector(".dc-pub.is-on")?.scrollIntoView({ block: "nearest" });
+  }, [selecionada, celular]);
 
   if (celular) {
     return (
@@ -207,16 +236,6 @@ export function PublicacoesPage() {
     );
   }
 
-  const selecionada = search.id ?? c?.itens[0]?.id;
-  // Escolher na lista não mexe na rolagem: a lista fica onde está e a publicação abre do começo.
-  const escolher = (id: string | undefined) => void navigate({ search: (s) => ({ ...s, id }), replace: true, resetScroll: false });
-  /** Depois de tratar: a próxima da lista (a tratada sai da aba Novas). */
-  const proxima = () => {
-    const itens = c?.itens ?? [];
-    const i = itens.findIndex((x) => x.id === selecionada);
-    escolher(itens[i + 1]?.id ?? itens[i - 1]?.id);
-  };
-
   return (
     <Pagina cheia>
       <Cabecalho
@@ -249,17 +268,21 @@ export function PublicacoesPage() {
             <div className="p-4">
               <Carregando linhas={3} />
             </div>
-          ) : c.itens.length ? (
-            <Rolagem id="publicacoes" className="dc-linhas">
-              {c.itens.map((i) => (
-                <ItemDaCaixa key={i.id} item={i} celular={false} ligado={i.id === selecionada} aoEscolher={() => escolher(i.id)} />
-              ))}
-            </Rolagem>
+          ) : itensDaFila.length ? (
+            <>
+              <Rolagem id="publicacoes" className="dc-linhas">
+                {itensDaFila.map((i) => (
+                  <ItemDaCaixa key={i.id} item={i} celular={false} ligado={i.id === selecionada} aoEscolher={() => escolher(i.id)} />
+                ))}
+              </Rolagem>
+              <TeclasDaFila />
+            </>
           ) : (
             vazio
           )}
         </section>
         {selecionada && <Selecionada key={selecionada} id={selecionada} aoTerminar={proxima} />}
+        {zerada && <CaixaZerada n={tratadasAqui.size} situacao={situacao} pendentes={c.contagens.pendente} aoVerPendentes={() => irPara("pendente")} />}
       </div>
       <ColarPublicacao aberto={colar} aoFechar={() => setColar(false)} />
       {dialogoDaCaptura}
@@ -273,6 +296,47 @@ function Selecionada({ id, aoTerminar }: { id: string; aoTerminar: () => void })
     return <section className="dc-painel dc-caixa__carregando p-4">{q.error ? <FalhaAoCarregar erro={q.error} sumiu="Publicação não encontrada" aoTentar={() => void q.refetch()} /> : <Carregando />}</section>;
   }
   return <VerPublicacao pub={q.data} celular={false} aoTerminar={aoTerminar} />;
+}
+
+/** O pé da lista, só no computador: as teclas da fila, à vista sem pedir atenção. */
+function TeclasDaFila() {
+  return (
+    <p className="dc-caixa__teclas">
+      <span>
+        <kbd className="dc-tecla">J</kbd> <kbd className="dc-tecla">K</kbd> navegam
+      </span>
+      <span>
+        <kbd className="dc-tecla">C</kbd> confirma
+      </span>
+      <span>
+        <kbd className="dc-tecla">A</kbd> ajusta
+      </span>
+      <span>
+        <kbd className="dc-tecla">N</kbd> não gera prazo
+      </span>
+    </p>
+  );
+}
+
+/** O fim da fila: acabou, quantas foram e o que vem depois. Caixa que já chega vazia não passa por aqui. */
+function CaixaZerada({ n, situacao, pendentes, aoVerPendentes }: { n: number; situacao: SituacaoPublicacao; pendentes: number; aoVerPendentes: () => void }) {
+  return (
+    <section className="dc-painel dc-caixa__zerada" role="status">
+      <span className="dc-caixa__zerada-marca">
+        <Check aria-hidden />
+      </span>
+      <h2 className="dc-painel__titulo">{situacao === "nova" ? "Caixa zerada" : "Nada mais nesta aba"}</h2>
+      <p className="dc-nota m-0">
+        Você tratou {n === 1 ? "1 publicação" : `${n} publicações`} nesta sequência.{situacao === "nova" ? ` A próxima busca no DJEN sai ${proximaBusca()}.` : ""}
+      </p>
+      <div className="dc-linha-acoes">
+        <Link to="/prazos" className="dc-btn dc-btn--primaria dc-btn--md">
+          Ver os prazos
+        </Link>
+        {situacao !== "pendente" && pendentes > 0 && <Botao onClick={aoVerPendentes}>Ver {pendentes === 1 ? "1 pendente" : `${pendentes} pendentes`}</Botao>}
+      </div>
+    </section>
+  );
 }
 
 /** Tela própria no celular. No computador, a mesma publicação abre dentro da caixa. */
@@ -467,35 +531,46 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
     ) : null);
   const lida = modo === "sem_prazo" && pub.situacao === "lida" && <Faixa tipo="ok">Marcada como lida, sem prazo.</Faixa>;
 
-  // Ações: [principal, secundária, terciária, extra]
-  type Acao = { rotulo: string; icone?: ReactNode; fazer: () => void; ocupado?: boolean; desligado?: boolean };
+  // Ações: [principal, secundária, terciária, extra]. `teclas`: o atalho na fila de publicações; a primeira é a que aparece no botão.
+  type Acao = { rotulo: string; icone?: ReactNode; fazer: () => void; ocupado?: boolean; desligado?: boolean; teclas?: string[] };
   const acoes: Acao[] =
     modo === "prazo"
       ? [
           // Confiança baixa: não confirma num clique; abre o ajuste com os motivos no topo.
           ...(c?.conferencia?.confianca === "baixa"
-            ? [{ rotulo: "Conferir e confirmar", icone: <Pencil />, fazer: () => setDialogo("prazo"), desligado: semProcesso }]
+            ? [{ rotulo: "Conferir e confirmar", icone: <Pencil />, fazer: () => setDialogo("prazo"), desligado: semProcesso, teclas: ["c", "a"] }]
             : [
-                { rotulo: "Confirmar prazo", icone: <Check />, fazer: () => confirmar.mutate(), ocupado: confirmar.isPending, desligado: semProcesso },
-                { rotulo: "Ajustar", icone: <Pencil />, fazer: () => setDialogo("prazo"), desligado: semProcesso },
+                { rotulo: "Confirmar prazo", icone: <Check />, fazer: () => confirmar.mutate(), ocupado: confirmar.isPending, desligado: semProcesso, teclas: ["c"] },
+                { rotulo: "Ajustar", icone: <Pencil />, fazer: () => setDialogo("prazo"), desligado: semProcesso, teclas: ["a"] },
               ]),
-          { rotulo: "Não gera prazo", fazer: () => marcar.mutate("sem-prazo") },
+          { rotulo: "Não gera prazo", fazer: () => marcar.mutate("sem-prazo"), teclas: ["n"] },
           ...(pub.situacao === "nova" ? [{ rotulo: "Deixar pendente", fazer: () => marcar.mutate("pendente") }] : []),
         ]
       : modo === "audiencia"
         ? [
-            { rotulo: "Pôr na agenda", icone: <Check />, fazer: () => agendar.mutate(), ocupado: agendar.isPending, desligado: semProcesso },
-            { rotulo: "Ajustar", icone: <Pencil />, fazer: () => setDialogo("audiencia"), desligado: semProcesso },
-            { rotulo: "Não gera prazo", fazer: () => marcar.mutate("sem-prazo") },
+            { rotulo: "Pôr na agenda", icone: <Check />, fazer: () => agendar.mutate(), ocupado: agendar.isPending, desligado: semProcesso, teclas: ["c"] },
+            { rotulo: "Ajustar", icone: <Pencil />, fazer: () => setDialogo("audiencia"), desligado: semProcesso, teclas: ["a"] },
+            { rotulo: "Não gera prazo", fazer: () => marcar.mutate("sem-prazo"), teclas: ["n"] },
             ...(pub.situacao === "nova" ? [{ rotulo: "Deixar pendente", fazer: () => marcar.mutate("pendente") }] : []),
           ]
         : modo === "sem_prazo"
           ? [
-              ...(pub.situacao !== "lida" ? [{ rotulo: "Marcar como lida", icone: <Check />, fazer: () => marcar.mutate("sem-prazo"), ocupado: marcar.isPending && marcar.variables === "sem-prazo" }] : []),
-              { rotulo: "Criar prazo", icone: <Plus />, fazer: () => setDialogo("prazo"), desligado: semProcesso },
+              ...(pub.situacao !== "lida" ? [{ rotulo: "Marcar como lida", icone: <Check />, fazer: () => marcar.mutate("sem-prazo"), ocupado: marcar.isPending && marcar.variables === "sem-prazo", teclas: ["n"] }] : []),
+              { rotulo: "Criar prazo", icone: <Plus />, fazer: () => setDialogo("prazo"), desligado: semProcesso, teclas: ["a"] },
               ...(pub.situacao === "nova" ? [{ rotulo: "Deixar pendente", fazer: () => marcar.mutate("pendente") }] : []),
             ]
           : [];
+
+  // A fila pelo teclado: a tecla faz o que o botão faria, e não faz o que ele não deixaria.
+  const aberta = useRef(performance.now());
+  const apertar = (tecla: string) => {
+    const a = acoes.find((x) => x.teclas?.includes(tecla));
+    if (!a || ocupado) return;
+    if (a.desligado) return avisar("Vincule a publicação a um processo antes.", { erro: true });
+    if (tecla !== "a" && performance.now() - aberta.current < ESPERA_ANTES_DE_TRATAR) return;
+    a.fazer();
+  };
+  useTeclas({ c: () => apertar("c"), a: () => apertar("a"), n: () => apertar("n") }, !celular);
 
   const dialogos = (
     <>
@@ -577,8 +652,13 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
         {acoes.length > 0 && (
           <div className="dc-caixa__botoes">
             {acoes.map((a, i) => (
-              <Botao key={a.rotulo} variante={i === 0 ? "primaria" : i === 1 ? "secundaria" : "fantasma"} onClick={a.fazer} ocupado={a.ocupado} disabled={a.desligado || ocupado}>
+              <Botao key={a.rotulo} variante={i === 0 ? "primaria" : i === 1 ? "secundaria" : "fantasma"} onClick={a.fazer} ocupado={a.ocupado} disabled={a.desligado || ocupado} aria-keyshortcuts={a.teclas?.[0]?.toUpperCase()}>
                 {i < 2 && a.icone} {a.rotulo}
+                {a.teclas && (
+                  <span className="dc-tecla" aria-hidden>
+                    {a.teclas[0]!.toUpperCase()}
+                  </span>
+                )}
               </Botao>
             ))}
           </div>
