@@ -346,9 +346,9 @@ export function Faixa({ tipo, children }: { tipo: "aviso" | "erro" | "ok" | "not
   );
 }
 
-/** Número CNJ ou "Extrajudicial". */
-export function Cnj({ cnj, className }: { cnj: string | null | undefined; className?: string }) {
-  return <span className={cn("dc-num dc-cnj", className)}>{cnj ?? "Extrajudicial"}</span>;
+/** Número CNJ; sem ele, "Sem número" no processo judicial e "Extrajudicial" no caso que não tem número mesmo. */
+export function Cnj({ cnj, tipo, className }: { cnj: string | null | undefined; tipo?: "judicial" | "extrajudicial"; className?: string }) {
+  return <span className={cn("dc-num dc-cnj", className)}>{cnj ?? (tipo === "judicial" ? "Sem número" : "Extrajudicial")}</span>;
 }
 
 export function LinkProcesso({ id, children, className }: { id: string; children: ReactNode; className?: string }) {

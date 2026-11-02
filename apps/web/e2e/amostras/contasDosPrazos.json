@@ -1,14 +1,14 @@
 {
   "path": "/prazos/contas?amostra",
   "corpo": {
-    "704fe50c-a682-42b4-9c80-a93ff4e25b6a": {
+    "cdd77661-59db-42ea-8398-610596511e09": {
       "prazo": {
-        "id": "704fe50c-a682-42b4-9c80-a93ff4e25b6a",
+        "id": "cdd77661-59db-42ea-8398-610596511e09",
         "tipo": "Contestação trabalhista",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "d67adb9f-cb87-4e81-97f6-70908fea075c",
+          "id": "5fd6b30e-c7b0-47e3-acd5-90bbcb5eced3",
           "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves"
         }
       },
@@ -111,14 +111,14 @@
       "interno": null,
       "conferencia": null
     },
-    "33278c73-0186-4c48-be55-3606dc27c13e": {
+    "006898f0-bf56-49fb-b3fa-5d8e092a4425": {
       "prazo": {
-        "id": "33278c73-0186-4c48-be55-3606dc27c13e",
+        "id": "006898f0-bf56-49fb-b3fa-5d8e092a4425",
         "tipo": "Réplica à contestação",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "03979f1d-5610-4045-adce-5356d269d7f5",
+          "id": "369a274d-2fc5-4c84-bb2b-b66d856fab93",
           "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A."
         }
       },
@@ -265,14 +265,14 @@
       "interno": null,
       "conferencia": null
     },
-    "e30ceaef-3721-47f8-954b-cc82175df9cb": {
+    "764a548f-2b0e-452f-a66a-c765964baaba": {
       "prazo": {
-        "id": "e30ceaef-3721-47f8-954b-cc82175df9cb",
+        "id": "764a548f-2b0e-452f-a66a-c765964baaba",
         "tipo": "Alegações finais",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "935a496c-e123-45bf-b2ad-692a99b791be",
+          "id": "a2d56086-c5aa-470e-936f-19938d18ad40",
           "titulo": "Roberto Kühn × Transportes Serra Azul Ltda."
         }
       },
@@ -419,14 +419,14 @@
       "interno": null,
       "conferencia": null
     },
-    "d495f1b0-e8de-42cd-b562-8504e14d45e8": {
+    "768fbe0b-fb25-4e41-afc7-71e43b756f4d": {
       "prazo": {
-        "id": "d495f1b0-e8de-42cd-b562-8504e14d45e8",
+        "id": "768fbe0b-fb25-4e41-afc7-71e43b756f4d",
         "tipo": "Juntar procuração atualizada",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "8591f819-60dc-4223-a93e-6c944abe210d",
+          "id": "48c8a86b-cdfc-4efa-8840-3409d339f258",
           "titulo": "Eduardo Lima × Saúde Litoral Planos"
         }
       },
@@ -501,14 +501,14 @@
         ]
       }
     },
-    "38c43580-904c-4cc6-b919-d35c7d87284d": {
+    "304df9ca-b434-4195-91bd-ae14b168926c": {
       "prazo": {
-        "id": "38c43580-904c-4cc6-b919-d35c7d87284d",
+        "id": "304df9ca-b434-4195-91bd-ae14b168926c",
         "tipo": "Embargos de declaração",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "afb15e5a-24b2-442f-86b8-e55b5e6edfd9",
+          "id": "72a31691-20ad-4fc9-9266-012551e03006",
           "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha"
         }
       },
@@ -578,14 +578,14 @@
       "interno": null,
       "conferencia": null
     },
-    "d14ff3e9-3d8c-4a51-9fea-625f144e7237": {
+    "07438e86-fb83-40c6-adaf-d64f33e2e454": {
       "prazo": {
-        "id": "d14ff3e9-3d8c-4a51-9fea-625f144e7237",
+        "id": "07438e86-fb83-40c6-adaf-d64f33e2e454",
         "tipo": "Recolher custas do recurso",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "de01b39a-0814-4c82-a124-1da344c12b5c",
+          "id": "ce2a0674-6ab0-42ca-a678-9f6d44e5fd5b",
           "titulo": "Gilberto Weiss × Cooperativa Agro Vale"
         }
       },
@@ -655,14 +655,14 @@
       "interno": null,
       "conferencia": null
     },
-    "9341c172-28c1-4b10-9042-f61460bacffc": {
+    "19e9c8e8-95d6-449e-99f4-90083a665d87": {
       "prazo": {
-        "id": "9341c172-28c1-4b10-9042-f61460bacffc",
+        "id": "19e9c8e8-95d6-449e-99f4-90083a665d87",
         "tipo": "Manifestação sobre documentos",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "266e23cf-549c-43a2-afa2-1f522dbe8755",
+          "id": "1efb3eac-3a19-481d-976e-f6b2d87fbe94",
           "titulo": "Jorge Batista × Mercado Bom Preço Ltda."
         }
       },
@@ -743,14 +743,14 @@
       "interno": null,
       "conferencia": null
     },
-    "35ac9ae7-e6f3-4b6a-be90-2525e859962a": {
+    "dd194502-f84d-4d01-83e2-b4d1f09b41e2": {
       "prazo": {
-        "id": "35ac9ae7-e6f3-4b6a-be90-2525e859962a",
+        "id": "dd194502-f84d-4d01-83e2-b4d1f09b41e2",
         "tipo": "Quesitos e assistente técnico",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "b561ece8-39ea-47f8-a33d-d6f116b3a43e",
+          "id": "bc11f93d-2705-49a5-9270-da511531519f",
           "titulo": "Helena Vieira × Instituto Nacional do Seguro Social"
         }
       },
@@ -898,14 +898,14 @@
       "interno": null,
       "conferencia": null
     },
-    "6c230a0e-7ec4-463e-a8cd-ec978de24f64": {
+    "1cb4cb05-4fb4-40dd-8579-b2bad77392eb": {
       "prazo": {
-        "id": "6c230a0e-7ec4-463e-a8cd-ec978de24f64",
+        "id": "1cb4cb05-4fb4-40dd-8579-b2bad77392eb",
         "tipo": "Razões finais",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "6b331600-775f-4799-9a16-d4254795543d",
+          "id": "611c7971-e517-46ee-81d7-b21091553c49",
           "titulo": "Antônio Reis × Transportadora Vale Verde"
         }
       },
@@ -986,14 +986,14 @@
       "interno": null,
       "conferencia": null
     },
-    "559c8143-4015-4e16-9a4b-2b656f66f20f": {
+    "97715db6-32db-452f-966d-b63d208ebbf3": {
       "prazo": {
-        "id": "559c8143-4015-4e16-9a4b-2b656f66f20f",
+        "id": "97715db6-32db-452f-966d-b63d208ebbf3",
         "tipo": "Indicar bens à penhora",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "de6c3365-4ffa-4296-bb43-84e41c590ebd",
+          "id": "286e8bc7-1543-4cf1-b644-a2ebab34ab64",
           "titulo": "Auto Center Pioneiro Ltda. × Distribuidora Peças Sul"
         }
       },
@@ -1140,14 +1140,14 @@
       "interno": null,
       "conferencia": null
     },
-    "b78ab9b4-8874-4160-b6e9-f3cff07a1d9d": {
+    "0f2f1edb-ddbf-4f98-b83f-99e927d2b2d1": {
       "prazo": {
-        "id": "b78ab9b4-8874-4160-b6e9-f3cff07a1d9d",
+        "id": "0f2f1edb-ddbf-4f98-b83f-99e927d2b2d1",
         "tipo": "Rol de testemunhas",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "266e23cf-549c-43a2-afa2-1f522dbe8755",
+          "id": "1efb3eac-3a19-481d-976e-f6b2d87fbe94",
           "titulo": "Jorge Batista × Mercado Bom Preço Ltda."
         }
       },
@@ -1233,14 +1233,14 @@
         ]
       }
     },
-    "e24aec35-346d-41f7-b853-ca94f194e137": {
+    "e6952104-fd76-4563-b494-e4210ddd23e4": {
       "prazo": {
-        "id": "e24aec35-346d-41f7-b853-ca94f194e137",
+        "id": "e6952104-fd76-4563-b494-e4210ddd23e4",
         "tipo": "Contrarrazões de apelação",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "82feb465-ff05-4c78-8124-001f0760db3f",
+          "id": "f2552a31-c79e-4aaf-bdab-8f88338005f9",
           "titulo": "Lúcia Matos × Município de Brusque"
         }
       },
@@ -1387,14 +1387,14 @@
       "interno": null,
       "conferencia": null
     },
-    "11f19c56-695a-43d9-8195-4c479b8433a9": {
+    "e49a4317-1e1a-496a-a021-6685bac0c587": {
       "prazo": {
-        "id": "11f19c56-695a-43d9-8195-4c479b8433a9",
+        "id": "e49a4317-1e1a-496a-a021-6685bac0c587",
         "tipo": "Manifestação sobre estudo social",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "64c20c19-34d7-42af-82c3-c967bcd76310",
+          "id": "9b78ed2d-f412-44e2-ac56-3e90248b91ef",
           "titulo": "Sandra Petry × Gilmar Petry"
         }
       },
@@ -1549,143 +1549,14 @@
       "interno": null,
       "conferencia": null
     },
-    "6b24ab3b-7bd1-41f4-b689-8a03796aa9ef": {
+    "c1929b82-b484-4e5d-a426-81679ee6195c": {
       "prazo": {
-        "id": "6b24ab3b-7bd1-41f4-b689-8a03796aa9ef",
+        "id": "c1929b82-b484-4e5d-a426-81679ee6195c",
         "tipo": "Contrarrazões ao recurso inominado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "e5850788-ceb8-425c-ac77-1e40a9bcf52b",
-          "titulo": "Jussara Junkes Lopes × Voa Brasil Linhas Aéreas S.A."
-        }
-      },
-      "tipo": "Contrarrazões ao recurso inominado",
-      "fim": "2026-11-09",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TJSC",
-        "proprio": true,
-        "publicacao": "2026-10-23",
-        "inicio": "2026-10-26",
-        "fim": "2026-11-09",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-23",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-24",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-10-25",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-10-26",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "b75f0bcd-928b-4263-bedf-5443d2556dfb": {
-      "prazo": {
-        "id": "b75f0bcd-928b-4263-bedf-5443d2556dfb",
-        "tipo": "Contrarrazões ao recurso inominado",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "865d4c2f-d693-4cf9-852d-618a67127271",
+          "id": "387b5038-fe87-49b2-ad32-6bef8ecf2e41",
           "titulo": "Felipe Krause Cardoso × Saúde Litoral Planos de Saúde S.A."
         }
       },
@@ -1807,14 +1678,14 @@
       "interno": null,
       "conferencia": null
     },
-    "d78844c6-2d21-4490-81b7-346179ebee10": {
+    "92ed058f-8b93-4ec8-981c-8ddad4ac5cb3": {
       "prazo": {
-        "id": "d78844c6-2d21-4490-81b7-346179ebee10",
+        "id": "92ed058f-8b93-4ec8-981c-8ddad4ac5cb3",
         "tipo": "Manifestação sobre laudo pericial",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "c577d6de-4c8f-41a6-967f-ff6a61d0a6cf",
+          "id": "37f6a155-b207-4cfe-9af0-a5ee8184ff0d",
           "titulo": "Caroline Costa Ramos × Farmácia Rio Manso Ltda."
         }
       },
@@ -1936,50 +1807,68 @@
       "interno": null,
       "conferencia": null
     },
-    "0121b813-19a8-46fb-82ad-a39e2b0ab3ec": {
+    "5c59ead2-5e14-4345-b476-4311b9fe4e8f": {
       "prazo": {
-        "id": "0121b813-19a8-46fb-82ad-a39e2b0ab3ec",
-        "tipo": "Recurso ordinário",
+        "id": "5c59ead2-5e14-4345-b476-4311b9fe4e8f",
+        "tipo": "Contrarrazões ao recurso inominado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "dbb4f8d2-7a9b-4e60-874c-f5a84be571de",
-          "titulo": "Everton Wolff Nunes × Panificadora Bela Vista S.A."
+          "id": "aad34b1d-d376-4dc7-9172-61277253c163",
+          "titulo": "Jussara Junkes Lopes × Voa Brasil Linhas Aéreas S.A."
         }
       },
-      "tipo": "Recurso ordinário",
+      "tipo": "Contrarrazões ao recurso inominado",
       "fim": "2026-11-09",
-      "dias": 8,
+      "dias": 10,
       "contagem": "uteis",
       "digitada": false,
       "aberta": {
-        "tribunal": "TRT12",
+        "tribunal": "TJSC",
         "proprio": true,
-        "publicacao": "2026-10-27",
-        "inicio": "2026-10-28",
+        "publicacao": "2026-10-23",
+        "inicio": "2026-10-26",
         "fim": "2026-11-09",
-        "dias": 8,
+        "dias": 10,
         "contagem": "uteis",
         "prorrogadoDe": null,
         "linha": [
           {
-            "dia": "2026-10-27",
+            "dia": "2026-10-23",
             "tipo": "publicacao"
           },
           {
-            "dia": "2026-10-28",
+            "dia": "2026-10-24",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-10-25",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-10-26",
             "tipo": "contado",
             "n": 1
           },
           {
-            "dia": "2026-10-29",
+            "dia": "2026-10-27",
             "tipo": "contado",
             "n": 2
           },
           {
-            "dia": "2026-10-30",
+            "dia": "2026-10-28",
             "tipo": "contado",
             "n": 3
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 5
           },
           {
             "dia": "2026-10-31",
@@ -1997,22 +1886,22 @@
           {
             "dia": "2026-11-03",
             "tipo": "contado",
-            "n": 4
+            "n": 6
           },
           {
             "dia": "2026-11-04",
             "tipo": "contado",
-            "n": 5
+            "n": 7
           },
           {
             "dia": "2026-11-05",
             "tipo": "contado",
-            "n": 6
+            "n": 8
           },
           {
             "dia": "2026-11-06",
             "tipo": "contado",
-            "n": 7
+            "n": 9
           },
           {
             "dia": "2026-11-07",
@@ -2025,13 +1914,13 @@
           {
             "dia": "2026-11-09",
             "tipo": "contado",
-            "n": 8,
+            "n": 10,
             "vence": true
           }
         ]
       },
-      "regra": "Dias úteis (CLT, art. 775)",
-      "calendario": "TRT12, com os feriados cadastrados para a comarca de Itajaí",
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
       "calendarioCompleto": true,
       "fora": [
         {
@@ -2047,14 +1936,14 @@
       "interno": null,
       "conferencia": null
     },
-    "b9529563-1bfe-4f51-9c75-929f912aa899": {
+    "dbb48eaa-ced8-40da-bcb1-6035ef87e6f9": {
       "prazo": {
-        "id": "b9529563-1bfe-4f51-9c75-929f912aa899",
+        "id": "dbb48eaa-ced8-40da-bcb1-6035ef87e6f9",
         "tipo": "Recurso ordinário",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "390500a5-0ab9-4175-a199-280462f433e4",
+          "id": "ac0fe151-b859-482d-afd8-fb872e7a8b30",
           "titulo": "Ivone Pacheco × Panificadora Vento Sul Ltda."
         }
       },
@@ -2158,14 +2047,14 @@
       "interno": null,
       "conferencia": null
     },
-    "8b275a7f-0ef3-4f05-ac87-a46ce0cdcbcb": {
+    "19cf318e-7773-410f-9734-3da4b24d1238": {
       "prazo": {
-        "id": "8b275a7f-0ef3-4f05-ac87-a46ce0cdcbcb",
+        "id": "19cf318e-7773-410f-9734-3da4b24d1238",
         "tipo": "Recurso ordinário",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "774404cf-20d2-4646-ad0e-c9799b8a0885",
+          "id": "933a643b-2340-4559-8848-6ccdae8454e0",
           "titulo": "Diego Werner Bernardi × Restaurante Serra Dourada S.A."
         }
       },
@@ -2269,68 +2158,50 @@
       "interno": null,
       "conferencia": null
     },
-    "6c0f77c5-504f-43ed-ab70-c7671b14ae9d": {
+    "abd7ce9e-6739-4c6c-ae5c-03bbc0527b29": {
       "prazo": {
-        "id": "6c0f77c5-504f-43ed-ab70-c7671b14ae9d",
-        "tipo": "Entregar a versão final ao cliente",
+        "id": "abd7ce9e-6739-4c6c-ae5c-03bbc0527b29",
+        "tipo": "Recurso ordinário",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "844d638c-8aae-4a8b-b6a8-3fbb7ddbb772",
-          "titulo": "Usinagem Ipê Amarelo Ltda. · acordo de sócios"
+          "id": "e5f24d2f-c2cc-4d7b-8d27-6e869d5bce26",
+          "titulo": "Everton Wolff Nunes × Panificadora Bela Vista S.A."
         }
       },
-      "tipo": "Entregar a versão final ao cliente",
+      "tipo": "Recurso ordinário",
       "fim": "2026-11-09",
-      "dias": 10,
+      "dias": 8,
       "contagem": "uteis",
       "digitada": false,
       "aberta": {
-        "tribunal": "TJSC",
+        "tribunal": "TRT12",
         "proprio": true,
-        "publicacao": "2026-10-23",
-        "inicio": "2026-10-26",
+        "publicacao": "2026-10-27",
+        "inicio": "2026-10-28",
         "fim": "2026-11-09",
-        "dias": 10,
+        "dias": 8,
         "contagem": "uteis",
         "prorrogadoDe": null,
         "linha": [
           {
-            "dia": "2026-10-23",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-24",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-10-25",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-10-26",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
             "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 2
+            "tipo": "publicacao"
           },
           {
             "dia": "2026-10-28",
             "tipo": "contado",
-            "n": 3
+            "n": 1
           },
           {
             "dia": "2026-10-29",
             "tipo": "contado",
-            "n": 4
+            "n": 2
           },
           {
             "dia": "2026-10-30",
             "tipo": "contado",
-            "n": 5
+            "n": 3
           },
           {
             "dia": "2026-10-31",
@@ -2348,22 +2219,22 @@
           {
             "dia": "2026-11-03",
             "tipo": "contado",
-            "n": 6
+            "n": 4
           },
           {
             "dia": "2026-11-04",
             "tipo": "contado",
-            "n": 7
+            "n": 5
           },
           {
             "dia": "2026-11-05",
             "tipo": "contado",
-            "n": 8
+            "n": 6
           },
           {
             "dia": "2026-11-06",
             "tipo": "contado",
-            "n": 9
+            "n": 7
           },
           {
             "dia": "2026-11-07",
@@ -2376,13 +2247,13 @@
           {
             "dia": "2026-11-09",
             "tipo": "contado",
-            "n": 10,
+            "n": 8,
             "vence": true
           }
         ]
       },
-      "regra": "Dias úteis (CPC, art. 219)",
-      "calendario": "TJSC",
+      "regra": "Dias úteis (CLT, art. 775)",
+      "calendario": "TRT12, com os feriados cadastrados para a comarca de Itajaí",
       "calendarioCompleto": true,
       "fora": [
         {
@@ -2398,14 +2269,14 @@
       "interno": null,
       "conferencia": null
     },
-    "1dd92f3d-dbc3-4d4a-b441-8f8557c9b463": {
+    "857bf59a-5e89-4e04-a7ea-bfb5616c2263": {
       "prazo": {
-        "id": "1dd92f3d-dbc3-4d4a-b441-8f8557c9b463",
+        "id": "857bf59a-5e89-4e04-a7ea-bfb5616c2263",
         "tipo": "Entregar a versão final ao cliente",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "60a526f7-23c5-4382-9a31-efe3482d8881",
+          "id": "3d8f736c-22bd-4e93-b454-ac677ad26833",
           "titulo": "Restaurante Serra Dourada S.A. · revisão de contratos com fornecedores"
         }
       },
@@ -2527,55 +2398,35 @@
       "interno": null,
       "conferencia": null
     },
-    "062ecfa8-143e-4c69-8a81-36feabf32c75": {
+    "4274652f-bc4e-4d89-bae2-699b19856133": {
       "prazo": {
-        "id": "062ecfa8-143e-4c69-8a81-36feabf32c75",
-        "tipo": "Rol de testemunhas",
+        "id": "4274652f-bc4e-4d89-bae2-699b19856133",
+        "tipo": "Entregar a versão final ao cliente",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "60a9d48c-04aa-4247-8310-565a387e0395",
-          "titulo": "Karina Nunes × Jussara Campos"
+          "id": "67a41f1f-9eb3-4c9b-93ed-01629bf47d03",
+          "titulo": "Usinagem Ipê Amarelo Ltda. · acordo de sócios"
         }
       },
-      "tipo": "Rol de testemunhas",
-      "fim": "2026-11-10",
-      "dias": 15,
+      "tipo": "Entregar a versão final ao cliente",
+      "fim": "2026-11-09",
+      "dias": 10,
       "contagem": "uteis",
       "digitada": false,
       "aberta": {
         "tribunal": "TJSC",
         "proprio": true,
-        "publicacao": "2026-10-19",
-        "inicio": "2026-10-20",
-        "fim": "2026-11-10",
-        "dias": 15,
+        "publicacao": "2026-10-23",
+        "inicio": "2026-10-26",
+        "fim": "2026-11-09",
+        "dias": 10,
         "contagem": "uteis",
         "prorrogadoDe": null,
         "linha": [
           {
-            "dia": "2026-10-19",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-20",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-21",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-22",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
             "dia": "2026-10-23",
-            "tipo": "contado",
-            "n": 4
+            "tipo": "publicacao"
           },
           {
             "dia": "2026-10-24",
@@ -2588,27 +2439,27 @@
           {
             "dia": "2026-10-26",
             "tipo": "contado",
-            "n": 5
+            "n": 1
           },
           {
             "dia": "2026-10-27",
             "tipo": "contado",
-            "n": 6
+            "n": 2
           },
           {
             "dia": "2026-10-28",
             "tipo": "contado",
-            "n": 7
+            "n": 3
           },
           {
             "dia": "2026-10-29",
             "tipo": "contado",
-            "n": 8
+            "n": 4
           },
           {
             "dia": "2026-10-30",
             "tipo": "contado",
-            "n": 9
+            "n": 5
           },
           {
             "dia": "2026-10-31",
@@ -2626,22 +2477,22 @@
           {
             "dia": "2026-11-03",
             "tipo": "contado",
-            "n": 10
+            "n": 6
           },
           {
             "dia": "2026-11-04",
             "tipo": "contado",
-            "n": 11
+            "n": 7
           },
           {
             "dia": "2026-11-05",
             "tipo": "contado",
-            "n": 12
+            "n": 8
           },
           {
             "dia": "2026-11-06",
             "tipo": "contado",
-            "n": 13
+            "n": 9
           },
           {
             "dia": "2026-11-07",
@@ -2654,18 +2505,13 @@
           {
             "dia": "2026-11-09",
             "tipo": "contado",
-            "n": 14
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 15,
+            "n": 10,
             "vence": true
           }
         ]
       },
       "regra": "Dias úteis (CPC, art. 219)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
+      "calendario": "TJSC",
       "calendarioCompleto": true,
       "fora": [
         {
@@ -2681,14 +2527,14 @@
       "interno": null,
       "conferencia": null
     },
-    "d8b0563c-2814-400c-80e9-04fd0d849074": {
+    "c994cfe3-3873-4c0c-bb1c-79fbf2e2d237": {
       "prazo": {
-        "id": "d8b0563c-2814-400c-80e9-04fd0d849074",
+        "id": "c994cfe3-3873-4c0c-bb1c-79fbf2e2d237",
         "tipo": "Contrarrazões de apelação",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "bdb0e572-29f3-41ed-ba99-e54d4308db95",
+          "id": "cab66b73-9627-4b6f-80a8-f61d9766b059",
           "titulo": "Karina Dalmolin × Marli Probst"
         }
       },
@@ -2835,14 +2681,14 @@
       "interno": null,
       "conferencia": null
     },
-    "52fb1170-9fc7-4ec8-b5c9-dbb92e72f462": {
+    "446ba4a2-d6d3-42e1-b3b1-ad4ff12a6335": {
       "prazo": {
-        "id": "52fb1170-9fc7-4ec8-b5c9-dbb92e72f462",
+        "id": "446ba4a2-d6d3-42e1-b3b1-ad4ff12a6335",
         "tipo": "Réplica à contestação",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "4676d0cf-1733-4a28-b6a7-5e63bb3bd974",
+          "id": "84c53236-3661-4f5e-84b6-af3ec9907849",
           "titulo": "Eliane Schneider × Instituto Nacional do Seguro Social"
         }
       },
@@ -2990,421 +2836,88 @@
       "interno": null,
       "conferencia": null
     },
-    "334af7c5-6113-4af4-9557-b1453f4bb288": {
+    "58445e9c-07fe-4ce3-a4f7-ed42bf59e0f5": {
       "prazo": {
-        "id": "334af7c5-6113-4af4-9557-b1453f4bb288",
-        "tipo": "Contrarrazões ao recurso inominado",
+        "id": "58445e9c-07fe-4ce3-a4f7-ed42bf59e0f5",
+        "tipo": "Rol de testemunhas",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "edc455a2-b416-451b-a6d0-73c7bdcd32a5",
-          "titulo": "Felipe Pires Cardoso × Instituto Nacional do Seguro Social"
+          "id": "f61003f9-4070-4672-a808-95fc66049326",
+          "titulo": "Karina Nunes × Jussara Campos"
         }
       },
-      "tipo": "Contrarrazões ao recurso inominado",
+      "tipo": "Rol de testemunhas",
       "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TRF4",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana",
-            "motivo": "Dia de Todos os Santos"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TRF4, com os feriados cadastrados para a comarca de Joinville",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "dee7b99e-bca6-470d-8345-29aabed35939": {
-      "prazo": {
-        "id": "dee7b99e-bca6-470d-8345-29aabed35939",
-        "tipo": "Contrarrazões ao recurso inominado",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "adfd428e-1db5-4d48-8eee-c96007328f64",
-          "titulo": "Gabriela Pires × Instituto Nacional do Seguro Social"
-        }
-      },
-      "tipo": "Contrarrazões ao recurso inominado",
-      "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TRF4",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana",
-            "motivo": "Dia de Todos os Santos"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TRF4, com os feriados cadastrados para a comarca de Balneário Camboriú",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "e45421dc-87f0-4df6-8361-913700c7834e": {
-      "prazo": {
-        "id": "e45421dc-87f0-4df6-8361-913700c7834e",
-        "tipo": "Contrarrazões ao recurso inominado",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "df2a26f1-b4e8-4bf2-aa66-ce6a13bc55f7",
-          "titulo": "Isabela Cardoso Costa × Instituto Nacional do Seguro Social"
-        }
-      },
-      "tipo": "Contrarrazões ao recurso inominado",
-      "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TRF4",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana",
-            "motivo": "Dia de Todos os Santos"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TRF4, com os feriados cadastrados para a comarca de São Bento do Sul",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "88bbb018-e9c5-4a51-9ff5-84c4925637a5": {
-      "prazo": {
-        "id": "88bbb018-e9c5-4a51-9ff5-84c4925637a5",
-        "tipo": "Contrarrazões ao recurso inominado",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "01037841-88a6-455d-be30-740e46590825",
-          "titulo": "Ricardo Campos × Mercado Virtual Brasil Ltda."
-        }
-      },
-      "tipo": "Contrarrazões ao recurso inominado",
-      "fim": "2026-11-10",
-      "dias": 10,
+      "dias": 15,
       "contagem": "uteis",
       "digitada": false,
       "aberta": {
         "tribunal": "TJSC",
         "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
+        "publicacao": "2026-10-19",
+        "inicio": "2026-10-20",
         "fim": "2026-11-10",
-        "dias": 10,
+        "dias": 15,
         "contagem": "uteis",
         "prorrogadoDe": null,
         "linha": [
           {
-            "dia": "2026-10-26",
+            "dia": "2026-10-19",
             "tipo": "publicacao"
           },
           {
-            "dia": "2026-10-27",
+            "dia": "2026-10-20",
             "tipo": "contado",
             "n": 1
           },
           {
-            "dia": "2026-10-28",
+            "dia": "2026-10-21",
             "tipo": "contado",
             "n": 2
           },
           {
-            "dia": "2026-10-29",
+            "dia": "2026-10-22",
             "tipo": "contado",
             "n": 3
           },
           {
-            "dia": "2026-10-30",
+            "dia": "2026-10-23",
             "tipo": "contado",
             "n": 4
+          },
+          {
+            "dia": "2026-10-24",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-10-25",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-10-26",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 9
           },
           {
             "dia": "2026-10-31",
@@ -3422,22 +2935,22 @@
           {
             "dia": "2026-11-03",
             "tipo": "contado",
-            "n": 5
+            "n": 10
           },
           {
             "dia": "2026-11-04",
             "tipo": "contado",
-            "n": 6
+            "n": 11
           },
           {
             "dia": "2026-11-05",
             "tipo": "contado",
-            "n": 7
+            "n": 12
           },
           {
             "dia": "2026-11-06",
             "tipo": "contado",
-            "n": 8
+            "n": 13
           },
           {
             "dia": "2026-11-07",
@@ -3450,18 +2963,18 @@
           {
             "dia": "2026-11-09",
             "tipo": "contado",
-            "n": 9
+            "n": 14
           },
           {
             "dia": "2026-11-10",
             "tipo": "contado",
-            "n": 10,
+            "n": 15,
             "vence": true
           }
         ]
       },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de Jaraguá do Sul",
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
       "calendarioCompleto": true,
       "fora": [
         {
@@ -3477,622 +2990,14 @@
       "interno": null,
       "conferencia": null
     },
-    "ed6ccfe6-da9a-488c-ab38-028320d93d75": {
+    "f025a514-c1ec-4ba4-a76b-f3b813ec4ef5": {
       "prazo": {
-        "id": "ed6ccfe6-da9a-488c-ab38-028320d93d75",
+        "id": "f025a514-c1ec-4ba4-a76b-f3b813ec4ef5",
         "tipo": "Contrarrazões ao recurso inominado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "30043b75-8aa4-44bc-8fc4-10c21399d9dd",
-          "titulo": "Leonardo Zimmermann Farias × Instituto Nacional do Seguro Social"
-        }
-      },
-      "tipo": "Contrarrazões ao recurso inominado",
-      "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TRF4",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana",
-            "motivo": "Dia de Todos os Santos"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TRF4, com os feriados cadastrados para a comarca de Joinville",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "1972aea7-522a-4229-904b-5d72afbdf5ec": {
-      "prazo": {
-        "id": "1972aea7-522a-4229-904b-5d72afbdf5ec",
-        "tipo": "Contrarrazões ao recurso inominado",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "ba7967b7-b2bb-4e2e-858a-16c41fc1596e",
-          "titulo": "Vinícius Goulart × Instituto Nacional do Seguro Social"
-        }
-      },
-      "tipo": "Contrarrazões ao recurso inominado",
-      "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TRF4",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana",
-            "motivo": "Dia de Todos os Santos"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TRF4, com os feriados cadastrados para a comarca de Joinville",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "75b08fc0-b269-4beb-8aba-c21377a52f69": {
-      "prazo": {
-        "id": "75b08fc0-b269-4beb-8aba-c21377a52f69",
-        "tipo": "Manifestação sobre laudo pericial",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "5db120a0-867e-429f-9dbf-d35168f5029a",
-          "titulo": "Felipe Bernardi Lehmann × Instituto Nacional do Seguro Social"
-        }
-      },
-      "tipo": "Manifestação sobre laudo pericial",
-      "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TRF4",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana",
-            "motivo": "Dia de Todos os Santos"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TRF4, com os feriados cadastrados para a comarca de Itajaí",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "5cb42145-1952-4063-b74f-e98c567ec0d7": {
-      "prazo": {
-        "id": "5cb42145-1952-4063-b74f-e98c567ec0d7",
-        "tipo": "Recurso inominado",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "252f8ee5-51bc-430d-b730-0fa396aeadaa",
-          "titulo": "João Pedro Antunes × Banco Horizonte S.A."
-        }
-      },
-      "tipo": "Recurso inominado",
-      "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TJSC",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de Jaraguá do Sul",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "0ca4e908-5a58-4b6b-8b61-2d13cd197e79": {
-      "prazo": {
-        "id": "0ca4e908-5a58-4b6b-8b61-2d13cd197e79",
-        "tipo": "Manifestação sobre a contestação",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "b77b792e-1f98-4423-87a3-dfe306027a51",
-          "titulo": "Lucas Amaral Silveira × Mercado Virtual Brasil Ltda."
-        }
-      },
-      "tipo": "Manifestação sobre a contestação",
-      "fim": "2026-11-10",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TJSC",
-        "proprio": true,
-        "publicacao": "2026-10-26",
-        "inicio": "2026-10-27",
-        "fim": "2026-11-10",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-26",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-27",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de Balneário Camboriú",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "ce6df2e3-8cfc-46ec-9d1b-d798a43ae6b9": {
-      "prazo": {
-        "id": "ce6df2e3-8cfc-46ec-9d1b-d798a43ae6b9",
-        "tipo": "Contrarrazões ao recurso inominado",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "0251d80d-a962-4422-918e-5ae663ba3840",
+          "id": "20468bfd-8878-4253-8102-42d19ba564a7",
           "titulo": "Douglas Werner × Instituto Nacional do Seguro Social"
         }
       },
@@ -4207,14 +3112,1109 @@
       "interno": null,
       "conferencia": null
     },
-    "2a478139-a5d1-47f0-b037-362bcb912fc1": {
+    "ba4ac926-ad45-4e63-8ef6-e440dca38ed1": {
       "prazo": {
-        "id": "2a478139-a5d1-47f0-b037-362bcb912fc1",
+        "id": "ba4ac926-ad45-4e63-8ef6-e440dca38ed1",
+        "tipo": "Contrarrazões ao recurso inominado",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "e5d92fd1-2218-4054-934a-38ce653ece1b",
+          "titulo": "Felipe Pires Cardoso × Instituto Nacional do Seguro Social"
+        }
+      },
+      "tipo": "Contrarrazões ao recurso inominado",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRF4",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana",
+            "motivo": "Dia de Todos os Santos"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TRF4, com os feriados cadastrados para a comarca de Joinville",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "489f60f7-3177-4d43-a487-3dc77b00a661": {
+      "prazo": {
+        "id": "489f60f7-3177-4d43-a487-3dc77b00a661",
+        "tipo": "Recurso inominado",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "80f3daf9-5d4c-4ce3-9256-b5328dce68c9",
+          "titulo": "João Pedro Antunes × Banco Horizonte S.A."
+        }
+      },
+      "tipo": "Recurso inominado",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Jaraguá do Sul",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "c936059b-91a8-4ef1-b377-0d78b2d8848d": {
+      "prazo": {
+        "id": "c936059b-91a8-4ef1-b377-0d78b2d8848d",
+        "tipo": "Manifestação sobre laudo pericial",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "e269a5dc-05d1-4ee0-b142-6707e175e7ae",
+          "titulo": "Felipe Bernardi Lehmann × Instituto Nacional do Seguro Social"
+        }
+      },
+      "tipo": "Manifestação sobre laudo pericial",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRF4",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana",
+            "motivo": "Dia de Todos os Santos"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TRF4, com os feriados cadastrados para a comarca de Itajaí",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "5493dcb1-97d7-4c29-9cd2-0ff19a6d3533": {
+      "prazo": {
+        "id": "5493dcb1-97d7-4c29-9cd2-0ff19a6d3533",
+        "tipo": "Manifestação sobre a contestação",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "78f7c4ce-bd59-40dc-938b-5ee6f48cced5",
+          "titulo": "Lucas Amaral Silveira × Mercado Virtual Brasil Ltda."
+        }
+      },
+      "tipo": "Manifestação sobre a contestação",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Balneário Camboriú",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "916b404f-ee3f-40bc-b03d-ee66a8bb5ac7": {
+      "prazo": {
+        "id": "916b404f-ee3f-40bc-b03d-ee66a8bb5ac7",
+        "tipo": "Contrarrazões ao recurso inominado",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "e6abba64-a064-42f5-8c8f-d867c83d3af7",
+          "titulo": "Vinícius Goulart × Instituto Nacional do Seguro Social"
+        }
+      },
+      "tipo": "Contrarrazões ao recurso inominado",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRF4",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana",
+            "motivo": "Dia de Todos os Santos"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TRF4, com os feriados cadastrados para a comarca de Joinville",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "5cab46c5-35b8-4479-af75-1e5521d74991": {
+      "prazo": {
+        "id": "5cab46c5-35b8-4479-af75-1e5521d74991",
+        "tipo": "Contrarrazões ao recurso inominado",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "effa5d94-3376-4bc4-87d1-c964bbfe2363",
+          "titulo": "Gabriela Pires × Instituto Nacional do Seguro Social"
+        }
+      },
+      "tipo": "Contrarrazões ao recurso inominado",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRF4",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana",
+            "motivo": "Dia de Todos os Santos"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TRF4, com os feriados cadastrados para a comarca de Balneário Camboriú",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "d314d82b-f997-4ae4-bed5-71d283cb747b": {
+      "prazo": {
+        "id": "d314d82b-f997-4ae4-bed5-71d283cb747b",
+        "tipo": "Contrarrazões ao recurso inominado",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "91be6410-7d89-42de-b72b-b7fa4a16c5e5",
+          "titulo": "Isabela Cardoso Costa × Instituto Nacional do Seguro Social"
+        }
+      },
+      "tipo": "Contrarrazões ao recurso inominado",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRF4",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana",
+            "motivo": "Dia de Todos os Santos"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TRF4, com os feriados cadastrados para a comarca de São Bento do Sul",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "125ce14b-40af-4119-bd9b-cee06273a331": {
+      "prazo": {
+        "id": "125ce14b-40af-4119-bd9b-cee06273a331",
+        "tipo": "Contrarrazões ao recurso inominado",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "b5d97b2c-27e7-48d7-b5f7-dd9b0169d422",
+          "titulo": "Ricardo Campos × Mercado Virtual Brasil Ltda."
+        }
+      },
+      "tipo": "Contrarrazões ao recurso inominado",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Jaraguá do Sul",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "94b73a27-981c-487d-a903-3d9d1bc9f38c": {
+      "prazo": {
+        "id": "94b73a27-981c-487d-a903-3d9d1bc9f38c",
+        "tipo": "Contrarrazões ao recurso inominado",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "ed60f3b8-cd1b-4ad9-83f5-3f45e80873f1",
+          "titulo": "Leonardo Zimmermann Farias × Instituto Nacional do Seguro Social"
+        }
+      },
+      "tipo": "Contrarrazões ao recurso inominado",
+      "fim": "2026-11-10",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRF4",
+        "proprio": true,
+        "publicacao": "2026-10-26",
+        "inicio": "2026-10-27",
+        "fim": "2026-11-10",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-26",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-27",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana",
+            "motivo": "Dia de Todos os Santos"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TRF4, com os feriados cadastrados para a comarca de Joinville",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "323ebee6-73cf-4edd-ac74-fd05b79a581b": {
+      "prazo": {
+        "id": "323ebee6-73cf-4edd-ac74-fd05b79a581b",
         "tipo": "Entregar a versão final ao cliente",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "ac03e2eb-7d7a-49d2-8a48-cfd006162574",
+          "id": "1d63f806-5ba3-4958-b649-d10fe00fd39e",
           "titulo": "Caroline Amaral · alteração do contrato social"
         }
       },
@@ -4328,14 +4328,14 @@
       "interno": null,
       "conferencia": null
     },
-    "e0152d8d-bd42-480b-a01f-efbd7a842cf1": {
+    "bda8a3ab-4b6a-42af-a8d1-5a97af91d46e": {
       "prazo": {
-        "id": "e0152d8d-bd42-480b-a01f-efbd7a842cf1",
+        "id": "bda8a3ab-4b6a-42af-a8d1-5a97af91d46e",
         "tipo": "Impugnação aos embargos",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "d86219d5-bdae-43c3-989d-49ce2199ef72",
+          "id": "9b0ac7b2-2fd0-454f-928c-d742e2aad173",
           "titulo": "Nelson Schmitt Reinert × Logística Colina Verde S.A."
         }
       },
@@ -4482,24 +4482,24 @@
       "interno": null,
       "conferencia": null
     },
-    "a7c10a87-28b5-4eb9-9174-2516b3b79485": {
+    "b208ebb3-ad3c-4f4c-8090-71f2d3be2910": {
       "prazo": {
-        "id": "a7c10a87-28b5-4eb9-9174-2516b3b79485",
-        "tipo": "Contrarrazões ao recurso inominado",
+        "id": "b208ebb3-ad3c-4f4c-8090-71f2d3be2910",
+        "tipo": "Réplica à defesa",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "e3715900-5bff-44a7-9311-443a40daf869",
-          "titulo": "Luiz Carlos Schmitt Lehmann × Energia Litoral Distribuidora S.A."
+          "id": "82252c72-0a6a-4aa2-9690-74c999b1480a",
+          "titulo": "Ronaldo Pires Wolff × Metalúrgica Pioneira S.A."
         }
       },
-      "tipo": "Contrarrazões ao recurso inominado",
+      "tipo": "Réplica à defesa",
       "fim": "2026-11-11",
       "dias": 10,
       "contagem": "uteis",
       "digitada": false,
       "aberta": {
-        "tribunal": "TJSC",
+        "tribunal": "TRT12",
         "proprio": true,
         "publicacao": "2026-10-27",
         "inicio": "2026-10-28",
@@ -4586,8 +4586,8 @@
           }
         ]
       },
-      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de São Bento do Sul",
+      "regra": "Dias úteis (CLT, art. 775)",
+      "calendario": "TRT12, com os feriados cadastrados para a comarca de Jaraguá do Sul",
       "calendarioCompleto": true,
       "fora": [
         {
@@ -4603,14 +4603,14 @@
       "interno": null,
       "conferencia": null
     },
-    "c6ccbfa4-63cb-4e07-9039-c06069694273": {
+    "ad392385-1429-4a11-9dba-e42cdc47bf02": {
       "prazo": {
-        "id": "c6ccbfa4-63cb-4e07-9039-c06069694273",
+        "id": "ad392385-1429-4a11-9dba-e42cdc47bf02",
         "tipo": "Contrarrazões ao recurso inominado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "c32e9bae-9aa8-4948-94f9-bdd85a79c11b",
+          "id": "1ac527b9-d51f-40b0-b1ce-3fccd22c6d4e",
           "titulo": "Wagner Medeiros Klein × Conecta Sul Telecomunicações S.A."
         }
       },
@@ -4724,14 +4724,135 @@
       "interno": null,
       "conferencia": null
     },
-    "d56d34aa-476e-478a-b8f5-57e091c66e5d": {
+    "865152a6-a074-45c9-89fe-7c58e55d4026": {
       "prazo": {
-        "id": "d56d34aa-476e-478a-b8f5-57e091c66e5d",
+        "id": "865152a6-a074-45c9-89fe-7c58e55d4026",
+        "tipo": "Réplica à defesa",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "9ae4b7c3-31a2-44a4-a72f-1ffac37cf7e7",
+          "titulo": "Jaqueline Schulz Bortolini × Supermercado Lagoa Funda Ltda."
+        }
+      },
+      "tipo": "Réplica à defesa",
+      "fim": "2026-11-11",
+      "dias": 10,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRT12",
+        "proprio": true,
+        "publicacao": "2026-10-27",
+        "inicio": "2026-10-28",
+        "fim": "2026-11-11",
+        "dias": 10,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-27",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-11",
+            "tipo": "contado",
+            "n": 10,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (CLT, art. 775)",
+      "calendario": "TRT12, com os feriados cadastrados para a comarca de Brusque",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "99d86b06-a720-4cbc-8f3b-e00dc547dbd0": {
+      "prazo": {
+        "id": "99d86b06-a720-4cbc-8f3b-e00dc547dbd0",
         "tipo": "Recurso inominado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "3f049ec3-a1e9-487e-83cb-37fcf780451d",
+          "id": "223ccc0f-999c-4462-abaa-11b9989a3daa",
           "titulo": "Gisele Goulart × Instituto Nacional do Seguro Social"
         }
       },
@@ -4846,24 +4967,24 @@
       "interno": null,
       "conferencia": null
     },
-    "364f3a4a-7e45-4733-bf4b-a75ee11819c6": {
+    "6d9d2c57-542e-48e4-9d0f-68741f98f0c6": {
       "prazo": {
-        "id": "364f3a4a-7e45-4733-bf4b-a75ee11819c6",
-        "tipo": "Réplica à defesa",
+        "id": "6d9d2c57-542e-48e4-9d0f-68741f98f0c6",
+        "tipo": "Contrarrazões ao recurso inominado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "f5fb96c6-eaf6-4bf2-8c21-f2401285d483",
-          "titulo": "Ronaldo Pires Wolff × Metalúrgica Pioneira S.A."
+          "id": "de7aa048-c64d-4427-8561-86ac69ce4152",
+          "titulo": "Luiz Carlos Schmitt Lehmann × Energia Litoral Distribuidora S.A."
         }
       },
-      "tipo": "Réplica à defesa",
+      "tipo": "Contrarrazões ao recurso inominado",
       "fim": "2026-11-11",
       "dias": 10,
       "contagem": "uteis",
       "digitada": false,
       "aberta": {
-        "tribunal": "TRT12",
+        "tribunal": "TJSC",
         "proprio": true,
         "publicacao": "2026-10-27",
         "inicio": "2026-10-28",
@@ -4950,8 +5071,8 @@
           }
         ]
       },
-      "regra": "Dias úteis (CLT, art. 775)",
-      "calendario": "TRT12, com os feriados cadastrados para a comarca de Jaraguá do Sul",
+      "regra": "Dias úteis (Lei 9.099/1995, art. 12-A)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de São Bento do Sul",
       "calendarioCompleto": true,
       "fora": [
         {
@@ -4967,14 +5088,14 @@
       "interno": null,
       "conferencia": null
     },
-    "2256d357-d86b-490c-bb4f-9a44c113ff73": {
+    "9456e751-37d6-43b0-a91b-5f73121cb063": {
       "prazo": {
-        "id": "2256d357-d86b-490c-bb4f-9a44c113ff73",
+        "id": "9456e751-37d6-43b0-a91b-5f73121cb063",
         "tipo": "Contrarrazões ao recurso inominado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "11e9acf0-3702-4f87-912f-778d3fa7b849",
+          "id": "fd33b529-6624-4938-8f68-42e850549661",
           "titulo": "Juliano Krause × Voa Brasil Linhas Aéreas S.A."
         }
       },
@@ -5088,135 +5209,14 @@
       "interno": null,
       "conferencia": null
     },
-    "5afc373a-523a-440c-bfbd-77c8328bf6f9": {
+    "6d886123-5e9b-4d69-91a4-81111d7f417a": {
       "prazo": {
-        "id": "5afc373a-523a-440c-bfbd-77c8328bf6f9",
-        "tipo": "Réplica à defesa",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "1da51af7-c5eb-40cf-91de-f1a403b96243",
-          "titulo": "Jaqueline Schulz Bortolini × Supermercado Lagoa Funda Ltda."
-        }
-      },
-      "tipo": "Réplica à defesa",
-      "fim": "2026-11-11",
-      "dias": 10,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TRT12",
-        "proprio": true,
-        "publicacao": "2026-10-27",
-        "inicio": "2026-10-28",
-        "fim": "2026-11-11",
-        "dias": 10,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-27",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-11",
-            "tipo": "contado",
-            "n": 10,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (CLT, art. 775)",
-      "calendario": "TRT12, com os feriados cadastrados para a comarca de Brusque",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "3b75694d-3c56-4420-92cb-e6848fe28039": {
-      "prazo": {
-        "id": "3b75694d-3c56-4420-92cb-e6848fe28039",
+        "id": "6d886123-5e9b-4d69-91a4-81111d7f417a",
         "tipo": "Juntar CNIS atualizado",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "b150e38c-589b-4a53-983a-d6c533f26320",
+          "id": "f543fa9b-fe6d-4c81-aecb-95d509b5c10f",
           "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social"
         }
       },
@@ -5331,14 +5331,14 @@
       "interno": null,
       "conferencia": null
     },
-    "b0ec956f-e95c-4589-bad4-e2e18893564f": {
+    "4a6975f2-4fb8-41c5-a2ec-a1ee84ca7860": {
       "prazo": {
-        "id": "b0ec956f-e95c-4589-bad4-e2e18893564f",
+        "id": "4a6975f2-4fb8-41c5-a2ec-a1ee84ca7860",
         "tipo": "Entregar a versão final ao cliente",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "c0e33b95-bc6b-4438-8a5a-5f00a4b811ef",
+          "id": "3c900642-bc7a-4c5f-8c9a-ebcc061f780e",
           "titulo": "Panificadora Bela Vista Ltda. · registro de marca"
         }
       },
@@ -5452,14 +5452,14 @@
       "interno": null,
       "conferencia": null
     },
-    "58be1360-208c-43d7-b18d-ed7407713bea": {
+    "b45240a8-9692-4f6c-911e-c2feb829e4f9": {
       "prazo": {
-        "id": "58be1360-208c-43d7-b18d-ed7407713bea",
+        "id": "b45240a8-9692-4f6c-911e-c2feb829e4f9",
         "tipo": "Apelação",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "f2ba07bd-2252-4c0d-834e-e28125060547",
+          "id": "d7bc43b6-3488-405e-a8b3-80c938c7483f",
           "titulo": "Juliana Kretzer × Luiz Carlos Lehmann"
         }
       },
@@ -5606,14 +5606,14 @@
       "interno": null,
       "conferencia": null
     },
-    "7bcf0f17-2466-450f-a261-5c28d25ae1a1": {
+    "5c3efa8a-50a9-47ef-93ae-9453717a21cf": {
       "prazo": {
-        "id": "7bcf0f17-2466-450f-a261-5c28d25ae1a1",
+        "id": "5c3efa8a-50a9-47ef-93ae-9453717a21cf",
         "tipo": "Impugnação aos embargos",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "7e60b4c7-5aee-4fa3-b895-3658def90ff2",
+          "id": "dc3efdf3-007c-4527-9053-3b1faa8c123a",
           "titulo": "Logística Ribeirão Verde Ltda. × Bruna Dalmolin Bittencourt"
         }
       },
@@ -5760,14 +5760,14 @@
       "interno": null,
       "conferencia": null
     },
-    "bf9e20c1-8e87-43ce-a870-5af9b3f86eb4": {
+    "6db23b21-855d-4da3-9511-f6795cd21d03": {
       "prazo": {
-        "id": "bf9e20c1-8e87-43ce-a870-5af9b3f86eb4",
+        "id": "6db23b21-855d-4da3-9511-f6795cd21d03",
         "tipo": "Impugnação ao laudo",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "f93d162d-93eb-4b68-8fcc-39dfc0bc510c",
+          "id": "6484d432-f6fc-4f4e-97db-7430f7099d76",
           "titulo": "Renata Cordeiro × Clínica Sorriso Pleno"
         }
       },
@@ -5914,14 +5914,14 @@
       "interno": null,
       "conferencia": null
     },
-    "046076ac-5086-41d3-bd03-5758f46bed71": {
+    "46984440-5e6e-4d60-8159-bb4125920311": {
       "prazo": {
-        "id": "046076ac-5086-41d3-bd03-5758f46bed71",
+        "id": "46984440-5e6e-4d60-8159-bb4125920311",
         "tipo": "Indicar bens à penhora",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "ed0e951c-13ca-437b-a4ed-ef34d6efa86a",
+          "id": "99aa9330-732e-4362-b71b-16fc8176ee42",
           "titulo": "Panificadora Bela Vista S.A. × Karina Costa"
         }
       },
@@ -6068,14 +6068,14 @@
       "interno": null,
       "conferencia": null
     },
-    "9f093f49-a385-4282-bc97-59634a11ef58": {
+    "e1774952-24ac-40a1-9cbc-9761acc9b670": {
       "prazo": {
-        "id": "9f093f49-a385-4282-bc97-59634a11ef58",
+        "id": "e1774952-24ac-40a1-9cbc-9761acc9b670",
         "tipo": "Embargos à execução fiscal",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "057f0b87-0a1e-4cd0-af01-6f98e4ba7ba7",
+          "id": "d1959f5d-cc78-4973-ac5d-b7a56fd861b1",
           "titulo": "Estado de Santa Catarina × Agropecuária Boa Safra Ltda."
         }
       },
@@ -6331,14 +6331,14 @@
       "interno": null,
       "conferencia": null
     },
-    "27533d8f-69fd-419d-813f-bddb9c9fe2bd": {
+    "80e34d97-bbd6-4360-9cf9-d1db5604ed0a": {
       "prazo": {
-        "id": "27533d8f-69fd-419d-813f-bddb9c9fe2bd",
+        "id": "80e34d97-bbd6-4360-9cf9-d1db5604ed0a",
         "tipo": "Réplica à contestação",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "2a5192bb-4cf4-4091-815b-38bd280bca27",
+          "id": "1e554f6c-4ee7-422a-a4eb-0a95ccef0baf",
           "titulo": "Daniel Bauer Sartori × Instituto Nacional do Seguro Social"
         }
       },
@@ -6495,14 +6495,14 @@
       "interno": null,
       "conferencia": null
     },
-    "cb9890ce-6b0e-4fd8-bb32-820e480c071d": {
+    "def596f4-6b29-45b2-9eaa-464b9962ef00": {
       "prazo": {
-        "id": "cb9890ce-6b0e-4fd8-bb32-820e480c071d",
+        "id": "def596f4-6b29-45b2-9eaa-464b9962ef00",
         "tipo": "Manifestação sobre contestação",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "631d4663-e229-4b7a-b85b-a4f39db42f97",
+          "id": "39feea4f-195f-47cd-973a-781bd79f1e05",
           "titulo": "Simone Gaspar × Condomínio Residencial Atlântico"
         }
       },
@@ -6650,14 +6650,14 @@
       "interno": null,
       "conferencia": null
     },
-    "dfd6e6b9-e3c0-4e01-8b6e-2a2039f93826": {
+    "5c7db697-3a04-4e86-ae5f-c43c2d16c6a8": {
       "prazo": {
-        "id": "dfd6e6b9-e3c0-4e01-8b6e-2a2039f93826",
+        "id": "5c7db697-3a04-4e86-ae5f-c43c2d16c6a8",
         "tipo": "Réplica à contestação",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "b561ece8-39ea-47f8-a33d-d6f116b3a43e",
+          "id": "bc11f93d-2705-49a5-9270-da511531519f",
           "titulo": "Helena Vieira × Instituto Nacional do Seguro Social"
         }
       },
@@ -6811,324 +6811,14 @@
         ]
       }
     },
-    "9f460cbc-df2c-432f-a5e0-fd1e0ad5a261": {
+    "8b310615-6eff-4ac3-868f-e3e40842a94f": {
       "prazo": {
-        "id": "9f460cbc-df2c-432f-a5e0-fd1e0ad5a261",
+        "id": "8b310615-6eff-4ac3-868f-e3e40842a94f",
         "tipo": "Impugnação aos embargos",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "dc94a8f8-2302-4abd-b766-13943c4ebc1b",
-          "titulo": "Panificadora Pedra Branca Ltda. × Metalúrgica Girassol Ltda."
-        }
-      },
-      "tipo": "Impugnação aos embargos",
-      "fim": "2026-11-18",
-      "dias": 15,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TJSC",
-        "proprio": true,
-        "publicacao": "2026-10-27",
-        "inicio": "2026-10-28",
-        "fim": "2026-11-18",
-        "dias": 15,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-27",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-11",
-            "tipo": "contado",
-            "n": 10
-          },
-          {
-            "dia": "2026-11-12",
-            "tipo": "contado",
-            "n": 11
-          },
-          {
-            "dia": "2026-11-13",
-            "tipo": "contado",
-            "n": 12
-          },
-          {
-            "dia": "2026-11-14",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-15",
-            "tipo": "fim_de_semana",
-            "motivo": "Proclamação da República"
-          },
-          {
-            "dia": "2026-11-16",
-            "tipo": "contado",
-            "n": 13
-          },
-          {
-            "dia": "2026-11-17",
-            "tipo": "contado",
-            "n": 14
-          },
-          {
-            "dia": "2026-11-18",
-            "tipo": "contado",
-            "n": 15,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (CPC, art. 219)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de Jaraguá do Sul",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "e722c69e-3bc7-45fd-8b30-2c24b887f908": {
-      "prazo": {
-        "id": "e722c69e-3bc7-45fd-8b30-2c24b887f908",
-        "tipo": "Rol de testemunhas",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "e760f8a2-d633-4446-af30-bc71a53edc62",
-          "titulo": "Daniela Reinert Teixeira × Logística Estrela Guia Ltda."
-        }
-      },
-      "tipo": "Rol de testemunhas",
-      "fim": "2026-11-18",
-      "dias": 15,
-      "contagem": "uteis",
-      "digitada": false,
-      "aberta": {
-        "tribunal": "TJSC",
-        "proprio": true,
-        "publicacao": "2026-10-27",
-        "inicio": "2026-10-28",
-        "fim": "2026-11-18",
-        "dias": 15,
-        "contagem": "uteis",
-        "prorrogadoDe": null,
-        "linha": [
-          {
-            "dia": "2026-10-27",
-            "tipo": "publicacao"
-          },
-          {
-            "dia": "2026-10-28",
-            "tipo": "contado",
-            "n": 1
-          },
-          {
-            "dia": "2026-10-29",
-            "tipo": "contado",
-            "n": 2
-          },
-          {
-            "dia": "2026-10-30",
-            "tipo": "contado",
-            "n": 3
-          },
-          {
-            "dia": "2026-10-31",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-01",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-02",
-            "tipo": "feriado",
-            "motivo": "Finados"
-          },
-          {
-            "dia": "2026-11-03",
-            "tipo": "contado",
-            "n": 4
-          },
-          {
-            "dia": "2026-11-04",
-            "tipo": "contado",
-            "n": 5
-          },
-          {
-            "dia": "2026-11-05",
-            "tipo": "contado",
-            "n": 6
-          },
-          {
-            "dia": "2026-11-06",
-            "tipo": "contado",
-            "n": 7
-          },
-          {
-            "dia": "2026-11-07",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-08",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-09",
-            "tipo": "contado",
-            "n": 8
-          },
-          {
-            "dia": "2026-11-10",
-            "tipo": "contado",
-            "n": 9
-          },
-          {
-            "dia": "2026-11-11",
-            "tipo": "contado",
-            "n": 10
-          },
-          {
-            "dia": "2026-11-12",
-            "tipo": "contado",
-            "n": 11
-          },
-          {
-            "dia": "2026-11-13",
-            "tipo": "contado",
-            "n": 12
-          },
-          {
-            "dia": "2026-11-14",
-            "tipo": "fim_de_semana"
-          },
-          {
-            "dia": "2026-11-15",
-            "tipo": "fim_de_semana",
-            "motivo": "Proclamação da República"
-          },
-          {
-            "dia": "2026-11-16",
-            "tipo": "contado",
-            "n": 13
-          },
-          {
-            "dia": "2026-11-17",
-            "tipo": "contado",
-            "n": 14
-          },
-          {
-            "dia": "2026-11-18",
-            "tipo": "contado",
-            "n": 15,
-            "vence": true
-          }
-        ]
-      },
-      "regra": "Dias úteis (CPC, art. 219)",
-      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
-      "calendarioCompleto": true,
-      "fora": [
-        {
-          "dia": "2026-11-02",
-          "nome": "Finados",
-          "tipo": "nacional"
-        }
-      ],
-      "prorrogadoDe": null,
-      "pelaConta": null,
-      "pelo": "publicacao",
-      "outra": null,
-      "interno": null,
-      "conferencia": null
-    },
-    "14088b23-a373-4102-ac94-8477d6d3b8fe": {
-      "prazo": {
-        "id": "14088b23-a373-4102-ac94-8477d6d3b8fe",
-        "tipo": "Impugnação aos embargos",
-        "situacao": "aberto",
-        "confirmado": true,
-        "processo": {
-          "id": "9f8eefe9-c37f-4a0c-b768-b6dde74b2e32",
+          "id": "c63369f4-1bba-4a3a-9bb0-1fabecec354a",
           "titulo": "Douglas Dalmolin × Transportes Bela Vista Ltda."
         }
       },
@@ -7276,14 +6966,324 @@
       "interno": null,
       "conferencia": null
     },
-    "17480fce-2359-4cc3-93bc-cc1770ec6d98": {
+    "b41b34b0-1589-48ba-840c-f4f51e228298": {
       "prazo": {
-        "id": "17480fce-2359-4cc3-93bc-cc1770ec6d98",
+        "id": "b41b34b0-1589-48ba-840c-f4f51e228298",
+        "tipo": "Impugnação aos embargos",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "22290118-f453-4cbf-92f1-855ae1bbc929",
+          "titulo": "Panificadora Pedra Branca Ltda. × Metalúrgica Girassol Ltda."
+        }
+      },
+      "tipo": "Impugnação aos embargos",
+      "fim": "2026-11-18",
+      "dias": 15,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-27",
+        "inicio": "2026-10-28",
+        "fim": "2026-11-18",
+        "dias": 15,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-27",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-11",
+            "tipo": "contado",
+            "n": 10
+          },
+          {
+            "dia": "2026-11-12",
+            "tipo": "contado",
+            "n": 11
+          },
+          {
+            "dia": "2026-11-13",
+            "tipo": "contado",
+            "n": 12
+          },
+          {
+            "dia": "2026-11-14",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-15",
+            "tipo": "fim_de_semana",
+            "motivo": "Proclamação da República"
+          },
+          {
+            "dia": "2026-11-16",
+            "tipo": "contado",
+            "n": 13
+          },
+          {
+            "dia": "2026-11-17",
+            "tipo": "contado",
+            "n": 14
+          },
+          {
+            "dia": "2026-11-18",
+            "tipo": "contado",
+            "n": 15,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Jaraguá do Sul",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "170d94f6-558e-4dd8-989a-880ce83d6da1": {
+      "prazo": {
+        "id": "170d94f6-558e-4dd8-989a-880ce83d6da1",
+        "tipo": "Rol de testemunhas",
+        "situacao": "aberto",
+        "confirmado": true,
+        "processo": {
+          "id": "a2b61334-cc65-4b66-ab90-8e4f93dcb992",
+          "titulo": "Daniela Reinert Teixeira × Logística Estrela Guia Ltda."
+        }
+      },
+      "tipo": "Rol de testemunhas",
+      "fim": "2026-11-18",
+      "dias": 15,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-27",
+        "inicio": "2026-10-28",
+        "fim": "2026-11-18",
+        "dias": 15,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-27",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-28",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-11",
+            "tipo": "contado",
+            "n": 10
+          },
+          {
+            "dia": "2026-11-12",
+            "tipo": "contado",
+            "n": 11
+          },
+          {
+            "dia": "2026-11-13",
+            "tipo": "contado",
+            "n": 12
+          },
+          {
+            "dia": "2026-11-14",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-15",
+            "tipo": "fim_de_semana",
+            "motivo": "Proclamação da República"
+          },
+          {
+            "dia": "2026-11-16",
+            "tipo": "contado",
+            "n": 13
+          },
+          {
+            "dia": "2026-11-17",
+            "tipo": "contado",
+            "n": 14
+          },
+          {
+            "dia": "2026-11-18",
+            "tipo": "contado",
+            "n": 15,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": null
+    },
+    "db37d9e9-13ac-4410-afcd-6af4fd161fe4": {
+      "prazo": {
+        "id": "db37d9e9-13ac-4410-afcd-6af4fd161fe4",
         "tipo": "Especificação de provas",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "f93d162d-93eb-4b68-8fcc-39dfc0bc510c",
+          "id": "6484d432-f6fc-4f4e-97db-7430f7099d76",
           "titulo": "Renata Cordeiro × Clínica Sorriso Pleno"
         }
       },
@@ -7436,14 +7436,14 @@
         ]
       }
     },
-    "afda9ba9-4cfd-4a0f-856e-0d77bf6de5e5": {
+    "919d1c34-50b0-4449-8148-b341149b2827": {
       "prazo": {
-        "id": "afda9ba9-4cfd-4a0f-856e-0d77bf6de5e5",
+        "id": "919d1c34-50b0-4449-8148-b341149b2827",
         "tipo": "Juntar documentos da defesa",
         "situacao": "aberto",
         "confirmado": true,
         "processo": {
-          "id": "d67adb9f-cb87-4e81-97f6-70908fea075c",
+          "id": "5fd6b30e-c7b0-47e3-acd5-90bbcb5eced3",
           "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves"
         }
       },
@@ -7624,14 +7624,14 @@
       "interno": null,
       "conferencia": null
     },
-    "0a5270fa-827b-4194-9639-4db5527a6be4": {
+    "a594abab-5a48-47dc-9a2f-2bdeaed44f15": {
       "prazo": {
-        "id": "0a5270fa-827b-4194-9639-4db5527a6be4",
+        "id": "a594abab-5a48-47dc-9a2f-2bdeaed44f15",
         "tipo": "Manifestação sobre laudo pericial",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7",
+          "id": "71ff11de-0cb0-4dfa-a248-111cab69d0f8",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         }
       },
@@ -7802,14 +7802,14 @@
         ]
       }
     },
-    "b827c2f5-ad89-47d8-a7d8-0adc271067fb": {
+    "92e98696-e7d4-4447-8536-57b2c7983933": {
       "prazo": {
-        "id": "b827c2f5-ad89-47d8-a7d8-0adc271067fb",
+        "id": "92e98696-e7d4-4447-8536-57b2c7983933",
         "tipo": "Apelação",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "11ef87fb-c9d7-49dd-9573-0cae29613dce",
+          "id": "52346775-3404-4350-8840-0667312c6514",
           "titulo": "Lúcia Matos × Instituto de Previdência de Brusque"
         }
       },
@@ -7980,14 +7980,14 @@
         ]
       }
     },
-    "80385b5e-edf2-4528-892c-eb83e448f26e": {
+    "1201a3bb-73ed-47b9-9df5-04364bb1d760": {
       "prazo": {
-        "id": "80385b5e-edf2-4528-892c-eb83e448f26e",
+        "id": "1201a3bb-73ed-47b9-9df5-04364bb1d760",
         "tipo": "Contestação",
         "situacao": "aberto",
         "confirmado": false,
         "processo": {
-          "id": "806254db-1538-42ef-99cb-1606fd68e9da",
+          "id": "e69986a2-8682-47b5-8291-fea62b343c94",
           "titulo": "Construtora Litoral Norte × Marcos Tavares"
         }
       },

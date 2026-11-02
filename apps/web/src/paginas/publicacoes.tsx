@@ -19,12 +19,11 @@ import { Rolagem } from "@/componentes/rolagem";
 import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { atualizarPrazos, euQuery } from "@/lib/consultas";
 import { useTeclas } from "@/lib/teclas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { CaixaDePublicacoes, Contagem, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
-import { atualizarPrazos } from "./prazo";
 
 const ABAS: { id: SituacaoPublicacao; rotulo: string }[] = [
   { id: "nova", rotulo: "Novas" },

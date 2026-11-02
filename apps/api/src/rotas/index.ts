@@ -4,8 +4,8 @@
  * tudo que a rota lê ou grava.
  */
 import { avisoDaAssinatura, hojeEm, somarDias } from "@decreta/core";
-import { alvaras, clientes, equipe, escritorios, negocios, organization, prazos, processos, publicacoes } from "@decreta/db";
-import { and, eq, ilike, inArray, like, lte, or, sql } from "drizzle-orm";
+import { alvaras, clientes, equipe, escritorios, negocios, organization, prazos, processos, publicacoes, type Tx } from "@decreta/db";
+import { and, asc, eq, ilike, inArray, isNull, like, lte, or, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { acessoLiberado, colunasDaAssinatura, estadoDoEscritorio, recusaDeAcesso } from "../servicos/assinatura.ts";
@@ -117,16 +117,27 @@ export function createRotas(deps: DepsDasRotas) {
     return c.json(await tenant(c, deps, (tx) => painelDoDia(db, tx, c.get("orgId"), hoje, c.get("timezone"), { iaLigada: !!deps.ia })));
   });
 
-  /** Busca do menu (⌘K): processos por número, partes ou título; clientes por nome, documento ou telefone. */
+  /**
+   * Busca do menu (⌘K): processos por número, partes ou título; clientes por nome, documento ou telefone;
+   * e os prazos que esperam confirmação. Sem termo, só os prazos mais próximos.
+   */
   app.get("/busca", async (c) => {
     const q = (c.req.query("q") ?? "").trim();
-    if (q.length < 2) return c.json({ processos: [], clientes: [] });
+    const aConfirmar = (tx: Tx, filtro?: SQL) =>
+      tx
+        .select({ id: prazos.id, tipo: prazos.tipo, fim: prazos.fim, processo: { id: processos.id, titulo: processos.titulo } })
+        .from(prazos)
+        .innerJoin(processos, eq(processos.id, prazos.processoId))
+        .where(and(eq(prazos.situacao, "aberto"), isNull(prazos.confirmadoEm), filtro))
+        .orderBy(asc(prazos.fim), asc(prazos.createdAt))
+        .limit(5);
+    if (q.length < 2) return tenant(c, deps, async (tx) => c.json({ processos: [], clientes: [], prazos: await aConfirmar(tx) }));
     const digitos = q.replace(/\D/g, "");
     const termo = termoSemAcento(q);
     return tenant(c, deps, async (tx) => {
-      const [ps, cs] = await Promise.all([
+      const [ps, cs, pz] = await Promise.all([
         tx
-          .select({ id: processos.id, titulo: processos.titulo, cnj: processos.cnj, orgao: processos.orgao })
+          .select({ id: processos.id, titulo: processos.titulo, cnj: processos.cnj, tipo: processos.tipo, orgao: processos.orgao })
           .from(processos)
           .where(or(like(semAcentoNoBanco(sql`${processos.titulo}`), termo), digitos.length >= 4 ? sql`regexp_replace(coalesce(${processos.cnj}, ''), '\\D', '', 'g') like ${`%${digitos}%`}` : sql`false`))
           .limit(8),
@@ -135,8 +146,9 @@ export function createRotas(deps: DepsDasRotas) {
           .from(clientes)
           .where(or(like(semAcentoNoBanco(sql`${clientes.nome}`), termo), digitos.length >= 4 ? or(ilike(clientes.documento, `%${digitos}%`), sql`regexp_replace(coalesce(${clientes.telefone}, ''), '\\D', '', 'g') like ${`%${digitos}%`}`) : sql`false`))
           .limit(8),
+        aConfirmar(tx, or(like(semAcentoNoBanco(sql`${prazos.tipo}`), termo), like(semAcentoNoBanco(sql`${processos.titulo}`), termo), digitos.length >= 4 ? sql`regexp_replace(coalesce(${processos.cnj}, ''), '\\D', '', 'g') like ${`%${digitos}%`}` : sql`false`)),
       ]);
-      return c.json({ processos: ps, clientes: cs });
+      return c.json({ processos: ps, clientes: cs, prazos: pz });
     });
   });
 

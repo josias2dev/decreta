@@ -232,6 +232,15 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-busca-campo svg { width: var(--space-4); height: var(--space-4); color: var(--tinta-3); flex: none; }
 .dc-busca-campo input { flex: 1; height: 48px; border: 0; outline: none; background: transparent; font: 400 var(--texto-campo)/var(--linha-campo) var(--font-sans); color: var(--tinta); }
 .dc-busca-grupo { padding: var(--space-1) 0; }
+.dc-busca-opcao { width: 100%; background: transparent; border: 0; text-align: left; cursor: pointer; font: inherit; }
+.dc-busca-opcao:hover { background: var(--superficie-2); }
+.dc-busca-opcao:focus-visible, .dc-busca-processo__prazo:focus-visible { outline: none; background: var(--superficie-2); box-shadow: inset 0 0 0 2px var(--foco); }
+.dc-busca-processo { display: flex; align-items: center; min-width: 0; }
+.dc-busca-processo > .dc-busca-opcao { flex: 1 1 auto; min-width: 0; }
+.dc-busca-processo__prazo { flex: none; margin-right: var(--space-3); }
+.dc-busca-confirmar { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); min-height: 0; overflow-y: auto; }
+.dc-busca-confirmar .dc-dialogo__texto { margin-top: calc(-1 * var(--space-3)); }
+.dc-dialogo--busca:not(.dc-celular) .dc-conta-viva--com-calendario { display: grid; grid-template-columns: minmax(0, 1fr) 264px; grid-template-rows: auto 1fr; grid-template-areas: "data calendario" "resto calendario"; gap: var(--space-3) var(--space-5); }
 .dc-busca-grupo__titulo { padding: var(--space-1-half) var(--space-4); font: 500 var(--texto-legenda)/var(--linha-legenda) var(--font-sans); color: var(--tinta-3); }
 
 /* ---------- Avisos que somem ---------- */

@@ -1,5 +1,5 @@
 /** Prazo e briefing: o que o juízo decidiu, o que fazer, a contagem e o histórico. */
-import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ExternalLink, FileText, RotateCcw } from "lucide-react";
 import { useState, type ReactNode } from "react";
@@ -16,14 +16,9 @@ import { PecaContraria } from "@/componentes/peca-contraria";
 import { Avatar, BlocoIa, Botao, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { atualizarPrazos, euQuery } from "@/lib/consultas";
 import { POLO_DO_CLIENTE, diaCompleto, diaCurto, diaDaSemana, diaDoInstante, diaMes, hora, ondeTramita, prazoEmDias } from "@/lib/formato";
 import type { Briefing, Contagem, Prazo, PreviaDaConta } from "@/lib/tipos";
-
-/** Tudo que mostra prazo muda junto: a lista, o Hoje, os números do menu e a caixa de publicações. */
-export function atualizarPrazos(qc: QueryClient) {
-  for (const k of ["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda", "conta", "busca"]) void qc.invalidateQueries({ queryKey: [k] });
-}
 
 const FONTE = { djen: "DJEN", datajud: "DataJud", manual: "Publicação digitada" } as const;
 

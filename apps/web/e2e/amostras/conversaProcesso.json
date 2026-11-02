@@ -1,9 +1,9 @@
 {
-  "path": "/ia/conversas/a32f1b5b-cbf3-4af7-acdd-b82319435b38",
+  "path": "/ia/conversas/94617c20-97b7-43cc-9c1b-26c6e2a6589b",
   "corpo": {
     "rodape": "Gerado por IA. Confira nos autos.",
     "conversa": {
-      "id": "a32f1b5b-cbf3-4af7-acdd-b82319435b38",
+      "id": "94617c20-97b7-43cc-9c1b-26c6e2a6589b",
       "titulo": "Processo da Marina Duarte",
       "modo": "pergunte",
       "fixada": false,
@@ -13,16 +13,16 @@
     },
     "mensagens": [
       {
-        "id": "8a9d2141-d284-4c35-a674-40589c57d2a8",
+        "id": "4ff882cb-6315-4033-8852-714a46a6d035",
         "papel": "pessoa",
         "texto": "Como está o processo da Marina?",
         "partes": null,
         "em": "2026-10-29T11:41:02.000Z"
       },
       {
-        "id": "8d32af64-49ce-4ab5-8ab2-22b4360dc3d8",
+        "id": "25ee1924-7a14-4d0b-8ebc-9ffb14688ffb",
         "papel": "ia",
-        "texto": "O [processo da Marina Duarte contra a Seguradora Alfa](/processos/a3fb9773-70f7-49d6-a80c-5e61d5cafad7) está na fase de perícia, e a perícia foi boa para nós.\n\n- **Evento 87 (21/10):** o laudo confirmou o nexo e apontou incapacidade parcial permanente de 40%.\n- **Evento 88 (28/10):** o juízo intimou as partes para se manifestar sobre o laudo em 15 dias.\n- **Evento 89:** a ré pediu esclarecimentos ao perito, dizendo que não houve vistoria.\n\nO que pede ação agora é a [manifestação sobre o laudo](/prazos/0a5270fa-827b-4194-9639-4db5527a6be4), que vence em **23/11** (data ainda a confirmar). Vale concordar com o laudo e rebater o pedido da ré: a vistoria não era necessária para avaliar a incapacidade.",
+        "texto": "O [processo da Marina Duarte contra a Seguradora Alfa](/processos/71ff11de-0cb0-4dfa-a248-111cab69d0f8) está na fase de perícia, e a perícia foi boa para nós.\n\n- **Evento 87 (21/10):** o laudo confirmou o nexo e apontou incapacidade parcial permanente de 40%.\n- **Evento 88 (28/10):** o juízo intimou as partes para se manifestar sobre o laudo em 15 dias.\n- **Evento 89:** a ré pediu esclarecimentos ao perito, dizendo que não houve vistoria.\n\nO que pede ação agora é a [manifestação sobre o laudo](/prazos/a594abab-5a48-47dc-9a2f-2bdeaed44f15), que vence em **23/11** (data ainda a confirmar). Vale concordar com o laudo e rebater o pedido da ré: a vistoria não era necessária para avaliar a incapacidade.",
         "partes": [
           {
             "id": "chamada-1-0",
@@ -31,7 +31,7 @@
             "saida": {
               "itens": [
                 {
-                  "id": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7",
+                  "id": "71ff11de-0cb0-4dfa-a248-111cab69d0f8",
                   "cnj": "5004321-25.2026.8.24.0038",
                   "fase": "Instrução · laudo juntado",
                   "orgao": "2ª Vara Cível",
@@ -39,18 +39,18 @@
                   "titulo": "Marina Duarte × Seguradora Alfa S.A.",
                   "assunto": "Seguro · indenização por invalidez",
                   "cliente": {
-                    "id": "9bc5fe9a-db9c-4ffc-b657-8a1f479ff0a4",
+                    "id": "156431ca-0ff7-449c-8207-99fb632549d3",
                     "nome": "Marina Duarte"
                   },
                   "comarca": "Joinville",
                   "situacao": "ativo",
                   "responsavel": {
-                    "id": "Qp6CUHWhDXQKd44e9TJW3QFOv6ZtkEOV",
+                    "id": "3gnBfai95z6U8AmR1tBtij3UE3n8MmNS",
                     "apelido": "Beatriz",
                     "iniciais": "BS"
                   },
                   "proximoPrazo": {
-                    "id": "0a5270fa-827b-4194-9639-4db5527a6be4",
+                    "id": "a594abab-5a48-47dc-9a2f-2bdeaed44f15",
                     "fim": "2026-11-23",
                     "tipo": "Manifestação sobre laudo pericial",
                     "quando": "23 nov",
@@ -75,14 +75,14 @@
             "saida": {
               "prazos": [
                 {
-                  "id": "0a5270fa-827b-4194-9639-4db5527a6be4",
+                  "id": "a594abab-5a48-47dc-9a2f-2bdeaed44f15",
                   "fim": "2026-11-23",
                   "dias": 15,
                   "tipo": "Manifestação sobre laudo pericial",
                   "quando": "23 nov",
                   "contagem": "uteis",
                   "processo": {
-                    "id": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7",
+                    "id": "71ff11de-0cb0-4dfa-a248-111cab69d0f8",
                     "cnj": "5004321-25.2026.8.24.0038",
                     "titulo": "Marina Duarte × Seguradora Alfa S.A."
                   },
@@ -90,14 +90,14 @@
                   "urgencia": "prazo",
                   "cumpridoEm": null,
                   "responsavel": {
-                    "id": "Qp6CUHWhDXQKd44e9TJW3QFOv6ZtkEOV",
+                    "id": "3gnBfai95z6U8AmR1tBtij3UE3n8MmNS",
                     "apelido": "Beatriz",
                     "iniciais": "BS"
                   }
                 }
               ],
               "processo": {
-                "id": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7",
+                "id": "71ff11de-0cb0-4dfa-a248-111cab69d0f8",
                 "cnj": "5004321-25.2026.8.24.0038",
                 "fase": "Instrução · laudo juntado",
                 "orgao": "2ª Vara Cível",
@@ -105,7 +105,7 @@
                 "titulo": "Marina Duarte × Seguradora Alfa S.A.",
                 "assunto": "Seguro · indenização por invalidez",
                 "cliente": {
-                  "id": "9bc5fe9a-db9c-4ffc-b657-8a1f479ff0a4",
+                  "id": "156431ca-0ff7-449c-8207-99fb632549d3",
                   "nome": "Marina Duarte"
                 },
                 "comarca": "Joinville",
@@ -115,12 +115,12 @@
                 "valorCausa": "86400.00",
                 "poloCliente": "ativo",
                 "responsavel": {
-                  "id": "Qp6CUHWhDXQKd44e9TJW3QFOv6ZtkEOV",
+                  "id": "3gnBfai95z6U8AmR1tBtij3UE3n8MmNS",
                   "apelido": "Beatriz",
                   "iniciais": "BS"
                 },
                 "proximoPrazo": {
-                  "id": "0a5270fa-827b-4194-9639-4db5527a6be4",
+                  "id": "a594abab-5a48-47dc-9a2f-2bdeaed44f15",
                   "fim": "2026-11-23",
                   "tipo": "Manifestação sobre laudo pericial",
                   "quando": "23 nov",
@@ -135,25 +135,25 @@
               "audiencias": []
             },
             "entrada": {
-              "processoId": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7"
+              "processoId": "71ff11de-0cb0-4dfa-a248-111cab69d0f8"
             }
           },
           {
             "tipo": "texto",
-            "texto": "O [processo da Marina Duarte contra a Seguradora Alfa](/processos/a3fb9773-70f7-49d6-a80c-5e61d5cafad7) está na fase de perícia, e a perícia foi boa para nós.\n\n- **Evento 87 (21/10):** o laudo confirmou o nexo e apontou incapacidade parcial permanente de 40%.\n- **Evento 88 (28/10):** o juízo intimou as partes para se manifestar sobre o laudo em 15 dias.\n- **Evento 89:** a ré pediu esclarecimentos ao perito, dizendo que não houve vistoria.\n\nO que pede ação agora é a [manifestação sobre o laudo](/prazos/0a5270fa-827b-4194-9639-4db5527a6be4), que vence em **23/11** (data ainda a confirmar). Vale concordar com o laudo e rebater o pedido da ré: a vistoria não era necessária para avaliar a incapacidade."
+            "texto": "O [processo da Marina Duarte contra a Seguradora Alfa](/processos/71ff11de-0cb0-4dfa-a248-111cab69d0f8) está na fase de perícia, e a perícia foi boa para nós.\n\n- **Evento 87 (21/10):** o laudo confirmou o nexo e apontou incapacidade parcial permanente de 40%.\n- **Evento 88 (28/10):** o juízo intimou as partes para se manifestar sobre o laudo em 15 dias.\n- **Evento 89:** a ré pediu esclarecimentos ao perito, dizendo que não houve vistoria.\n\nO que pede ação agora é a [manifestação sobre o laudo](/prazos/a594abab-5a48-47dc-9a2f-2bdeaed44f15), que vence em **23/11** (data ainda a confirmar). Vale concordar com o laudo e rebater o pedido da ré: a vistoria não era necessária para avaliar a incapacidade."
           }
         ],
         "em": "2026-10-29T11:41:24.000Z"
       },
       {
-        "id": "f45e1f4d-7d30-4fff-8cf7-dc16972584a1",
+        "id": "e0127b29-7586-4620-9985-6f4d6876f018",
         "papel": "pessoa",
         "texto": "Me lembra de ligar para ela amanhã para explicar o laudo",
         "partes": null,
         "em": "2026-10-29T11:43:40.000Z"
       },
       {
-        "id": "8e24068e-6f0f-47a2-b3ed-f854fee31807",
+        "id": "1148e4a8-5fc8-4cf2-90a9-e1e587625e05",
         "papel": "ia",
         "texto": "Deixei a tarefa pronta para amanhã, 30/10. Confira no cartão e crie.",
         "partes": [
@@ -165,17 +165,17 @@
               "dia": "2026-10-30",
               "titulo": "Ligar para a Marina sobre o laudo",
               "cliente": {
-                "id": "9bc5fe9a-db9c-4ffc-b657-8a1f479ff0a4",
+                "id": "156431ca-0ff7-449c-8207-99fb632549d3",
                 "nome": "Marina Duarte"
               },
               "detalhe": "Explicar o resultado da perícia (40% de incapacidade, nexo confirmado) e o pedido de esclarecimentos da ré.",
               "processo": {
-                "id": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7",
+                "id": "71ff11de-0cb0-4dfa-a248-111cab69d0f8",
                 "cnj": "5004321-25.2026.8.24.0038",
                 "titulo": "Marina Duarte × Seguradora Alfa S.A."
               },
               "responsavel": {
-                "id": "Qp6CUHWhDXQKd44e9TJW3QFOv6ZtkEOV",
+                "id": "3gnBfai95z6U8AmR1tBtij3UE3n8MmNS",
                 "apelido": "Beatriz",
                 "iniciais": "BS"
               }
@@ -184,8 +184,8 @@
               "dia": "2026-10-30",
               "titulo": "Ligar para a Marina sobre o laudo",
               "detalhe": "Explicar o resultado da perícia (40% de incapacidade, nexo confirmado) e o pedido de esclarecimentos da ré.",
-              "clienteId": "9bc5fe9a-db9c-4ffc-b657-8a1f479ff0a4",
-              "processoId": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7"
+              "clienteId": "156431ca-0ff7-449c-8207-99fb632549d3",
+              "processoId": "71ff11de-0cb0-4dfa-a248-111cab69d0f8"
             }
           },
           {

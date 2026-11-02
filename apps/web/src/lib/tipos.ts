@@ -1088,8 +1088,10 @@ export interface RetornosDaIa {
 }
 
 export interface Busca {
-  processos: ProcessoResumido[];
+  processos: (ProcessoResumido & { tipo?: "judicial" | "extrajudicial" })[];
   clientes: { id: string; nome: string; documento: string | null; telefone: string | null }[];
+  /** Os prazos que esperam confirmação: os mais próximos, ou os que batem com o termo. */
+  prazos?: { id: string; tipo: string; fim: string; processo: { id: string; titulo: string } }[];
 }
 
 export interface Registro {
