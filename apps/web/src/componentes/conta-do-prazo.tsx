@@ -12,24 +12,23 @@ import { Botao, Campo, Dados, Faixa, Painel } from "@/componentes/ui";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, juntar } from "@/lib/formato";
 import type { Contagem, ContaDoPrazo, PreviaDaConta, SegundaConferencia } from "@/lib/tipos";
 
-const CONFIANCA = { alta: ["dc-selo--ok", "Confiança alta"], media: ["dc-selo--prazo", "Confiança média"], baixa: ["dc-selo--vencido", "Confiança baixa"] } as const;
+const CONFIANCA = { alta: ["dc-selo--ok", "Alta"], media: ["dc-selo--prazo", "Média"], baixa: ["dc-selo--vencido", "Baixa"] } as const;
 
-/** A segunda conferência da sugestão: os dias batem com a lei, o ato combina com o documento, a equipe costuma descartar. */
-export function ConferenciaDaSugestao({ conferencia: c }: { conferencia: SegundaConferencia }) {
-  const [classe, rotulo] = CONFIANCA[c.confianca];
+/** A confiança da segunda conferência: os dias batem com a lei, o ato combina com o documento, a equipe costuma descartar. */
+export function SeloDeConfianca({ confianca }: { confianca: SegundaConferencia["confianca"] }) {
+  const [classe, rotulo] = CONFIANCA[confianca];
+  return <span className={`dc-selo ${classe}`}>{rotulo}</span>;
+}
+
+/** O porquê da confiança, logo abaixo dos dados. */
+export function MotivosDaConferencia({ conferencia: c }: { conferencia: SegundaConferencia }) {
+  if (c.motivos.length === 1) return <p className="dc-fatos__nota">{c.motivos[0]}</p>;
   return (
-    <div className="dc-segunda">
-      <span className={`dc-selo ${classe}`}>{rotulo}</span>
-      {c.motivos.length === 1 ? (
-        <p>{c.motivos[0]}</p>
-      ) : (
-        <ul>
-          {c.motivos.map((m) => (
-            <li key={m}>{m}</li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <ul className="dc-fatos__nota dc-fatos__nota--lista">
+      {c.motivos.map((m) => (
+        <li key={m}>{m}</li>
+      ))}
+    </ul>
   );
 }
 
@@ -56,7 +55,7 @@ export function diaDigitadoCompleto(valor: string): string | null {
 
 const dia = (d: string) => (
   <span>
-    <strong className="dc-num">{diaCompleto(d)}</strong> <span className="text-[var(--tinta-2)]">{diaDaSemana(d)}</span>
+    <strong className="dc-num font-semibold">{diaCompleto(d)}</strong> <span className="text-[var(--tinta-2)]">{diaDaSemana(d)}</span>
   </span>
 );
 
@@ -97,15 +96,10 @@ export function PainelDaConta({ conta, contagem, conferencia, aoAjustar }: { con
     "Confirmado",
     conta.confirmadoEm ? `${conta.confirmadoPor?.apelido ?? "Alguém"} · ${diaCurto(diaDoInstante(conta.confirmadoEm))} às ${hora(conta.confirmadoEm)}` : "Ainda não: confira e confirme",
   ]);
+  if (conferencia) linhas.push(["Confiança", <SeloDeConfianca key="confianca" confianca={conferencia.confianca} />]);
   return (
     <Painel titulo="A conta">
       <div className="dc-conta">
-        {conferencia && (
-          <div className="dc-par">
-            <span className="dc-rotulo">Segunda conferência</span>
-            <ConferenciaDaSugestao conferencia={conferencia} />
-          </div>
-        )}
         {conta.pelaConta && !conta.fimDigitado && (
           <Faixa tipo="aviso">
             <CircleAlert />
@@ -118,6 +112,7 @@ export function PainelDaConta({ conta, contagem, conferencia, aoAjustar }: { con
           </Faixa>
         )}
         <Dados linhas={linhas} />
+        {conferencia && <MotivosDaConferencia conferencia={conferencia} />}
         {conta.calendarioCompleto === false && <AvisoSemCalendarioProprio />}
         {conta.outra && (
           <Faixa tipo="nota">

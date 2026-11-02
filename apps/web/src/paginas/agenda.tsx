@@ -287,7 +287,7 @@ export function AgendaPage() {
     );
   }
   return (
-    <Pagina cheia className="dc-pagina--agenda">
+    <Pagina cheia>
       <Cabecalho
         titulo="Agenda"
         sub={resumo}

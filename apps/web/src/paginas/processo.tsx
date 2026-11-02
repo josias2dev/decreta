@@ -116,7 +116,7 @@ export function ProcessoPage() {
             {p.valorCausa && <> · Valor da causa {dinheiro(p.valorCausa)}</>}
           </span>
         </div>
-        <div className="-mx-3 px-3">{abas}</div>
+        <div className="dc-sangria">{abas}</div>
         {conteudo}
       </TelaCelular>
     );

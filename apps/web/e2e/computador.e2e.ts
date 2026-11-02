@@ -86,7 +86,7 @@ test("prazo: briefing da IA, data final contada e confirmar", async ({ page }) =
 test("prazo: a conta inteira à mostra, com a regra, o calendário e a tempestividade da peça", async ({ page }) => {
   await abrir(page, `/prazos/${ids.prazo}`);
   const conta = page.locator("section").filter({ has: page.getByRole("heading", { name: "A conta" }) });
-  for (const texto of ["Dias úteis (CPC, art. 219)", "TJSC, com os feriados cadastrados para a comarca de Joinville", "Confiança alta", "Bate com a lei: 15 dias (CPC, art. 477, § 1º).", "Ainda não: confira e confirme"]) {
+  for (const texto of ["Dias úteis (CPC, art. 219)", "TJSC, com os feriados cadastrados para a comarca de Joinville", "Alta", "Bate com a lei: 15 dias (CPC, art. 477, § 1º).", "Ainda não: confira e confirme"]) {
     await expect(conta.getByText(texto, { exact: true })).toBeVisible();
   }
   await conta.getByText("Tópico de tempestividade da peça").click();
@@ -116,7 +116,7 @@ test("sugestão com confiança baixa não confirma num clique: abre o ajuste com
     .responder(`/prazos/${ids.prazo}`, { ...prazo, conferencia: { confianca: "baixa", motivos: [motivo] } })
     .responder("POST /prazos/calcular", { ...prazo.conta, publicacao: prazo.publicadoEm, dias: prazo.dias, contagem: prazo.contagem });
   await abrir(page, `/prazos/${ids.prazo}`, api);
-  await expect(page.getByText("Confiança baixa")).toBeVisible();
+  await expect(page.getByText("Baixa", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Confirmar prazo" })).toHaveCount(0);
   await page.getByRole("button", { name: "Conferir e confirmar" }).click();
   const dialogo = page.getByRole("dialog", { name: "Ajustar prazo" });
@@ -165,7 +165,7 @@ test("publicação com sugestão de confiança baixa: a caixa pede para conferir
   const sugestao = { ...pub.sugestao, conteudo: { ...pub.sugestao.conteudo, conferencia: { confianca: "baixa", motivos: [motivo] } } };
   const api = new ApiFalsa().responder(`/publicacoes/${ids.publicacao}`, { ...pub, sugestao });
   await abrir(page, `/publicacoes?id=${ids.publicacao}`, api);
-  await expect(page.getByText("Segunda conferência")).toBeVisible();
+  await expect(page.getByText("Confiança", { exact: true })).toBeVisible();
   await expect(page.getByText(motivo).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Confirmar prazo" })).toHaveCount(0);
   await page.getByRole("button", { name: "Conferir e confirmar" }).click();

@@ -87,7 +87,7 @@ test("prazo: a conta cabe na tela, com a regra e a segunda conferência", async 
   const conta = page.locator("section").filter({ has: page.getByRole("heading", { name: "A conta" }) });
   await conta.scrollIntoViewIfNeeded();
   await expect(conta.getByText("Dias úteis (CPC, art. 219)", { exact: true })).toBeVisible();
-  await expect(conta.getByText("Confiança alta")).toBeVisible();
+  await expect(conta.getByText("Alta", { exact: true })).toBeVisible();
   expect(await sobraNaLateral(page)).toBe(0);
 });
 

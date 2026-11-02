@@ -37,7 +37,7 @@
   --sombra-foco: 0 0 0 1px var(--superficie), 0 0 0 3px var(--foco);
   --sombra-card: 0 1px 2px rgba(29, 29, 32, 0.04), 0 10px 28px -24px rgba(29, 29, 32, 0.3);
   --sombra-flutuante: 0 14px 34px -24px rgba(29, 29, 32, 0.45);
-  --sombra-botao: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --sombra-botao: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --sombra-acento: 0 6px 16px -10px rgba(51, 70, 196, 0.75);
   --sombra-leve: 0 1px 1px rgba(29, 29, 32, 0.05);
 }
@@ -93,7 +93,7 @@
  *   titulo  15/20  título de tela, de diálogo e de seção
  *   numero  20/24  número de destaque
  * `campo` é o texto dos campos: acompanha o corpo no computador; no celular fica em 16 px, porque abaixo disso o iPhone dá zoom.
- * Espaço: grade de 4 px, com o meio passo de 2 px para o que encosta.
+ * A compactação vem da letra menor e da informação organizada, não de componente espremido: os respiros são generosos.
  */
 :root {
   --texto-legenda: 11px;
@@ -123,46 +123,55 @@
   --space-6: 24px;
   --space-8: 32px;
 
-  --radius-sm: 3px;
-  --radius-md: 5px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --radius-lg: 8px;
   --radius-pill: 999px;
 
   /* Densidade: o que muda entre compacto, confortável e celular. */
-  --altura-controle: 28px;
-  --altura-controle-sm: 24px;
-  --altura-chip: 24px;
-  --altura-selo: 18px;
-  --altura-aba: 32px;
-  --altura-menu-item: 28px;
-  --altura-cabecalho: 48px;
-  --altura-numeros: 44px;
-  --altura-painel-topo: 36px;
-  --altura-th: 24px;
-  --respiro-controle: 10px;
-  --respiro-painel: 12px;
-  --respiro-pagina: 16px;
-  --respiro-linha: 4px;
-  --respiro-coluna: 8px;
-  --vao-pagina: 12px;
-  --vao-bloco: 12px;
-  --vao-filtros: 4px;
-  --icone-botao: 14px;
-  --avatar: 20px;
-  --avatar-grande: 32px;
+  --altura-controle: 32px;
+  --altura-controle-sm: 28px;
+  --altura-chip: 28px;
+  --altura-selo: 20px;
+  --altura-aba: 40px;
+  --altura-menu-item: 32px;
+  --altura-cabecalho: 56px;
+  --altura-numeros: 56px;
+  --altura-painel-topo: 44px;
+  --altura-th: 32px;
+  --altura-linha: 56px;
+  --altura-grupo: 32px;
+  --respiro-controle: 12px;
+  --respiro-campo: 10px;
+  --respiro-painel: 16px;
+  --respiro-pagina: 24px;
+  --respiro-linha: 8px;
+  --respiro-coluna: 12px;
+  --respiro-cartao: 12px;
+  --vao-pagina: 16px;
+  --vao-bloco: 16px;
+  --vao-campos: 14px;
+  --vao-filtros: 6px;
+  --vao-cartoes: 8px;
+  --vao-menu: 16px;
+  --icone-botao: 16px;
+  --avatar: 24px;
+  --avatar-grande: 36px;
 
   --escala-coluna: 1;
   --layout-menu: 208px;
   --layout-menu-recolhido: 52px;
-  --layout-lado: 320px;
+  --layout-lado: 336px;
+  --layout-caixa: 372px;
+  --layout-fatos: 280px;
   --layout-leitura: 68ch;
   --transicao: 120ms ease;
   --font-sans: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
-  /* CNJ, datas e valores: alinham em coluna e leem como dado. */
-  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Só o editor da peça e os trechos de código da resposta da IA. Data, valor e número seguem na Geist, com tabular-nums. */
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
-/* Confortável: a preferência de quem quer letra maior e mais ar (/conta). O atributo fica na raiz (lib/densidade.ts). */
+/* Confortável: a preferência de quem quer ainda mais espaço e a letra um pouco maior. O atributo fica na raiz (lib/densidade.ts). */
 [data-densidade="confortavel"] {
   --texto-legenda: 12px;
   --linha-legenda: 16px;
@@ -178,33 +187,41 @@
   --linha-numero: 28px;
   --texto-campo: 14px;
   --linha-campo: 20px;
-  --altura-controle: 32px;
-  --altura-controle-sm: 28px;
-  --altura-chip: 28px;
-  --altura-selo: 20px;
-  --altura-aba: 36px;
-  --altura-menu-item: 32px;
-  --altura-cabecalho: 60px;
-  --altura-numeros: 56px;
-  --altura-painel-topo: 44px;
-  --altura-th: 32px;
-  --respiro-controle: 12px;
-  --respiro-painel: 16px;
-  --respiro-pagina: 24px;
-  --respiro-linha: 8px;
-  --respiro-coluna: 12px;
-  --vao-pagina: 16px;
-  --vao-bloco: 16px;
-  --vao-filtros: 6px;
-  --icone-botao: 16px;
-  --avatar: 24px;
-  --avatar-grande: 36px;
+  --altura-controle: 36px;
+  --altura-controle-sm: 32px;
+  --altura-chip: 32px;
+  --altura-selo: 22px;
+  --altura-aba: 44px;
+  --altura-menu-item: 36px;
+  --altura-cabecalho: 64px;
+  --altura-numeros: 68px;
+  --altura-painel-topo: 52px;
+  --altura-th: 36px;
+  --altura-linha: 66px;
+  --altura-grupo: 36px;
+  --respiro-controle: 14px;
+  --respiro-campo: 12px;
+  --respiro-painel: 20px;
+  --respiro-pagina: 32px;
+  --respiro-linha: 10px;
+  --respiro-coluna: 14px;
+  --respiro-cartao: 14px;
+  --vao-pagina: 20px;
+  --vao-bloco: 20px;
+  --vao-campos: 18px;
+  --vao-filtros: 8px;
+  --vao-cartoes: 10px;
+  --vao-menu: 20px;
+  --avatar: 26px;
+  --avatar-grande: 40px;
   --escala-coluna: 1.16;
   --layout-menu: 232px;
-  --layout-lado: 340px;
+  --layout-lado: 360px;
+  --layout-caixa: 420px;
+  --layout-fatos: 320px;
 }
 
-/* Celular: o texto não encolhe, os alvos de toque continuam em 44 px e os campos em 16 px. Só os respiros diminuem. */
+/* Celular: o texto não encolhe, os alvos de toque ficam em 44 px e os campos em 16 px. */
 .dc-celular {
   --texto-legenda: 12px;
   --linha-legenda: 16px;
@@ -221,22 +238,27 @@
   --texto-campo: 16px;
   --linha-campo: 24px;
   --altura-controle: 44px;
-  --altura-controle-sm: 32px;
-  --altura-chip: 32px;
-  --altura-selo: 20px;
-  --altura-aba: 40px;
-  --altura-painel-topo: 40px;
-  --altura-numeros: 52px;
+  --altura-controle-sm: 36px;
+  --altura-chip: 34px;
+  --altura-selo: 22px;
+  --altura-aba: 44px;
+  --altura-painel-topo: 48px;
+  --altura-numeros: 60px;
+  --altura-linha: 60px;
   --respiro-controle: 16px;
-  --respiro-painel: 12px;
-  --respiro-linha: 8px;
-  --vao-pagina: 16px;
-  --vao-bloco: 12px;
-  --vao-filtros: 6px;
+  --respiro-campo: 12px;
+  --respiro-painel: 14px;
+  --respiro-pagina: 16px;
+  --respiro-linha: 10px;
+  --respiro-cartao: 14px;
+  --vao-pagina: 20px;
+  --vao-bloco: 16px;
+  --vao-campos: 16px;
+  --vao-filtros: 8px;
+  --vao-cartoes: 8px;
   --icone-botao: 18px;
   --avatar: 24px;
   --avatar-grande: 36px;
-  --radius-md: 6px;
 }
 [data-densidade="confortavel"] .dc-celular {
   --texto-legenda: 13px;
@@ -251,10 +273,13 @@
   --linha-titulo: 24px;
   --texto-numero: 22px;
   --linha-numero: 28px;
-  --altura-chip: 36px;
-  --altura-numeros: 60px;
+  --altura-chip: 38px;
+  --altura-numeros: 68px;
+  --altura-linha: 68px;
   --respiro-painel: 16px;
   --respiro-linha: 12px;
+  --respiro-cartao: 16px;
   --vao-pagina: 24px;
-  --vao-bloco: 16px;
+  --vao-bloco: 20px;
+  --vao-campos: 18px;
 }
