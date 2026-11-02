@@ -31,7 +31,8 @@ export async function enviarWhatsapp(w: Wameow, numero: string, texto: string): 
 /** O texto da mensagem para uma pessoa. `null` quando não há nada dela no dia (não manda mensagem vazia). */
 export function resumoDaManha(painel: PainelDoDia, pessoa: { id: string; apelido: string }, telas: string, opcoes: { saudacao?: boolean } = {}): string | null {
   const meus = painel.itens.filter((i) => i.responsavel?.id === pessoa.id);
-  const semDono = painel.itens.filter((i) => i.tipo === "prazo" && !i.responsavel);
+  // O prazo interno é do Hoje e da Agenda: o resumo fala do que vence.
+  const semDono = painel.itens.filter((i) => i.tipo === "prazo" && !i.responsavel && !i.interno);
   const vencidos = meus.filter((i) => i.urgencia === "vencido");
   const hoje = meus.filter((i) => i.urgencia === "hoje");
   const auds = meus.filter((i) => i.tipo === "audiencia");

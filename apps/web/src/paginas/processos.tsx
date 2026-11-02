@@ -3,8 +3,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { DataViva } from "@/componentes/data-viva";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoProcesso } from "@/componentes/novos";
+import { SeloDeIncompleto } from "@/componentes/numero-do-processo";
 import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Responsavel, Selo, Vazio } from "@/componentes/ui";
 import { api } from "@/lib/api";
@@ -13,17 +15,17 @@ import { useCelular } from "@/lib/celular";
 import { diaCompleto, diaDoInstante, haQuanto, numero, ondeTramita } from "@/lib/formato";
 import type { Pagina as PaginaDaApi, ProcessoNaLista } from "@/lib/tipos";
 
-type Situacao = "ativos" | "arquivados" | "todos";
+type Situacao = "ativos" | "arquivados" | "todos" | "incompletos";
 const SITUACAO: Record<ProcessoNaLista["situacao"], string> = { ativo: "Ativo", suspenso: "Suspenso", arquivado: "Arquivado", encerrado: "Encerrado" };
 
 /** O tribunal (TJSC, TRT12, TRF4), o número e onde tramita, numa linha: TJSC · 5004321-25.2026.8.24.0038 · 2ª Vara Cível de Joinville. */
 function Onde({ p }: { p: ProcessoNaLista }) {
   const tribunal = (p.cnj && tribunalDoCnj(p.cnj)) || (p.tipo === "extrajudicial" ? "Extrajudicial" : null);
-  const resto = [p.cnj ? ondeTramita(p) : p.classe, p.situacao !== "ativo" && SITUACAO[p.situacao]].filter(Boolean).join(" · ");
+  const resto = [p.tipo === "judicial" ? ondeTramita(p) : p.classe, p.situacao !== "ativo" && SITUACAO[p.situacao]].filter(Boolean).join(" · ");
   return (
     <span className="dc-onde">
       {tribunal && <span className="dc-onde__tribunal">{tribunal}</span>}
-      {p.cnj && <span className="dc-num dc-onde__cnj">{p.cnj}</span>}
+      {(p.cnj || p.tipo === "judicial") && <span className="dc-num dc-onde__cnj">{p.cnj ?? "Sem número"}</span>}
       {resto && <span className="dc-onde__resto">{resto}</span>}
     </span>
   );
@@ -38,13 +40,14 @@ export function ProcessosPage() {
   const [novo, setNovo] = useState(!!search.novo);
   const lista = useInfiniteQuery({
     queryKey: ["processos", situacao, search.busca ?? ""],
-    queryFn: ({ pageParam }) => api<PaginaDaApi<ProcessoNaLista>>(`/processos?${new URLSearchParams({ situacao, pagina: String(pageParam), ...(search.busca ? { busca: search.busca } : {}) })}`),
+    queryFn: ({ pageParam }) => api<PaginaDaApi<ProcessoNaLista> & { incompletos?: number }>(`/processos?${new URLSearchParams({ situacao, pagina: String(pageParam), ...(search.busca ? { busca: search.busca } : {}) })}`),
     initialPageParam: 1,
     getNextPageParam: (ultima) => (ultima.pagina * ultima.porPagina < ultima.total ? ultima.pagina + 1 : undefined),
     placeholderData: (a) => a,
   });
   const itens = lista.data?.pages.flatMap((p) => p.itens) ?? [];
   const total = lista.data?.pages[0]?.total ?? 0;
+  const incompletos = lista.data?.pages[0]?.incompletos ?? 0;
   const ir = (s: Situacao) => void navigate({ search: (x) => ({ ...x, situacao: s === "ativos" ? undefined : s }) });
 
   const filtros = (
@@ -60,6 +63,11 @@ export function ProcessosPage() {
         <Chip ligado={situacao === "todos"} onClick={() => ir("todos")}>
           Todos
         </Chip>
+        {(incompletos > 0 || situacao === "incompletos") && (
+          <Chip ligado={situacao === "incompletos"} alerta n={incompletos} onClick={() => ir("incompletos")}>
+            Incompletos
+          </Chip>
+        )}
       </div>
     </div>
   );
@@ -70,7 +78,7 @@ export function ProcessosPage() {
     </Botao>
   );
   const fim = <AoChegarNoFim ativo={!!lista.hasNextPage && !lista.isFetchingNextPage} aoChegar={() => void lista.fetchNextPage()} />;
-  const sub = lista.data ? `${numero(total)} ${total === 1 ? "processo" : "processos"}${situacao === "ativos" ? " ativos" : situacao === "arquivados" ? " arquivados" : ""}` : " ";
+  const sub = lista.data ? `${numero(total)} ${total === 1 ? "processo" : "processos"}${situacao === "ativos" ? " ativos" : situacao === "arquivados" ? " arquivados" : situacao === "incompletos" ? " sem o número" : ""}` : " ";
 
   if (celular) {
     return (
@@ -89,12 +97,25 @@ export function ProcessosPage() {
         ) : itens.length ? (
           <div className="dc-lista">
             {itens.map((p) => (
-              <Link key={p.id} to="/processos/$id" params={{ id: p.id }} className="dc-item">
-                <span className="dc-item__titulo">{p.titulo}</span>
-                {p.proximoPrazo ? <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo> : <span />}
+              <div key={p.id} className="dc-item dc-com-esticado">
+                <Link to="/processos/$id" params={{ id: p.id }} className="dc-item__titulo dc-esticado">
+                  {p.titulo}
+                </Link>
+                {p.proximoPrazo ? (
+                  <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+                    <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                  </DataViva>
+                ) : (
+                  <span />
+                )}
                 <span className="dc-item__meta">
                   <Onde p={p} />
                 </span>
+                {p.incompleto && (
+                  <span className="dc-item__meta">
+                    <SeloDeIncompleto />
+                  </span>
+                )}
                 <span className="dc-item__pe">
                   <Avatar pessoa={p.responsavel} />
                   <span className="min-w-0 truncate">
@@ -102,7 +123,7 @@ export function ProcessosPage() {
                     {p.proximoPrazo && <> · {p.proximoPrazo.tipo}</>}
                   </span>
                 </span>
-              </Link>
+              </div>
             ))}
             {fim}
             {mais}
@@ -153,6 +174,7 @@ export function ProcessosPage() {
                             <Link to="/processos/$id" params={{ id: p.id }} onClick={(e) => e.stopPropagation()}>
                               {p.titulo}
                             </Link>
+                            {p.incompleto && <SeloDeIncompleto />}
                           </span>
                           <span className="dc-celula__2">
                             <Onde p={p} />
@@ -165,7 +187,9 @@ export function ProcessosPage() {
                       <td>
                         {p.proximoPrazo ? (
                           <span className="dc-prazo-linha" title={`${p.proximoPrazo.tipo} · ${diaCompleto(p.proximoPrazo.fim)}`}>
-                            <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                            <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+                              <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                            </DataViva>
                             <span className="truncate">{p.proximoPrazo.tipo}</span>
                           </span>
                         ) : (

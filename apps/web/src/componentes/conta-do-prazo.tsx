@@ -59,10 +59,10 @@ const dia = (d: string) => (
   </span>
 );
 
-/** "Fins de semana, 02/11 (Finados) e 20/11 (Consciência Negra)". */
-function foraDaConta(conta: ContaDoPrazo, contagem: Contagem): string {
+/** "Fins de semana, 02/11 (Finados) e 20/11 (Consciência Negra)"; com um dia só, "Fins de semana e 20/11 (Consciência Negra)". */
+export function foraDaConta(conta: Pick<ContaDoPrazo, "desconsiderados">, contagem: Contagem): string {
   const dias = conta.desconsiderados.map((d) => `${diaCurto(d.dia)} (${d.nome})`);
-  if (contagem === "uteis") return dias.length ? `Fins de semana, ${juntar(dias)}` : "Fins de semana";
+  if (contagem === "uteis") return juntar(["Fins de semana", ...dias]);
   return dias.length ? juntar(dias) : "Nada";
 }
 

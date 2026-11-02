@@ -120,6 +120,12 @@ export class ApiFalsa {
     const troca = this.trocas.get(`${metodo} ${caminho}`) ?? this.trocas.get(caminho) ?? this.trocas.get(completo);
     if (troca) return json(troca.status ?? 200, troca.corpo);
     if (!this.logado) return json(401, { erro: "sem_sessao" });
+    // A conta atrás de uma data de prazo: uma amostra por prazo e por publicação.
+    const conta = metodo === "GET" ? /^\/(prazos|publicacoes)\/([0-9a-f-]{36})\/conta$/.exec(caminho) : null;
+    if (conta) {
+      const dela = amostras[conta[1] === "prazos" ? "contasDosPrazos" : "contasDasPublicacoes"]!.corpo[conta[2]!];
+      return dela ? json(200, dela) : json(404, { erro: "nao_encontrado" });
+    }
     // Um documento da amostra e o arquivo dele.
     const doc = metodo === "GET" ? /^\/documentos\/([0-9a-f-]{36})(\/arquivo)?$/.exec(caminho) : null;
     if (doc) {

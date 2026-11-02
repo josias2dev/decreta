@@ -4,6 +4,7 @@ import { ChevronRight, CircleAlert, FolderPlus, MessageSquarePlus, UserPlus } fr
 import { useState } from "react";
 import { AuditoriaDaCarteira } from "@/componentes/auditoria";
 import { AvisoDaCaptura } from "@/componentes/captura-do-djen";
+import { DataViva } from "@/componentes/data-viva";
 import { AvisoDoTeste } from "@/componentes/faixa-do-plano";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
@@ -11,6 +12,7 @@ import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, Faixa, MarcaIa, Painel
 import { api } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
+import { diaCurto } from "@/lib/formato";
 import type { ItemDoDia, PainelDoDia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { TerminarDeConfigurar } from "./comecar";
@@ -197,10 +199,14 @@ export function HojePage() {
                 {p.publicacoes.length ? (
                   <div className="flex flex-col gap-3.5">
                     {p.publicacoes.map((x) => (
-                      <Link key={x.id} to="/publicacoes" search={{ id: x.id }} className="flex flex-col gap-0.5 no-underline">
-                        <span className="dc-t-corpo font-semibold text-[var(--tinta)]">{x.titulo}</span>
-                        <span className="dc-t-meta text-[var(--tinta-2)]">{x.detalhe}</span>
-                      </Link>
+                      <div key={x.id} className="dc-com-esticado flex flex-col gap-0.5">
+                        <Link to="/publicacoes" search={{ id: x.id }} className="dc-esticado dc-t-corpo font-semibold text-[var(--tinta)]">
+                          {x.titulo}
+                        </Link>
+                        <span className="dc-t-meta text-[var(--tinta-2)]">
+                          <DetalheDaPublicacao publicacao={x} />
+                        </span>
+                      </div>
                     ))}
                     {p.contadores.publicacoesNovas > p.publicacoes.length && (
                       <Link to="/publicacoes" className="dc-link">
@@ -239,6 +245,22 @@ export function HojePage() {
       )}
       {dialogos}
     </Pagina>
+  );
+}
+
+/** "Marina Duarte · prazo sugerido 23/11": a data sugerida abre a conta. */
+function DetalheDaPublicacao({ publicacao: x }: { publicacao: PainelDoDia["publicacoes"][number] }) {
+  const data = x.fimSugerido ? diaCurto(x.fimSugerido) : null;
+  if (!data || !x.detalhe.includes(data)) return <>{x.detalhe}</>;
+  const [antes, depois] = x.detalhe.split(data);
+  return (
+    <>
+      {antes}
+      <DataViva alvo={{ publicacao: x.id }} texto>
+        {data}
+      </DataViva>
+      {depois}
+    </>
   );
 }
 
@@ -283,8 +305,17 @@ function Numeros({ painel, celular }: { painel: PainelDoDia; celular?: boolean }
 function seloDoItem(i: ItemDoDia, celular?: boolean) {
   if (i.tipo === "tarefa") return <Selo urgencia={celular ? "breve" : "tarefa"}>{celular ? "Tarefa · hoje" : "Tarefa"}</Selo>;
   if (i.tipo === "audiencia") return <Selo urgencia="audiencia">{i.quando}</Selo>;
-  return <Selo urgencia={i.urgencia as "vencido" | "hoje"}>{i.quando}</Selo>;
+  return (
+    <span title={i.interno ? [i.interno.regra, i.interno.aviso].filter(Boolean).join(". ") : undefined}>
+      <DataViva alvo={{ prazo: i.id }}>
+        <Selo urgencia={i.urgencia as "vencido" | "hoje" | "breve"}>{i.quando}</Selo>
+      </DataViva>
+    </span>
+  );
 }
+
+/** O item é o prazo interno: o fatal vem antes das partes. */
+const fatalDoInterno = (i: ItemDoDia) => (i.interno ? `Fatal ${diaCurto(i.interno.fatal)} · ` : "");
 
 function useAbrir(i: ItemDoDia) {
   const navigate = useNavigate();
@@ -312,9 +343,13 @@ function LinhaDoDia({ item: i }: { item: ItemDoDia }) {
             {i.aConfirmar && <span className="dc-selo dc-selo--ia">IA · a confirmar</span>}
           </span>
           {(i.detalhe || i.cnj) && (
-            <span className="dc-celula__2 dc-celula__2--uma">
-              {i.detalhe}
-              {i.detalhe && i.cnj && " · "}
+            <span className="dc-celula__2 dc-celula__2--cnj">
+              {i.detalhe && (
+                <span className="dc-corta">
+                  {fatalDoInterno(i)}
+                  {i.detalhe}
+                </span>
+              )}
               {i.cnj && <Cnj cnj={i.cnj} />}
             </span>
           )}
@@ -328,11 +363,16 @@ function LinhaDoDia({ item: i }: { item: ItemDoDia }) {
 }
 
 function CartaoDoDia({ item: i }: { item: ItemDoDia }) {
-  const conteudo = (
+  const titulo = i.tipo === "audiencia" ? `${i.titulo.replace(" · por vídeo", "")} · ${i.quando}` : i.titulo;
+  const resto = (
     <>
-      <span className="dc-item__titulo">{i.tipo === "audiencia" ? `${i.titulo.replace(" · por vídeo", "")} · ${i.quando}` : i.titulo}</span>
       {i.tipo === "audiencia" ? <Selo urgencia="audiencia">{i.titulo.includes("por vídeo") ? "Por vídeo" : "Presencial"}</Selo> : seloDoItem(i, true)}
-      {i.detalhe && <span className="dc-item__meta">{i.detalhe}</span>}
+      {i.detalhe && (
+        <span className="dc-item__meta">
+          {fatalDoInterno(i)}
+          {i.detalhe}
+        </span>
+      )}
       <span className="dc-item__pe">
         <Avatar pessoa={i.responsavel} />
         {/* Um texto só, que quebra como frase, e não em colunas. */}
@@ -349,12 +389,22 @@ function CartaoDoDia({ item: i }: { item: ItemDoDia }) {
       </span>
     </>
   );
+  // O prazo tem a data viva por cima: o link cobre o cartão sem envolver o botão.
   if (i.tipo === "prazo")
     return (
-      <Link className="dc-item" to="/prazos/$id" params={{ id: i.id }}>
-        {conteudo}
-      </Link>
+      <div className="dc-item dc-com-esticado">
+        <Link className="dc-item__titulo dc-esticado" to="/prazos/$id" params={{ id: i.id }}>
+          {titulo}
+        </Link>
+        {resto}
+      </div>
     );
+  const conteudo = (
+    <>
+      <span className="dc-item__titulo">{titulo}</span>
+      {resto}
+    </>
+  );
   if (i.tipo === "audiencia")
     return (
       <Link className="dc-item" to="/audiencias/$id" params={{ id: i.id }}>

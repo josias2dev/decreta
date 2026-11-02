@@ -1,13 +1,14 @@
-import { diaDoInstante, ehDia, hojeEm, horaLocal, instanteLocal, nomeDaAudiencia, somarDias, urgenciaDoPrazo } from "@decreta/core";
+import { diaDoInstante, ehDia, hojeEm, horaLocal, instanteLocal, nomeDaAudiencia, prazoInterno, somarDias, urgenciaDoPrazo } from "@decreta/core";
 import { audiencias, prazos, processos, tarefas } from "@decreta/db";
 import { itemDoChecklist } from "@decreta/ia";
 import { and, asc, eq, gte, isNull, lt, lte, ne } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { naTela, ultimaAnalise } from "../servicos/analises.ts";
-import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
+import { calendarioDoEscritorio, calendariosDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
+import { antecedenciaDoInterno, FOLGA_DO_INTERNO } from "../servicos/prazos.ts";
 import { corpo, falha, id, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 
 const dia = z.string().refine(ehDia, "data inválida");
@@ -32,7 +33,9 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return tenant(c, deps, async (tx) => {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const cal = await calendarioDoEscritorio(tx, await tribunalPadrao(tx, c.get("orgId")));
-      const proc = { titulo: processos.titulo, cnj: processos.cnj };
+      const proc = { titulo: processos.titulo, cnj: processos.cnj, tipo: processos.tipo };
+      const antecedencia = await antecedenciaDoInterno(tx, c.get("orgId"));
+      const calendarioDe = antecedencia ? await calendariosDoEscritorio(tx, c.get("orgId")) : null;
       const [auds, przs, tars] = await Promise.all([
         tx
           .select({ a: audiencias, processo: proc })
@@ -41,10 +44,10 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
           .where(and(ne(audiencias.situacao, "cancelada"), gte(audiencias.em, instanteLocal(de, "00:00", tz)), lt(audiencias.em, instanteLocal(somarDias(ate, 1), "00:00", tz))))
           .orderBy(asc(audiencias.em)),
         tx
-          .select({ p: prazos, processo: proc })
+          .select({ p: prazos, processo: proc, onde: { tribunal: processos.tribunal, comarca: processos.comarca } })
           .from(prazos)
           .innerJoin(processos, eq(processos.id, prazos.processoId))
-          .where(and(eq(prazos.situacao, "aberto"), gte(prazos.fim, de), lte(prazos.fim, ate)))
+          .where(and(eq(prazos.situacao, "aberto"), gte(prazos.fim, de), lte(prazos.fim, antecedencia ? somarDias(ate, FOLGA_DO_INTERNO) : ate)))
           .orderBy(asc(prazos.fim)),
         tx.select().from(tarefas).where(and(gte(tarefas.dia, de), lte(tarefas.dia, ate))).orderBy(asc(tarefas.dia)),
       ]);
@@ -56,8 +59,13 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
       };
       for (const { a, processo } of auds)
         em(diaDoInstante(a.em, tz)).push({ tipo: "audiencia", id: a.id, hora: horaLocal(a.em, tz), titulo: nomeDaAudiencia(a.tipo), porVideo: a.porVideo, processo: { id: a.processoId, ...processo }, responsavel: resumir(pessoas, a.responsavelId), situacao: a.situacao });
-      for (const { p, processo } of przs)
-        em(p.fim).push({ tipo: "prazo", id: p.id, titulo: p.tipo, urgencia: urgenciaDoPrazo(p, hoje, cal), processo: { id: p.processoId, ...processo }, responsavel: resumir(pessoas, p.responsavelId), aConfirmar: !p.confirmadoEm });
+      for (const { p, processo, onde } of przs) {
+        const item = { tipo: "prazo", id: p.id, titulo: p.tipo, processo: { id: p.processoId, ...processo }, responsavel: resumir(pessoas, p.responsavelId), aConfirmar: !p.confirmadoEm };
+        if (p.fim <= ate) em(p.fim).push({ ...item, urgencia: urgenciaDoPrazo(p, hoje, cal) });
+        // O mesmo prazo aparece também no dia do interno, com o fatal à vista.
+        const interno = calendarioDe && prazoInterno({ fatal: p.fim, antecedencia, hoje, calendario: calendarioDe(onde) });
+        if (interno && interno.dia >= de && interno.dia <= ate) em(interno.dia).push({ ...item, urgencia: "breve", interno: { fatal: p.fim, regra: interno.regra, aviso: interno.aviso } });
+      }
       for (const t of tars) em(t.dia).push({ tipo: "tarefa", id: t.id, titulo: t.titulo, detalhe: t.detalhe, concluida: !!t.concluidaEm, processoId: t.processoId, responsavel: resumir(pessoas, t.responsavelId) });
       return c.json({ hoje, de, ate, dias: [...dias.values()].sort((a, b) => a.dia.localeCompare(b.dia)) });
     });
@@ -83,7 +91,7 @@ export function rotasDaAgenda(app: Hono<Ambiente>, deps: DepsDasRotas) {
         situacao: a.situacao,
         checklist: a.checklist.map((i) => ({ ...i, texto: itemDoChecklist(i.texto) })),
         responsavel: resumir(pessoas, a.responsavelId),
-        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, orgao: processo.orgao, comarca: processo.comarca, semIa: ctx?.semIa ?? false },
+        processo: { id: processo.id, titulo: processo.titulo, cnj: processo.cnj, tipo: processo.tipo, orgao: processo.orgao, comarca: processo.comarca, semIa: ctx?.semIa ?? false },
         preparacao: preparacaoNaTela(naTela(await ultimaAnalise(tx, "audiencia", a.id, "preparar-audiencia"), ctx?.base)),
       });
     });

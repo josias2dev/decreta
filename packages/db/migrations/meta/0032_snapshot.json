@@ -1,6 +1,6 @@
 {
-  "id": "f7f329c5-5963-4d9f-8c8a-77f95ea5bd00",
-  "prevId": "bd58a9af-c09c-491f-89c0-625185171dbf",
+  "id": "a6ffce22-52cc-45dd-81e3-ad5d4ba8738d",
+  "prevId": "54fb51b9-c771-4937-bf5a-177db3d920f0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3668,6 +3668,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'{}'::jsonb"
+        },
+        "prazo_interno_dias": {
+          "name": "prazo_interno_dias",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "onboarding_concluido_em": {
           "name": "onboarding_concluido_em",

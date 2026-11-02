@@ -79,7 +79,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .limit(10);
       const proposta = propostas.find((a) => a.conteudo.tipo === tipo.id)?.conteudo.estrategia as EstrategiaDaPeca | undefined;
       return c.json({
-        processo: { id: p.id, titulo: p.titulo, cnj: p.cnj, orgao: p.orgao, semIa: await semIa(tx, { processoId: p.id }) },
+        processo: { id: p.id, titulo: p.titulo, cnj: p.cnj, tipo: p.tipo, orgao: p.orgao, semIa: await semIa(tx, { processoId: p.id }) },
         prazo: prazo ? { id: prazo.id, tipo: prazo.tipo, fim: prazo.fim } : null,
         tipoSugerido: sugerido.id,
         /** As partes como o cadastro diz: pessoa física ou jurídica nunca sai do texto. */

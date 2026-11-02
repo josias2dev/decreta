@@ -209,7 +209,7 @@ export function ClientePage() {
               <span className="dc-celula min-w-0 flex-1">
                 <span className="dc-celula__1">{p.titulo}</span>
                 <span className="dc-celula__2">
-                  <Cnj cnj={p.cnj} />
+                  <Cnj cnj={p.cnj} tipo={p.tipo} />
                   {p.orgao && ` · ${p.orgao}`}
                   {p.situacao !== "ativo" && ` · ${p.situacao}`}
                 </span>

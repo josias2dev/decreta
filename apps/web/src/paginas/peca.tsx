@@ -10,6 +10,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState, type MouseEvent
 import { AjusteDaPecaPainel } from "@/componentes/ajuste-da-peca";
 import { AntesDeProtocolar, AvisoAoBaixar, pontosAntesDeProtocolar, type PontoNaLista } from "@/componentes/antes-de-protocolar";
 import { useAviso } from "@/componentes/avisos";
+import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { EstrategiaDaPecaEditor } from "@/componentes/estrategia-da-peca";
 import { DialogoDoFato, FatosDaPeca } from "@/componentes/fatos-da-peca";
@@ -227,7 +228,16 @@ export function PecaPage() {
   const iaLigada = !!eu.data?.ia && !p.processo.semIa;
   const timbre = escritorio.data?.timbre ?? { nome: eu.data?.escritorio.nome ?? "" };
   const docx = pecaId && texto && !gerando ? `${API_URL}/api/app/pecas/${pecaId}/docx` : undefined;
-  const sobreOPrazo = p.prazo ? `Sugerido pelo prazo de ${diaCurto(p.prazo.fim)}` : "Escolha o modelo da peça";
+  const sobreOPrazo = p.prazo ? (
+    <>
+      Sugerido pelo prazo de{" "}
+      <DataViva alvo={{ prazo: p.prazo.id }} texto>
+        {diaCurto(p.prazo.fim)}
+      </DataViva>
+    </>
+  ) : (
+    "Escolha o modelo da peça"
+  );
   const quandoGerou = peca && !gerando ? `${diaDoInstante(peca.atualizadaEm) === eu.data?.hoje ? "às" : `em ${diaCurto(diaDoInstante(peca.atualizadaEm))} às`} ${hora(peca.atualizadaEm)}` : null;
   const revisada = peca?.situacao === "revisada";
   const revisao = salva?.revisao;
@@ -533,8 +543,15 @@ export function PecaPage() {
           titulo="Gerar peça"
           sobre={
             <>
-              <strong>{p.processo.titulo}</strong> · <Cnj cnj={p.processo.cnj} />
-              {p.prazo && ` · vence ${diaMes(p.prazo.fim)}`}
+              <strong>{p.processo.titulo}</strong> · <Cnj cnj={p.processo.cnj} tipo={p.processo.tipo} />
+              {p.prazo && (
+                <>
+                  {" · vence "}
+                  <DataViva alvo={{ prazo: p.prazo.id }} texto>
+                    {diaMes(p.prazo.fim)}
+                  </DataViva>
+                </>
+              )}
             </>
           }
           acoes={

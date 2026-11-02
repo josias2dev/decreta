@@ -208,7 +208,7 @@ export function NovoProcesso({ aberto, aoFechar, cliente }: { aberto: boolean; a
   const navigate = useNavigate();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
-  const vazio = { cnj: "", extrajudicial: false, titulo: "", poloCliente: "ativo" as "ativo" | "passivo", outraParte: "", orgao: "", comarca: "", classe: "", responsavelId: "" };
+  const vazio = { cnj: "", extrajudicial: false, semNumero: false, titulo: "", poloCliente: "ativo" as "ativo" | "passivo", outraParte: "", orgao: "", comarca: "", classe: "", responsavelId: "" };
   const [f, setF] = useState(vazio);
   const [cli, setCli] = useState<{ id: string; nome: string } | null>(cliente ?? null);
   /** Qual parte do tribunal é o cliente. */
@@ -216,7 +216,7 @@ export function NovoProcesso({ aberto, aoFechar, cliente }: { aberto: boolean; a
   const [cadastrar, setCadastrar] = useState<string | null>(null);
 
   const digitos = f.cnj.replace(/\D/g, "");
-  const buscar = aberto && !f.extrajudicial && digitos.length === 20;
+  const buscar = aberto && !f.extrajudicial && !f.semNumero && digitos.length === 20;
   const consulta = useQuery({
     queryKey: ["consulta-cnj", digitos],
     queryFn: () => api<ConsultaDoCnj>(`/processos/consulta?cnj=${digitos}`),
@@ -280,7 +280,7 @@ export function NovoProcesso({ aberto, aoFechar, cliente }: { aberto: boolean; a
       api<{ id: string }>("/processos", {
         json: {
           tipo: f.extrajudicial ? "extrajudicial" : "judicial",
-          cnj: f.extrajudicial ? null : f.cnj,
+          cnj: f.extrajudicial || f.semNumero ? null : f.cnj,
           titulo: f.titulo.trim() || undefined,
           clienteId: cli?.id ?? null,
           poloCliente: f.poloCliente,
@@ -295,12 +295,13 @@ export function NovoProcesso({ aberto, aoFechar, cliente }: { aberto: boolean; a
     onSuccess: (r) => {
       void qc.invalidateQueries({ queryKey: ["processos"] });
       void qc.invalidateQueries({ queryKey: ["eu"] });
-      avisar(f.extrajudicial ? "Caso cadastrado." : c && (c.fontes.datajud === "achou" || c.fontes.djen === "achou") ? "Processo cadastrado com os dados do tribunal." : "Processo cadastrado. Os andamentos chegam do DataJud em instantes.");
+      avisar(f.extrajudicial ? "Caso cadastrado." : f.semNumero ? "Processo salvo incompleto. Busque o número quando puder." : c && (c.fontes.datajud === "achou" || c.fontes.djen === "achou") ? "Processo cadastrado com os dados do tribunal." : "Processo cadastrado. Os andamentos chegam do DataJud em instantes.");
       fechar();
       void navigate({ to: "/processos/$id", params: { id: r.id } });
     },
   });
-  const pronto = (f.extrajudicial ? f.titulo.trim().length >= 2 : digitos.length === 20) && !c?.cadastrado;
+  // Sem o número, basta o que identifique o processo depois: o título, o cliente ou a outra parte.
+  const pronto = (f.extrajudicial ? f.titulo.trim().length >= 2 : f.semNumero ? f.titulo.trim().length >= 2 || !!cli || f.outraParte.trim().length >= 2 : digitos.length === 20) && !c?.cadastrado;
   const doTribunal = (campo: "orgao" | "comarca") => (c && c[campo] && f[campo] === c[campo] ? "Veio do tribunal" : undefined);
   return (
     <Dialogo
@@ -314,7 +315,7 @@ export function NovoProcesso({ aberto, aoFechar, cliente }: { aberto: boolean; a
             Cancelar
           </Botao>
           <Botao variante="primaria" type="submit" form="novo-processo" ocupado={criar.isPending} disabled={!pronto}>
-            Cadastrar
+            {f.semNumero ? "Salvar incompleto" : "Cadastrar"}
           </Botao>
         </>
       }
@@ -327,13 +328,25 @@ export function NovoProcesso({ aberto, aoFechar, cliente }: { aberto: boolean; a
           criar.mutate();
         }}
       >
-        <label className="dc-opcao">
-          <input type="checkbox" className="dc-checa" checked={f.extrajudicial} onChange={(e) => setF({ ...f, extrajudicial: e.target.checked })} /> Caso extrajudicial (sem número)
-        </label>
+        <div className="flex flex-col gap-2">
+          <label className="dc-opcao">
+            <input type="checkbox" className="dc-checa" checked={f.extrajudicial} onChange={(e) => setF({ ...f, extrajudicial: e.target.checked, semNumero: false })} /> Caso extrajudicial (sem número)
+          </label>
+          <label className="dc-opcao">
+            <input type="checkbox" className="dc-checa" checked={f.semNumero} onChange={(e) => setF({ ...f, semNumero: e.target.checked, extrajudicial: false })} /> Ainda não tenho o número
+          </label>
+        </div>
         {f.extrajudicial ? (
           <Campo rotulo="Título do caso" htmlFor="pr-titulo">
             <input id="pr-titulo" value={f.titulo} onChange={(e) => setF({ ...f, titulo: e.target.value })} placeholder="Revisão do contrato social" />
           </Campo>
+        ) : f.semNumero ? (
+          <>
+            <Faixa tipo="aviso">Sem o número, o processo fica incompleto e não é monitorado: o Decreta não traz os andamentos do DataJud nem liga as publicações do DJEN a ele. Dá para completar depois, na ficha.</Faixa>
+            <Campo rotulo="Título do processo" htmlFor="pr-titulo" ajuda="Opcional: sem ele, o título sai do cliente e da outra parte.">
+              <input id="pr-titulo" value={f.titulo} onChange={(e) => setF({ ...f, titulo: e.target.value })} placeholder="Marina Duarte × Seguradora Alfa" />
+            </Campo>
+          </>
         ) : (
           <>
             <Campo rotulo="Número do processo (CNJ)" htmlFor="pr-cnj">

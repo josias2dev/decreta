@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/539fa387-026c-4322-b60c-0dc0c992b0d4",
+  "path": "/publicacoes/c0c4b866-ed41-44de-b2a2-aa81d201f23b",
   "corpo": {
-    "id": "539fa387-026c-4322-b60c-0dc0c992b0d4",
+    "id": "c0c4b866-ed41-44de-b2a2-aa81d201f23b",
     "situacao": "nova",
     "fonte": "manual",
     "disponibilizadaEm": "2026-10-28",
@@ -19,9 +19,10 @@
     "destinatarios": [],
     "advogados": [],
     "processo": {
-      "id": "5bdd8ca2-8b52-4a0b-ba26-a690090643d0",
+      "id": "9b08b102-00d5-426b-a9c7-192d95727993",
       "titulo": "Eduardo Lima × Saúde Litoral Planos",
       "cnj": "5003390-24.2026.8.24.0005",
+      "tipo": "judicial",
       "classe": "Procedimento comum cível",
       "orgao": "1ª Vara Cível",
       "comarca": "Balneário Camboriú",
@@ -29,7 +30,7 @@
       "semIa": false
     },
     "sugestao": {
-      "id": "6f8971d9-91f5-424b-aae3-a9b52081eda9",
+      "id": "0643f772-c3dd-4468-a6a6-5258f848f11c",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -75,13 +76,13 @@
         }
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-11-02T21:21:44.467Z",
+      "em": "2026-11-02T23:03:44.392Z",
       "desatualizada": false,
       "erro": null,
       "responsavel": null
     },
     "prazo": {
-      "id": "1da86ee5-e08f-4117-9747-262d93021b90",
+      "id": "5cf26eb3-3147-4854-8c71-471d112b35dc",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Apelação"
@@ -89,7 +90,7 @@
     "audiencia": null,
     "decisao": true,
     "sentenca": {
-      "id": "7b980f55-431f-4955-8c7d-a2e8695779e7",
+      "id": "3d0e3c2b-e139-447b-943c-2f586ff12aa5",
       "acao": "ler-sentenca",
       "situacao": "pronto",
       "conteudo": {
@@ -131,7 +132,7 @@
         "honorarios": "Ré paga custas e 10% do valor da condenação."
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-11-02T21:21:44.491Z",
+      "em": "2026-11-02T23:03:44.770Z",
       "desatualizada": false,
       "erro": null
     },

@@ -10,17 +10,18 @@
         "itens": [
           {
             "tipo": "audiencia",
-            "id": "0752aa4f-97e0-4f47-8b49-34fe9ffb8627",
+            "id": "34c5be46-c7cb-4f6b-a12d-c7d1c3581160",
             "hora": "14:30",
             "titulo": "Audiência de conciliação",
             "porVideo": true,
             "processo": {
-              "id": "c5288f5e-f98d-4e96-9283-0a40c99d326c",
+              "id": "8e168924-e048-487f-ba41-ff788fd35819",
               "titulo": "Carlos Henrique Prado × Construtora Vale Norte",
-              "cnj": "5007745-68.2026.8.24.0008"
+              "cnj": "5007745-68.2026.8.24.0008",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
               "nome": "Rafael Freitas",
               "apelido": "Rafael",
               "iniciais": "RF",
@@ -30,17 +31,18 @@
           },
           {
             "tipo": "audiencia",
-            "id": "3179213b-ca61-42b1-a8ab-87f93e2a1652",
+            "id": "3ff8a912-5767-4871-b1a3-805178dd4fb5",
             "hora": "16:00",
             "titulo": "Audiência de instrução e julgamento",
             "porVideo": false,
             "processo": {
-              "id": "0f0b5f59-f253-4c9b-b4a0-2c5652ad2b4b",
+              "id": "ac930a84-745b-4314-8e5c-5d9f6e850cbe",
               "titulo": "Antônio Reis × Transportadora Vale Verde",
-              "cnj": "0000533-40.2025.5.12.0028"
+              "cnj": "0000533-40.2025.5.12.0028",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
@@ -50,64 +52,67 @@
           },
           {
             "tipo": "prazo",
-            "id": "7593af3c-51af-488a-b3c5-2b24f5759704",
-            "titulo": "Juntar procuração atualizada",
-            "urgencia": "hoje",
+            "id": "3e43e8dc-37bd-4057-9b46-a3385974afda",
+            "titulo": "Alegações finais",
             "processo": {
-              "id": "5bdd8ca2-8b52-4a0b-ba26-a690090643d0",
+              "id": "1d0958c8-7354-4fe9-b5ce-b8275e6abd96",
+              "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
+              "cnj": "5009876-57.2025.8.24.0038",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
+              "nome": "Beatriz Souza",
+              "apelido": "Beatriz",
+              "iniciais": "BS",
+              "foto": "/demonstracao/beatriz.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "hoje"
+          },
+          {
+            "tipo": "prazo",
+            "id": "dba28f33-d6bf-4914-9e7b-954c2a07f3c9",
+            "titulo": "Réplica à contestação",
+            "processo": {
+              "id": "ddc0e6b1-8866-41e0-a656-1a7291aa9c0d",
+              "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
+              "cnj": "5011873-86.2026.8.24.0023",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
+              "nome": "Beatriz Souza",
+              "apelido": "Beatriz",
+              "iniciais": "BS",
+              "foto": "/demonstracao/beatriz.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "hoje"
+          },
+          {
+            "tipo": "prazo",
+            "id": "88db028f-6939-4e96-abbb-89e6f5012f27",
+            "titulo": "Juntar procuração atualizada",
+            "processo": {
+              "id": "9b08b102-00d5-426b-a9c7-192d95727993",
               "titulo": "Eduardo Lima × Saúde Litoral Planos",
-              "cnj": "5003390-24.2026.8.24.0005"
+              "cnj": "5003390-24.2026.8.24.0005",
+              "tipo": "judicial"
             },
             "responsavel": null,
-            "aConfirmar": true
-          },
-          {
-            "tipo": "prazo",
-            "id": "474546be-6b6f-4eba-8eb9-85bcba715907",
-            "titulo": "Réplica à contestação",
-            "urgencia": "hoje",
-            "processo": {
-              "id": "74ac578b-268c-4774-abeb-cf8f66eaae33",
-              "titulo": "Ana Lúcia Ferraz × Banco Horizonte S.A.",
-              "cnj": "5011873-86.2026.8.24.0023"
-            },
-            "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
-              "nome": "Beatriz Souza",
-              "apelido": "Beatriz",
-              "iniciais": "BS",
-              "foto": "/demonstracao/beatriz.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "c9cd5292-9aa7-4f14-8f8e-3a5fdd1dfbd2",
-            "titulo": "Alegações finais",
-            "urgencia": "hoje",
-            "processo": {
-              "id": "a024a7b9-4132-4c6a-8225-930c2544b89b",
-              "titulo": "Roberto Kühn × Transportes Serra Azul Ltda.",
-              "cnj": "5009876-57.2025.8.24.0038"
-            },
-            "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
-              "nome": "Beatriz Souza",
-              "apelido": "Beatriz",
-              "iniciais": "BS",
-              "foto": "/demonstracao/beatriz.jpg"
-            },
-            "aConfirmar": false
+            "aConfirmar": true,
+            "urgencia": "hoje"
           },
           {
             "tipo": "tarefa",
-            "id": "48a469ac-f2d2-4c75-95ec-58df72145b9b",
+            "id": "428532fd-effe-4b51-b9c5-a3353a8cd4fc",
             "titulo": "Cobrar documentos do cliente novo",
             "detalhe": "faltam RG e comprovante de residência",
             "concluida": false,
             "processoId": null,
             "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
               "nome": "Rafael Freitas",
               "apelido": "Rafael",
               "iniciais": "RF",
@@ -121,51 +126,53 @@
         "itens": [
           {
             "tipo": "prazo",
-            "id": "a9ccdf08-d6f4-4837-b1f2-6cb9112932d3",
-            "titulo": "Embargos de declaração",
-            "urgencia": "breve",
-            "processo": {
-              "id": "227fc0db-35fa-49fb-8888-b9937b5d522b",
-              "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
-              "cnj": "0001145-87.2026.5.12.0045"
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "788749da-9947-4ee4-8ac5-d5415b30a2ca",
+            "id": "1cc64d7b-aa2b-437a-8a1b-9e112e0283f7",
             "titulo": "Recolher custas do recurso",
-            "urgencia": "breve",
             "processo": {
-              "id": "b0c3d804-822f-4a98-8ca8-fec91f54cd52",
+              "id": "d850015e-48ae-48d1-895c-4cea9fdf0a7f",
               "titulo": "Gilberto Weiss × Cooperativa Agro Vale",
-              "cnj": "5000456-14.2024.8.24.0054"
+              "cnj": "5000456-14.2024.8.24.0054",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
               "foto": "/demonstracao/camila.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "breve"
+          },
+          {
+            "tipo": "prazo",
+            "id": "a264202c-91c5-4b58-853c-40430c42ae5e",
+            "titulo": "Embargos de declaração",
+            "processo": {
+              "id": "2b1fa707-7807-43ae-b6c5-6d471cbdcca8",
+              "titulo": "Hotel Mar Azul Ltda. × Fernanda Rocha",
+              "cnj": "0001145-87.2026.5.12.0045",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "breve"
           },
           {
             "tipo": "tarefa",
-            "id": "5a88550d-4f03-4dad-a7d8-00ed9a88ffd1",
+            "id": "9f4cc9dc-386c-46a6-829e-23e03489bf7e",
             "titulo": "Ligar para a cliente sobre o laudo",
             "detalhe": "explicar o resultado da perícia e os próximos passos",
             "concluida": false,
-            "processoId": "78098986-fa0c-49c7-a5c2-17b6ee49c7dd",
+            "processoId": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
             "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
               "nome": "Beatriz Souza",
               "apelido": "Beatriz",
               "iniciais": "BS",
@@ -174,13 +181,13 @@
           },
           {
             "tipo": "tarefa",
-            "id": "ca44a497-3d14-439b-b1f8-fe12c00ce742",
+            "id": "404cc20d-b8c8-4fe9-8557-64d9ebd7f350",
             "titulo": "Conferir guia de custas",
             "detalhe": "vencimento e código de barras",
             "concluida": false,
-            "processoId": "03c5217b-bdc0-4ee4-b110-ad4d7afb1dae",
+            "processoId": "b10dd399-4bd1-437d-9276-037c915c7f74",
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
@@ -194,17 +201,18 @@
         "itens": [
           {
             "tipo": "audiencia",
-            "id": "0df586a1-0095-4dd9-89fb-42fda3ec0a0f",
+            "id": "57e89b7e-6071-41af-acce-68c7735d4481",
             "hora": "15:00",
             "titulo": "Audiência de mediação",
             "porVideo": true,
             "processo": {
-              "id": "d7bc7c0e-710c-41c9-8504-dea2b2f86d19",
+              "id": "40d28b6d-e978-4e63-ac1d-22dc8dbd848c",
               "titulo": "André Probst Maas × Cláudia Cunha",
-              "cnj": "5033408-60.2025.8.24.0038"
+              "cnj": "5033408-60.2025.8.24.0038",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
               "nome": "Beatriz Souza",
               "apelido": "Beatriz",
               "iniciais": "BS",
@@ -214,32 +222,33 @@
           },
           {
             "tipo": "prazo",
-            "id": "49cdf17f-86a0-4370-81c5-c0f8a7b31aed",
+            "id": "88db6167-ff3f-4677-be9b-fc992eecd7c9",
             "titulo": "Manifestação sobre documentos",
-            "urgencia": "breve",
             "processo": {
-              "id": "0427eec3-8493-43d8-98b0-8feb8ec57116",
+              "id": "936d7da0-fa4f-4a22-afa7-a2ffa9a3bed0",
               "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
-              "cnj": "0000977-14.2026.5.12.0004"
+              "cnj": "0000977-14.2026.5.12.0004",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
               "foto": "/demonstracao/tiago.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "breve"
           },
           {
             "tipo": "tarefa",
-            "id": "f811dfa9-d62a-41f0-bf91-69e4aa98ff8c",
+            "id": "17306b41-d243-425d-bed1-5b5ca72c8aae",
             "titulo": "Conferir cálculo das verbas rescisórias",
             "detalhe": "planilha enviada pelo contador do hotel",
             "concluida": false,
-            "processoId": "227fc0db-35fa-49fb-8888-b9937b5d522b",
+            "processoId": "2b1fa707-7807-43ae-b6c5-6d471cbdcca8",
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
@@ -253,17 +262,18 @@
         "itens": [
           {
             "tipo": "audiencia",
-            "id": "9b6c08c5-90ed-4392-8042-7d74dbfb8004",
+            "id": "5f1ef59a-0cf1-489f-91f3-f14f4d5de613",
             "hora": "10:00",
             "titulo": "Audiência de mediação",
             "porVideo": false,
             "processo": {
-              "id": "fcabbdba-dab8-49ad-a524-66f41f86f105",
+              "id": "6903cda0-a1d0-4686-8d9f-216a2e2c283e",
               "titulo": "Sandra Petry × Gilmar Petry",
-              "cnj": "5006671-83.2026.8.24.0038"
+              "cnj": "5006671-83.2026.8.24.0038",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
               "nome": "Beatriz Souza",
               "apelido": "Beatriz",
               "iniciais": "BS",
@@ -273,51 +283,53 @@
           },
           {
             "tipo": "prazo",
-            "id": "87059510-d100-4722-b04a-a44572d54c0a",
-            "titulo": "Razões finais",
-            "urgencia": "breve",
-            "processo": {
-              "id": "0f0b5f59-f253-4c9b-b4a0-2c5652ad2b4b",
-              "titulo": "Antônio Reis × Transportadora Vale Verde",
-              "cnj": "0000533-40.2025.5.12.0028"
-            },
-            "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
-              "nome": "Tiago Martins",
-              "apelido": "Tiago",
-              "iniciais": "TM",
-              "foto": "/demonstracao/tiago.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "7447ecf5-ff7b-4045-86de-99e93494a1f8",
+            "id": "753e3783-95e7-45a2-9084-46ea4f916096",
             "titulo": "Quesitos e assistente técnico",
-            "urgencia": "breve",
             "processo": {
-              "id": "1e64ad7a-5fad-4bf8-9eab-aaecc961d30c",
+              "id": "cdb63773-27d0-4651-bc31-1d9c9c66ca9b",
               "titulo": "Helena Vieira × Instituto Nacional do Seguro Social",
-              "cnj": "5018822-20.2026.4.04.7201"
+              "cnj": "5018822-20.2026.4.04.7201",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
               "nome": "Beatriz Souza",
               "apelido": "Beatriz",
               "iniciais": "BS",
               "foto": "/demonstracao/beatriz.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "breve"
+          },
+          {
+            "tipo": "prazo",
+            "id": "ac1f6094-d0e2-4fba-ae70-8ffa402c58ea",
+            "titulo": "Razões finais",
+            "processo": {
+              "id": "ac930a84-745b-4314-8e5c-5d9f6e850cbe",
+              "titulo": "Antônio Reis × Transportadora Vale Verde",
+              "cnj": "0000533-40.2025.5.12.0028",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+              "nome": "Tiago Martins",
+              "apelido": "Tiago",
+              "iniciais": "TM",
+              "foto": "/demonstracao/tiago.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "breve"
           },
           {
             "tipo": "tarefa",
-            "id": "bf517cc2-dab9-4bbc-8145-59e962800847",
+            "id": "70c49c4e-e824-4696-8430-5b5dcdefc48f",
             "titulo": "Conferir guia de custas",
             "detalhe": "vencimento e código de barras",
             "concluida": false,
-            "processoId": "d4dd5f09-6025-4b0e-a377-55d879695e67",
+            "processoId": "7c5030ae-b7fc-4b20-98b9-e47dd33af8f8",
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
@@ -331,51 +343,53 @@
         "itens": [
           {
             "tipo": "prazo",
-            "id": "fd6741f1-f609-44d5-bfba-bf43a9d7d18f",
-            "titulo": "Rol de testemunhas",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "0427eec3-8493-43d8-98b0-8feb8ec57116",
-              "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
-              "cnj": "0000977-14.2026.5.12.0004"
-            },
-            "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
-              "nome": "Tiago Martins",
-              "apelido": "Tiago",
-              "iniciais": "TM",
-              "foto": "/demonstracao/tiago.jpg"
-            },
-            "aConfirmar": true
-          },
-          {
-            "tipo": "prazo",
-            "id": "6d056344-b268-4562-a4dc-e057fe46fac6",
+            "id": "86f00d83-0384-4c44-bd14-d110e7889abf",
             "titulo": "Indicar bens à penhora",
-            "urgencia": "prazo",
             "processo": {
-              "id": "ba5267f5-cbad-4d8e-8665-60b30274fb35",
+              "id": "de4c6e95-02be-4478-a8c4-f8a41fd16fd6",
               "titulo": "Auto Center Pioneiro Ltda. × Distribuidora Peças Sul",
-              "cnj": "5012450-53.2025.8.24.0038"
+              "cnj": "5012450-53.2025.8.24.0038",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
               "foto": "/demonstracao/camila.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "c8f60875-9d35-4a3d-ad51-c86720966f7a",
+            "titulo": "Rol de testemunhas",
+            "processo": {
+              "id": "936d7da0-fa4f-4a22-afa7-a2ffa9a3bed0",
+              "titulo": "Jorge Batista × Mercado Bom Preço Ltda.",
+              "cnj": "0000977-14.2026.5.12.0004",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+              "nome": "Tiago Martins",
+              "apelido": "Tiago",
+              "iniciais": "TM",
+              "foto": "/demonstracao/tiago.jpg"
+            },
+            "aConfirmar": true,
+            "urgencia": "prazo"
           },
           {
             "tipo": "tarefa",
-            "id": "652b3f38-dd8b-4bca-8e82-56f772ee15a6",
+            "id": "7f904055-149d-46d1-bcf9-69f40b0c334d",
             "titulo": "Pedir certidão de inteiro teor",
             "detalhe": "para instruir o recurso",
             "concluida": false,
-            "processoId": "b0c3d804-822f-4a98-8ca8-fec91f54cd52",
+            "processoId": "d850015e-48ae-48d1-895c-4cea9fdf0a7f",
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
@@ -389,17 +403,18 @@
         "itens": [
           {
             "tipo": "audiencia",
-            "id": "cacb398e-b78c-4e5d-9e57-17f127c0181c",
+            "id": "7b609a1a-405d-4c9d-b883-9c7372ea14ab",
             "hora": "10:00",
             "titulo": "Audiência de instrução e julgamento",
             "porVideo": true,
             "processo": {
-              "id": "67828281-2609-4421-9eaa-7043575ed1bf",
+              "id": "7defacbc-837c-42a3-9428-32b8e692e09f",
               "titulo": "Caroline Costa Ramos × Farmácia Rio Manso Ltda.",
-              "cnj": "0001831-42.2025.5.12.0004"
+              "cnj": "0001831-42.2025.5.12.0004",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
               "nome": "Rafael Freitas",
               "apelido": "Rafael",
               "iniciais": "RF",
@@ -409,32 +424,33 @@
           },
           {
             "tipo": "prazo",
-            "id": "7912500d-065b-41f5-9092-cb0f0e078ede",
+            "id": "37d9ee14-ebd4-43c4-b677-e037d7063fcf",
             "titulo": "Contrarrazões de apelação",
-            "urgencia": "prazo",
             "processo": {
-              "id": "cb03318c-b710-4c59-aac1-6ba512002377",
+              "id": "9f2fde6d-35d5-4eeb-8302-b5e39da23e73",
               "titulo": "Lúcia Matos × Município de Brusque",
-              "cnj": "5002210-86.2025.8.24.0011"
+              "cnj": "5002210-86.2025.8.24.0011",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
               "nome": "Rafael Freitas",
               "apelido": "Rafael",
               "iniciais": "RF",
               "foto": "/demonstracao/rafael.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "tarefa",
-            "id": "1bc96819-76d2-4692-9679-fe80eca8b2fe",
+            "id": "99c3221d-eb48-4846-b236-00e6d012a90a",
             "titulo": "Ligar para o cliente",
             "detalhe": "explicar a última movimentação",
             "concluida": false,
-            "processoId": "67828281-2609-4421-9eaa-7043575ed1bf",
+            "processoId": "7defacbc-837c-42a3-9428-32b8e692e09f",
             "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
               "nome": "Rafael Freitas",
               "apelido": "Rafael",
               "iniciais": "RF",
@@ -448,17 +464,18 @@
         "itens": [
           {
             "tipo": "audiencia",
-            "id": "e54ba01b-67ca-468f-8cc6-2b6d38a3e9f2",
+            "id": "c7a49381-4b20-4e7d-9180-e980d13e43ae",
             "hora": "13:30",
             "titulo": "Audiência una",
             "porVideo": false,
             "processo": {
-              "id": "1fce7353-7d99-43b4-a543-0211262b3f24",
+              "id": "fdb4bfc3-e0fd-41fd-9b83-fd75a1ccc1aa",
               "titulo": "Padaria Bom Grão Ltda. × Rodrigo Alves",
-              "cnj": "0000812-61.2026.5.12.0005"
+              "cnj": "0000812-61.2026.5.12.0005",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
@@ -468,17 +485,18 @@
           },
           {
             "tipo": "audiencia",
-            "id": "a8964f3a-d0ae-436a-bc66-4f13aef9aff4",
+            "id": "f090762d-c12b-43ae-b56c-feb96cd20e16",
             "hora": "16:00",
             "titulo": "Audiência de mediação",
             "porVideo": false,
             "processo": {
-              "id": "1b20a33e-e0ba-4ca8-ac61-280d63f1b73d",
+              "id": "2c6b230c-2f0a-4c8c-afe8-e307f8b5a8b4",
               "titulo": "Maurício Probst Teixeira × Cristiane Klein",
-              "cnj": "5010888-87.2026.8.24.0033"
+              "cnj": "5010888-87.2026.8.24.0033",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
@@ -488,174 +506,183 @@
           },
           {
             "tipo": "prazo",
-            "id": "560e8b70-6608-4f50-b96c-2a6f13aab81c",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
+            "id": "167896cf-7f26-4a04-8c3e-27a601dbdf51",
+            "titulo": "Recurso ordinário",
             "processo": {
-              "id": "cc60172a-fa92-4da3-a168-03f0fee5f20b",
-              "titulo": "Felipe Krause Cardoso × Saúde Litoral Planos de Saúde S.A.",
-              "cnj": "5037446-86.2023.8.24.0038"
+              "id": "738b88f0-e288-431f-839c-6db289f04460",
+              "titulo": "Ivone Pacheco × Panificadora Vento Sul Ltda.",
+              "cnj": "0001194-62.2023.5.12.0004",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+              "nome": "Tiago Martins",
+              "apelido": "Tiago",
+              "iniciais": "TM",
+              "foto": "/demonstracao/tiago.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "8154929b-d335-4e44-8e1a-61262707930c",
+            "titulo": "Recurso ordinário",
+            "processo": {
+              "id": "da43bb6f-52f0-40a6-a1ac-6712e0361aa0",
+              "titulo": "Diego Werner Bernardi × Restaurante Serra Dourada S.A.",
+              "cnj": "0002114-65.2025.5.12.0004",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+              "nome": "Tiago Martins",
+              "apelido": "Tiago",
+              "iniciais": "TM",
+              "foto": "/demonstracao/tiago.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "5c4c1dd8-d45e-453e-857b-d96725f117fe",
+            "titulo": "Recurso ordinário",
+            "processo": {
+              "id": "85fb365d-729e-420e-b8df-2d24c2e5934d",
+              "titulo": "Everton Wolff Nunes × Panificadora Bela Vista S.A.",
+              "cnj": "0001431-25.2025.5.12.0005",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+              "nome": "Tiago Martins",
+              "apelido": "Tiago",
+              "iniciais": "TM",
+              "foto": "/demonstracao/tiago.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "07956511-7342-4cf3-aba8-2148c3c5c28a",
+            "titulo": "Manifestação sobre estudo social",
+            "processo": {
+              "id": "6903cda0-a1d0-4686-8d9f-216a2e2c283e",
+              "titulo": "Sandra Petry × Gilmar Petry",
+              "cnj": "5006671-83.2026.8.24.0038",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
+              "nome": "Beatriz Souza",
+              "apelido": "Beatriz",
+              "iniciais": "BS",
+              "foto": "/demonstracao/beatriz.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "f08d5c98-6531-4ea9-9d26-bf31f30a6ca1",
+            "titulo": "Entregar a versão final ao cliente",
+            "processo": {
+              "id": "e734fd94-5469-4a1e-a487-7bde7faba066",
+              "titulo": "Restaurante Serra Dourada S.A. · revisão de contratos com fornecedores",
+              "cnj": null,
+              "tipo": "extrajudicial"
+            },
+            "responsavel": {
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
+              "nome": "Beatriz Souza",
+              "apelido": "Beatriz",
+              "iniciais": "BS",
+              "foto": "/demonstracao/beatriz.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "acb1e47c-7f43-439f-a293-daa00a50dcae",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "292ee07a-6665-4999-8028-28868836d99d",
+              "titulo": "Jussara Junkes Lopes × Voa Brasil Linhas Aéreas S.A.",
+              "cnj": "5030160-86.2025.8.24.0038",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "f2812850-cade-4731-97a3-b4784436764f",
+            "titulo": "Manifestação sobre laudo pericial",
+            "processo": {
+              "id": "7defacbc-837c-42a3-9428-32b8e692e09f",
+              "titulo": "Caroline Costa Ramos × Farmácia Rio Manso Ltda.",
+              "cnj": "0001831-42.2025.5.12.0004",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "50bb8c67-3cc8-4f4a-af0a-478f586a426c",
+            "titulo": "Entregar a versão final ao cliente",
+            "processo": {
+              "id": "2e7e9a21-1525-4275-873c-32d7999e956e",
+              "titulo": "Usinagem Ipê Amarelo Ltda. · acordo de sócios",
+              "cnj": null,
+              "tipo": "extrajudicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "a0a9e205-ea34-4155-8b25-acf31eb9dfe1",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "690cb1b5-c4ce-4736-bdeb-c70c2e6d7ca8",
+              "titulo": "Felipe Krause Cardoso × Saúde Litoral Planos de Saúde S.A.",
+              "cnj": "5037446-86.2023.8.24.0038",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
               "foto": "/demonstracao/camila.jpg"
             },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "9761b791-9556-4d3f-b8d3-eaa8a0720fc1",
-            "titulo": "Recurso ordinário",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "91695009-06d8-4b40-9012-0ffba7a3071a",
-              "titulo": "Diego Werner Bernardi × Restaurante Serra Dourada S.A.",
-              "cnj": "0002114-65.2025.5.12.0004"
-            },
-            "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
-              "nome": "Tiago Martins",
-              "apelido": "Tiago",
-              "iniciais": "TM",
-              "foto": "/demonstracao/tiago.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "402f988b-f62d-4fe9-b144-20c324f9f7a7",
-            "titulo": "Recurso ordinário",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "c0c9d645-d6d4-47d0-b28d-5291b84b6d68",
-              "titulo": "Everton Wolff Nunes × Panificadora Bela Vista S.A.",
-              "cnj": "0001431-25.2025.5.12.0005"
-            },
-            "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
-              "nome": "Tiago Martins",
-              "apelido": "Tiago",
-              "iniciais": "TM",
-              "foto": "/demonstracao/tiago.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "9c893e6f-fe2f-47a9-b68d-75b3f2043344",
-            "titulo": "Recurso ordinário",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "4031c574-9d23-4acd-bb9a-792f4e9775f3",
-              "titulo": "Ivone Pacheco × Panificadora Vento Sul Ltda.",
-              "cnj": "0001194-62.2023.5.12.0004"
-            },
-            "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
-              "nome": "Tiago Martins",
-              "apelido": "Tiago",
-              "iniciais": "TM",
-              "foto": "/demonstracao/tiago.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "e95f0bf3-9deb-471c-8fea-9c96f967d0a8",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "49833058-5d54-4286-8d9b-b49356668187",
-              "titulo": "Jussara Junkes Lopes × Voa Brasil Linhas Aéreas S.A.",
-              "cnj": "5030160-86.2025.8.24.0038"
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "47a98353-595f-4fec-a7aa-b2f00a07980b",
-            "titulo": "Manifestação sobre laudo pericial",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "67828281-2609-4421-9eaa-7043575ed1bf",
-              "titulo": "Caroline Costa Ramos × Farmácia Rio Manso Ltda.",
-              "cnj": "0001831-42.2025.5.12.0004"
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "f48c5792-9b79-4b28-be2a-8684ca0a7364",
-            "titulo": "Entregar a versão final ao cliente",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "7e60be0a-2cd9-40c5-99a7-69820a979361",
-              "titulo": "Usinagem Ipê Amarelo Ltda. · acordo de sócios",
-              "cnj": null
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "5481da8e-3cd6-45bb-b1a7-5452b68ea451",
-            "titulo": "Manifestação sobre estudo social",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "fcabbdba-dab8-49ad-a524-66f41f86f105",
-              "titulo": "Sandra Petry × Gilmar Petry",
-              "cnj": "5006671-83.2026.8.24.0038"
-            },
-            "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
-              "nome": "Beatriz Souza",
-              "apelido": "Beatriz",
-              "iniciais": "BS",
-              "foto": "/demonstracao/beatriz.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "e57c8bce-512d-4c95-934c-0b61e0f6b0b2",
-            "titulo": "Entregar a versão final ao cliente",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "d829a55a-d896-4f2d-9b34-e156f68cd466",
-              "titulo": "Restaurante Serra Dourada S.A. · revisão de contratos com fornecedores",
-              "cnj": null
-            },
-            "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
-              "nome": "Beatriz Souza",
-              "apelido": "Beatriz",
-              "iniciais": "BS",
-              "foto": "/demonstracao/beatriz.jpg"
-            },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           }
         ]
       },
@@ -664,269 +691,283 @@
         "itens": [
           {
             "tipo": "prazo",
-            "id": "8aeed1a8-aadc-4d2c-b96b-17bb238b442e",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "d4aa7469-2d92-4369-b0b7-2310dcfb6928",
-              "titulo": "Leonardo Zimmermann Farias × Instituto Nacional do Seguro Social",
-              "cnj": "5019966-97.2024.4.04.7201"
-            },
-            "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
-              "nome": "Camila Azevedo",
-              "apelido": "Camila",
-              "iniciais": "CA",
-              "foto": "/demonstracao/camila.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "b0b07347-fad8-4bd7-b159-66e00595ed2c",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "d4dd5f09-6025-4b0e-a377-55d879695e67",
-              "titulo": "Isabela Cardoso Costa × Instituto Nacional do Seguro Social",
-              "cnj": "5011285-70.2026.4.04.7201"
-            },
-            "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
-              "nome": "Camila Azevedo",
-              "apelido": "Camila",
-              "iniciais": "CA",
-              "foto": "/demonstracao/camila.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "056165d1-509f-4628-a144-650b536e561b",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "dc7c4ef3-917a-43d9-9401-0fa7cbdb4a90",
-              "titulo": "Vinícius Goulart × Instituto Nacional do Seguro Social",
-              "cnj": "5022100-63.2025.4.04.7201"
-            },
-            "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
-              "nome": "Beatriz Souza",
-              "apelido": "Beatriz",
-              "iniciais": "BS",
-              "foto": "/demonstracao/beatriz.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "78f5ae89-d9f8-4a0c-b756-6c83da937ce5",
-            "titulo": "Manifestação sobre a contestação",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "64ee247d-9ca2-4aef-ab10-d2f57877f948",
-              "titulo": "Lucas Amaral Silveira × Mercado Virtual Brasil Ltda.",
-              "cnj": "5034508-18.2026.8.24.0005"
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "9d9bd37e-4d87-436d-99ab-dcb03024353f",
+            "id": "e463e9bd-f839-41e8-b45b-e9b52b4e5d63",
             "titulo": "Manifestação sobre laudo pericial",
-            "urgencia": "prazo",
             "processo": {
-              "id": "ac32144e-a6fc-4cb9-be61-ee8067df0c73",
+              "id": "c1a5ef75-4492-46a7-9f63-661a20983eed",
               "titulo": "Felipe Bernardi Lehmann × Instituto Nacional do Seguro Social",
-              "cnj": "5015833-20.2026.4.04.7208"
+              "cnj": "5015833-20.2026.4.04.7208",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
               "nome": "Beatriz Souza",
               "apelido": "Beatriz",
               "iniciais": "BS",
               "foto": "/demonstracao/beatriz.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "77205662-1153-4a48-af2a-73c236be8dc9",
+            "id": "2b21635c-d77d-4200-8a35-69f7d6304bc2",
             "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
             "processo": {
-              "id": "8c3d7317-98de-4788-93a3-fbd17d15136c",
-              "titulo": "Gabriela Pires × Instituto Nacional do Seguro Social",
-              "cnj": "5034724-94.2023.4.04.7208"
-            },
-            "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
-              "nome": "Camila Azevedo",
-              "apelido": "Camila",
-              "iniciais": "CA",
-              "foto": "/demonstracao/camila.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "306cb25e-ed74-4fc9-806d-97d1bf0223d5",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "e47213d2-ac89-45f7-92e9-a878892e91e3",
-              "titulo": "Ricardo Campos × Mercado Virtual Brasil Ltda.",
-              "cnj": "5016061-83.2026.8.24.0036"
-            },
-            "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
-              "nome": "Camila Azevedo",
-              "apelido": "Camila",
-              "iniciais": "CA",
-              "foto": "/demonstracao/camila.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "7e0f29df-ff92-4315-bb47-8082cfee22eb",
-            "titulo": "Contrarrazões de apelação",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "e4bdf01d-c73d-4a79-8daa-a4d6fc8ce5b5",
-              "titulo": "Karina Dalmolin × Marli Probst",
-              "cnj": "5011581-29.2024.8.24.0005"
-            },
-            "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
-              "nome": "Tiago Martins",
-              "apelido": "Tiago",
-              "iniciais": "TM",
-              "foto": "/demonstracao/tiago.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "cc64320a-ad14-4298-b451-77a2387392a4",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "0b2ea6b7-3a77-4f64-98e0-08f39abffebe",
+              "id": "a0226263-36c8-4923-bc04-5744c79c1420",
               "titulo": "Douglas Werner × Instituto Nacional do Seguro Social",
-              "cnj": "5018262-15.2025.4.04.7201"
+              "cnj": "5018262-15.2025.4.04.7201",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
               "foto": "/demonstracao/tiago.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "b0b0dc7f-449a-4756-9aaf-06ad7485d06e",
+            "id": "f40f0554-7c5a-4949-aef1-3020cfab89ad",
+            "titulo": "Contrarrazões de apelação",
+            "processo": {
+              "id": "c52fb24e-330b-4808-bf1b-53e447aa3682",
+              "titulo": "Karina Dalmolin × Marli Probst",
+              "cnj": "5011581-29.2024.8.24.0005",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+              "nome": "Tiago Martins",
+              "apelido": "Tiago",
+              "iniciais": "TM",
+              "foto": "/demonstracao/tiago.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "590b22d2-aebb-4279-801b-1d1b3f13423a",
             "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
             "processo": {
-              "id": "f1dba4f6-690e-4703-bc33-1e1b90872d46",
-              "titulo": "Felipe Pires Cardoso × Instituto Nacional do Seguro Social",
-              "cnj": "5013002-54.2025.4.04.7201"
+              "id": "a221dd4c-ca39-4d46-9832-92f28bd80a44",
+              "titulo": "Gabriela Pires × Instituto Nacional do Seguro Social",
+              "cnj": "5034724-94.2023.4.04.7208",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
+              "nome": "Camila Azevedo",
+              "apelido": "Camila",
+              "iniciais": "CA",
+              "foto": "/demonstracao/camila.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "a5d35a50-e1f1-4e9a-9204-ed7fe8cf40cf",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "7c5030ae-b7fc-4b20-98b9-e47dd33af8f8",
+              "titulo": "Isabela Cardoso Costa × Instituto Nacional do Seguro Social",
+              "cnj": "5011285-70.2026.4.04.7201",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
+              "nome": "Camila Azevedo",
+              "apelido": "Camila",
+              "iniciais": "CA",
+              "foto": "/demonstracao/camila.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "8013d423-adcf-4ca7-9387-25ec13fc17e0",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "84dad1a4-a7f1-4747-be62-a99380e58e33",
+              "titulo": "Felipe Pires Cardoso × Instituto Nacional do Seguro Social",
+              "cnj": "5013002-54.2025.4.04.7201",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
               "foto": "/demonstracao/tiago.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "e4cc7737-2404-4176-a0ae-18f5d1cb8af9",
+            "id": "d28dadf6-1904-4352-9df9-ad28fdadbe94",
             "titulo": "Réplica à contestação",
-            "urgencia": "prazo",
             "processo": {
-              "id": "f7ef5ac2-23ab-4773-99c4-c96f6575310e",
+              "id": "97c5d015-1a75-4595-bfb0-152f6cba7602",
               "titulo": "Eliane Schneider × Instituto Nacional do Seguro Social",
-              "cnj": "5036701-16.2026.4.04.7209"
+              "cnj": "5036701-16.2026.4.04.7209",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
               "nome": "Beatriz Souza",
               "apelido": "Beatriz",
               "iniciais": "BS",
               "foto": "/demonstracao/beatriz.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "66335627-b1d2-465c-801a-831358fcbb78",
-            "titulo": "Recurso inominado",
-            "urgencia": "prazo",
+            "id": "07ce5b2f-2c81-4226-80a4-6788dca3e2df",
+            "titulo": "Contrarrazões ao recurso inominado",
             "processo": {
-              "id": "dd32c7b0-21a8-44fb-9816-3fd9dee37d1c",
-              "titulo": "João Pedro Antunes × Banco Horizonte S.A.",
-              "cnj": "5000981-79.2026.8.24.0036"
+              "id": "3aa2f5cc-0d3a-40dc-9314-26d6f61b107c",
+              "titulo": "Ricardo Campos × Mercado Virtual Brasil Ltda.",
+              "cnj": "5016061-83.2026.8.24.0036",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
+              "nome": "Camila Azevedo",
+              "apelido": "Camila",
+              "iniciais": "CA",
+              "foto": "/demonstracao/camila.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "23d0c889-9869-49db-a6c6-829b530df4d9",
-            "titulo": "Entregar a versão final ao cliente",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "b77630df-e163-494c-80fc-3da89df3856d",
-              "titulo": "Caroline Amaral · alteração do contrato social",
-              "cnj": null
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "acd9fc59-c459-4645-8de6-c1550f297441",
+            "id": "9469f734-e44a-46d7-9777-44984f1676bf",
             "titulo": "Rol de testemunhas",
-            "urgencia": "prazo",
             "processo": {
-              "id": "9f6b99db-75fb-4e7c-ac89-577aac8e6080",
+              "id": "41d76eac-373c-42a3-955c-819cdacfca79",
               "titulo": "Karina Nunes × Jussara Campos",
-              "cnj": "5018502-65.2025.8.24.0038"
+              "cnj": "5018502-65.2025.8.24.0038",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "v0E3TAN9SDzeEFgRmEo2JjafFm5y9fey",
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
               "nome": "Beatriz Souza",
               "apelido": "Beatriz",
               "iniciais": "BS",
               "foto": "/demonstracao/beatriz.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "738a5569-167b-4795-823b-3c8baceaf1c4",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "ee0afc49-0483-4b80-ba2b-879dabb88190",
+              "titulo": "Vinícius Goulart × Instituto Nacional do Seguro Social",
+              "cnj": "5022100-63.2025.4.04.7201",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
+              "nome": "Beatriz Souza",
+              "apelido": "Beatriz",
+              "iniciais": "BS",
+              "foto": "/demonstracao/beatriz.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "eb1583cf-4daf-4ad8-a581-6cfc7ebccef1",
+            "titulo": "Recurso inominado",
+            "processo": {
+              "id": "8baae7ba-f43e-4513-a629-77e4499ac850",
+              "titulo": "João Pedro Antunes × Banco Horizonte S.A.",
+              "cnj": "5000981-79.2026.8.24.0036",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "77558729-cc03-48e3-9f79-0aee4f4653d7",
+            "titulo": "Entregar a versão final ao cliente",
+            "processo": {
+              "id": "7ff149b7-01b9-4516-a103-29efcd1bb40e",
+              "titulo": "Caroline Amaral · alteração do contrato social",
+              "cnj": null,
+              "tipo": "extrajudicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "6f023eb5-07b2-4231-80d9-2594daed8dd9",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "b4a57f76-afc0-4925-95d3-9d42b767b645",
+              "titulo": "Leonardo Zimmermann Farias × Instituto Nacional do Seguro Social",
+              "cnj": "5019966-97.2024.4.04.7201",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
+              "nome": "Camila Azevedo",
+              "apelido": "Camila",
+              "iniciais": "CA",
+              "foto": "/demonstracao/camila.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "2dc72b0d-f732-4220-9f94-5d429eff06f6",
+            "titulo": "Manifestação sobre a contestação",
+            "processo": {
+              "id": "c4814455-08c4-4e61-aa38-bb3560ce4836",
+              "titulo": "Lucas Amaral Silveira × Mercado Virtual Brasil Ltda.",
+              "cnj": "5034508-18.2026.8.24.0005",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
           }
         ]
       },
@@ -935,17 +976,18 @@
         "itens": [
           {
             "tipo": "audiencia",
-            "id": "d141c03f-683d-4fe6-8e54-17cb7c5d6ff3",
+            "id": "c908f020-6c5b-471a-a287-c0613ad79565",
             "hora": "09:15",
             "titulo": "Audiência de conciliação",
             "porVideo": true,
             "processo": {
-              "id": "1636d892-cb84-481a-8f81-b9a1ab4c67cd",
+              "id": "27cdc646-8ae5-4229-a07c-10e5acf12c01",
               "titulo": "Simone Gaspar × Condomínio Residencial Atlântico",
-              "cnj": "5004418-25.2026.8.24.0038"
+              "cnj": "5004418-25.2026.8.24.0038",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
@@ -955,17 +997,18 @@
           },
           {
             "tipo": "audiencia",
-            "id": "0981b410-cdf2-4e48-bae2-19a61095ee76",
+            "id": "ab8f6f58-6270-4e0a-add2-733a4e9b025d",
             "hora": "09:30",
             "titulo": "Audiência de mediação",
             "porVideo": true,
             "processo": {
-              "id": "0b438131-0e46-4bb4-80a5-8cefaf046b06",
+              "id": "70772e68-5073-4a57-adce-e885d64d6fae",
               "titulo": "Gabriela Goulart Sartori × Leandro Stein",
-              "cnj": "5013180-70.2025.8.24.0036"
+              "cnj": "5013180-70.2025.8.24.0036",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
@@ -975,17 +1018,18 @@
           },
           {
             "tipo": "audiencia",
-            "id": "a1bf34e8-6f2a-4116-86f5-32792eb5ea8b",
+            "id": "5d19c582-ac1b-4792-b9fa-350604ad772d",
             "hora": "10:00",
             "titulo": "Audiência inicial",
             "porVideo": false,
             "processo": {
-              "id": "94d04e66-24dc-4ea2-a0e1-c8828ced2686",
+              "id": "1354a2f2-6dca-4c5e-bf4f-1b546606fe7b",
               "titulo": "Viviane Campos × Móveis Mirante Ltda.",
-              "cnj": "0002194-60.2024.5.12.0005"
+              "cnj": "0002194-60.2024.5.12.0005",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
@@ -995,17 +1039,18 @@
           },
           {
             "tipo": "audiencia",
-            "id": "554a8469-aa4a-416c-a0fb-a41adec9ca8d",
+            "id": "2aab83a7-ba6d-479c-9195-cfbfd50217e1",
             "hora": "14:30",
             "titulo": "Audiência de conciliação",
             "porVideo": false,
             "processo": {
-              "id": "77ec0e36-7ce9-482b-be72-d15538c45601",
+              "id": "b0a59fb4-f2be-4bdb-852b-92e663cf6f24",
               "titulo": "Renan Dutra Goulart × Supermercado Recanto Ltda.",
-              "cnj": "5015173-92.2026.8.24.0011"
+              "cnj": "5015173-92.2026.8.24.0011",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
@@ -1015,178 +1060,187 @@
           },
           {
             "tipo": "prazo",
-            "id": "a9db863a-9c12-49b1-b452-d31d2221bd84",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "c2ac42fb-dc35-4096-8e27-c7217d25564c",
-              "titulo": "Juliano Krause × Voa Brasil Linhas Aéreas S.A.",
-              "cnj": "5016579-67.2026.8.24.0038"
-            },
-            "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
-              "nome": "Camila Azevedo",
-              "apelido": "Camila",
-              "iniciais": "CA",
-              "foto": "/demonstracao/camila.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "abb7b0a2-ea92-4f61-9584-adcf97ebbd15",
+            "id": "978f43ec-93c5-443d-83d7-212e4f9f8673",
             "titulo": "Réplica à defesa",
-            "urgencia": "prazo",
             "processo": {
-              "id": "03c5217b-bdc0-4ee4-b110-ad4d7afb1dae",
+              "id": "b10dd399-4bd1-437d-9276-037c915c7f74",
               "titulo": "Jaqueline Schulz Bortolini × Supermercado Lagoa Funda Ltda.",
-              "cnj": "0002144-48.2026.5.12.0010"
+              "cnj": "0002144-48.2026.5.12.0010",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
               "foto": "/demonstracao/tiago.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "f71a84cf-b084-4e4e-8e16-2463c6ad4fb2",
-            "titulo": "Réplica à defesa",
-            "urgencia": "prazo",
+            "id": "72ef8530-7bbf-4702-bed3-2a1494111f6b",
+            "titulo": "Recurso inominado",
             "processo": {
-              "id": "569225e7-0967-4596-8e10-ccc615d5331b",
-              "titulo": "Ronaldo Pires Wolff × Metalúrgica Pioneira S.A.",
-              "cnj": "0001320-62.2026.5.12.0019"
+              "id": "55e5ff9c-f8df-49c7-a9da-98900b6234d9",
+              "titulo": "Gisele Goulart × Instituto Nacional do Seguro Social",
+              "cnj": "5033230-16.2026.4.04.7201",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
               "foto": "/demonstracao/tiago.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "a68cf331-4f1e-49c0-ad52-5c0251d419ce",
-            "titulo": "Juntar CNIS atualizado",
-            "urgencia": "prazo",
+            "id": "0c783e98-1056-43f8-bd9a-9b6fff3e4109",
+            "titulo": "Contrarrazões ao recurso inominado",
             "processo": {
-              "id": "55915efb-e8f8-45bf-8ad2-4676cceb7023",
-              "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
-              "cnj": "5020176-80.2026.4.04.7201"
+              "id": "d9582b89-3363-4aec-8c96-88108eeb0fe9",
+              "titulo": "Juliano Krause × Voa Brasil Linhas Aéreas S.A.",
+              "cnj": "5016579-67.2026.8.24.0038",
+              "tipo": "judicial"
             },
             "responsavel": {
-              "id": "9BGZGHSoZmSb7qf72tNzZkytPGYgcFhy",
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
               "nome": "Camila Azevedo",
               "apelido": "Camila",
               "iniciais": "CA",
               "foto": "/demonstracao/camila.jpg"
             },
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "prazo",
-            "id": "0dcae59a-6967-47cd-b27b-dc39d602cabf",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "c7cd2cd9-c102-4073-acf7-c9c937290219",
-              "titulo": "Wagner Medeiros Klein × Conecta Sul Telecomunicações S.A.",
-              "cnj": "5038487-20.2025.8.24.0038"
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "448e0ce6-9d0a-4af3-ad6c-e3a03392d544",
-            "titulo": "Recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "71900a8f-227f-42d6-a9ab-e0352ae65063",
-              "titulo": "Gisele Goulart × Instituto Nacional do Seguro Social",
-              "cnj": "5033230-16.2026.4.04.7201"
-            },
-            "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
-              "nome": "Tiago Martins",
-              "apelido": "Tiago",
-              "iniciais": "TM",
-              "foto": "/demonstracao/tiago.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "55567325-c747-4085-947e-ba50500899d2",
-            "titulo": "Entregar a versão final ao cliente",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "3ab3668e-6cd1-4b24-996c-17dd1f0c7ad8",
-              "titulo": "Panificadora Bela Vista Ltda. · registro de marca",
-              "cnj": null
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "ec0fc4c3-3d59-4b14-8d00-0520f88af089",
-            "titulo": "Contrarrazões ao recurso inominado",
-            "urgencia": "prazo",
-            "processo": {
-              "id": "a85a1659-fdb0-4f49-b1d8-78b9c68717cb",
-              "titulo": "Luiz Carlos Schmitt Lehmann × Energia Litoral Distribuidora S.A.",
-              "cnj": "5017067-30.2024.8.24.0058"
-            },
-            "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
-              "nome": "Rafael Freitas",
-              "apelido": "Rafael",
-              "iniciais": "RF",
-              "foto": "/demonstracao/rafael.jpg"
-            },
-            "aConfirmar": false
-          },
-          {
-            "tipo": "prazo",
-            "id": "4da28638-ab4f-4b45-9d6b-9c0976a2e8cd",
+            "id": "e174e04e-833e-4950-a421-76efc15a4011",
             "titulo": "Impugnação aos embargos",
-            "urgencia": "prazo",
             "processo": {
-              "id": "eca3193c-2d75-45e2-9ed9-1bed78591d25",
+              "id": "38c9a685-c8ef-4c9b-9baf-b6cb43d5d57f",
               "titulo": "Nelson Schmitt Reinert × Logística Colina Verde S.A.",
-              "cnj": "5033747-71.2023.8.24.0011"
+              "cnj": "5033747-71.2023.8.24.0011",
+              "tipo": "judicial"
             },
             "responsavel": null,
-            "aConfirmar": false
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "1c695099-ad7d-4b26-b066-d2f31d9beaaa",
+            "titulo": "Juntar CNIS atualizado",
+            "processo": {
+              "id": "a808976e-22e5-4661-ae01-f9381c1e5f24",
+              "titulo": "Vanessa Hoffmann × Instituto Nacional do Seguro Social",
+              "cnj": "5020176-80.2026.4.04.7201",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "VhM4K4fbSr8d3EYFBG2xul5ITekiKzE5",
+              "nome": "Camila Azevedo",
+              "apelido": "Camila",
+              "iniciais": "CA",
+              "foto": "/demonstracao/camila.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "bab2cc0f-1c0f-436f-8c94-1241ad835790",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "cd1d583d-c25c-47e8-9145-9a5f75beff36",
+              "titulo": "Wagner Medeiros Klein × Conecta Sul Telecomunicações S.A.",
+              "cnj": "5038487-20.2025.8.24.0038",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "ea531e41-1aee-4348-b992-a4955fa85bbb",
+            "titulo": "Réplica à defesa",
+            "processo": {
+              "id": "d3624481-a32c-4dad-8dc0-f7d545d804b4",
+              "titulo": "Ronaldo Pires Wolff × Metalúrgica Pioneira S.A.",
+              "cnj": "0001320-62.2026.5.12.0019",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+              "nome": "Tiago Martins",
+              "apelido": "Tiago",
+              "iniciais": "TM",
+              "foto": "/demonstracao/tiago.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "99bdb244-c7e4-4084-afef-ee55efb02ebf",
+            "titulo": "Entregar a versão final ao cliente",
+            "processo": {
+              "id": "579a7ace-71bf-4262-8ea4-37b7e04a0376",
+              "titulo": "Panificadora Bela Vista Ltda. · registro de marca",
+              "cnj": null,
+              "tipo": "extrajudicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
+          },
+          {
+            "tipo": "prazo",
+            "id": "dac7e1d5-93f8-46a6-8a16-571e82317311",
+            "titulo": "Contrarrazões ao recurso inominado",
+            "processo": {
+              "id": "e21fb520-ad0c-4cbf-b4ca-7c752817fa6c",
+              "titulo": "Luiz Carlos Schmitt Lehmann × Energia Litoral Distribuidora S.A.",
+              "cnj": "5017067-30.2024.8.24.0058",
+              "tipo": "judicial"
+            },
+            "responsavel": {
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
+              "nome": "Rafael Freitas",
+              "apelido": "Rafael",
+              "iniciais": "RF",
+              "foto": "/demonstracao/rafael.jpg"
+            },
+            "aConfirmar": false,
+            "urgencia": "prazo"
           },
           {
             "tipo": "tarefa",
-            "id": "08e8547c-0408-4b86-b045-a52ed10bb516",
+            "id": "54d975fd-a176-4bdd-b655-54f2681b645f",
             "titulo": "Revisar contrato de honorários",
             "detalhe": "cliente pediu para parcelar",
             "concluida": false,
-            "processoId": "8fdbf28b-e634-44f2-917d-bdf1453cfee5",
+            "processoId": "75aad3c0-340b-46d9-a342-5c7c14e32da0",
             "responsavel": {
-              "id": "eYmviuro7D6eOKfp0Or0snzqfbhahFbY",
+              "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
               "nome": "Tiago Martins",
               "apelido": "Tiago",
               "iniciais": "TM",
@@ -1195,13 +1249,13 @@
           },
           {
             "tipo": "tarefa",
-            "id": "843dde05-83cf-42cb-928a-dc092657a64b",
+            "id": "ff7e38a0-559e-448f-8d46-4de19204436b",
             "titulo": "Confirmar as testemunhas",
             "detalhe": "endereço e telefone de cada uma",
             "concluida": false,
-            "processoId": "30faccb6-f6c6-44a8-8064-9dba520fa605",
+            "processoId": "a7839070-cbb3-4d06-a99d-04d0da340e8f",
             "responsavel": {
-              "id": "okUaRzVIxwwPoLuUiXskthfAZjwcMzhn",
+              "id": "tykoFnXrtSyOcwBPv0GRYFkPcHUuvQ8e",
               "nome": "Rafael Freitas",
               "apelido": "Rafael",
               "iniciais": "RF",

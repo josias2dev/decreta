@@ -191,6 +191,8 @@ describe.skipIf(!hasTestDatabase)("exportar tudo", () => {
         expect(nomes).toContain(`planilhas/${p}.csv`);
       }
       expect(nomes).toContain("LEIA-ME.txt");
+      // A configuração do prazo interno vai junto com as outras do escritório.
+      expect(await texto(zip, "planilhas/escritorio.csv")).toContain("prazo_interno_dias");
       const leia = await texto(zip, "LEIA-ME.txt");
       expect(leia).toContain("Cópia dos dados de Souza & Mendes Advocacia");
       expect(leia).toContain("- clientes: 2");

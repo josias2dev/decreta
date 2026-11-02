@@ -1,7 +1,7 @@
-import { cnpjValido, cpfValido, formatarCnj, formatarDocumento, hojeEm, lerCnj, limparCnpj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
-import { alvaras, audiencias, clientes, documentos, escritorios, movimentacoes, partes, pecas, prazos, processos, resultados, type Tx } from "@decreta/db";
+import { cnpjValido, cpfValido, formatarCnj, formatarDocumento, hojeEm, incompletoDoProcesso, lerCnj, limparCnpj, tribunalDoCnj, urgenciaDoPrazo } from "@decreta/core";
+import { alvaras, audiencias, clientes, documentos, escritorios, movimentacoes, partes, pecas, prazos, processos, publicacoes, resultados, type Tx } from "@decreta/db";
 import { buscarDjenDoProcesso, partesDoDjen } from "@decreta/tribunais";
-import { and, asc, desc, eq, gt, inArray, isNotNull, like, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, like, ne, or, sql, type SQL } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
@@ -11,6 +11,7 @@ import { atualizarDoDataJud, autorDoAto } from "../servicos/captura.ts";
 import { comunicacoesGuardadas, completarPartes, consultarCnj, oabsDaEquipe } from "../servicos/consulta.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
+import { candidatosAoNumero } from "../servicos/numero-do-processo.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { corpo, falha, id, ip, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 
@@ -79,8 +80,11 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const cal = await calendarioDoEscritorio(tx, await tribunalPadrao(tx, c.get("orgId")));
       const onde: SQL[] = [];
-      if (situacao === "ativos") onde.push(inArray(processos.situacao, ["ativo", "suspenso"]));
+      const ativo = inArray(processos.situacao, ["ativo", "suspenso"]);
+      const semNumero = and(eq(processos.tipo, "judicial"), isNull(processos.cnj), ativo);
+      if (situacao === "ativos") onde.push(ativo);
       else if (situacao === "arquivados") onde.push(inArray(processos.situacao, ["arquivado", "encerrado"]));
+      else if (situacao === "incompletos") onde.push(semNumero!);
       if (responsavel === "sem") onde.push(sql`${processos.responsavelId} is null`);
       else if (responsavel) onde.push(eq(processos.responsavelId, responsavel));
       if (busca) {
@@ -98,6 +102,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       }
       const filtro = onde.length ? and(...onde) : undefined;
       const [{ total } = { total: 0 }] = await tx.select({ total: sql<number>`count(*)::int` }).from(processos).leftJoin(clientes, eq(clientes.id, processos.clienteId)).where(filtro);
+      const [{ n: incompletos } = { n: 0 }] = await tx.select({ n: sql<number>`count(*)::int` }).from(processos).where(semNumero);
       const linhas = await tx
         .select({ p: processos, cliente: clientes.nome })
         .from(processos)
@@ -108,7 +113,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .offset((pagina - 1) * POR_PAGINA);
       const proximos = linhas.length
         ? await tx
-            .selectDistinctOn([prazos.processoId], { processoId: prazos.processoId, fim: prazos.fim, tipo: prazos.tipo, situacao: prazos.situacao })
+            .selectDistinctOn([prazos.processoId], { id: prazos.id, processoId: prazos.processoId, fim: prazos.fim, tipo: prazos.tipo, situacao: prazos.situacao })
             .from(prazos)
             .where(and(eq(prazos.situacao, "aberto"), inArray(prazos.processoId, linhas.map((l) => l.p.id))))
             .orderBy(prazos.processoId, asc(prazos.fim))
@@ -118,6 +123,8 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         total,
         pagina,
         porPagina: POR_PAGINA,
+        /** Quantos processos ativos estão sem o número: não aparece filtro quando não há nenhum. */
+        incompletos,
         itens: linhas.map(({ p, cliente }) => {
           const pr = proximo.get(p.id);
           const u = pr ? urgenciaDoPrazo(pr, hoje, cal) : null;
@@ -131,9 +138,10 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
             comarca: p.comarca,
             situacao: p.situacao,
             cliente,
+            incompleto: incompletoDoProcesso({ tipo: p.tipo, cnj: p.cnj, temCliente: !!p.clienteId, orgao: p.orgao }),
             responsavel: resumir(pessoas, p.responsavelId),
             ultimaMovimentacaoEm: p.ultimaMovimentacaoEm?.toISOString() ?? null,
-            proximoPrazo: pr && u ? { fim: pr.fim, tipo: pr.tipo, urgencia: u, quando: quandoDoPrazo(u, pr.fim, hoje) } : null,
+            proximoPrazo: pr && u ? { id: pr.id, fim: pr.fim, tipo: pr.tipo, urgencia: u, quando: quandoDoPrazo(u, pr.fim, hoje) } : null,
           };
         }),
       });
@@ -229,6 +237,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         titulo: p.titulo,
         cnj: p.cnj,
         tipo: p.tipo,
+        incompleto: incompletoDoProcesso({ tipo: p.tipo, cnj: p.cnj, temCliente: !!p.clienteId, orgao: p.orgao }),
         tribunal: p.tribunal,
         sistema: p.sistema,
         classe: p.classe,
@@ -263,11 +272,21 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     });
   });
 
+  /** O processo está sem número: onde ele pode estar, nas publicações já lidas e ainda sem processo. */
+  app.get("/processos/:id/numero", async (c) => {
+    const processoId = id(c);
+    return tenant(c, deps, async (tx) => {
+      const [p] = await tx.select({ id: processos.id, titulo: processos.titulo, clienteId: processos.clienteId }).from(processos).where(eq(processos.id, processoId));
+      if (!p) falha(404, "nao_encontrado");
+      return c.json({ candidatos: await candidatosAoNumero(tx, p) });
+    });
+  });
+
   app.put("/processos/:id", async (c) => {
     const processoId = id(c);
     const b = await corpo(c, dadosDoProcesso.omit({ partes: true }).partial());
-    await tenant(c, deps, async (tx) => {
-      const [p] = await tx.select({ id: processos.id }).from(processos).where(eq(processos.id, processoId));
+    const { ganhouNumero, ligadas } = await tenant(c, deps, async (tx) => {
+      const [p] = await tx.select({ id: processos.id, cnj: processos.cnj }).from(processos).where(eq(processos.id, processoId));
       if (!p) falha(404, "nao_encontrado");
       const { cnj: cnjBruto, ...resto } = b;
       const valores: Partial<typeof processos.$inferInsert> = Object.fromEntries(Object.entries(resto).filter(([, v]) => v !== undefined));
@@ -276,8 +295,16 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         valores.cnj = cnjBruto ? formatarCnj(cnjBruto) : null;
         valores.tribunal = valores.cnj ? tribunalDoCnj(valores.cnj) : null;
       }
+      const ganhouNumero = !!valores.cnj && valores.cnj !== p.cnj;
+      if (ganhouNumero && (await tx.select({ id: processos.id }).from(processos).where(and(eq(processos.cnj, valores.cnj!), ne(processos.id, processoId)))).length) falha(409, "processo_existe", "Este número já está cadastrado.");
       await tx.update(processos).set(valores).where(eq(processos.id, processoId));
+      // O que já foi lido com este número passa a ser deste processo, e a IA lê de novo, como ao vincular à mão.
+      const ligadas = ganhouNumero ? await tx.update(publicacoes).set({ processoId }).where(and(eq(publicacoes.cnj, valores.cnj!), isNull(publicacoes.processoId))).returning({ id: publicacoes.id }) : [];
+      return { ganhouNumero, ligadas };
     });
+    // Com o número, o processo passa a ser monitorado.
+    if (ganhouNumero) await deps.enfileirar({ nome: "processo.datajud", organizationId: c.get("orgId"), processoId });
+    for (const l of ligadas) await deps.enfileirar({ nome: "publicacao.nova", organizationId: c.get("orgId"), publicacaoId: l.id });
     return c.json({ ok: true });
   });
 

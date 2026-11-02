@@ -88,6 +88,14 @@ describe("a conta aberta", () => {
     }
   });
 
+  test("com o calendário do escritório: o dia cadastrado fica de fora, com o nome", () => {
+    const calendario = calendarioPara({ tribunal: "TJSC", extras: [{ dia: "2026-11-04", nome: "Ponte da comarca", tipo: "local" }] });
+    const c = abrirConta({ publicacao: "2026-10-30", dias: 3, contagem: "uteis", tribunal: "TJSC", calendario });
+    expect(contados(c)).toEqual(["2026-11-03", "2026-11-05", "2026-11-06"]);
+    expect(c.fim).toBe("2026-11-06");
+    expect(c.linha.find((d) => d.dia === "2026-11-04")).toEqual({ dia: "2026-11-04", tipo: "feriado", motivo: "Ponte da comarca" });
+  });
+
   test("dias fora da faixa não viram conta", () => {
     expect(() => abrirConta({ publicacao: "2026-10-30", dias: 0, contagem: "uteis", tribunal: "TJSC" })).toThrow(RangeError);
   });

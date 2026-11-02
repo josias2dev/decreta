@@ -204,7 +204,7 @@ export function explicarContagem(r: ResultadoDaContagem): string {
   const partes = [`Começa em ${dm(r.inicio)}, primeiro dia útil depois da publicação.`];
   const fora = r.desconsiderados.map((f) => `${dm(f.dia)} (${f.nome})`);
   if (r.contagem === "uteis") {
-    partes.push(fora.length ? `Fora da conta: fins de semana, ${juntar(fora)}.` : "Fora da conta: só os fins de semana.");
+    partes.push(fora.length ? `Fora da conta: ${juntar(["fins de semana", ...fora])}.` : "Fora da conta: só os fins de semana.");
   } else if (fora.length) {
     partes.push(`Dias corridos; não contam: ${juntar(fora)}.`);
   } else {
@@ -242,7 +242,7 @@ export function textoDaTempestividade(r: ResultadoDaContagem, o: { rito: Rito; d
 }
 
 /** Dias seguidos com o mesmo motivo viram "de 16/02/2026 a 17/02/2026 (Carnaval)"; o fim de semana no meio não separa. */
-function juntarIntervalos(lista: Feriado[]): { texto: string; dias: number } {
+export function juntarIntervalos(lista: Feriado[]): { texto: string; dias: number } {
   const blocos: { de: Dia; ate: Dia; nome: string }[] = [];
   for (const f of [...lista].sort((a, b) => a.dia.localeCompare(b.dia))) {
     const ultimo = blocos.at(-1);
