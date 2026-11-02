@@ -12,9 +12,11 @@ import {
   contarComDoisMarcos,
   contarPrazo,
   explicarContagem,
+  MOTIVO_DO_TRECHO,
   regraDaContagem,
   ritoDoProcesso,
   textoDaTempestividade,
+  trechoNaFonte,
   type Calendario,
   type Conferencia,
   type Contagem,
@@ -152,7 +154,7 @@ export async function historicoDasSugestoes(tx: Tx): Promise<{ chave: string; de
 }
 
 /** A segunda conferência da sugestão, com o que a equipe já fez com o mesmo ato. */
-export function conferir(s: { tipo: string; dias: number; contagem: Contagem; rito: Rito; documento: string | null }, historico: { chave: string; descartada: boolean }[]): Conferencia {
+export function conferir(s: { tipo: string; dias: number; contagem: Contagem; rito: Rito; documento: string | null; trechoNaFonte?: boolean }, historico: { chave: string; descartada: boolean }[]): Conferencia {
   const mesmos = historico.filter((h) => h.chave === chaveDoAto(s.tipo));
   return conferirSugestao({ ...s, historico: { descartadas: mesmos.filter((h) => h.descartada).length, confirmadas: mesmos.filter((h) => !h.descartada).length } });
 }
@@ -161,8 +163,10 @@ export interface SugestaoNaTela extends SugestaoDePrazo {
   contagemCalculada: ContagemNaTela | null;
   /** "Dias úteis (CPC, art. 219)". */
   regra: string | null;
-  /** A segunda conferência: os dias batem com a lei, o ato combina com o documento, a equipe costuma descartar. */
+  /** A segunda conferência: os dias batem com a lei, o ato combina com o documento, a frase citada existe, a equipe costuma descartar. */
   conferencia: Conferencia | null;
+  /** O `trecho` existe mesmo no teor: só assim a tela o mostra como da publicação. */
+  trechoConfere: boolean;
   responsavelId: string | null;
 }
 
@@ -212,11 +216,14 @@ export async function sugerirPrazoDaPublicacao(deps: Deps, organizationId: strin
         contextoDoProcesso: contexto,
       });
       const gera = s.geraPrazo && s.dias ? { dias: s.dias, contagem: s.contagem } : null;
+      const trechoConfere = trechoNaFonte(s.trecho, pub.texto);
       return {
         ...s,
         contagemCalculada: gera ? contagemNaTela(contarPrazo({ publicacao: pub.publicadaEm, ...gera, calendario: regras.cal })) : null,
         regra: gera ? regraDaContagem(regras.rito, gera.contagem) : null,
-        conferencia: gera ? conferir({ tipo: s.tipo, ...gera, rito: regras.rito, documento: pub.tipoDocumento }, historico) : null,
+        // Sem prazo e com frase que não existe: é aqui que um prazo pode passar sem ninguém ver.
+        conferencia: gera ? conferir({ tipo: s.tipo, ...gera, rito: regras.rito, documento: pub.tipoDocumento, trechoNaFonte: trechoConfere }, historico) : trechoConfere ? null : { confianca: "baixa", motivos: [MOTIVO_DO_TRECHO] },
+        trechoConfere,
         responsavelId,
       } satisfies SugestaoNaTela;
     },

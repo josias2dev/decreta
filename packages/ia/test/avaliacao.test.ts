@@ -59,9 +59,17 @@ describe("conjunto-ouro", () => {
     expect(r.falhas.join(" ")).toContain("24/11/2026");
   });
 
+  test("trecho que não está na publicação é erro, mesmo com o prazo certo", async () => {
+    const caso = CONJUNTO_OURO.prazos[0] as CasoDePrazo;
+    const ia = iaDoGabarito(CONJUNTO_OURO, (_m, r) => ({ ...(r as object), trecho: "Frase que a publicação nunca disse." }));
+    const r = await avaliarPrazo(ia, caso);
+    expect(r.acertou).toBe(false);
+    expect(r.falhas.join(" ")).toContain("Frase que a publicação nunca disse.");
+  });
+
   test("prazo onde não há prazo é erro", async () => {
     const caso = CONJUNTO_OURO.prazos.find((c) => c.esperado.geraPrazo === false) as CasoDePrazo;
-    const ia = iaDoGabarito(CONJUNTO_OURO, () => ({ geraPrazo: true, tipo: "Manifestação", dias: 5, contagem: "uteis", fundamento: null, audiencia: null, resumo: "x", assunto: "x", recusa: null }));
+    const ia = iaDoGabarito(CONJUNTO_OURO, () => ({ geraPrazo: true, tipo: "Manifestação", dias: 5, contagem: "uteis", fundamento: null, audiencia: null, resumo: "x", assunto: "x", trecho: "Aguarde-se o retorno", recusa: null }));
     const r = await avaliarPrazo(ia, caso);
     expect(r.acertou).toBe(false);
   });

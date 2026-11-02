@@ -172,6 +172,23 @@ test("publicação com sugestão de confiança baixa: a caixa pede para conferir
   await expect(page.getByRole("dialog").getByText(`Confira antes de confirmar. ${motivo}`)).toBeVisible();
 });
 
+test("a publicação mostra a frase que sustenta a leitura, e frase que o código não achou não aparece como dela", async ({ page }) => {
+  const pub = amostras.publicacaoMarina!.corpo;
+  const frase = "no prazo comum de 15 (quinze) dias";
+  const comTrecho = (conteudo: object) => ({ ...pub, sugestao: { ...pub.sugestao, conteudo: { ...pub.sugestao.conteudo, ...conteudo } } });
+  await abrir(page, `/publicacoes?id=${ids.publicacao}`, new ApiFalsa().responder(`/publicacoes/${ids.publicacao}`, comTrecho({ trecho: frase, trechoConfere: true })));
+  await expect(page.getByText("Trecho da publicação")).toBeVisible();
+  await expect(page.getByText(`“${frase}”`)).toBeVisible();
+
+  const motivo = "O trecho que a IA citou não está na publicação; confira o teor.";
+  const semProva = comTrecho({ trecho: "Frase inventada pela IA.", trechoConfere: false, geraPrazo: false, dias: null, conferencia: { confianca: "baixa", motivos: [motivo] } });
+  await abrir(page, `/publicacoes?id=${ids.publicacao}`, new ApiFalsa().responder(`/publicacoes/${ids.publicacao}`, semProva));
+  await expect(page.getByText(motivo).first()).toBeVisible();
+  await expect(page.getByText("Não abre prazo para o escritório")).toBeVisible();
+  await expect(page.getByText("Frase inventada pela IA.")).toHaveCount(0);
+  await expect(page.getByText("Trecho da publicação")).toHaveCount(0);
+});
+
 test("cliente sem IA: a ficha marca a recusa, e o processo fica com o selo e sem as ações de IA", async ({ page }) => {
   const cliente = amostras.clienteConferido!.corpo;
   const api = await abrir(page, `/clientes/${ids.cliente}`, new ApiFalsa().responder("/eu", euComIa).responder(`/clientes/${ids.cliente}`, cliente));

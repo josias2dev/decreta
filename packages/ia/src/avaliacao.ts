@@ -8,7 +8,7 @@
  * - Resumo: nota pela rubrica (o que precisa aparecer e o que não pode).
  * - Citações: todo evento, folha ou artigo citado precisa estar no material.
  */
-import { calendarioPara, contarPrazo, dataDaPublicacao, extrairCitacoes, extrairFontes, formatarDia, MARCA_DA_FOLHA, type Dia, type Feriado } from "@decreta/core";
+import { calendarioPara, contarPrazo, dataDaPublicacao, extrairCitacoes, extrairFontes, formatarDia, MARCA_DA_FOLHA, trechoNaFonte, type Dia, type Feriado } from "@decreta/core";
 import { IaRecusou, resumirAutos, sugerirPrazo, type ResumoDosAutos, type SugestaoDePrazo } from "./acoes.ts";
 import type { Ia } from "./gateway.ts";
 
@@ -105,6 +105,7 @@ export async function avaliarPrazo(ia: Ia, caso: CasoDePrazo): Promise<Resultado
   }
   const e = caso.esperado;
   if (s) {
+    if (!trechoNaFonte(s.trecho, caso.publicacao.texto)) falhas.push(`o trecho citado não está na publicação: "${s.trecho}"`);
     if (!e.geraPrazo) {
       if (s.geraPrazo) falhas.push(`não gera prazo, mas a IA sugeriu ${s.tipo} em ${s.dias ?? "?"} dias`);
     } else if (!s.geraPrazo || !s.dias) {

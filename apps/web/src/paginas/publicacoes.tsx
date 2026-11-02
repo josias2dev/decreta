@@ -779,6 +779,26 @@ function Par({ rotulo, valor, nota, className }: { rotulo: string; valor: ReactN
   );
 }
 
+/** A prova da leitura: a frase que o código achou no teor e a segunda conferência. */
+function ProvaDaLeitura({ c }: { c: Sugestao }) {
+  return (
+    <>
+      {c.trechoConfere && c.trecho && (
+        <div className="dc-par dc-inteira" style={{ gridColumn: "1 / -1" }}>
+          <span className="dc-rotulo">Trecho da publicação</span>
+          <p>“{c.trecho}”</p>
+        </div>
+      )}
+      {c.conferencia && (
+        <div className="dc-par dc-inteira" style={{ gridColumn: "1 / -1" }}>
+          <span className="dc-rotulo">Segunda conferência</span>
+          <ConferenciaDaSugestao conferencia={c.conferencia} />
+        </div>
+      )}
+    </>
+  );
+}
+
 function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pessoa | null }) {
   if (c.audiencia) {
     const a = c.audiencia;
@@ -793,6 +813,7 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
             <p>{c.resumo}</p>
           </div>
         )}
+        <ProvaDaLeitura c={c} />
       </div>
     );
   }
@@ -803,6 +824,7 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
           <span className="dc-rotulo">Não abre prazo para o escritório</span>
           <p>{c.resumo}</p>
         </div>
+        <ProvaDaLeitura c={c} />
       </div>
     );
   }
@@ -822,12 +844,7 @@ function ConteudoDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pess
           <Responsavel pessoa={responsavel ?? null} />
         </span>
       </div>
-      {c.conferencia && (
-        <div className="dc-par dc-inteira" style={{ gridColumn: "1 / -1" }}>
-          <span className="dc-rotulo">Segunda conferência</span>
-          <ConferenciaDaSugestao conferencia={c.conferencia} />
-        </div>
-      )}
+      <ProvaDaLeitura c={c} />
     </div>
   );
 }

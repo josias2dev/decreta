@@ -18,6 +18,7 @@ const sugestao = (s: Partial<CasoDePrazo["gabarito"]>): CasoDePrazo["gabarito"] 
   audiencia: null,
   resumo: "",
   assunto: "",
+  trecho: "",
   recusa: null,
   ...s,
 });
@@ -36,7 +37,7 @@ const PRAZOS: CasoDePrazo[] = [
     },
     // Publicada em 30/10 (sexta); 02/11 é Finados: começa em 03/11. 20/11 não conta. Vence em 24/11.
     esperado: { geraPrazo: true, ato: "laudo", dias: 15, fim: "2026-11-24" },
-    gabarito: sugestao({ tipo: "Manifestação sobre laudo pericial", dias: 15, fundamento: "art. 477, § 1º, CPC", resumo: "Intimação para falar do laudo do evento 87.", assunto: "laudo pericial" }),
+    gabarito: sugestao({ tipo: "Manifestação sobre laudo pericial", dias: 15, fundamento: "art. 477, § 1º, CPC", resumo: "Intimação para falar do laudo do evento 87.", assunto: "laudo pericial", trecho: "manifestarem-se sobre o laudo pericial juntado no evento 87, no prazo comum de 15 (quinze) dias" }),
   },
   {
     id: "embargos-carnaval",
@@ -51,7 +52,7 @@ const PRAZOS: CasoDePrazo[] = [
     },
     // Publicada em 13/02 (sexta); 16 e 17 são Carnaval e 18 tem expediente reduzido: começa em 19/02. Vence em 25/02.
     esperado: { geraPrazo: true, ato: "embargos de declara", dias: 5, fim: "2026-02-25" },
-    gabarito: sugestao({ tipo: "Embargos de declaração", dias: 5, fundamento: "art. 1.023, CPC", resumo: "Sentença de procedência; prazo para embargos de declaração.", assunto: "sentença" }),
+    gabarito: sugestao({ tipo: "Embargos de declaração", dias: 5, fundamento: "art. 1.023, CPC", resumo: "Sentença de procedência; prazo para embargos de declaração.", assunto: "sentença", trecho: "JULGO PROCEDENTE o pedido para condenar a ré ao pagamento de R$ 12.400,00" }),
   },
   {
     id: "apelacao-recesso",
@@ -66,7 +67,7 @@ const PRAZOS: CasoDePrazo[] = [
     },
     // Publicada em 18/12; recesso e suspensão até 20/01: começa em 21/01/2027. 08 e 09/02 são Carnaval; a quarta de cinzas conta no meio. Vence em 12/02/2027.
     esperado: { geraPrazo: true, ato: "apela", dias: 15, fim: "2027-02-12" },
-    gabarito: sugestao({ tipo: "Apelação", dias: 15, fundamento: "art. 1.003, § 5º, CPC", resumo: "Sentença de improcedência; cabe apelação.", assunto: "sentença" }),
+    gabarito: sugestao({ tipo: "Apelação", dias: 15, fundamento: "art. 1.003, § 5º, CPC", resumo: "Sentença de improcedência; cabe apelação.", assunto: "sentença", trecho: "JULGO IMPROCEDENTES os pedidos formulados na inicial" }),
   },
   {
     id: "contrarrazoes-clt",
@@ -81,7 +82,7 @@ const PRAZOS: CasoDePrazo[] = [
     },
     // Publicada em 13/11 (sexta); começa em 16/11; 20/11 não conta. Vence em 26/11.
     esperado: { geraPrazo: true, ato: "contrarraz", dias: 8, fim: "2026-11-26" },
-    gabarito: sugestao({ tipo: "Contrarrazões ao recurso ordinário", dias: 8, fundamento: "art. 900, CLT", resumo: "Recurso ordinário da reclamada recebido; prazo para contrarrazões.", assunto: "recurso ordinário" }),
+    gabarito: sugestao({ tipo: "Contrarrazões ao recurso ordinário", dias: 8, fundamento: "art. 900, CLT", resumo: "Recurso ordinário da reclamada recebido; prazo para contrarrazões.", assunto: "recurso ordinário", trecho: "Intime-se o reclamante para, querendo, apresentar contrarrazões no prazo legal." }),
   },
   {
     id: "contestacao-feriado-municipal",
@@ -97,7 +98,7 @@ const PRAZOS: CasoDePrazo[] = [
     },
     // Publicada em 06/03 (sexta); 09/03 é feriado municipal: começa em 10/03. Vence em 30/03.
     esperado: { geraPrazo: true, ato: "contesta", dias: 15, fim: "2026-03-30" },
-    gabarito: sugestao({ tipo: "Contestação", dias: 15, fundamento: "art. 335, CPC", resumo: "Citação para contestar em 15 dias úteis.", assunto: "citação" }),
+    gabarito: sugestao({ tipo: "Contestação", dias: 15, fundamento: "art. 335, CPC", resumo: "Citação para contestar em 15 dias úteis.", assunto: "citação", trecho: "apresentar contestação no prazo de 15 (quinze) dias úteis" }),
   },
   {
     id: "recurso-inominado-juizado",
@@ -112,7 +113,7 @@ const PRAZOS: CasoDePrazo[] = [
     },
     // Publicada em 04/09 (sexta); 07/09 é a Independência: começa em 08/09. Vence em 21/09.
     esperado: { geraPrazo: true, ato: "recurso inominado", dias: 10, fim: "2026-09-21" },
-    gabarito: sugestao({ tipo: "Recurso inominado", dias: 10, fundamento: "art. 42, Lei 9.099/1995", resumo: "Sentença de parcial procedência no Juizado; cabe recurso inominado.", assunto: "sentença" }),
+    gabarito: sugestao({ tipo: "Recurso inominado", dias: 10, fundamento: "art. 42, Lei 9.099/1995", resumo: "Sentença de parcial procedência no Juizado; cabe recurso inominado.", assunto: "sentença", trecho: "JULGO PARCIALMENTE PROCEDENTE o pedido para condenar a ré a restituir R$ 1.890,00 ao autor." }),
   },
   {
     id: "documentos-aparecida",
@@ -127,7 +128,7 @@ const PRAZOS: CasoDePrazo[] = [
     },
     // 12/10 é feriado: publicada em 13/10; começa em 14/10. Vence em 20/10.
     esperado: { geraPrazo: true, ato: "documento", dias: 5, fim: "2026-10-20" },
-    gabarito: sugestao({ tipo: "Manifestação sobre documentos", dias: 5, fundamento: null, resumo: "Vista dos documentos dos eventos 52 a 55.", assunto: "documentos" }),
+    gabarito: sugestao({ tipo: "Manifestação sobre documentos", dias: 5, fundamento: null, resumo: "Vista dos documentos dos eventos 52 a 55.", assunto: "documentos", trecho: "Vista à parte autora, pelo prazo de 5 (cinco) dias" }),
   },
   {
     id: "despacho-sem-prazo",
@@ -141,7 +142,7 @@ const PRAZOS: CasoDePrazo[] = [
       disponibilizadaEm: "2026-10-27",
     },
     esperado: { geraPrazo: false },
-    gabarito: sugestao({ geraPrazo: false, tipo: "", dias: null, resumo: "Aguarda o retorno da carta precatória.", assunto: "cumpra-se" }),
+    gabarito: sugestao({ geraPrazo: false, tipo: "", dias: null, resumo: "Aguarda o retorno da carta precatória.", assunto: "cumpra-se", trecho: "Aguarde-se o retorno da carta precatória" }),
   },
 ];
 

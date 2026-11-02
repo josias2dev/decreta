@@ -156,6 +156,17 @@ Em aberto:
 - **Baixo — só o prazo:** o resumo, o briefing e a peça não têm observação.
 - **Baixo — o que é acerto:** o placar compara se gera prazo, os dias e a contagem. O descarte de um prazo conta como "não gera", mesmo quando o motivo foi outro.
 
+## 2.6. A leitura da IA traz a frase da publicação (conferida por código)
+
+A sugestão de prazo dizia o ato e os dias, sem mostrar de onde tirou, e nada pegava uma conclusão sem base no teor. Agora a IA copia a frase que sustenta a conclusão, e o código procura essa frase na publicação (quebra de linha, caixa, acento e aspas em volta não contam; palavra trocada ou reticências, sim). Se achar, a tela mostra "Trecho da publicação". Se não achar, o prazo nasce do mesmo jeito e a segunda conferência cai para baixa, pedindo para conferir o teor. Na leitura "não gera prazo", o caso mais perigoso, a lista passa a dizer "Não gera prazo · confira o teor". O conjunto-ouro (`bun run avaliar`) reprova trecho que não está na publicação.
+
+Em aberto:
+
+- **Médio — frase real, conclusão errada:** a conferência prova que a frase existe, não que ela sustenta a conclusão. A pessoa continua sendo quem decide.
+- **Baixo — só a sugestão de prazo:** briefing, resumo dos autos, leitura da sentença e peças continuam com a checagem de citações que já tinham, sem frase literal.
+- **Baixo — ficha do prazo:** a frase aparece na publicação; a ficha do prazo mostra só o aviso quando ela não confere.
+- **Baixo — leituras antigas:** ficam sem trecho e sem aviso até serem lidas de novo.
+
 ## 3. Depende de você
 
 - **Cobrança e duração do acesso de contas novas:** hoje o cadastro não tem período de teste nem pagamento, e o escritório em avaliação fica assim até alguém liberar à mão.

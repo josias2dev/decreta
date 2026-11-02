@@ -27,7 +27,7 @@ export function seloDaSugestao(a: { situacao: string; conteudo: Record<string, u
   const s = a.conteudo as Partial<SugestaoNaTela>;
   if (s.audiencia) return { tipo: "audiencia", texto: `Audiência · ${s.audiencia.data.slice(8, 10)}/${s.audiencia.data.slice(5, 7)} às ${s.audiencia.hora}` };
   if (s.geraPrazo && s.contagemCalculada) return { tipo: "prazo", texto: `Prazo sugerido · ${formatarDiaCurto(s.contagemCalculada.fim)}` };
-  return { tipo: "sem_prazo", texto: "Não gera prazo" };
+  return { tipo: "sem_prazo", texto: s.conferencia?.confianca === "baixa" ? "Não gera prazo · confira o teor" : "Não gera prazo" };
 }
 
 const confirmacao = z.object({

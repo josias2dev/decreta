@@ -203,6 +203,7 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
       audiencia: null,
       resumo: "Intimação para falar do laudo do evento 87.",
       assunto: "laudo pericial",
+      trecho: "manifestarem-se sobre o laudo pericial juntado no evento 87",
       recusa: null,
     };
     const a = await sugerirPrazoDaPublicacao({ db: t.db, ia }, orgId, publicacaoId);

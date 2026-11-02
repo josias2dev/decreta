@@ -1,7 +1,8 @@
 /**
  * Regra do prazo e segunda conferência da sugestão da IA. A IA lê a
  * publicação e diz o ato e os dias; aqui uma tabela fixa confere se a
- * quantidade de dias bate com a lei e se o ato combina com o documento.
+ * quantidade de dias bate com a lei, se o ato combina com o documento e se a
+ * frase que a IA citou existe mesmo na publicação.
  */
 import type { Contagem } from "./prazos.ts";
 
@@ -94,10 +95,24 @@ export interface SugestaoAConferir {
   documento?: string | null;
   /** O que a equipe fez com as sugestões do mesmo ato. */
   historico?: { descartadas: number; confirmadas: number };
+  /** A frase citada pela IA existe na publicação. Sem a informação (leitura antiga), não entra na conta. */
+  trechoNaFonte?: boolean;
 }
 
 /** A partir de quantos descartes, sem nenhuma confirmação, o ato vira suspeito. */
 export const DESCARTES_PARA_DESCONFIAR = 3;
+
+/** Menos que isso ("15 dias") não prova de onde veio a conclusão. */
+const TRECHO_MINIMO = 8;
+const PONTAS_DO_TRECHO = /^[\s"'“”‘’.,;:]+|[\s"'“”‘’.,;:]+$/g;
+
+export const MOTIVO_DO_TRECHO = "O trecho que a IA citou não está na publicação; confira o teor.";
+
+/** A frase existe na fonte? Quebra de linha, caixa, acento e aspas em volta não contam; uma palavra trocada ou reticências, sim. */
+export function trechoNaFonte(trecho: string, fonte: string): boolean {
+  const t = semAcento(trecho).replace(PONTAS_DO_TRECHO, "");
+  return t.length >= TRECHO_MINIMO && semAcento(fonte).includes(t);
+}
 
 export function conferirSugestao(s: SugestaoAConferir): Conferencia {
   const ato = atoDe(s.tipo);
@@ -109,6 +124,7 @@ export function conferirSugestao(s: SugestaoAConferir): Conferencia {
   if (ato?.inicial && (documento === "sentenca" || documento === "acordao")) alertas.push(`${maiuscula(ato.nome)} depois de ${s.documento!.toLowerCase()} não combina; confira o ato.`);
   if (lei && lei[0] !== s.dias) alertas.push(`Para ${ato!.nome}, a lei dá ${lei[0]} dias (${lei[1]}); a sugestão diz ${s.dias}.`);
   if (s.contagem === "corridos") alertas.push(`Prazo processual conta em dias úteis (${DIAS_UTEIS[s.rito]}); a sugestão conta em dias corridos.`);
+  if (s.trechoNaFonte === false) alertas.push(MOTIVO_DO_TRECHO);
   const h = s.historico;
   if (h && h.descartadas >= DESCARTES_PARA_DESCONFIAR && h.confirmadas === 0) {
     alertas.push(`A equipe descartou ${h.descartadas} sugestões de ${ato?.nome ?? s.tipo.replace(/\s+/g, " ").trim().toLowerCase()} e não confirmou nenhuma.`);

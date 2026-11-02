@@ -1,5 +1,34 @@
 import { describe, expect, test } from "bun:test";
-import { chaveDoAto, conferirSugestao, regraDaContagem, ritoDoProcesso } from "../src/index.ts";
+import { chaveDoAto, conferirSugestao, regraDaContagem, ritoDoProcesso, trechoNaFonte } from "../src/index.ts";
+
+describe("trecho citado pela IA", () => {
+  const TEOR = "Intimem-se as partes para, querendo,\nmanifestarem-se sobre o laudo  pericial, no prazo comum de 15 (quinze) dias. Após, voltem conclusos.";
+
+  test("a frase copiada do teor confere, mesmo com outra quebra de linha, caixa, acento ou aspas em volta", () => {
+    expect(trechoNaFonte("no prazo comum de 15 (quinze) dias", TEOR)).toBe(true);
+    expect(trechoNaFonte("querendo, manifestarem-se sobre o laudo pericial", TEOR)).toBe(true);
+    expect(trechoNaFonte("“APOS, VOLTEM CONCLUSOS.”", TEOR)).toBe(true);
+  });
+
+  test("frase que não está no teor, trocada ou com reticências não confere", () => {
+    expect(trechoNaFonte("no prazo comum de 5 (cinco) dias", TEOR)).toBe(false);
+    expect(trechoNaFonte("Intimem-se as partes ... voltem conclusos", TEOR)).toBe(false);
+  });
+
+  test("vazio ou curto demais para provar alguma coisa não confere", () => {
+    expect(trechoNaFonte("", TEOR)).toBe(false);
+    expect(trechoNaFonte("dias", TEOR)).toBe(false);
+  });
+
+  test("a conferência avisa quando o trecho não confere; sem a informação, não diz nada", () => {
+    const base = { tipo: "Contestação", dias: 15, contagem: "uteis" as const, rito: "cpc" as const };
+    const c = conferirSugestao({ ...base, trechoNaFonte: false });
+    expect(c.confianca).toBe("baixa");
+    expect(c.motivos.join(" ")).toContain("O trecho que a IA citou não está na publicação");
+    expect(conferirSugestao({ ...base, trechoNaFonte: true }).confianca).toBe("alta");
+    expect(conferirSugestao(base).confianca).toBe("alta");
+  });
+});
 
 describe("regra aplicada", () => {
   test("Justiça do Trabalho conta pela CLT", () => {

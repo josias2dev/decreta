@@ -110,6 +110,12 @@ export interface OpcoesDaDemonstracao {
  * Com `manterPessoas`, as contas e as sessões ficam (para renovar as datas sem
  * tirar ninguém do sistema). Nenhum outro escritório é tocado.
  */
+/** A frase do teor que a leitura da demonstração cita: a que fala do prazo ou, sem ela, a primeira com corpo. */
+const fraseDoTeor = (teor: string) => {
+  const frases = teor.split(/(?<=[.!?])\s+/).filter((f) => f.length >= 20);
+  return frases.find((f) => /prazo|\bdias\b/i.test(f)) ?? frases[0] ?? "";
+};
+
 export async function apagarDemonstracao(db: Database, o: { arquivos?: Armazenamento; manterPessoas?: boolean } = {}): Promise<string | null> {
   const [org] = await db.select({ id: organization.id }).from(organization).where(eq(organization.slug, ESCRITORIO.slug));
   if (org) {
@@ -420,10 +426,13 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
         await tx.insert(analises).values({ organizationId, alvo: "publicacao", alvoId: pub.id, acao: "sugerir-prazo", situacao: "recusa", conteudo: { recusa: "Falta o teor da publicação. Abra a íntegra no sistema do tribunal e cole aqui, ou anexe a decisão." }, fonte: `DJEN · ${pub.disponibilizadaEm.split("-").reverse().join("/")}`, base: impressao(pub.texto), createdAt: quando });
         return null;
       }
+      const trecho = fraseDoTeor(pub.texto);
       const contagemCalculada = s.geraPrazo && s.dias ? contagemNaTela(contarPrazo({ publicacao: pub.publicadaEm, dias: s.dias, contagem: s.contagem, calendario: cal })) : null;
       const rito = ritoDoProcesso({ tribunal: pub.tribunal, classe: pub.classe, orgao: pub.orgao });
       const conteudo: SugestaoNaTela = {
         ...s,
+        trecho,
+        trechoConfere: !!trecho,
         recusa: null,
         contagemCalculada,
         regra: contagemCalculada ? regraDaContagem(rito, s.contagem) : null,

@@ -29,6 +29,7 @@ const leitura = (o: { geraPrazo: boolean; dias?: number | null; contagem?: "utei
   assunto: "laudo",
   resumo: "Resumo com o nome da Marina Duarte.",
   audiencia: null,
+  trecho: "falar sobre o laudo pericial em 15 dias",
   recusa: o.recusa ?? null,
 });
 

@@ -219,6 +219,10 @@ export interface Sugestao {
   /** "Dias úteis (CPC, art. 219)". Some nas leituras antigas. */
   regra?: string | null;
   conferencia?: SegundaConferencia | null;
+  /** A frase da publicação que sustenta a leitura. Some nas leituras antigas. */
+  trecho?: string;
+  /** O código achou a frase no teor; sem isso, ela não aparece como da publicação. */
+  trechoConfere?: boolean;
   responsavelId: string | null;
 }
 

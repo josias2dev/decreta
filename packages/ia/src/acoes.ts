@@ -87,6 +87,7 @@ export const sugestaoDePrazoSchema = z.object({
     .describe("Se a publicação designa audiência, os dados dela. Nulo caso contrário."),
   resumo: z.string().describe('Uma linha sobre o que a publicação diz, ex.: "Intimação para falar do laudo pericial do evento 87."'),
   assunto: z.string().describe('O assunto em duas ou três palavras, em minúsculas, ex.: "laudo pericial", "sentença", "audiência designada", "cumpra-se".'),
+  trecho: z.string().describe("A frase da publicação que sustenta a conclusão, copiada palavra por palavra, sem reticências."),
   recusa,
 });
 export type SugestaoDePrazo = z.infer<typeof sugestaoDePrazoSchema>;
@@ -102,7 +103,8 @@ export function semTeor(texto: string): boolean {
 const INSTRUCOES_DO_PRAZO = `Leia a publicação e diga se ela abre prazo para o nosso cliente, qual o ato e quantos dias.
 Não calcule a data final: o sistema conta os dias úteis com o calendário do tribunal.
 Despacho de mero expediente ("cumpra-se", "aguarde-se", "vista ao MP") normalmente não gera prazo para nós.
-Se o prazo não estiver escrito, use o prazo legal só quando tiver certeza (ex.: 15 dias úteis para contestar, CPC art. 335; 15 dias para apelar, art. 1.003, § 5º). Na dúvida, recuse.`;
+Se o prazo não estiver escrito, use o prazo legal só quando tiver certeza (ex.: 15 dias úteis para contestar, CPC art. 335; 15 dias para apelar, art. 1.003, § 5º). Na dúvida, recuse.
+Em "trecho", copie da publicação, palavra por palavra e sem reticências, a frase que sustenta a sua conclusão, seja o prazo ou a falta dele. Copie só da publicação, nunca do histórico do processo.`;
 
 /** O prompt que o modo observar testa no lugar do atual, sem efeito no escritório; nulo, testa só o modelo (MODELO_OBSERVAR). */
 export const INSTRUCOES_DO_PRAZO_EM_OBSERVACAO: string | null = null;

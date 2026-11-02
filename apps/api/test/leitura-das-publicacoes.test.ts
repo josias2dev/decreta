@@ -134,7 +134,7 @@ describe.skipIf(!hasTestDatabase)("publicações que a IA não leu", () => {
     const medida = iaMedida({ db: t.db }, ia, { organizationId: orgId, userId: null, origem: "fundo" });
     const procedencias = async () => t.owner<{ situacao: string; procedencia: { codigo: string; chamadas: { metodo: string; modelo: string | null; prompt: string }[] } }[]>`select situacao, procedencia from analises where alvo_id = ${id} order by created_at`;
 
-    ia.respostas["sugerir-prazo"] = { geraPrazo: false, tipo: null, fundamento: null, dias: null, contagem: null, assunto: "laudo", resumo: "Sem prazo.", audiencia: null, recusa: null, citacoes: [] };
+    ia.respostas["sugerir-prazo"] = { geraPrazo: false, tipo: null, fundamento: null, dias: null, contagem: null, assunto: "laudo", resumo: "Sem prazo.", audiencia: null, trecho: "falar sobre o laudo pericial em 15 dias", recusa: null, citacoes: [] };
     const lida = await sugerirPrazoDaPublicacao({ db: t.db, ia: medida }, orgId, id);
     expect(["pronto", "erro"]).toContain(lida!.situacao);
     const [primeira] = await procedencias();

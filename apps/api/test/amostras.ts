@@ -131,7 +131,7 @@ try {
     texto:
       "Vistos. Eduardo Lima ajuizou ação contra Unimed Litoral pedindo a cobertura da cirurgia negada, o reembolso de R$ 18.400,00 e danos morais. A ré alegou exclusão contratual. Ante o exposto, JULGO PARCIALMENTE PROCEDENTES os pedidos para condenar a ré a custear a cirurgia e a reembolsar R$ 18.400,00, com correção pelo INPC desde o desembolso e juros de 1% ao mês desde a citação. Rejeito o pedido de danos morais. Custas e honorários de 10% do valor da condenação pela ré. Publique-se. Intimem-se.",
   });
-  ia.respostas["sugerir-prazo"] = { geraPrazo: true, tipo: "Apelação", dias: 15, contagem: "uteis", fundamento: "art. 1.003, § 5º, CPC", audiencia: null, resumo: "Sentença parcialmente procedente: cirurgia e reembolso, sem danos morais.", assunto: "sentença", recusa: null };
+  ia.respostas["sugerir-prazo"] = { trecho: "Ante o exposto, JULGO PARCIALMENTE PROCEDENTES os pedidos", geraPrazo: true, tipo: "Apelação", dias: 15, contagem: "uteis", fundamento: "art. 1.003, § 5º, CPC", audiencia: null, resumo: "Sentença parcialmente procedente: cirurgia e reembolso, sem danos morais.", assunto: "sentença", recusa: null };
   ia.respostas["ler-sentenca"] = {
     tipo: "sentenca",
     resultado: "parcialmente_procedente",

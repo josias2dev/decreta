@@ -175,13 +175,15 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const cal = await calendarioDoEscritorio(tx, processo.tribunal ?? (await tribunalPadrao(tx, c.get("orgId"))), processo.comarca);
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const { rito, documento, ...conta } = await contaDoPrazo(tx, c.get("orgId"), prazo);
+      const [pub] = prazo.publicacaoId ? await tx.select().from(publicacoes).where(eq(publicacoes.id, prazo.publicacaoId)) : [];
+      const sugestao = pub ? await ultimaAnalise(tx, "publicacao", pub.id, "sugerir-prazo") : null;
       // A segunda conferência vale enquanto a sugestão da IA espera alguém confirmar.
       const conferencia =
-        prazo.origem === "ia" && !prazo.confirmadoEm && prazo.situacao === "aberto" ? conferir({ tipo: prazo.tipo, dias: prazo.dias, contagem: prazo.contagem, rito, documento }, await historicoDasSugestoes(tx)) : null;
-      const [pub] = prazo.publicacaoId ? await tx.select().from(publicacoes).where(eq(publicacoes.id, prazo.publicacaoId)) : [];
+        prazo.origem === "ia" && !prazo.confirmadoEm && prazo.situacao === "aberto"
+          ? conferir({ tipo: prazo.tipo, dias: prazo.dias, contagem: prazo.contagem, rito, documento, trechoNaFonte: (sugestao?.conteudo as { trechoConfere?: boolean } | undefined)?.trechoConfere }, await historicoDasSugestoes(tx))
+          : null;
       const contexto = await carregarContexto(tx, processo.id);
       const briefing = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "briefing-prazo"), contexto?.base);
-      const sugestao = pub ? await ultimaAnalise(tx, "publicacao", pub.id, "sugerir-prazo") : null;
       const pecaContraria = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "ler-peca-contraria"), contexto?.base);
       const pecasDoPrazo = await tx
         .select({ id: pecas.id, titulo: pecas.titulo, situacao: pecas.situacao, atualizadaEm: pecas.updatedAt, criadaPor: pecas.criadaPor, textoGerado: pecas.textoGerado })

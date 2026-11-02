@@ -47,7 +47,7 @@ describe.skipIf(!hasTestDatabase)("prazo à prova de auditoria", () => {
         { idExterno, disponibilizadaEm: "2026-10-28", tribunal: "TJSC", orgao: "2ª Vara Cível da Comarca de Joinville", tipoComunicacao: "Intimação", tipoDocumento, classe: "Procedimento Comum Cível", cnj: CNJ, texto: TEOR, link: null, destinatarios: [], advogados: [] },
       ]),
     );
-    ia.respostas["sugerir-prazo"] = { geraPrazo: true, tipo: sugestao.tipo, dias: sugestao.dias, contagem: sugestao.contagem ?? "uteis", fundamento: null, audiencia: null, resumo: "Intimação.", assunto: "intimação", recusa: null };
+    ia.respostas["sugerir-prazo"] = { geraPrazo: true, tipo: sugestao.tipo, dias: sugestao.dias, contagem: sugestao.contagem ?? "uteis", fundamento: null, audiencia: null, resumo: "Intimação.", assunto: "intimação", trecho: "manifestarem-se sobre o laudo pericial juntado no evento 87", recusa: null };
     const a = await sugerirPrazoDaPublicacao({ db: t.db, ia }, orgId, pubId!);
     return { pubId: pubId!, sugestao: a!.conteudo as Record<string, any> };
   }

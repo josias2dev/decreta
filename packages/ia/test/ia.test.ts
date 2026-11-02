@@ -64,6 +64,7 @@ describe("sugestão de prazo", () => {
           audiencia: null,
           resumo: "Intimação para falar do laudo do evento 87.",
           assunto: "laudo pericial",
+          trecho: "manifestarem-se sobre o laudo pericial juntado no evento 87",
           recusa: null,
         },
       },
