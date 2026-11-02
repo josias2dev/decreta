@@ -66,6 +66,7 @@ import type {
 import type { Eu } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { useAviso } from "./avisos";
+import { DataViva } from "./data-viva";
 import { Dialogo } from "./dialogo";
 import { IconeDoArquivo } from "./icone-arquivo";
 import { Avatar, Botao, Selo } from "./ui";
@@ -505,7 +506,9 @@ function LinhaDoPrazo({ p, semProcesso }: { p: PrazoNaIa; semProcesso?: boolean 
             Cumprido{cumpridoEm && <span className="dc-num"> {diaCurto(cumpridoEm)}</span>}
           </Selo>
         ) : (
-          <Selo urgencia={p.urgencia}>{p.quando}</Selo>
+          <DataViva alvo={{ prazo: p.id }}>
+            <Selo urgencia={p.urgencia}>{p.quando}</Selo>
+          </DataViva>
         )}
       </span>
       <span className="dc-linha-prazo__texto">
@@ -514,7 +517,14 @@ function LinhaDoPrazo({ p, semProcesso }: { p: PrazoNaIa; semProcesso?: boolean 
             {p.tipo}
           </Link>
           {p.situacao === "a_confirmar" && aberto && <span className="dc-cartao-ia__marca">a confirmar</span>}
-          {cumpridoEm && <span className="dc-cartao-ia__marca">vencia {diaCurto(p.fim)}</span>}
+          {cumpridoEm && (
+            <span className="dc-cartao-ia__marca">
+              vencia{" "}
+              <DataViva alvo={{ prazo: p.id }} texto>
+                {diaCurto(p.fim)}
+              </DataViva>
+            </span>
+          )}
         </span>
         {!semProcesso && (
           <Link to="/processos/$id" params={{ id: p.processo.id }} className="dc-cartao-ia__sub">

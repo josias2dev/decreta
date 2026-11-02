@@ -36,6 +36,8 @@ export interface PublicacaoDoDia {
   id: string;
   titulo: string;
   detalhe: string;
+  /** A data do prazo sugerido, que também está no detalhe: a tela abre a conta dela. */
+  fimSugerido: Dia | null;
 }
 
 export interface PainelDoDia {
@@ -224,10 +226,10 @@ export async function painelDoDia(db: Database, tx: Tx, organizationId: string, 
     itens,
     publicacoes: pubs.slice(0, 3).map((p) => {
       const s = ultimaSugestao.get(p.id);
-      const lida = s?.situacao === "pronto" ? (s.conteudo as { geraPrazo?: boolean; tipo?: string; assunto?: string }) : null;
+      const lida = s?.situacao === "pronto" ? (s.conteudo as { geraPrazo?: boolean; tipo?: string; assunto?: string; audiencia?: unknown; contagemCalculada?: { fim: string } | null }) : null;
       const quem = p.processo?.split(" × ")[0] ?? p.destinatarios[0]?.nome ?? "Sem processo";
       const titulo = lida?.geraPrazo && lida.tipo ? lida.tipo : tituloDaPublicacao(p.tipoComunicacao, lida?.assunto ?? p.tipoDocumento?.toLocaleLowerCase("pt-BR") ?? null);
-      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s, p.texto, semLeitura(p))}` };
+      return { id: p.id, titulo, detalhe: `${quem} · ${resumoDaSugestao(s, p.texto, semLeitura(p))}`, fimSugerido: lida?.geraPrazo && !lida.audiencia ? (lida.contagemCalculada?.fim ?? null) : null };
     }),
     porResponsavel,
     alertasDaCaptura: (await saudeDaCaptura(tx, hoje)).alertas,

@@ -23,6 +23,7 @@ import {
   somarMeses,
   type FeriadosDoPeriodo,
 } from "@/componentes/calendario";
+import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -373,23 +374,39 @@ function LinhaDaAgenda({ item: i, compacta, aoMarcar }: { item: ItemDaAgenda; co
       </label>
     );
   }
-  const destino = i.tipo === "audiencia" ? ({ to: "/audiencias/$id", params: { id: i.id } } as const) : ({ to: "/prazos/$id", params: { id: i.id } } as const);
-  return (
-    <Link {...destino} className="dc-linhas__item items-center">
-      <span className={marcador}>
-        {i.tipo === "audiencia" ? (
-          <span className="dc-selo dc-selo--prazo dc-num">
-            {i.porVideo && <Video />}
-            {i.hora}
+  // O prazo tem a data viva por cima: o link cobre a linha sem envolver o botão.
+  if (i.tipo === "prazo") {
+    return (
+      <div className="dc-linhas__item items-center dc-com-esticado">
+        <span className={marcador}>
+          <DataViva alvo={{ prazo: i.id }}>
+            <Selo urgencia={i.urgencia ?? "prazo"}>{i.interno ? "Interno" : "Prazo"}</Selo>
+          </DataViva>
+        </span>
+        <span className="dc-celula min-w-0 flex-1">
+          <span className="dc-celula__1">
+            <Link to="/prazos/$id" params={{ id: i.id }} className="dc-esticado">
+              {i.titulo}
+            </Link>
+            {i.aConfirmar && <span className="dc-selo dc-selo--ia ml-2">a confirmar</span>}
           </span>
-        ) : (
-          <Selo urgencia={i.urgencia ?? "prazo"}>{i.interno ? "Interno" : "Prazo"}</Selo>
-        )}
+          {processo}
+        </span>
+        {pessoa}
+      </div>
+    );
+  }
+  return (
+    <Link to="/audiencias/$id" params={{ id: i.id }} className="dc-linhas__item items-center">
+      <span className={marcador}>
+        <span className="dc-selo dc-selo--prazo dc-num">
+          {i.porVideo && <Video />}
+          {i.hora}
+        </span>
       </span>
       <span className="dc-celula min-w-0 flex-1">
         <span className="dc-celula__1">
           {i.titulo}
-          {i.aConfirmar && <span className="dc-selo dc-selo--ia ml-2">a confirmar</span>}
           {i.situacao && i.situacao !== "marcada" && <span className="ml-2 dc-t-meta font-normal text-[var(--tinta-2)]">{SITUACAO[i.situacao as keyof typeof SITUACAO]}</span>}
         </span>
         {processo}

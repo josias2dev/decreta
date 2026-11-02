@@ -69,7 +69,7 @@ test.describe("em Hoje", () => {
     const linha = page.locator(".dc-tabela tbody tr").filter({ hasText: "Contestação da Alfa" });
     await expect(linha.getByText("Interno hoje")).toBeVisible();
     await expect(linha.getByText(/Fatal 24\/11/)).toBeVisible();
-    await expect(linha.locator("[title]").filter({ hasText: "Interno hoje" })).toHaveAttribute("title", new RegExp(REGRA.replace(/[()]/g, "\\$&")));
+    await expect(linha.getByTitle(REGRA)).toContainText("Interno hoje");
     expect(await sobraNaLateral(page)).toBe(0);
   });
 

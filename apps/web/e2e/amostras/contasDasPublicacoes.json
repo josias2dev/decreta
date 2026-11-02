@@ -1,0 +1,632 @@
+{
+  "path": "/publicacoes/contas?amostra",
+  "corpo": {
+    "01d15a7b-11aa-464d-8621-474a1daaee7d": {
+      "prazo": {
+        "id": "0a5270fa-827b-4194-9639-4db5527a6be4",
+        "tipo": "Manifestação sobre laudo pericial",
+        "situacao": "aberto",
+        "confirmado": false,
+        "processo": {
+          "id": "a3fb9773-70f7-49d6-a80c-5e61d5cafad7",
+          "titulo": "Marina Duarte × Seguradora Alfa S.A."
+        }
+      },
+      "tipo": "Manifestação sobre laudo pericial",
+      "fim": "2026-11-23",
+      "dias": 15,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-29",
+        "inicio": "2026-10-30",
+        "fim": "2026-11-23",
+        "dias": 15,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-29",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-11",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-12",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-13",
+            "tipo": "contado",
+            "n": 10
+          },
+          {
+            "dia": "2026-11-14",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-15",
+            "tipo": "fim_de_semana",
+            "motivo": "Proclamação da República"
+          },
+          {
+            "dia": "2026-11-16",
+            "tipo": "contado",
+            "n": 11
+          },
+          {
+            "dia": "2026-11-17",
+            "tipo": "contado",
+            "n": 12
+          },
+          {
+            "dia": "2026-11-18",
+            "tipo": "contado",
+            "n": 13
+          },
+          {
+            "dia": "2026-11-19",
+            "tipo": "contado",
+            "n": 14
+          },
+          {
+            "dia": "2026-11-20",
+            "tipo": "feriado",
+            "motivo": "Consciência Negra"
+          },
+          {
+            "dia": "2026-11-21",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-22",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-23",
+            "tipo": "contado",
+            "n": 15,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Joinville",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        },
+        {
+          "dia": "2026-11-20",
+          "nome": "Consciência Negra",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": {
+        "confianca": "alta",
+        "motivos": [
+          "Bate com a lei: 15 dias (CPC, art. 477, § 1º)."
+        ]
+      }
+    },
+    "649aa955-978e-4a5e-bdd8-08ec9a01e762": {
+      "prazo": {
+        "id": "b827c2f5-ad89-47d8-a7d8-0adc271067fb",
+        "tipo": "Apelação",
+        "situacao": "aberto",
+        "confirmado": false,
+        "processo": {
+          "id": "11ef87fb-c9d7-49dd-9573-0cae29613dce",
+          "titulo": "Lúcia Matos × Instituto de Previdência de Brusque"
+        }
+      },
+      "tipo": "Apelação",
+      "fim": "2026-11-23",
+      "dias": 15,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-29",
+        "inicio": "2026-10-30",
+        "fim": "2026-11-23",
+        "dias": 15,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-29",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-11",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-12",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-13",
+            "tipo": "contado",
+            "n": 10
+          },
+          {
+            "dia": "2026-11-14",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-15",
+            "tipo": "fim_de_semana",
+            "motivo": "Proclamação da República"
+          },
+          {
+            "dia": "2026-11-16",
+            "tipo": "contado",
+            "n": 11
+          },
+          {
+            "dia": "2026-11-17",
+            "tipo": "contado",
+            "n": 12
+          },
+          {
+            "dia": "2026-11-18",
+            "tipo": "contado",
+            "n": 13
+          },
+          {
+            "dia": "2026-11-19",
+            "tipo": "contado",
+            "n": 14
+          },
+          {
+            "dia": "2026-11-20",
+            "tipo": "feriado",
+            "motivo": "Consciência Negra"
+          },
+          {
+            "dia": "2026-11-21",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-22",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-23",
+            "tipo": "contado",
+            "n": 15,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Brusque",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        },
+        {
+          "dia": "2026-11-20",
+          "nome": "Consciência Negra",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": {
+        "confianca": "alta",
+        "motivos": [
+          "Bate com a lei: 15 dias (CPC, art. 1.003, § 5º)."
+        ]
+      }
+    },
+    "9a7fc4b8-e3af-4fd5-b752-629492df657c": {
+      "prazo": {
+        "id": "80385b5e-edf2-4528-892c-eb83e448f26e",
+        "tipo": "Contestação",
+        "situacao": "aberto",
+        "confirmado": false,
+        "processo": {
+          "id": "806254db-1538-42ef-99cb-1606fd68e9da",
+          "titulo": "Construtora Litoral Norte × Marcos Tavares"
+        }
+      },
+      "tipo": "Contestação",
+      "fim": "2026-11-23",
+      "dias": 15,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TJSC",
+        "proprio": true,
+        "publicacao": "2026-10-29",
+        "inicio": "2026-10-30",
+        "fim": "2026-11-23",
+        "dias": 15,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-29",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-11-06",
+            "tipo": "contado",
+            "n": 5
+          },
+          {
+            "dia": "2026-11-07",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-08",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-09",
+            "tipo": "contado",
+            "n": 6
+          },
+          {
+            "dia": "2026-11-10",
+            "tipo": "contado",
+            "n": 7
+          },
+          {
+            "dia": "2026-11-11",
+            "tipo": "contado",
+            "n": 8
+          },
+          {
+            "dia": "2026-11-12",
+            "tipo": "contado",
+            "n": 9
+          },
+          {
+            "dia": "2026-11-13",
+            "tipo": "contado",
+            "n": 10
+          },
+          {
+            "dia": "2026-11-14",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-15",
+            "tipo": "fim_de_semana",
+            "motivo": "Proclamação da República"
+          },
+          {
+            "dia": "2026-11-16",
+            "tipo": "contado",
+            "n": 11
+          },
+          {
+            "dia": "2026-11-17",
+            "tipo": "contado",
+            "n": 12
+          },
+          {
+            "dia": "2026-11-18",
+            "tipo": "contado",
+            "n": 13
+          },
+          {
+            "dia": "2026-11-19",
+            "tipo": "contado",
+            "n": 14
+          },
+          {
+            "dia": "2026-11-20",
+            "tipo": "feriado",
+            "motivo": "Consciência Negra"
+          },
+          {
+            "dia": "2026-11-21",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-22",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-23",
+            "tipo": "contado",
+            "n": 15,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (CPC, art. 219)",
+      "calendario": "TJSC, com os feriados cadastrados para a comarca de Balneário Camboriú",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        },
+        {
+          "dia": "2026-11-20",
+          "nome": "Consciência Negra",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": {
+        "confianca": "alta",
+        "motivos": [
+          "Bate com a lei: 15 dias (CPC, art. 335)."
+        ]
+      }
+    },
+    "1dc7b660-39ec-4af4-9c60-ead8278f3c6f": {
+      "prazo": {
+        "id": "b78ab9b4-8874-4160-b6e9-f3cff07a1d9d",
+        "tipo": "Rol de testemunhas",
+        "situacao": "aberto",
+        "confirmado": false,
+        "processo": {
+          "id": "266e23cf-549c-43a2-afa2-1f522dbe8755",
+          "titulo": "Jorge Batista × Mercado Bom Preço Ltda."
+        }
+      },
+      "tipo": "Rol de testemunhas",
+      "fim": "2026-11-05",
+      "dias": 5,
+      "contagem": "uteis",
+      "digitada": false,
+      "aberta": {
+        "tribunal": "TRT12",
+        "proprio": true,
+        "publicacao": "2026-10-28",
+        "inicio": "2026-10-29",
+        "fim": "2026-11-05",
+        "dias": 5,
+        "contagem": "uteis",
+        "prorrogadoDe": null,
+        "linha": [
+          {
+            "dia": "2026-10-28",
+            "tipo": "publicacao"
+          },
+          {
+            "dia": "2026-10-29",
+            "tipo": "contado",
+            "n": 1
+          },
+          {
+            "dia": "2026-10-30",
+            "tipo": "contado",
+            "n": 2
+          },
+          {
+            "dia": "2026-10-31",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-01",
+            "tipo": "fim_de_semana"
+          },
+          {
+            "dia": "2026-11-02",
+            "tipo": "feriado",
+            "motivo": "Finados"
+          },
+          {
+            "dia": "2026-11-03",
+            "tipo": "contado",
+            "n": 3
+          },
+          {
+            "dia": "2026-11-04",
+            "tipo": "contado",
+            "n": 4
+          },
+          {
+            "dia": "2026-11-05",
+            "tipo": "contado",
+            "n": 5,
+            "vence": true
+          }
+        ]
+      },
+      "regra": "Dias úteis (CLT, art. 775)",
+      "calendario": "TRT12, com os feriados cadastrados para a comarca de Joinville",
+      "calendarioCompleto": true,
+      "fora": [
+        {
+          "dia": "2026-11-02",
+          "nome": "Finados",
+          "tipo": "nacional"
+        }
+      ],
+      "prorrogadoDe": null,
+      "pelaConta": null,
+      "pelo": "publicacao",
+      "outra": null,
+      "interno": null,
+      "conferencia": {
+        "confianca": "media",
+        "motivos": [
+          "Sem prazo fixo em lei para conferir: os dias vêm da publicação."
+        ]
+      }
+    }
+  }
+}

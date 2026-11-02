@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Cancelada } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, DataDoInterno, diaDigitadoCompleto, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
+import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
@@ -21,7 +22,7 @@ import type { Briefing, Contagem, Prazo, PreviaDaConta } from "@/lib/tipos";
 
 /** Tudo que mostra prazo muda junto: a lista, o Hoje, os números do menu e a caixa de publicações. */
 export function atualizarPrazos(qc: QueryClient) {
-  for (const k of ["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda"]) void qc.invalidateQueries({ queryKey: [k] });
+  for (const k of ["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda", "conta", "busca"]) void qc.invalidateQueries({ queryKey: [k] });
 }
 
 const FONTE = { djen: "DJEN", datajud: "DataJud", manual: "Publicação digitada" } as const;
@@ -80,9 +81,11 @@ export function PrazoPage() {
       ) : p.situacao === "descartado" ? (
         <Selo urgencia="prazo">Descartado</Selo>
       ) : (
-        <Selo urgencia={p.urgencia}>
-          Vence {diaMes(p.fim)} · {prazoEmDias(p.dias, p.contagem)}
-        </Selo>
+        <DataViva alvo={{ prazo: p.id }}>
+          <Selo urgencia={p.urgencia}>
+            Vence {diaMes(p.fim)} · {prazoEmDias(p.dias, p.contagem)}
+          </Selo>
+        </DataViva>
       )}
       {p.confirmado ? (
         <span className="dc-selo dc-selo--ok">
@@ -128,7 +131,10 @@ export function PrazoPage() {
         [
           "Data final",
           <span key="fim">
-            <strong className="dc-num">{diaCompleto(p.fim)}</strong> <span className="text-[var(--tinta-2)]">{diaDaSemana(p.fim)}</span>
+            <DataViva alvo={{ prazo: p.id }} texto>
+              <strong className="dc-num">{diaCompleto(p.fim)}</strong>
+            </DataViva>{" "}
+            <span className="text-[var(--tinta-2)]">{diaDaSemana(p.fim)}</span>
           </span>,
         ],
         ...(p.interno ? ([["Prazo interno", <DataDoInterno key="interno" interno={p.interno} />]] as [string, ReactNode][]) : []),

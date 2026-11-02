@@ -10,6 +10,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosDaConferencia, MotivosParaConferir, PreviaNoDialogo, SeloDeConfianca } from "@/componentes/conta-do-prazo";
+import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -75,27 +76,39 @@ function SeloDaLista({ selo }: { selo: Selo }) {
 }
 
 function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePublicacoes["itens"][number]; ligado?: boolean; celular: boolean; aoEscolher?: () => void }) {
-  const miolo = (
-    <>
+  // No celular, o título é o link que cobre o item. No computador, o item inteiro escolhe, e o título é o alvo do teclado.
+  const titulo = celular ? (
+    <Link to="/publicacoes/$id" params={{ id: item.id }} className="dc-pub__titulo dc-esticado">
+      {item.titulo}
+    </Link>
+  ) : (
+    <button
+      type="button"
+      className="dc-pub__titulo"
+      aria-current={ligado || undefined}
+      onClick={(e) => {
+        e.stopPropagation();
+        aoEscolher?.();
+      }}
+    >
+      {item.titulo}
+    </button>
+  );
+  return (
+    <div className={cn("dc-pub", celular && "dc-com-esticado", ligado && "is-on")} onClick={celular ? undefined : aoEscolher}>
       <span className="dc-pub__topo">
-        <span className="dc-pub__titulo">{item.titulo}</span>
+        {titulo}
         <span className="dc-pub__data">{diaCurto(item.disponibilizadaEm)}</span>
       </span>
       <span className="dc-pub__partes">{item.partes}</span>
-      <SeloDaLista selo={item.selo} />
-    </>
-  );
-  if (celular) {
-    return (
-      <Link to="/publicacoes/$id" params={{ id: item.id }} className="dc-pub">
-        {miolo}
-      </Link>
-    );
-  }
-  return (
-    <button type="button" className={cn("dc-pub", ligado && "is-on")} aria-current={ligado || undefined} onClick={aoEscolher}>
-      {miolo}
-    </button>
+      {item.selo.tipo === "prazo" ? (
+        <DataViva alvo={{ publicacao: item.id }}>
+          <SeloDaLista selo={item.selo} />
+        </DataViva>
+      ) : (
+        <SeloDaLista selo={item.selo} />
+      )}
+    </div>
   );
 }
 
@@ -416,7 +429,7 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
       rodape={s ? "Gerado por IA. Confira nos autos." : !iaAqui ? undefined : pub.leituraParada ? "Sem leitura da IA." : "A IA está lendo o teor."}
     >
       {c ? (
-        <FatosDaSugestao c={c} responsavel={s!.responsavel} />
+        <FatosDaSugestao c={c} responsavel={s!.responsavel} publicacaoId={pub.id} />
       ) : !iaAqui ? (
         <p className="m-0 dc-t-corpo">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
       ) : pub.leituraParada ? (
@@ -431,7 +444,11 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
       <Faixa tipo="ok">
         <Check />
         <span className="flex-1">
-          Prazo confirmado: {pub.prazo.tipo}, vence em {diaCompleto(pub.prazo.fim)}.
+          Prazo confirmado: {pub.prazo.tipo}, vence em{" "}
+          <DataViva alvo={{ prazo: pub.prazo.id }} texto>
+            {diaCompleto(pub.prazo.fim)}
+          </DataViva>
+          .
         </span>
         <Link to="/prazos/$id" params={{ id: pub.prazo.id }} className="dc-link">
           Abrir prazo
@@ -807,7 +824,7 @@ function ProvaDaSugestao({ c }: { c: Sugestao }) {
 }
 
 /** Os fatos que se decidem: a data em destaque e, abaixo, rótulo e valor num padrão só. */
-function FatosDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pessoa | null }) {
+function FatosDaSugestao({ c, responsavel, publicacaoId }: { c: Sugestao; responsavel: Pessoa | null; publicacaoId: string }) {
   const confianca: [ReactNode, ReactNode][] = c.conferencia ? [["Confiança", <SeloDeConfianca key="confianca" confianca={c.conferencia.confianca} />]] : [];
   const motivos = c.conferencia && <MotivosDaConferencia conferencia={c.conferencia} />;
   if (c.audiencia) {
@@ -840,7 +857,13 @@ function FatosDaSugestao({ c, responsavel }: { c: Sugestao; responsavel: Pessoa 
       <span className="dc-fatos__ato">{c.tipo}</span>
       <div className="dc-fatos__destaque">
         <span className="dc-rotulo">Data final</span>
-        <strong className="dc-fatos__data">{conta ? diaCompleto(conta.fim) : "—"}</strong>
+        {conta ? (
+          <DataViva alvo={{ publicacao: publicacaoId }} texto>
+            <strong className="dc-fatos__data">{diaCompleto(conta.fim)}</strong>
+          </DataViva>
+        ) : (
+          <strong className="dc-fatos__data">—</strong>
+        )}
         <span className="dc-nota">{conta ? diaDaSemana(conta.fim) : "Vincule a um processo para contar"}</span>
       </div>
       <Dados

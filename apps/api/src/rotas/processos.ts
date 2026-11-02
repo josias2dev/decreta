@@ -108,7 +108,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .offset((pagina - 1) * POR_PAGINA);
       const proximos = linhas.length
         ? await tx
-            .selectDistinctOn([prazos.processoId], { processoId: prazos.processoId, fim: prazos.fim, tipo: prazos.tipo, situacao: prazos.situacao })
+            .selectDistinctOn([prazos.processoId], { id: prazos.id, processoId: prazos.processoId, fim: prazos.fim, tipo: prazos.tipo, situacao: prazos.situacao })
             .from(prazos)
             .where(and(eq(prazos.situacao, "aberto"), inArray(prazos.processoId, linhas.map((l) => l.p.id))))
             .orderBy(prazos.processoId, asc(prazos.fim))
@@ -133,7 +133,7 @@ export function rotasDosProcessos(app: Hono<Ambiente>, deps: DepsDasRotas) {
             cliente,
             responsavel: resumir(pessoas, p.responsavelId),
             ultimaMovimentacaoEm: p.ultimaMovimentacaoEm?.toISOString() ?? null,
-            proximoPrazo: pr && u ? { fim: pr.fim, tipo: pr.tipo, urgencia: u, quando: quandoDoPrazo(u, pr.fim, hoje) } : null,
+            proximoPrazo: pr && u ? { id: pr.id, fim: pr.fim, tipo: pr.tipo, urgencia: u, quando: quandoDoPrazo(u, pr.fim, hoje) } : null,
           };
         }),
       });

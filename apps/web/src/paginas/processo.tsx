@@ -8,6 +8,7 @@ import { useAviso } from "@/componentes/avisos";
 import { AbaCalculos } from "@/componentes/calculos";
 import { DaReceita, documentoDigitado, useEmpresa, usePreencher } from "@/componentes/campos-cliente";
 import { Conversa } from "@/componentes/conversa";
+import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { AvisoSemHonorario, FinanceiroDoCasoPainel, useFinanceiroLiberado } from "@/componentes/honorarios";
@@ -222,7 +223,14 @@ function AbaResumo({ p, celular, irPara }: { p: Processo; celular: boolean; irPa
   );
 
   const proximo = p.proximoPrazo && (
-    <Painel titulo="Próximo prazo" acao={<Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>}>
+    <Painel
+      titulo="Próximo prazo"
+      acao={
+        <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+          <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+        </DataViva>
+      }
+    >
       <div className="flex flex-col gap-0.5">
         <Link to="/prazos/$id" params={{ id: p.proximoPrazo.id }} className="font-semibold text-[var(--tinta)] no-underline hover:underline">
           {p.proximoPrazo.tipo}
@@ -620,15 +628,19 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
         ) : celular ? (
           <div className="dc-linhas">
             {itens.map((i) => (
-              <Link key={i.id} to="/prazos/$id" params={{ id: i.id }} className="dc-linhas__item">
+              <div key={i.id} className="dc-linhas__item dc-com-esticado">
                 <span className="dc-celula min-w-0 flex-1">
-                  <span className="dc-celula__1">{i.tipo}</span>
+                  <Link to="/prazos/$id" params={{ id: i.id }} className="dc-celula__1 dc-esticado">
+                    {i.tipo}
+                  </Link>
                   <span className="dc-celula__2">
                     {prazoEmDias(i.dias, i.contagem)} · {i.responsavel?.apelido ?? "sem responsável"}
                   </span>
                 </span>
-                <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
-              </Link>
+                <DataViva alvo={{ prazo: i.id }}>
+                  <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
+                </DataViva>
+              </div>
             ))}
           </div>
         ) : (
@@ -646,7 +658,9 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
                 {itens.map((i) => (
                   <tr key={i.id} data-link="" onClick={() => void navigate({ to: "/prazos/$id", params: { id: i.id } })}>
                     <td>
-                      <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
+                      <DataViva alvo={{ prazo: i.id }}>
+                        <Selo urgencia={i.situacao === "cumprido" ? "cumprido" : i.urgencia}>{i.situacao === "cumprido" ? diaMes(i.fim) : i.quando}</Selo>
+                      </DataViva>
                     </td>
                     <td>
                       <span className="dc-celula">

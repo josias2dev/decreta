@@ -1495,3 +1495,61 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-primeira-busca__lendo svg { width: var(--space-3); height: var(--space-3); }
 .dc-primeira-busca__abrir { display: inline-flex; align-items: center; gap: var(--space-1); align-self: flex-start; margin-top: var(--space-1); }
 .dc-primeira-busca__abrir svg { width: var(--space-3-half); height: var(--space-3-half); }
+
+/* Link que cobre o cartão inteiro: a data viva fica por cima, e nada interativo vai dentro de outro interativo. */
+.dc-com-esticado { position: relative; }
+.dc-com-esticado .dc-data-viva { z-index: 1; }
+.dc-esticado { color: inherit; text-decoration: none; }
+.dc-esticado::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.dc-esticado:focus-visible { outline: none; }
+.dc-esticado:focus-visible::after { box-shadow: inset 0 0 0 2px var(--foco); }
+.dc-linhas__item.dc-com-esticado:hover { background: color-mix(in srgb, var(--superficie-2) 55%, transparent); }
+button.dc-pub__titulo { min-width: 0; padding: 0; background: none; border: 0; text-align: left; cursor: pointer; }
+button.dc-pub__titulo:focus-visible { outline: none; }
+.dc-pub:has(.dc-pub__titulo:focus-visible) { box-shadow: inset 0 0 0 2px var(--foco); }
+
+/* Data viva: a data que abre a própria conta. */
+.dc-data-viva { position: relative; display: inline-flex; align-items: center; align-self: flex-start; max-width: 100%; margin: 0; padding: 0; background: none; border: 0; border-radius: var(--radius-sm); font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
+.dc-data-viva:hover > .dc-selo, .dc-data-viva:hover > .dc-pub__selo { box-shadow: inset 0 0 0 1px currentColor; }
+.dc-data-viva:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
+.dc-data-viva--texto { text-decoration: underline dotted; text-decoration-color: var(--tinta-3); text-underline-offset: var(--space-half); }
+.dc-data-viva--texto:hover { text-decoration-color: currentColor; }
+.dc-celular .dc-data-viva::after { content: ""; position: absolute; inset: calc(-1 * var(--space-3)) calc(-1 * var(--space-2)); }
+.dc-flutuante-conta { z-index: 60; display: flex; flex-direction: column; gap: var(--space-3); box-sizing: border-box; width: min(344px, calc(100vw - 32px)); max-height: var(--radix-popover-content-available-height); overflow-y: auto; padding: var(--space-4); background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); box-shadow: var(--sombra-flutuante); outline: none; }
+.dc-conta-viva { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.dc-conta-viva__data { display: flex; flex-direction: column; gap: var(--space-half); }
+.dc-conta-viva__fim { font: 600 var(--texto-numero)/var(--linha-numero) var(--font-sans); letter-spacing: -0.02em; color: var(--tinta); }
+.dc-conta-viva__resto { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.dc-conta-viva .dc-dados { grid-template-columns: 84px minmax(0, 1fr); }
+/* No computador, o calendário vai ao lado da data e da regra: a conta inteira cabe sem rolar. */
+.dc-flutuante-conta:has(.dc-conta-viva--com-calendario) { width: min(600px, calc(100vw - 32px)); }
+.dc-flutuante-conta .dc-conta-viva--com-calendario { display: grid; grid-template-columns: minmax(0, 1fr) 264px; grid-template-rows: auto 1fr; grid-template-areas: "data calendario" "resto calendario"; gap: var(--space-3) var(--space-5); }
+.dc-conta-viva--com-calendario > .dc-conta-viva__data { grid-area: data; }
+.dc-conta-viva--com-calendario > .dc-mesinho { grid-area: calendario; }
+.dc-conta-viva--com-calendario > .dc-conta-viva__resto { grid-area: resto; }
+
+/* O calendário pequeno da conta, um mês por vez. */
+.dc-mesinho { display: flex; flex-direction: column; gap: var(--space-1); }
+.dc-mesinho__topo { display: flex; align-items: center; justify-content: space-between; min-height: var(--altura-controle-sm); }
+.dc-mesinho__nome { flex: 1; font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); }
+.dc-mesinho__seta { display: grid; place-items: center; width: var(--altura-controle-sm); height: var(--altura-controle-sm); padding: 0; background: none; border: 0; border-radius: var(--radius-sm); color: var(--tinta-2); cursor: pointer; }
+.dc-mesinho__seta:hover:not(:disabled) { background: var(--superficie-2); }
+.dc-mesinho__seta:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
+.dc-mesinho__seta:disabled { color: var(--borda-forte); cursor: default; }
+.dc-mesinho__seta svg { width: var(--icone-botao); height: var(--icone-botao); }
+.dc-mesinho__semana, .dc-mesinho__dias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-half); }
+.dc-mesinho__semana span { text-align: center; font: 500 var(--texto-legenda)/var(--linha-legenda) var(--font-sans); color: var(--tinta-3); }
+.dc-mesinho__dia { display: grid; place-items: center; height: var(--altura-controle-sm); border-radius: var(--radius-sm); font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-3); }
+.dc-mesinho__dia.is-outro-mes { visibility: hidden; }
+.dc-mesinho__dia.is-contado { background: var(--superficie-2); color: var(--tinta); }
+.dc-mesinho__dia.is-publicacao { color: var(--tinta); box-shadow: inset 0 0 0 1px var(--borda-forte); }
+.dc-mesinho__dia.is-feriado, .dc-mesinho__dia.is-suspensao { color: var(--hoje); text-decoration: line-through; }
+.dc-mesinho__dia.is-vence { background: var(--primaria); color: var(--on-primaria); font-weight: 600; }
+.dc-mesinho__dia.is-interno { box-shadow: inset 0 0 0 2px var(--hoje); }
+.dc-mesinho__legenda { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); margin-top: var(--space-1); font: 400 var(--texto-legenda)/var(--linha-legenda) var(--font-sans); color: var(--tinta-2); }
+.dc-mesinho__legenda span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.dc-mesinho__legenda span::before { content: ""; width: var(--space-2-half); height: var(--space-2-half); border-radius: 2px; }
+.dc-mesinho__legenda .is-contado::before { background: var(--superficie-2); box-shadow: inset 0 0 0 1px var(--borda); }
+.dc-mesinho__legenda .is-publicacao::before { box-shadow: inset 0 0 0 1px var(--borda-forte); }
+.dc-mesinho__legenda .is-feriado::before { background: var(--hoje-suave); box-shadow: inset 0 0 0 1px var(--hoje); }
+.dc-mesinho__legenda .is-vence::before { background: var(--primaria); }

@@ -6,7 +6,7 @@
     "porPagina": 50,
     "itens": [
       {
-        "id": "e08057e8-ca5a-46c5-ad4e-c6721bc07924",
+        "id": "3120944d-b3ba-4664-acc7-d47ca0a62bde",
         "nome": "Adriana Dutra",
         "tipo": "pf",
         "documento": "323.772.346-07",
@@ -17,7 +17,7 @@
         "ultimoAtendimento": "2026-08-08T12:35:00.000Z"
       },
       {
-        "id": "8b2a0b35-5f60-4b07-a173-8a71ca0ea0d8",
+        "id": "204a2bd8-87ea-4579-b1fa-46ea698fdecb",
         "nome": "Agropecuária Boa Safra Ltda.",
         "tipo": "pj",
         "documento": "14.610.790/0001-31",
@@ -28,7 +28,7 @@
         "ultimoAtendimento": "2026-04-19T19:20:00.000Z"
       },
       {
-        "id": "fba2bb06-380f-49c3-a411-0ce134b674db",
+        "id": "f8f66313-0a13-4a17-9f0a-e1ca4411f8de",
         "nome": "Alexandre Bortolini Costa",
         "tipo": "pf",
         "documento": "818.093.420-90",
@@ -39,7 +39,7 @@
         "ultimoAtendimento": "2026-09-25T15:50:00.000Z"
       },
       {
-        "id": "372d7d54-bc44-4e9b-88ab-8c3bbb24c53e",
+        "id": "02561bb7-7573-48b9-b3c8-5997ec8a5f16",
         "nome": "Amanda Nunes",
         "tipo": "pf",
         "documento": "398.163.017-33",
@@ -50,7 +50,7 @@
         "ultimoAtendimento": "2026-07-02T14:50:00.000Z"
       },
       {
-        "id": "5298f49f-2ae1-4a22-b582-3a7a36c7e4f6",
+        "id": "2b2988d4-7024-408c-b8e9-529685331fd7",
         "nome": "Ana Lúcia Ferraz",
         "tipo": "pf",
         "documento": "512.398.746-00",
@@ -61,7 +61,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "cda34c40-83af-49e6-aa9e-7e3f9472f579",
+        "id": "b3d0e19d-496a-48eb-be8f-7906ef22a340",
         "nome": "Antônio Reis",
         "tipo": "pf",
         "documento": "248.150.937-41",
@@ -72,7 +72,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "68ce89c0-e8f7-47fa-b3cf-a68f80eceae0",
+        "id": "2863fefc-e89d-49de-bda0-31f65d879e87",
         "nome": "Auto Center Pioneiro Ltda.",
         "tipo": "pj",
         "documento": "33.451.287/0001-25",
@@ -83,7 +83,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "55b39a18-ae1c-4650-abbe-2ebc647ff59d",
+        "id": "3be0b3a9-cc31-4736-9d1a-486ef1fce9be",
         "nome": "Auto Peças Águas Claras Ltda.",
         "tipo": "pj",
         "documento": "65.784.627/0001-26",
@@ -94,7 +94,7 @@
         "ultimoAtendimento": "2026-09-23T20:05:00.000Z"
       },
       {
-        "id": "f2d2da03-8052-4534-94d5-22c3df1aabf6",
+        "id": "dba0d4b5-56a7-4ff6-a7ec-835c3e212c4b",
         "nome": "Bianca Bernardi Teixeira",
         "tipo": "pf",
         "documento": "472.176.147-32",
@@ -105,7 +105,7 @@
         "ultimoAtendimento": "2026-07-09T14:35:00.000Z"
       },
       {
-        "id": "d02d3b3f-f944-48c6-bbe7-102bcbe72b10",
+        "id": "e1caa099-c7f5-4c8c-be67-d684ee1dd2f5",
         "nome": "Bianca Kretzer",
         "tipo": "pf",
         "documento": "628.804.579-98",
@@ -116,7 +116,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "a1ec2f84-865a-4f9b-8df8-e16c7ec78338",
+        "id": "e4266e36-c4d3-48a6-a78c-781f16d9b2be",
         "nome": "Bruna Amaral",
         "tipo": "pf",
         "documento": "581.879.597-70",
@@ -127,7 +127,7 @@
         "ultimoAtendimento": "2026-08-05T13:35:00.000Z"
       },
       {
-        "id": "b15c5437-4b0d-4e37-a0f0-de8a7d3f2add",
+        "id": "466fef82-bd73-457d-bfc1-a642493a5c79",
         "nome": "Bruno Cunha Moura",
         "tipo": "pf",
         "documento": "659.531.193-30",
@@ -138,7 +138,7 @@
         "ultimoAtendimento": "2025-10-19T18:35:00.000Z"
       },
       {
-        "id": "94230733-7c05-4fc8-857b-506a38d979a7",
+        "id": "0bcee868-533f-4170-9462-9fd40c98400d",
         "nome": "Bruno Medeiros",
         "tipo": "pf",
         "documento": "138.130.144-44",
@@ -149,7 +149,7 @@
         "ultimoAtendimento": "2026-02-25T15:20:00.000Z"
       },
       {
-        "id": "3cf9f0e2-56c5-4e0e-81ed-0c1eab4e53d2",
+        "id": "03215bda-b5d9-4b4f-8f6c-b2a968ff9725",
         "nome": "Bruno Pereira",
         "tipo": "pf",
         "documento": "341.956.263-23",
@@ -160,7 +160,7 @@
         "ultimoAtendimento": "2026-05-04T15:35:00.000Z"
       },
       {
-        "id": "755e053c-89f9-403c-bbbf-ee4437e5532b",
+        "id": "852aa97a-fc37-4402-b012-1244398c1d6e",
         "nome": "Caio Silveira",
         "tipo": "pf",
         "documento": "415.339.583-86",
@@ -171,7 +171,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "4d4ea4bf-c996-4dd7-905a-59aab02cd316",
+        "id": "25c4c8c3-18dd-4373-885a-ec8e58e686db",
         "nome": "Caio Teixeira",
         "tipo": "pf",
         "documento": "623.473.210-05",
@@ -182,7 +182,7 @@
         "ultimoAtendimento": "2026-07-11T17:05:00.000Z"
       },
       {
-        "id": "ebfa7595-273c-4e4a-8fe1-e8135c25bdc7",
+        "id": "6cc52baa-bf1f-4221-ae29-76c1745b796b",
         "nome": "Carla Junkes",
         "tipo": "pf",
         "documento": "208.577.726-00",
@@ -193,7 +193,7 @@
         "ultimoAtendimento": "2025-11-11T19:50:00.000Z"
       },
       {
-        "id": "eb42eace-7f09-4a00-9328-c6363629a8c6",
+        "id": "36a0c527-1938-415d-a1f0-3b18e6837c54",
         "nome": "Carla Machado",
         "tipo": "pf",
         "documento": "364.948.764-04",
@@ -204,7 +204,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "254956d7-5fb7-45d1-bf61-9ae4c93a90d1",
+        "id": "27f625c4-79ea-4ce9-86b1-4782e7373754",
         "nome": "Carlos Henrique Prado",
         "tipo": "pf",
         "documento": "674.120.385-08",
@@ -215,7 +215,7 @@
         "ultimoAtendimento": "2026-10-27T18:30:00.000Z"
       },
       {
-        "id": "475d4e35-a253-4e85-be75-d2608238dab0",
+        "id": "c4e45497-a864-48fc-963b-7686957f2a72",
         "nome": "Caroline Amaral",
         "tipo": "pf",
         "documento": "714.896.685-00",
@@ -226,7 +226,7 @@
         "ultimoAtendimento": "2026-01-10T15:20:00.000Z"
       },
       {
-        "id": "8281c27d-48aa-4f10-b666-548df10a5c4e",
+        "id": "d5ef3a36-b525-411c-91f2-7c32cd9fd4cd",
         "nome": "Caroline Costa Ramos",
         "tipo": "pf",
         "documento": "118.139.969-62",
@@ -237,7 +237,7 @@
         "ultimoAtendimento": "2025-12-20T18:05:00.000Z"
       },
       {
-        "id": "ab2f7122-206f-49c4-ab38-5bcdcfd67b81",
+        "id": "4a0983b0-d5ba-474c-b851-46f4545b8ddc",
         "nome": "César Cunha",
         "tipo": "pf",
         "documento": "719.696.995-23",
@@ -248,7 +248,7 @@
         "ultimoAtendimento": "2026-01-05T19:35:00.000Z"
       },
       {
-        "id": "d5ca643f-c7c7-4b28-b82e-ec7d8afb8c34",
+        "id": "85dce63f-feef-4df8-a340-a5d4e2a2723c",
         "nome": "Cláudia Cunha",
         "tipo": "pf",
         "documento": "583.253.941-96",
@@ -259,7 +259,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "31186e13-ee85-4d78-ada7-fb5fdcf9cb2d",
+        "id": "156b912f-34d9-4da0-a40a-0854ecb2b461",
         "nome": "Cláudio Bortolini",
         "tipo": "pf",
         "documento": "355.417.991-47",
@@ -270,7 +270,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "9c26ab4a-7b0a-44b4-bf12-cb217553f26b",
+        "id": "db15cb57-ad44-41a9-83dd-6629e1d6ab34",
         "nome": "Construtora Serra Dourada S.A.",
         "tipo": "pj",
         "documento": "75.501.948/0001-20",
@@ -281,7 +281,7 @@
         "ultimoAtendimento": "2026-09-18T15:05:00.000Z"
       },
       {
-        "id": "0a09bd10-5059-4c41-90dc-1661ff269586",
+        "id": "594ccff4-9a82-4ba5-baaf-05922b3c1438",
         "nome": "Cooperativa Mista Rio Novo",
         "tipo": "pj",
         "documento": "51.234.098/0001-82",
@@ -292,7 +292,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "eab29af5-b483-4e63-9028-370a54263b24",
+        "id": "9e3a0c66-c380-4d3e-a730-4aa036894417",
         "nome": "Daniela Reinert",
         "tipo": "pf",
         "documento": "696.384.010-52",
@@ -303,7 +303,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "1b54884c-4980-4977-bccf-c40a5e0e044a",
+        "id": "c153914a-9a3f-4f95-a3bb-3acb5679be91",
         "nome": "Daniela Reinert Teixeira",
         "tipo": "pf",
         "documento": "299.521.776-07",
@@ -314,7 +314,7 @@
         "ultimoAtendimento": "2026-01-31T16:50:00.000Z"
       },
       {
-        "id": "630c5cbf-85f5-45bf-8d9f-2a80a409766e",
+        "id": "f6cb687a-f5fb-4291-a425-eec486be6616",
         "nome": "Daniel Bauer Sartori",
         "tipo": "pf",
         "documento": "614.874.852-55",
@@ -325,7 +325,7 @@
         "ultimoAtendimento": "2026-10-28T20:20:00.000Z"
       },
       {
-        "id": "b73fb7a1-39ec-4192-978a-aa9e6d55488b",
+        "id": "d1599207-8a46-402b-a6c9-eb0f8562f621",
         "nome": "Daniel Costa",
         "tipo": "pf",
         "documento": "527.664.518-38",
@@ -336,7 +336,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "d3b8c389-da77-4ca0-9c20-ce6abb38319f",
+        "id": "007645e8-53a5-4879-9b69-60a93eb8e588",
         "nome": "Débora Amaral",
         "tipo": "pf",
         "documento": "180.030.153-75",
@@ -347,7 +347,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "f70b1a9c-2bfd-4e12-8645-a8dcedc492a2",
+        "id": "87daede7-2d09-48b2-82fc-e7f5a99f05ce",
         "nome": "Diego Lehmann",
         "tipo": "pf",
         "documento": "286.333.571-51",
@@ -358,7 +358,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "c794e6ca-2987-4710-8646-785681261b1e",
+        "id": "9d9364fb-09bb-414d-aa49-669537b8ed5b",
         "nome": "Diego Stein Nunes",
         "tipo": "pf",
         "documento": "543.552.490-34",
@@ -369,7 +369,7 @@
         "ultimoAtendimento": "2026-09-10T20:35:00.000Z"
       },
       {
-        "id": "bd2d1711-8f4f-4961-9934-ad48741df31e",
+        "id": "033d41bd-1d4d-44bc-9d73-eb9b3f26d4fe",
         "nome": "Distribuidora de Alimentos Recanto Ltda.",
         "tipo": "pj",
         "documento": "51.364.434/0001-01",
@@ -380,7 +380,7 @@
         "ultimoAtendimento": "2026-04-02T18:20:00.000Z"
       },
       {
-        "id": "2e1b7485-11fa-4da6-8480-f0812370fda6",
+        "id": "108f5ba6-3c07-411e-a9d4-fdea9107acac",
         "nome": "Douglas Dalmolin",
         "tipo": "pf",
         "documento": "634.519.430-18",
@@ -391,7 +391,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "1afe3cc1-37ec-4e83-8814-2ead9d0c6e1f",
+        "id": "3ae57c17-1707-4de8-9a29-1b0d1352c5e8",
         "nome": "Douglas Pires",
         "tipo": "pf",
         "documento": "156.932.384-40",
@@ -402,7 +402,7 @@
         "ultimoAtendimento": "2026-10-25T20:50:00.000Z"
       },
       {
-        "id": "09bd1db3-0034-431f-bb09-9439980f50b7",
+        "id": "566454bb-7a17-4b7f-8c54-ca0bd2f0a135",
         "nome": "Douglas Werner",
         "tipo": "pf",
         "documento": "526.718.501-90",
@@ -413,7 +413,7 @@
         "ultimoAtendimento": "2026-10-15T12:05:00.000Z"
       },
       {
-        "id": "9c3364ca-ad73-40f7-9ffe-c59314faa104",
+        "id": "f217c4b4-c4d1-433d-9b51-93e8e843651b",
         "nome": "Eduardo Lima",
         "tipo": "pf",
         "documento": "145.786.320-08",
@@ -424,7 +424,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "16dafa1d-5237-4d28-bbcf-0f5ab14e008f",
+        "id": "05f5a8c1-bb32-4933-8f7c-5080e488038e",
         "nome": "Elaine Bortolini",
         "tipo": "pf",
         "documento": "792.855.520-48",
@@ -435,7 +435,7 @@
         "ultimoAtendimento": "2026-10-11T14:05:00.000Z"
       },
       {
-        "id": "79184605-8f02-4888-9173-47b0a19177c4",
+        "id": "ffbff6b1-5df4-4970-b159-8f896f45ac95",
         "nome": "Eliane Schneider",
         "tipo": "pf",
         "documento": "290.721.718-61",
@@ -446,7 +446,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "6f611e1d-fe55-4c94-883f-b63e3e3d160e",
+        "id": "b53e8db6-a8d4-4537-8ef9-7da25ae47165",
         "nome": "Everton Bittencourt Medeiros",
         "tipo": "pf",
         "documento": "861.187.002-65",
@@ -457,7 +457,7 @@
         "ultimoAtendimento": "2026-09-21T19:20:00.000Z"
       },
       {
-        "id": "124170e6-df94-4cd3-852a-33253e7fac76",
+        "id": "df7248c4-1e90-42c6-8532-9e23d85e47d9",
         "nome": "Everton Reinert Moura",
         "tipo": "pf",
         "documento": "363.692.475-37",
@@ -468,7 +468,7 @@
         "ultimoAtendimento": "2026-09-14T16:50:00.000Z"
       },
       {
-        "id": "fc6e04ca-7c8b-4a39-9571-8195ef8b1151",
+        "id": "dfaac13a-e8b0-442e-a668-877e2fd9af61",
         "nome": "Fabrício Farias",
         "tipo": "pf",
         "documento": "180.161.583-74",
@@ -479,7 +479,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "6f090124-d191-47a1-accf-a07c4809e51c",
+        "id": "caedf4aa-7b66-4346-a9e3-4a639174d0ea",
         "nome": "Farmácia Boa Safra Ltda.",
         "tipo": "pj",
         "documento": "72.348.706/0001-50",
@@ -490,7 +490,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "0b94c0f0-f2cb-41b1-b62d-f32f1a1fdafe",
+        "id": "3926ace5-307c-4bdf-b77f-4bc12b625560",
         "nome": "Farmácia Portal do Sul Ltda.",
         "tipo": "pj",
         "documento": "45.856.891/0001-10",
@@ -501,7 +501,7 @@
         "ultimoAtendimento": "2026-10-12T17:20:00.000Z"
       },
       {
-        "id": "1461e041-c830-4a46-8548-4997561f0816",
+        "id": "d342d624-0325-458f-9147-0979f9c47eaf",
         "nome": "Felipe Bernardi Lehmann",
         "tipo": "pf",
         "documento": "411.712.524-98",
@@ -512,7 +512,7 @@
         "ultimoAtendimento": null
       },
       {
-        "id": "20e38672-5460-4b4b-ad91-e3a8747c2756",
+        "id": "c4813fe6-fbfb-46db-b14a-bb3e9cbd09cf",
         "nome": "Felipe Krause Cardoso",
         "tipo": "pf",
         "documento": "553.518.622-80",
@@ -523,7 +523,7 @@
         "ultimoAtendimento": "2025-11-04T18:50:00.000Z"
       },
       {
-        "id": "45725229-d28b-4f7a-b3d0-7b5f5ee78f28",
+        "id": "80f92e11-9b6f-4369-8b49-82eaf2062c92",
         "nome": "Felipe Pires Cardoso",
         "tipo": "pf",
         "documento": "617.207.550-00",
@@ -534,7 +534,7 @@
         "ultimoAtendimento": "2026-09-27T16:20:00.000Z"
       },
       {
-        "id": "832e26d4-bb9c-48bd-a97a-a9ef6a511ba8",
+        "id": "b223859d-3f89-4169-8250-05a37f7ff0c6",
         "nome": "Gabriela Goulart Sartori",
         "tipo": "pf",
         "documento": "245.540.350-50",
@@ -545,7 +545,7 @@
         "ultimoAtendimento": "2026-07-25T15:50:00.000Z"
       },
       {
-        "id": "bb708553-49ea-4449-bbd5-dd92c8738102",
+        "id": "786188c8-5cc3-4c78-ad21-740ffae64620",
         "nome": "Gabriela Pires",
         "tipo": "pf",
         "documento": "591.032.948-03",

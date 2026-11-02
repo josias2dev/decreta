@@ -1,5 +1,5 @@
 /** O que a API das telas devolve (apps/api/src/rotas). */
-import type { AchadoDaAuditoria, AvisoDaConferencia, EstrategiaDaPeca, FatoDaPeca, ParteDoCadastro, PrazoInterno } from "@decreta/core";
+import type { AchadoDaAuditoria, AvisoDaConferencia, ContaAberta, EstrategiaDaPeca, FatoDaPeca, ParteDoCadastro, PrazoInterno } from "@decreta/core";
 
 export interface Pessoa {
   id: string;
@@ -159,7 +159,7 @@ export interface PainelDoDia {
   rotulo: string;
   contadores: { vencemHoje: number; vencidos: number; publicacoesNovas: number; publicacoesComPrazo: number; publicacoesSemLeitura: number; audienciasHoje: number; alvarasAguardando: number };
   itens: ItemDoDia[];
-  publicacoes: { id: string; titulo: string; detalhe: string }[];
+  publicacoes: { id: string; titulo: string; detalhe: string; fimSugerido?: string | null }[];
   porResponsavel: { pessoa: Pessoa | null; hoje: number; semana: number }[];
   /** Caderno do DJEN que faltou ou falhou. */
   alertasDaCaptura: string[];
@@ -299,6 +299,30 @@ export interface ContaDoPrazo {
   confirmadoEm: string | null;
 }
 
+/** A conta atrás de uma data de prazo, para abrir de qualquer tela. */
+export interface ContaParaAbrir {
+  /** O prazo gravado. Nulo: é só a sugestão da IA, numa publicação ainda sem processo. */
+  prazo: { id: string; tipo: string; situacao: string; confirmado: boolean; processo: { id: string; titulo: string } } | null;
+  tipo: string;
+  fim: string;
+  dias: number;
+  contagem: Contagem;
+  /** A data foi digitada à mão: não há conta por trás dela. */
+  digitada: boolean;
+  /** A conta dia a dia. Nula quando a data foi digitada. */
+  aberta: ContaAberta | null;
+  regra: string;
+  calendario: string;
+  calendarioCompleto: boolean;
+  fora: DiaDesconsiderado[];
+  prorrogadoDe: string | null;
+  pelaConta: string | null;
+  pelo: "publicacao" | "sistema";
+  outra: { inicio: string; fim: string } | null;
+  interno: PrazoInterno | null;
+  conferencia: SegundaConferencia | null;
+}
+
 /** A prévia da conta nos diálogos: com a intimação pelo sistema, vale o que vence primeiro. */
 export interface PreviaDaConta extends ContagemNaTela {
   pelo: "publicacao" | "sistema";
@@ -431,7 +455,7 @@ export interface ProcessoNaLista {
   cliente: string | null;
   responsavel: Pessoa | null;
   ultimaMovimentacaoEm: string | null;
-  proximoPrazo: { fim: string; tipo: string; urgencia: Urgencia; quando: string } | null;
+  proximoPrazo: { id: string; fim: string; tipo: string; urgencia: Urgencia; quando: string } | null;
 }
 
 export interface Pagina<T> {

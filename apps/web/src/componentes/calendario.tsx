@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { diaCurto } from "@/lib/formato";
 import type { ItemDaAgenda } from "@/lib/tipos";
 import { cn } from "@/lib/util";
+import { DataViva } from "./data-viva";
 import { Avatar } from "./ui";
 
 const data = (dia: string) => new Date(`${dia}T12:00:00Z`);
@@ -284,20 +285,33 @@ function EventoDaSemana({ item: i, aoMarcar }: { item: ItemDaAgenda; aoMarcar: (
         {corpo}
       </label>
     );
+  // O prazo tem a data viva por cima: o link cobre o evento sem envolver o botão.
+  if (i.tipo === "prazo")
+    return (
+      <div className={cn("dc-evento dc-com-esticado", `dc-evento--${cor}`)} title={dica(i)}>
+        <span className="dc-evento__meta">
+          <DataViva alvo={{ prazo: i.id }} texto>
+            {i.interno ? "Interno" : "Prazo"}
+          </DataViva>
+          {i.aConfirmar && <span className="dc-evento__confirmar">a confirmar</span>}
+          {pessoa}
+        </span>
+        <Link {...destinoDoItem(i)!} className="dc-evento__titulo dc-esticado">
+          {i.titulo}
+        </Link>
+        {sobre && (
+          <span className="dc-evento__sobre">
+            {fatalDoInterno(i)}
+            {sobre}
+          </span>
+        )}
+      </div>
+    );
   return (
     <Link {...destinoDoItem(i)!} className={cn("dc-evento", `dc-evento--${cor}`)} title={dica(i)}>
       <span className="dc-evento__meta">
-        {i.tipo === "audiencia" ? (
-          <>
-            <span className="dc-num">{i.hora}</span>
-            {i.porVideo && <Video aria-label="Por vídeo" />}
-          </>
-        ) : (
-          <>
-            {i.interno ? "Interno" : "Prazo"}
-            {i.aConfirmar && <span className="dc-evento__confirmar">a confirmar</span>}
-          </>
-        )}
+        <span className="dc-num">{i.hora}</span>
+        {i.porVideo && <Video aria-label="Por vídeo" />}
         {pessoa}
       </span>
       {corpo}

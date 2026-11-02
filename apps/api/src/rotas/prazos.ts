@@ -9,7 +9,7 @@ import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.t
 import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { antecedenciaDoInterno, conferir, contaDoPrazo, contagemNaTela, contarParaProcesso, historicoDasSugestoes } from "../servicos/prazos.ts";
+import { antecedenciaDoInterno, conferenciaDoPrazo, contaDoPrazo, contagemNaTela, contaParaAbrir, contarParaProcesso } from "../servicos/prazos.ts";
 import { corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const QUANDO = ["hoje", "semana", "vencidos", "abertos", "cumpridos"] as const;
@@ -182,6 +182,16 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     });
   });
 
+  /** A conta atrás da data: o que a data viva abre em qualquer tela. */
+  app.get("/prazos/:id/conta", async (c) => {
+    const prazoId = id(c);
+    return tenant(c, deps, async (tx) => {
+      const [linha] = await tx.select({ prazo: prazos, processo: { id: processos.id, titulo: processos.titulo } }).from(prazos).innerJoin(processos, eq(processos.id, prazos.processoId)).where(eq(prazos.id, prazoId));
+      if (!linha) falha(404, "nao_encontrado");
+      return c.json(await contaParaAbrir(tx, c.get("orgId"), linha.prazo, linha.processo, hojeEm(c.get("timezone"))));
+    });
+  });
+
   app.get("/prazos/:id", async (c) => {
     const prazoId = id(c);
     const hoje = hojeEm(c.get("timezone"));
@@ -194,11 +204,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
       const { rito, documento, ...conta } = await contaDoPrazo(tx, c.get("orgId"), prazo);
       const [pub] = prazo.publicacaoId ? await tx.select().from(publicacoes).where(eq(publicacoes.id, prazo.publicacaoId)) : [];
       const sugestao = pub ? await ultimaAnalise(tx, "publicacao", pub.id, "sugerir-prazo") : null;
-      // A segunda conferência vale enquanto a sugestão da IA espera alguém confirmar.
-      const conferencia =
-        prazo.origem === "ia" && !prazo.confirmadoEm && prazo.situacao === "aberto"
-          ? conferir({ tipo: prazo.tipo, dias: prazo.dias, contagem: prazo.contagem, rito, documento, trechoNaFonte: (sugestao?.conteudo as { trechoConfere?: boolean } | undefined)?.trechoConfere }, await historicoDasSugestoes(tx))
-          : null;
+      const conferencia = await conferenciaDoPrazo(tx, prazo, rito, documento);
       const contexto = await carregarContexto(tx, processo.id);
       const briefing = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "briefing-prazo"), contexto?.base);
       const pecaContraria = naTela(await ultimaAnalise(tx, "prazo", prazo.id, "ler-peca-contraria"), contexto?.base);

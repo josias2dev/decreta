@@ -3,6 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { DataViva } from "@/componentes/data-viva";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoProcesso } from "@/componentes/novos";
 import { AoChegarNoFim, Rolagem } from "@/componentes/rolagem";
@@ -89,9 +90,17 @@ export function ProcessosPage() {
         ) : itens.length ? (
           <div className="dc-lista">
             {itens.map((p) => (
-              <Link key={p.id} to="/processos/$id" params={{ id: p.id }} className="dc-item">
-                <span className="dc-item__titulo">{p.titulo}</span>
-                {p.proximoPrazo ? <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo> : <span />}
+              <div key={p.id} className="dc-item dc-com-esticado">
+                <Link to="/processos/$id" params={{ id: p.id }} className="dc-item__titulo dc-esticado">
+                  {p.titulo}
+                </Link>
+                {p.proximoPrazo ? (
+                  <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+                    <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                  </DataViva>
+                ) : (
+                  <span />
+                )}
                 <span className="dc-item__meta">
                   <Onde p={p} />
                 </span>
@@ -102,7 +111,7 @@ export function ProcessosPage() {
                     {p.proximoPrazo && <> · {p.proximoPrazo.tipo}</>}
                   </span>
                 </span>
-              </Link>
+              </div>
             ))}
             {fim}
             {mais}
@@ -165,7 +174,9 @@ export function ProcessosPage() {
                       <td>
                         {p.proximoPrazo ? (
                           <span className="dc-prazo-linha" title={`${p.proximoPrazo.tipo} · ${diaCompleto(p.proximoPrazo.fim)}`}>
-                            <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                            <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+                              <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+                            </DataViva>
                             <span className="truncate">{p.proximoPrazo.tipo}</span>
                           </span>
                         ) : (

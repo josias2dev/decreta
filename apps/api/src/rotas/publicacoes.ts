@@ -10,7 +10,7 @@ import { certidaoDaPublicacao, saudeDaCaptura } from "../servicos/captura.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { semIa } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
+import { contaDaPublicacao, contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
 import { comLimiteDaIa, corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { leituraParada, tituloDaPublicacao } from "../servicos/publicacoes.ts";
@@ -154,6 +154,18 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
           ? { id: resultado.id, tipo: resultado.tipo, resultado: resultado.resultado, resumo: resultado.resumo, confirmadoPor: resumir(pessoas, resultado.confirmadoPor), confirmadoEm: resultado.confirmadoEm.toISOString() }
           : null,
       });
+    });
+  });
+
+  /** A conta do prazo que a publicação abriu ou sugere. */
+  app.get("/publicacoes/:id/conta", async (c) => {
+    const pubId = id(c);
+    return tenant(c, deps, async (tx) => {
+      const [pub] = await tx.select().from(publicacoes).where(eq(publicacoes.id, pubId));
+      if (!pub) falha(404, "nao_encontrado");
+      const conta = await contaDaPublicacao(tx, c.get("orgId"), pub, hojeEm(c.get("timezone")));
+      if (!conta) falha(404, "sem_conta", "Esta publicação não tem prazo contado.");
+      return c.json(conta);
     });
   });
 
