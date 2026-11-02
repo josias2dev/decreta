@@ -27,7 +27,7 @@
         "polo": "ativo",
         "advogados": "Beatriz Souza (OAB/SC 41233)",
         "cliente": {
-          "id": "c8b74897-1385-4f46-bfbf-8006489d4227",
+          "id": "7a207fc4-5b1a-4a9c-ab9c-9630ad484cc3",
           "nome": "Douglas Werner"
         }
       },
@@ -40,7 +40,7 @@
     ],
     "poloCliente": "ativo",
     "cliente": {
-      "id": "c8b74897-1385-4f46-bfbf-8006489d4227",
+      "id": "7a207fc4-5b1a-4a9c-ab9c-9630ad484cc3",
       "nome": "Douglas Werner"
     }
   }

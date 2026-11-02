@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/66fec569-b6f6-4c4c-81d2-b926d8e079d7",
+  "path": "/publicacoes/7f7ac2d4-417a-408a-96a8-a1ad07d5b333",
   "corpo": {
-    "id": "66fec569-b6f6-4c4c-81d2-b926d8e079d7",
+    "id": "7f7ac2d4-417a-408a-96a8-a1ad07d5b333",
     "situacao": "nova",
     "fonte": "manual",
     "disponibilizadaEm": "2026-10-28",
@@ -19,7 +19,7 @@
     "destinatarios": [],
     "advogados": [],
     "processo": {
-      "id": "02fb8ac4-80fe-45ef-b7e0-00c7926e4537",
+      "id": "c7d1c104-d98d-4b28-8e7d-cee04110378a",
       "titulo": "Eduardo Lima × Saúde Litoral Planos",
       "cnj": "5003390-24.2026.8.24.0005",
       "classe": "Procedimento comum cível",
@@ -29,7 +29,7 @@
       "semIa": false
     },
     "sugestao": {
-      "id": "2d66eabf-072c-400e-98de-44569bad88c1",
+      "id": "44de3766-2d2c-4fdb-b721-f187c88fec57",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -38,6 +38,7 @@
         "regra": "Dias úteis (CPC, art. 219)",
         "recusa": null,
         "resumo": "Sentença parcialmente procedente: cirurgia e reembolso, sem danos morais.",
+        "trecho": "Ante o exposto, JULGO PARCIALMENTE PROCEDENTES os pedidos",
         "assunto": "sentença",
         "contagem": "uteis",
         "audiencia": null,
@@ -50,6 +51,7 @@
           "confianca": "alta"
         },
         "responsavelId": null,
+        "trechoConfere": true,
         "contagemCalculada": {
           "fim": "2026-11-23",
           "dias": 15,
@@ -73,13 +75,13 @@
         }
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-11-01T14:21:14.186Z",
+      "em": "2026-11-02T20:01:59.088Z",
       "desatualizada": false,
       "erro": null,
       "responsavel": null
     },
     "prazo": {
-      "id": "67a420de-7a57-400d-8e08-7c7ec46088e6",
+      "id": "c12ea78a-f5d0-4cd5-a482-15218a145b47",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Apelação"
@@ -87,7 +89,7 @@
     "audiencia": null,
     "decisao": true,
     "sentenca": {
-      "id": "c4e88a98-d6a3-418f-a39c-cce3d8033f85",
+      "id": "ec3791e0-a103-47e7-b966-203eb492ec28",
       "acao": "ler-sentenca",
       "situacao": "pronto",
       "conteudo": {
@@ -129,7 +131,7 @@
         "honorarios": "Ré paga custas e 10% do valor da condenação."
       },
       "fonte": "Publicação · 28/10/2026",
-      "em": "2026-11-01T14:21:14.210Z",
+      "em": "2026-11-02T20:01:59.121Z",
       "desatualizada": false,
       "erro": null
     },
