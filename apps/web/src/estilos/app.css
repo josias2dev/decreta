@@ -36,7 +36,7 @@
 .dc-app[data-menu="recolhido"] .dc-menu__conta { flex: none; width: 100%; justify-content: center; padding: var(--space-half) 0; border-color: transparent; background: transparent; }
 .dc-app[data-menu="recolhido"] .dc-menu__conta:hover, .dc-app[data-menu="recolhido"] .dc-menu__conta[data-state="open"] { background: var(--menu-hover); }
 .dc-app[data-menu="recolhido"] .dc-menu__conta > svg { display: none; }
-.dc-app > .dc-conteudo { box-sizing: border-box; height: calc(100dvh - 2 * var(--folga)); margin: var(--folga) var(--folga) var(--folga) 0; overflow-y: auto; overscroll-behavior: contain; background: var(--superficie); border: 1px solid var(--menu-borda); border-radius: var(--radius-lg); }
+.dc-app > .dc-conteudo { box-sizing: border-box; height: calc(100dvh - 2 * var(--folga)); margin: var(--folga) var(--folga) var(--folga) 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; background: var(--superficie); border: 1px solid var(--menu-borda); border-radius: var(--radius-lg); }
 /* O painel da plataforma não tem o menu do escritório: a folha usa a tela toda. */
 .dc-app--sozinho > .dc-conteudo { margin-left: var(--folga); }
 .dc-app .dc-pagina { padding: 0 var(--respiro-pagina) var(--respiro-pagina); gap: var(--vao-pagina); }
@@ -54,7 +54,7 @@
 .dc-app .dc-quadro__corpo { padding-bottom: var(--space-2); }
 
 /* ---------- Moldura no celular ---------- */
-.dc-tela { display: flex; flex-direction: column; min-height: 100dvh; background: var(--papel); }
+.dc-tela { display: flex; flex-direction: column; min-height: 100dvh; background: var(--papel); overflow-x: clip; }
 /* O topo (título) e o que fica preso com ele (busca, filtros, etapas); a lista rola por baixo. */
 .dc-cabeca { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--papel) 92%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .dc-topo { display: flex; align-items: center; gap: var(--space-3); padding: calc(var(--space-3) + env(safe-area-inset-top)) var(--respiro-pagina) var(--space-2); }
@@ -1360,6 +1360,19 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
   .dc-comecar-aviso__sep { display: none; }
   .dc-comecar-aviso__fechar { flex-basis: 100%; margin-left: var(--space-6); text-align: left; }
 }
+
+/* ---------- Movimento ----------
+   Explica de onde veio a tela: ao abrir um detalhe, ela entra da direita; ao voltar para a lista, da esquerda (moldura.tsx
+   marca a folha com data-entrada). Entre telas do mesmo nível, nada se mexe. Trocar de publicação só esmaece o que mudou.
+   Só transform e opacity, e nada para quem pediu "reduzir movimento". */
+@media (prefers-reduced-motion: no-preference) {
+  [data-entrada="fundo"] > main { animation: dc-entra-detalhe 160ms cubic-bezier(.2, 0, 0, 1); }
+  [data-entrada="volta"] > main { animation: dc-volta-lista 160ms cubic-bezier(.2, 0, 0, 1); }
+  .dc-caixa__teor, .dc-caixa__decisao { animation: dc-troca 120ms ease-out; }
+}
+@keyframes dc-entra-detalhe { from { opacity: 0; transform: translateX(12px); } }
+@keyframes dc-volta-lista { from { opacity: 0; transform: translateX(-12px); } }
+@keyframes dc-troca { from { opacity: 0; } }
 
 /* ---------- Tamanho de texto nas telas ----------
    O lugar do text-[13px]: os seis tamanhos da escala, com a entrelinha de cada um. */

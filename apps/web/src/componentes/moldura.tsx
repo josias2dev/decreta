@@ -163,10 +163,28 @@ function ComecarUmaVez({ eu, caminho }: { eu: Eu; caminho: string }) {
   return null;
 }
 
+/** O quanto a tela é funda: lista, detalhe e, abaixo do detalhe, a peça. O Perguntar cuida da própria rolagem e não entra na conta. */
+const nivelDaTela = (caminho: string) => (caminho.startsWith("/perguntar") ? 1 : caminho.startsWith("/pecas") ? 3 : caminho.split("/").filter(Boolean).length);
+
+/**
+ * De onde veio a tela que está na folha: indo mais fundo (da lista ao detalhe), voltando ou de lado (sem movimento, em
+ * app.css). Olha a tela desenhada, e não o endereço, que muda antes: a tela velha não se mexe enquanto a nova carrega.
+ */
+function useEntrada() {
+  const tela = useRouterState({ select: (s) => s.matches.at(-1)?.pathname ?? s.location.pathname });
+  const [atual, setAtual] = useState<{ tela: string; entrada?: "fundo" | "volta" }>({ tela });
+  if (atual.tela !== tela) {
+    const [de, para] = [nivelDaTela(atual.tela), nivelDaTela(tela)];
+    setAtual({ tela, entrada: para > de ? "fundo" : para < de ? "volta" : undefined });
+  }
+  return atual.entrada;
+}
+
 function Moldura({ eu }: { eu: Eu }) {
   const celular = useCelular();
   const caminho = useRouterState({ select: (s) => s.location.pathname });
   const aba = useRouterState({ select: (s) => (s.location.search as { aba?: string }).aba });
+  const entrada = useEntrada();
   const [buscando, setBuscando] = useState(false);
   // Se o arquivo do logo sumir, fica o ícone em vez da imagem quebrada.
   const [semLogo, setSemLogo] = useState(false);
@@ -200,7 +218,7 @@ function Moldura({ eu }: { eu: Eu }) {
     const doProcesso = /^\/processos\/([^/]+)$/.exec(caminho)?.[1];
     const semNav = SEM_NAVEGACAO.some((r) => r.test(caminho)) || (aba === "chat" && !!doProcesso);
     return (
-      <div className="dc dc-celular dc-tela">
+      <div className="dc dc-celular dc-tela" data-entrada={entrada}>
         <FaixaDoPlano aviso={eu.assinatura?.aviso} />
         <AbrirBusca.Provider value={() => setBuscando(true)}>
           <Outlet />
@@ -276,7 +294,7 @@ function Moldura({ eu }: { eu: Eu }) {
           <MenuDaConta eu={eu} recolhido={recolhido} />
         </div>
       </nav>
-      <div className="dc-conteudo" data-scroll-restoration-id="folha">
+      <div className="dc-conteudo" data-scroll-restoration-id="folha" data-entrada={entrada}>
         <FaixaDoPlano aviso={eu.assinatura?.aviso} />
         <AbrirBusca.Provider value={() => setBuscando(true)}>
           <Outlet />

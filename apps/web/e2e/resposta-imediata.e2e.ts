@@ -179,7 +179,7 @@ test.describe("publicações em sequência", () => {
   test.use({ viewport: { width: 1366, height: 768 } });
 
   test("a resposta da primeira não traz de volta a segunda, que ainda está a caminho", async ({ page }) => {
-    await abrir(page, `/publicacoes?id=${ids.publicacao}`);
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`, new ApiFalsa().responder(`GET /publicacoes/${SEGUNDA.id}`, { ...amostras.publicacaoMarina!.corpo, id: SEGUNDA.id }));
     const lista = page.locator(".dc-caixa__lista .dc-pub");
     await expect(lista.first()).toBeVisible();
     const inicio = await lista.count();
@@ -187,7 +187,7 @@ test.describe("publicações em sequência", () => {
     const soltarSegunda = await portao(page, new RegExp(`/api/app/publicacoes/${SEGUNDA.id}/`));
     await page.locator(".dc-caixa__botoes").getByRole("button", { name: "Não gera prazo" }).click();
     await expect(page).toHaveURL(new RegExp(`id=${SEGUNDA.id}`));
-    await page.locator(".dc-caixa__botoes").getByRole("button", { name: "Não gera prazo" }).click();
+    await page.locator(".dc-caixa__botoes").getByRole("button", { name: /Não gera prazo|Marcar como lida/ }).click();
     await expect(lista).toHaveCount(inicio - 2);
 
     soltarPrimeira("seguir");

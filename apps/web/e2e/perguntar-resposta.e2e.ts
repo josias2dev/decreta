@@ -256,6 +256,8 @@ test.describe("parar e cair no meio", () => {
     await expect(page.getByRole("alert").filter({ hasText: "limite de perguntas" })).toBeVisible();
     await page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: "Hoje" }).click();
     await expect(page).toHaveURL(/\/hoje$/);
+    // O endereço muda antes de a tela nova estar desenhada: sem esperar por ela, o "voltar" pode cancelar a ida.
+    await expect(page.getByRole("heading", { name: "Hoje", level: 1 })).toBeVisible();
     await page.goBack();
     await expect(page.getByRole("heading", { name: "Bom dia, Beatriz" })).toBeVisible();
   });

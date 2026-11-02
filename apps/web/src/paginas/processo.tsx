@@ -21,7 +21,7 @@ import { RadarDoProcesso } from "@/componentes/radar-do-processo";
 import { Abas, Avatar, BlocoIa, Botao, Campo, Carregando, Chip, Cnj, Dados, Faixa, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { API_URL, aosPoucos, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery, podeCriar } from "@/lib/consultas";
+import { euQuery, podeCriar, processoQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, diaMes, diasDesde, dinheiro, hora, numero, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, tamanho, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { Conversa as ConversaDaApi, Documento, ListaDePrazos, Movimentacao, Movimentacoes, Parte, Processo, ResumoDosAutos } from "@/lib/tipos";
 import type { AbaDoProcesso } from "@/lib/rotas";
@@ -48,7 +48,7 @@ export function ProcessoPage() {
   const financeiro = useFinanceiroLiberado();
   // Os honorários são do Financeiro: quem não o vê cai no resumo. No celular as quatro abas já enchem a linha: os honorários vêm no fim do resumo.
   const aba: AbaDoProcesso = search.aba === "honorarios" && (!financeiro || celular) ? "resumo" : (search.aba ?? "resumo");
-  const q = useQuery({ queryKey: ["processo", id], queryFn: () => api<Processo>(`/processos/${id}`) });
+  const q = useQuery(processoQuery(id));
   const irPara = (a: AbaDoProcesso) => void navigate({ search: { aba: a === "resumo" ? undefined : a }, replace: true });
 
   const p = q.data;

@@ -8,16 +8,15 @@ import { AvisoDoTeste } from "@/componentes/faixa-do-plano";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
 import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, Faixa, MarcaIa, Painel, Responsavel, Selo, Vazio } from "@/componentes/ui";
-import { api, SO_LEITURA } from "@/lib/api";
+import { SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery, podeCriar } from "@/lib/consultas";
+import { euQuery, hojeQuery, podeCriar } from "@/lib/consultas";
+import { usePreCarga } from "@/lib/pre-carga";
 import type { ItemDoDia, PainelDoDia } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 import { TerminarDeConfigurar } from "./comecar";
 
 type Filtro = "tudo" | "prazo" | "audiencia" | "tarefa";
-
-export const hojeQuery = { queryKey: ["hoje"], queryFn: () => api<PainelDoDia>("/hoje"), refetchInterval: 60_000 } as const;
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
@@ -348,8 +347,10 @@ function useAbrir(i: ItemDoDia) {
 
 function LinhaDoDia({ item: i }: { item: ItemDoDia }) {
   const abrir = useAbrir(i);
+  const preCarga = usePreCarga();
+  const destino = i.tipo === "prazo" ? ({ to: "/prazos/$id", params: { id: i.id } } as const) : i.tipo === "audiencia" ? ({ to: "/audiencias/$id", params: { id: i.id } } as const) : i.processoId ? ({ to: "/processos/$id", params: { id: i.processoId } } as const) : null;
   return (
-    <tr data-link={abrir ? "" : undefined} onClick={abrir}>
+    <tr data-link={abrir ? "" : undefined} {...(destino ? preCarga(destino) : {})} onClick={abrir}>
       <td>{seloDoItem(i)}</td>
       <td>
         <span className="dc-celula">

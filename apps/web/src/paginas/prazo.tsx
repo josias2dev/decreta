@@ -15,7 +15,7 @@ import { PecaContraria } from "@/componentes/peca-contraria";
 import { Avatar, BlocoIa, Botao, Campo, Carregando, Cnj, Dados, Faixa, LinhaDoTempo, ListaIa, Painel, Responsavel, SecaoIa, Selo, TopoDoDetalhe, Trilha } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery } from "@/lib/consultas";
+import { euQuery, prazoQuery } from "@/lib/consultas";
 import { POLO_DO_CLIENTE, diaCompleto, diaCurto, diaDaSemana, diaDoInstante, diaMes, hora, ondeTramita, prazoEmDias } from "@/lib/formato";
 import type { Briefing, Contagem, Prazo, PreviaDaConta } from "@/lib/tipos";
 
@@ -33,7 +33,7 @@ export function PrazoPage() {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
-  const q = useQuery({ queryKey: ["prazo", id], queryFn: () => api<Prazo>(`/prazos/${id}`) });
+  const q = useQuery(prazoQuery(id));
   const [dialogo, setDialogo] = useState<"ajustar" | "descartar" | null>(null);
 
   // A tela muda enquanto o pedido está no ar, a partir do que foi pedido, e não do que está guardado: se o servidor

@@ -9,9 +9,10 @@ import { Rolagem } from "@/componentes/rolagem";
 import { Avatar, Botao, Cabecalho, Carregando, Chip, Cnj, MarcaIa, Responsavel, Selo, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery, podeCriar } from "@/lib/consultas";
+import { euQuery, podeCriar, prazosQuery } from "@/lib/consultas";
 import { diaDaSemana, diaMes } from "@/lib/formato";
-import type { ListaDePrazos, PrazoNaLista, Quando } from "@/lib/tipos";
+import { usePreCarga } from "@/lib/pre-carga";
+import type { PrazoNaLista, Quando } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
 const somarDias = (dia: string, n: number) => {
@@ -76,7 +77,8 @@ export function PrazosPage() {
   const qc = useQueryClient();
   const avisar = useAviso();
   const params = new URLSearchParams({ quando, ...(responsavel ? { responsavel } : {}) }).toString();
-  const lista = useQuery({ queryKey: ["prazos", quando, responsavel ?? ""], queryFn: () => api<ListaDePrazos>(`/prazos?${params}`), placeholderData: (a) => a });
+  const lista = useQuery({ ...prazosQuery(quando, responsavel), placeholderData: (a) => a });
+  const preCarga = usePreCarga();
   const [novo, setNovo] = useState(false);
   const [selecao, setSelecao] = useState<Set<string>>(new Set());
   const [paraQuem, setParaQuem] = useState("");
@@ -317,7 +319,7 @@ export function PrazosPage() {
                         </td>
                       </tr>
                       {g.itens.map((i) => (
-                        <tr key={i.id} className={selecao.has(i.id) ? "is-on" : undefined} data-link="" onClick={() => void navigate({ to: "/prazos/$id", params: { id: i.id } })}>
+                        <tr key={i.id} className={selecao.has(i.id) ? "is-on" : undefined} data-link="" {...preCarga({ to: "/prazos/$id", params: { id: i.id } })} onClick={() => void navigate({ to: "/prazos/$id", params: { id: i.id } })}>
                           <td onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"

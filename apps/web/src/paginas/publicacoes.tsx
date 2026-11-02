@@ -6,7 +6,7 @@ import { lerPublicacaoColada, TIPOS_DE_COMUNICACAO } from "@decreta/core";
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery, useFaltaParaBuscar, VazioPorFalta } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosDaConferencia, MotivosParaConferir, PreviaNoDialogo, SeloDeConfianca } from "@/componentes/conta-do-prazo";
@@ -18,7 +18,7 @@ import { Rolagem } from "@/componentes/rolagem";
 import { Abas, BlocoIa, Botao, Cabecalho, Campo, Carregando, Cnj, Dados, Faixa, ListaIa, MarcaIa, Responsavel, SecaoIa, Vazio } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
-import { euQuery, podeCriar } from "@/lib/consultas";
+import { caixaQuery, euQuery, podeCriar, publicacaoQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDaSemana, diaDoInstante, hora, ondeTramita, prazoEmDias, RESULTADO_DA_DECISAO, TIPO_DA_DECISAO } from "@/lib/formato";
 import type { CaixaDePublicacoes, Contagem, Eu, Pagina as PaginaDaApi, ProcessoNaLista, LeituraDaSentenca, Pessoa, PreviaDaConta, Publicacao, ResultadoDecisao, Selo, SituacaoPublicacao, Sugestao, TipoDecisao } from "@/lib/tipos";
 import { cn } from "@/lib/util";
@@ -32,23 +32,6 @@ const ABAS: { id: SituacaoPublicacao; rotulo: string }[] = [
 ];
 const NA_SITUACAO: Record<SituacaoPublicacao, string> = { nova: "Publicação nova", pendente: "Publicação pendente", lida: "Publicação lida", vinculada: "Publicação vinculada" };
 const FONTE = { djen: "DJEN", datajud: "DataJud", manual: "Colada à mão" } as const;
-
-const caixaQuery = (situacao: SituacaoPublicacao) => ({
-  queryKey: ["publicacoes", situacao],
-  queryFn: () => api<CaixaDePublicacoes>(`/publicacoes?situacao=${situacao}`),
-  placeholderData: (a: CaixaDePublicacoes | undefined) => a,
-  refetchInterval: 60_000,
-});
-
-const publicacaoQuery = (id: string) => ({
-  queryKey: ["publicacao", id],
-  queryFn: () => api<Publicacao>(`/publicacoes/${id}`),
-  // Enquanto a IA lê o teor, a tela pergunta de novo; a leitura da sentença chega logo depois (e só se a IA estiver ligada).
-  refetchInterval: (q: { state: { data?: Publicacao; dataUpdateCount: number } }) => {
-    const d = q.state.data;
-    return d && ((!d.sugestao && !d.leituraParada) || (d.decisao && !d.sentenca && q.state.dataUpdateCount < 30)) ? 4000 : false;
-  },
-});
 
 /** A captura do DJEN: os cadernos às 04:30 e a busca pela OAB às 12:40 e às 18:40, de segunda a sexta (apps/api/src/inngest.ts). */
 export function proximaBusca(agora = new Date()): string {
@@ -75,6 +58,8 @@ function SeloDaLista({ selo }: { selo: Selo }) {
 }
 
 function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePublicacoes["itens"][number]; ligado?: boolean; celular: boolean; aoEscolher?: () => void }) {
+  const qc = useQueryClient();
+  const espera = useRef<ReturnType<typeof setTimeout>>(undefined);
   const miolo = (
     <>
       <span className="dc-pub__topo">
@@ -93,7 +78,16 @@ function ItemDaCaixa({ item, ligado, celular, aoEscolher }: { item: CaixaDePubli
     );
   }
   return (
-    <button type="button" className={cn("dc-pub", ligado && "is-on")} aria-current={ligado || undefined} onClick={aoEscolher}>
+    <button
+      type="button"
+      className={cn("dc-pub", ligado && "is-on")}
+      aria-current={ligado || undefined}
+      onClick={aoEscolher}
+      onMouseEnter={() => {
+        espera.current = setTimeout(() => void qc.prefetchQuery(publicacaoQuery(item.id)), 50);
+      }}
+      onMouseLeave={() => clearTimeout(espera.current)}
+    >
       {miolo}
     </button>
   );
@@ -124,8 +118,14 @@ export function PublicacoesPage() {
   const [colar, setColar] = useState(false);
   const [captura, setCaptura] = useState(false);
   const saude = useQuery(saudeDaCapturaQuery);
+  const qc = useQueryClient();
 
   const c = caixa.data;
+  // A seguinte da lista já vem: ao tratar esta, ela abre na hora.
+  const seguinte = c?.itens[c.itens.findIndex((x) => x.id === (search.id ?? c.itens[0]?.id)) + 1]?.id;
+  useEffect(() => {
+    if (seguinte && !celular) void qc.prefetchQuery(publicacaoQuery(seguinte));
+  }, [seguinte, celular, qc]);
   const capturada = c?.ultimaCaptura;
   const sub = !c
     ? " "
@@ -367,6 +367,12 @@ export function PublicacaoPage() {
   const q = useQuery(publicacaoQuery(id));
   const situacao = q.data?.situacao;
   const caixa = useQuery({ ...caixaQuery(situacao ?? "nova"), enabled: !!situacao && celular });
+  const qc = useQueryClient();
+  const lista = caixa.data?.itens;
+  const seguinte = lista?.[lista.findIndex((i) => i.id === id) + 1]?.id;
+  useEffect(() => {
+    if (seguinte && celular) void qc.prefetchQuery(publicacaoQuery(seguinte));
+  }, [seguinte, celular, qc]);
   if (!celular) return <Navigate to="/publicacoes" search={{ id }} replace />;
   if (!q.data) {
     return (

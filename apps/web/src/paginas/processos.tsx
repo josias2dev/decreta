@@ -10,11 +10,11 @@ import { Avatar, Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Responsavel, 
 import { api, SO_LEITURA } from "@/lib/api";
 import { useBuscaNaUrl } from "@/lib/busca";
 import { useCelular } from "@/lib/celular";
-import { euQuery, podeCriar } from "@/lib/consultas";
+import { euQuery, podeCriar, processosQuery, type SituacaoDosProcessos as Situacao } from "@/lib/consultas";
 import { diaCompleto, diaDoInstante, haQuanto, numero, ondeTramita } from "@/lib/formato";
+import { usePreCarga } from "@/lib/pre-carga";
 import type { Pagina as PaginaDaApi, ProcessoNaLista } from "@/lib/tipos";
 
-type Situacao = "ativos" | "arquivados" | "todos";
 const SITUACAO: Record<ProcessoNaLista["situacao"], string> = { ativo: "Ativo", suspenso: "Suspenso", arquivado: "Arquivado", encerrado: "Encerrado" };
 
 /** O tribunal (TJSC, TRT12, TRF4), o número e onde tramita, numa linha: TJSC · 5004321-25.2026.8.24.0038 · 2ª Vara Cível de Joinville. */
@@ -39,13 +39,8 @@ export function ProcessosPage() {
   const situacao: Situacao = search.situacao ?? "ativos";
   const [texto, setTexto] = useBuscaNaUrl(search.busca, (busca) => void navigate({ search: (s) => ({ ...s, busca }), replace: true }));
   const [novo, setNovo] = useState(!!search.novo);
-  const lista = useInfiniteQuery({
-    queryKey: ["processos", situacao, search.busca ?? ""],
-    queryFn: ({ pageParam }) => api<PaginaDaApi<ProcessoNaLista>>(`/processos?${new URLSearchParams({ situacao, pagina: String(pageParam), ...(search.busca ? { busca: search.busca } : {}) })}`),
-    initialPageParam: 1,
-    getNextPageParam: (ultima) => (ultima.pagina * ultima.porPagina < ultima.total ? ultima.pagina + 1 : undefined),
-    placeholderData: (a) => a,
-  });
+  const preCarga = usePreCarga();
+  const lista = useInfiniteQuery({ ...processosQuery(situacao, search.busca), placeholderData: (a) => a });
   const itens = lista.data?.pages.flatMap((p) => p.itens) ?? [];
   const total = lista.data?.pages[0]?.total ?? 0;
   const ir = (s: Situacao) => void navigate({ search: (x) => ({ ...x, situacao: s === "ativos" ? undefined : s }) });
@@ -203,7 +198,7 @@ export function ProcessosPage() {
                 </thead>
                 <tbody>
                   {itens.map((p) => (
-                    <tr key={p.id} data-link="" onClick={() => void navigate({ to: "/processos/$id", params: { id: p.id } })}>
+                    <tr key={p.id} data-link="" {...preCarga({ to: "/processos/$id", params: { id: p.id } })} onClick={() => void navigate({ to: "/processos/$id", params: { id: p.id } })}>
                       <td>
                         <span className="dc-celula">
                           <span className="dc-celula__1 dc-celula__1--uma">

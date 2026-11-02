@@ -20,9 +20,10 @@ import { API_URL, api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { ehSocio } from "@/lib/auth";
 import { useBuscaNaUrl } from "@/lib/busca";
 import { useCelular } from "@/lib/celular";
-import { euQuery, podeCriar } from "@/lib/consultas";
+import { clienteQuery, clientesQuery, euQuery, podeCriar } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, hora, numero, tamanho, telefone } from "@/lib/formato";
-import type { Canal, Cliente, ClienteNaLista, Pagina as PaginaDaApi } from "@/lib/tipos";
+import { usePreCarga } from "@/lib/pre-carga";
+import type { Canal, Cliente } from "@/lib/tipos";
 import { enquantoLe, Enviar, LeituraDaIa } from "./processo";
 
 export const CANAL: Record<Canal, string> = { presencial: "Presencial", telefone: "Telefone", whatsapp: "WhatsApp", video: "Vídeo", email: "E-mail" };
@@ -36,13 +37,8 @@ export function ClientesPage() {
   const [novo, setNovo] = useState(false);
   const eu = useQuery(euQuery);
   const pode = podeCriar(eu.data);
-  const lista = useInfiniteQuery({
-    queryKey: ["clientes", search.busca ?? ""],
-    queryFn: ({ pageParam }) => api<PaginaDaApi<ClienteNaLista>>(`/clientes?${new URLSearchParams({ pagina: String(pageParam), ...(search.busca ? { busca: search.busca } : {}) })}`),
-    initialPageParam: 1,
-    getNextPageParam: (u) => (u.pagina * u.porPagina < u.total ? u.pagina + 1 : undefined),
-    placeholderData: (a) => a,
-  });
+  const preCarga = usePreCarga();
+  const lista = useInfiniteQuery({ ...clientesQuery(search.busca), placeholderData: (a) => a });
   const itens = lista.data?.pages.flatMap((p) => p.itens) ?? [];
   const total = lista.data?.pages[0]?.total ?? 0;
   const sub = lista.data ? `${numero(total)} ${total === 1 ? "cliente" : "clientes"}` : " ";
@@ -149,7 +145,7 @@ export function ClientesPage() {
                 </thead>
                 <tbody>
                   {itens.map((c) => (
-                    <tr key={c.id} data-link="" onClick={() => void navigate({ to: "/clientes/$id", params: { id: c.id } })}>
+                    <tr key={c.id} data-link="" {...preCarga({ to: "/clientes/$id", params: { id: c.id } })} onClick={() => void navigate({ to: "/clientes/$id", params: { id: c.id } })}>
                       <td>
                         <span className="dc-celula">
                           <span className="dc-celula__1 dc-celula__1--uma">
@@ -196,7 +192,7 @@ export function ClientePage() {
   const { id } = useParams({ from: "/app/clientes/$id" });
   const celular = useCelular();
   const eu = useQuery(euQuery);
-  const q = useQuery({ queryKey: ["cliente", id], queryFn: () => api<Cliente>(`/clientes/${id}`), refetchInterval: enquantoLe });
+  const q = useQuery({ ...clienteQuery(id), refetchInterval: enquantoLe });
   const [dialogo, setDialogo] = useState<"atendimento" | "processo" | "editar" | "apagar" | null>(null);
   const qc = useQueryClient();
   const avisar = useAviso();
