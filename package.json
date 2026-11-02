@@ -20,7 +20,8 @@
     "escritorio:criar": "bun --env-file=.env apps/api/src/scripts/criar-escritorio.ts",
     "backup": "bun --env-file=.env apps/api/src/scripts/backup.ts",
     "avaliar": "bun --env-file=.env apps/api/src/scripts/avaliar-ia.ts",
-    "observacao": "bun --env-file=.env apps/api/src/scripts/observacao-ia.ts"
+    "observacao": "bun --env-file=.env apps/api/src/scripts/observacao-ia.ts",
+    "peticao-ficticia": "bun --env-file=.env apps/api/test/peticao-ficticia.ts"
   },
   "devDependencies": {
     "@types/bun": "1.4.4",

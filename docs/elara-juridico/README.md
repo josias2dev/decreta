@@ -25,6 +25,7 @@ Original: [ELARA JURÍDICO no Notion](https://app.notion.com/p/mogosoftware/ELAR
 | [15-easyjur-por-fontes-publicas.md](15-easyjur-por-fontes-publicas.md) | Análise nossa, fora do Notion: o EasyJur por fontes públicas, sem uso do sistema |
 | [16-legal-one-por-fontes-publicas.md](16-legal-one-por-fontes-publicas.md) | Análise nossa, fora do Notion: o Legal One Firm por fontes públicas, sem uso do sistema |
 | [17-plano-de-acao.md](17-plano-de-acao.md) | Análise nossa, fora do Notion: plano priorizado de experiência, redesign compacto e landing |
+| [18-decreta-no-mesmo-teste.md](18-decreta-no-mesmo-teste.md) | Análise nossa, fora do Notion: o Decreta no teste da petição fictícia e do prazo em feriado (item 0.1) |
 | [anexos/](anexos/) | Os dois diagramas da página, recortados de capturas de tela |
 
 ## O que muda em relação ao Notion
