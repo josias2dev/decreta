@@ -695,7 +695,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 /* Passos: o que a IA consultou */
 .dc-passos { display: flex; flex-wrap: wrap; gap: var(--space-1-half); margin: 0; padding: 0; list-style: none; }
 /* A fileira não cresce além da conversa (o nome comprido do processo fazia a tela andar para o lado no celular). */
-.dc-chat__autor > .dc-passos, .dc-chat__autor > .dc-passo { display: inline-flex; align-items: center; gap: var(--space-1); max-width: min(100%, 280px); height: var(--altura-selo); padding: 0 var(--space-1-half); box-sizing: border-box; border: 1px solid var(--borda); border-radius: var(--radius-sm); background: var(--superficie); font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
+.dc-chat__autor > .dc-passos, .dc-chat__autor > .dc-passo { min-width: 0; max-width: 100%; }
 .dc-passos--aberto { flex-basis: 100%; }
 .dc-passo { display: inline-flex; align-items: center; gap: var(--space-1-half); max-width: min(100%, 280px); height: 24px; padding: 0 9px; box-sizing: border-box; border: 1px solid var(--borda); border-radius: var(--radius-pill); background: var(--superficie); font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
 .dc-passo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1318,7 +1318,8 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-caixa__botoes > :nth-child(-n + 2), .dc-caixa__botoes > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 /* Abaixo de 1500 px a decisão encolhe, para o teor ter onde ler; abaixo de 1280 ela desce para baixo dele. */
 @media (max-width: 1500px) {
-  .dc-caixa { --largura-decisao: calc(304px * var(--escala-coluna)); }
+  .dc-caixa { --largura-decisao: 304px; }
+  [data-densidade="confortavel"] .dc-caixa { --largura-lista: 360px; }
 }
 @media (max-width: 1279px) {
   .dc-caixa { grid-template-columns: var(--largura-lista) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }

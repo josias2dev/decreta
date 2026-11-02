@@ -59,6 +59,18 @@ test.describe("a prévia", () => {
     await expect(page.locator(".dc-chat__resposta")).toHaveCount(1);
   });
 
+  test("o que a IA consultou é uma pílula só, sem caixa em volta", async ({ page }) => {
+    await abrirPrevia(page, "/perguntar");
+    await page.getByRole("navigation", { name: "Conversas" }).getByRole("link", { name: "Prazos desta semana" }).click();
+    const fileira = page.locator(".dc-chat__autor > .dc-passos").first();
+    await expect(fileira).toBeVisible();
+    const estilo = await fileira.evaluate((e) => {
+      const s = getComputedStyle(e);
+      return { borda: s.borderTopWidth, fundo: s.backgroundColor };
+    });
+    expect(estilo).toEqual({ borda: "0px", fundo: "rgba(0, 0, 0, 0)" });
+  });
+
   test("Parar no meio: a resposta fica uma vez, com o aviso", async ({ page }) => {
     await abrirPrevia(page, "/perguntar");
     const campo = page.getByRole("textbox", { name: "Pergunta" });

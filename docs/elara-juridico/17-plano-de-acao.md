@@ -93,7 +93,7 @@ Valores que ficaram no computador, conferidos na tela. A escala de fontes ficou 
 | Botão e campo | 32 px | 32 px | 36 px |
 | Filtro em chip | 28 px | 28 px | 32 px |
 | Linha de lista | 79 a 97 px | 56 px, em duas linhas | 66 px |
-| Item de Publicações | 92 px | 70 px, em três linhas, com as partes inteiras | Maior na mesma proporção |
+| Item de Publicações | 92 px | 70 px, em três linhas, com as partes inteiras | 76 px |
 | Cabeçalho da tela | 81 px | 56 px, com subtítulo na mesma linha | 64 px |
 | Números do dia | 82 px | 56 px, número e rótulo na mesma linha | 68 px |
 | Menu lateral | 232 px | 208 px, recolhível para 52 px | 232 px |

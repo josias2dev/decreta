@@ -209,6 +209,18 @@ test.describe("no computador", () => {
     expect(Math.abs(rotulo.y + rotulo.height / 2 - (foto.y + foto.height / 2))).toBeLessThanOrEqual(1);
   });
 
+  test("Publicações em Confortável, a 1366 px: as abas cabem e o teor tem largura de leitura", async ({ page }) => {
+    await page.addInitScript(([id]) => {
+      localStorage.setItem("decreta:densidade", "confortavel");
+      localStorage.setItem(`decreta:densidade:${id}`, "confortavel");
+    }, [amostras.eu!.corpo.usuario.id as string]);
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`);
+    await telaPronta(page);
+    await expect(page.locator("html")).toHaveAttribute("data-densidade", "confortavel");
+    expect(await page.locator(".dc-caixa__lista .dc-abas").evaluate((e) => e.scrollWidth - e.clientWidth)).toBe(0);
+    expect((await page.locator(".dc-caixa__teor").boundingBox())!.width).toBeGreaterThanOrEqual(340);
+  });
+
   test("Publicações abaixo de 1280 px: a decisão desce para baixo do teor", async ({ page }) => {
     await page.setViewportSize({ width: 1200, height: 800 });
     await abrir(page, `/publicacoes?id=${ids.publicacao}`);
