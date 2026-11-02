@@ -190,6 +190,13 @@
       "when": 1793636457883,
       "tag": "0026_termos_encerramento_e_funil",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793648865406,
+      "tag": "0027_cobertura_do_djen",
+      "breakpoints": true
     }
   ]
 }

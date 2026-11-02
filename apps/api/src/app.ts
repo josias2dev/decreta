@@ -16,6 +16,7 @@ import { registrarEvento, registrarEventoSemEscritorio } from "./eventos.ts";
 import { ipDoPedido, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
+import { montarCobertura, type Cobertura } from "./servicos/cobertura.ts";
 
 export interface AppDeps {
   db: Database;
@@ -31,6 +32,8 @@ export interface AppDeps {
   inngestHandler?: (c: Context) => Promise<Response>;
   log?: (msg: string, extra?: Record<string, unknown>) => void;
   reporter?: Reporter;
+  /** O fetch da lista de tribunais do DJEN, na cobertura (os testes passam um de mentira). */
+  fetchDoDjen?: typeof fetch;
 }
 
 export function createApp(deps: AppDeps) {
@@ -84,6 +87,15 @@ export function createApp(deps: AppDeps) {
       return c.body(null, 204);
     },
   );
+  /** A página aberta de cobertura: só datas e tribunais, em cache aqui e no navegador, para a visita não virar pedido ao DJEN. */
+  app.use("/api/cobertura", limitarPorIp({ janelaMs: 60_000, maximo: 30 }, ipDoPedido));
+  let coberturaGuardada: { ate: number; corpo: Cobertura } | null = null;
+  app.get("/api/cobertura", async (c) => {
+    if (!coberturaGuardada || coberturaGuardada.ate <= Date.now()) {
+      coberturaGuardada = { ate: Date.now() + COBERTURA_EM_CACHE_MS, corpo: await montarCobertura({ db, fetch: deps.fetchDoDjen, log }) };
+    }
+    return c.json(coberturaGuardada.corpo, 200, { "cache-control": `public, max-age=${COBERTURA_EM_CACHE_MS / 1000}` });
+  });
   app.use("/api/envio/*", limitarPorIp({ janelaMs: 60_000, maximo: 60 }, ipDoPedido));
   const limiteDoMcp = limitarPorIp({ janelaMs: 60_000, maximo: 120 }, ipDoPedido);
   app.use("/api/mcp", limiteDoMcp);
@@ -122,6 +134,7 @@ export function createApp(deps: AppDeps) {
   return app;
 }
 
+const COBERTURA_EM_CACHE_MS = 15 * 60_000;
 const TETO_DO_CADASTRO_BYTES = 16 * 1024;
 /** Um evento do site é `{"nome":"visita"}`: acima disto nem é lido. */
 const TETO_DO_EVENTO_BYTES = 1024;
@@ -169,14 +182,18 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
 /**
  * Telas compiladas na mesma origem da API: um endereço só, sem CORS, e o
  * cookie de sessão vale direto. O que está em /assets tem hash no nome e fica
- * em cache para sempre; as demais rotas caem no index.html (rotas do SPA).
+ * em cache para sempre; as demais rotas caem no index.html (rotas do SPA). A
+ * landing (`/`) e a demonstração são páginas estáticas à parte.
  */
 function servirTelas(app: Hono, dir: string) {
   const raiz = resolve(dir);
   const index = join(raiz, "index.html");
+  const pagina = (arquivo: string) => new Response(Bun.file(join(raiz, arquivo)), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
   app.get("*", async (c) => {
     const path = c.req.path;
     if (path.startsWith("/api/")) return c.notFound();
+    if (path === "/") return pagina("landing.html");
+    if (path === "/demonstracao" || path === "/demonstracao/") return pagina("demonstracao/index.html");
     let alvo: string;
     try {
       alvo = resolve(raiz, `.${decodeURIComponent(path)}`);
