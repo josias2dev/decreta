@@ -273,9 +273,8 @@ export function PrazosPage() {
                                   {i.tipo}
                                 </Link>
                               </span>
-                              <span className="dc-celula__2 dc-celula__2--uma">
-                                {[i.processo.titulo, i.processo.orgao && i.processo.comarca ? `${i.processo.orgao} de ${i.processo.comarca}` : i.processo.orgao].filter(Boolean).join(" · ")}
-                                {" · "}
+                              <span className="dc-celula__2 dc-celula__2--cnj">
+                                <span className="dc-corta">{[i.processo.titulo, i.processo.orgao && i.processo.comarca ? `${i.processo.orgao} de ${i.processo.comarca}` : i.processo.orgao].filter(Boolean).join(" · ")}</span>
                                 <Cnj cnj={i.processo.cnj} />
                               </span>
                             </span>

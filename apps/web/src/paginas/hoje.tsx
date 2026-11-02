@@ -312,9 +312,8 @@ function LinhaDoDia({ item: i }: { item: ItemDoDia }) {
             {i.aConfirmar && <span className="dc-selo dc-selo--ia">IA · a confirmar</span>}
           </span>
           {(i.detalhe || i.cnj) && (
-            <span className="dc-celula__2 dc-celula__2--uma">
-              {i.detalhe}
-              {i.detalhe && i.cnj && " · "}
+            <span className="dc-celula__2 dc-celula__2--cnj">
+              {i.detalhe && <span className="dc-corta">{i.detalhe}</span>}
               {i.cnj && <Cnj cnj={i.cnj} />}
             </span>
           )}

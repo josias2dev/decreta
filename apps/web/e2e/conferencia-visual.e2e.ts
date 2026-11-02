@@ -162,6 +162,34 @@ test.describe("no computador", () => {
     expect((await page.locator(".dc-menu").boundingBox())!.width).toBe(208);
   });
 
+  test("o número CNJ fica inteiro na segunda linha, e é o resto da linha que cede", async ({ page }) => {
+    const longo = "Transportadora de Cargas e Logística Integrada do Sul do Brasil Ltda. × Companhia Nacional de Seguros Gerais S.A. · 2ª Vara Cível de Joinville";
+    const painel = amostras.hoje!.corpo;
+    const lista = amostras.prazos!.corpo;
+    const api = new ApiFalsa()
+      .responder("/hoje", { ...painel, itens: painel.itens.map((i: { cnj: string | null }) => (i.cnj ? { ...i, detalhe: longo } : i)) })
+      .responder("/prazos", { ...lista, itens: lista.itens.map((i: { processo: object }) => ({ ...i, processo: { ...i.processo, titulo: longo } })) });
+    for (const [rota, tabela] of [["/hoje", ".dc-colunas .dc-tabela"], ["/prazos", ".dc-tabela"]] as const) {
+      await abrir(page, rota, api);
+      await telaPronta(page);
+      const numeros = page.locator(`${tabela} .dc-cnj`);
+      await expect(numeros.first()).toBeVisible();
+      const medidas = await numeros.evaluateAll((els) =>
+        els.map((e) => {
+          const linha = e.closest(".dc-celula__2")!;
+          return { sobra: linha.getBoundingClientRect().right - e.getBoundingClientRect().right, texto: e.textContent, corte: linha.querySelector(".dc-corta")!.scrollWidth > linha.querySelector(".dc-corta")!.clientWidth };
+        }),
+      );
+      expect(medidas.length, rota).toBeGreaterThan(0);
+      for (const m of medidas) {
+        expect(m.sobra, `${rota}: ${m.texto}`).toBeGreaterThanOrEqual(0);
+        expect(m.texto).toMatch(/^(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}|Extrajudicial)$/);
+        // O texto comprido antes do número é o que ganha as reticências.
+        expect(m.corte, rota).toBe(true);
+      }
+    }
+  });
+
   test("Publicações: as partes numa linha inteira, três colunas e a decisão com a data em destaque", async ({ page }) => {
     const caixa = amostras.publicacoes!.corpo;
     await abrir(page, `/publicacoes?id=${ids.publicacao}`, new ApiFalsa().responder("/publicacoes", { ...caixa, itens: repetir(caixa.itens, 24) }));
