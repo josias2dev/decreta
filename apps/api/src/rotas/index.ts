@@ -4,18 +4,23 @@
  * tudo que a rota lê ou grava.
  */
 import { hojeEm, somarDias } from "@decreta/core";
-import { alvaras, clientes, escritorios, negocios, organization, prazos, processos, publicacoes } from "@decreta/db";
+import { alvaras, clientes, equipe, escritorios, negocios, organization, prazos, processos, publicacoes } from "@decreta/db";
 import { and, eq, ilike, inArray, like, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { AVISO_DO_ENCERRAMENTO } from "../servicos/encerramento.ts";
+import { contarParcelasEmAtraso } from "../servicos/honorarios.ts";
 import { ehMembro, pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { painelDoDia } from "../servicos/hoje.ts";
 import { ehSocio, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { rotasDaAgenda } from "./agenda.ts";
 import { rotasDosCalculos } from "./calculos.ts";
+import { rotasDasAssinaturas } from "./assinaturas.ts";
 import { rotasDosClientes } from "./clientes.ts";
+import { rotasDaCobranca } from "./cobranca.ts";
 import { rotasDasConsultas } from "./consultas.ts";
+import { rotasDoFinanceiro } from "./financeiro.ts";
+import { rotasDaPrestacao } from "./prestacao.ts";
 import { rotasDosDocumentos } from "./documentos.ts";
 import { rotasDoEscritorio } from "./escritorio.ts";
 import { rotasDosDadosDoEscritorio } from "./dados-do-escritorio.ts";
@@ -63,7 +68,7 @@ export function createRotas(deps: DepsDasRotas) {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const conta = (q: Promise<{ n: number }[]>) => q.then((r) => r[0]?.n ?? 0);
       const n = sql<number>`count(*)::int`;
-      const [prazosSemana, prazosHoje, pubsNovas, nProcessos, nClientes, nNegocios, nAlvaras, [esc]] = await Promise.all([
+      const [prazosSemana, prazosHoje, pubsNovas, nProcessos, nClientes, nNegocios, nAlvaras, [esc], [perfil]] = await Promise.all([
         conta(tx.select({ n }).from(prazos).where(and(eq(prazos.situacao, "aberto"), lte(prazos.fim, somarDias(hoje, 7))))),
         conta(tx.select({ n }).from(prazos).where(and(eq(prazos.situacao, "aberto"), lte(prazos.fim, hoje)))),
         conta(tx.select({ n }).from(publicacoes).where(eq(publicacoes.situacao, "nova"))),
@@ -72,17 +77,21 @@ export function createRotas(deps: DepsDasRotas) {
         conta(tx.select({ n }).from(negocios).where(eq(negocios.etapa, "triagem"))),
         conta(tx.select({ n }).from(alvaras).where(inArray(alvaras.etapa, ["novo", "aguardando_saque", "sacado"]))),
         tx.select({ timbre: escritorios.timbre, onboardingConcluidoEm: escritorios.onboardingConcluidoEm }).from(escritorios),
+        tx.select({ financeiro: equipe.financeiro }).from(equipe).where(eq(equipe.userId, c.get("userId"))),
       ]);
       const eu = pessoas.get(c.get("userId"));
+      // O Financeiro é dos sócios e de quem eles liberaram; o número do menu (parcelas em atraso) só aparece para eles.
+      const financeiro = ehSocio(c.get("papel")) || !!perfil?.financeiro;
+      const emAtraso = financeiro ? await contarParcelasEmAtraso(tx, hoje) : 0;
       return c.json({
-        usuario: { id: c.get("userId"), nome: c.get("userNome"), apelido: eu?.apelido ?? c.get("userNome"), iniciais: eu?.iniciais ?? "?", foto: eu?.foto ?? null, cargo: eu?.cargo ?? null, papel: c.get("papel") },
+        usuario: { id: c.get("userId"), nome: c.get("userNome"), apelido: eu?.apelido ?? c.get("userNome"), iniciais: eu?.iniciais ?? "?", foto: eu?.foto ?? null, cargo: eu?.cargo ?? null, papel: c.get("papel"), financeiro },
         // O logo do timbre aparece no menu; ele sai de GET /escritorio/logo.
         // `onboarding`: a configuração inicial ainda está pendente, e esta pessoa (sócia) pode fazê-la.
         escritorio: { id: c.get("orgId"), nome: c.get("orgNome"), pessoas: pessoas.size, timezone: c.get("timezone"), logo: !!esc?.timbre?.logoDocumentoId, demonstracao: c.get("demonstracao"), onboarding: !!esc && !esc.onboardingConcluidoEm && ehSocio(c.get("papel")) },
         hoje,
         ia: deps.ia !== null,
         equipe: [...pessoas.values()].map((p) => ({ id: p.id, nome: p.nome, apelido: p.apelido, iniciais: p.iniciais, foto: p.foto, cargo: p.cargo, papel: p.papel })),
-        menu: { prazos: prazosSemana, prazosHoje, publicacoes: pubsNovas, processos: nProcessos, clientes: nClientes, negocios: nNegocios, alvaras: nAlvaras },
+        menu: { prazos: prazosSemana, prazosHoje, publicacoes: pubsNovas, processos: nProcessos, clientes: nClientes, negocios: nNegocios, alvaras: nAlvaras, financeiro: emAtraso },
       });
     });
   });
@@ -132,5 +141,9 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDasMensagensAoCliente(app, deps);
   rotasDosTokensMcp(app, deps);
   rotasDoRadar(app, deps);
+  rotasDoFinanceiro(app, deps);
+  rotasDaCobranca(app, deps);
+  rotasDaPrestacao(app, deps);
+  rotasDasAssinaturas(app, deps);
   return app;
 }

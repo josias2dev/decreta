@@ -4,11 +4,13 @@ import { createGatewayIa } from "@decreta/ia";
 import { serve } from "inngest/hono";
 import { createApp } from "./app.ts";
 import { createAuth } from "./auth.ts";
+import { criarCofre } from "./cofre.ts";
 import { createLogMailer, createResendMailer } from "./email.ts";
 import { readEnv } from "./env.ts";
 import { createFunctions, eventoDoPedido, inngest } from "./inngest.ts";
 import { candidatoDoPrazo } from "./servicos/observacao.ts";
 import { rotasDoEnvioPeloCliente } from "./rotas/envio-pelo-cliente.ts";
+import { rotasDoAvisoDoAsaas } from "./rotas/cobranca-aviso.ts";
 import { rotasDoMcp } from "./rotas/mcp.ts";
 import { createRotas } from "./rotas/index.ts";
 import { startSentry } from "./sentry.ts";
@@ -60,6 +62,8 @@ const rotas = createRotas({
   },
   log,
   limites,
+  cofre: criarCofre(env.COFRE_SECRET || env.BETTER_AUTH_SECRET),
+  enderecoDaApi: env.BETTER_AUTH_URL,
 });
 
 const enfileirarPedido = async (p: Parameters<typeof eventoDoPedido>[0]) => {
@@ -73,6 +77,7 @@ const app = createApp({
   rotas,
   envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log }),
   mcp: rotasDoMcp({ db, log }),
+  avisoDoAsaas: rotasDoAvisoDoAsaas({ db, log }),
   inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao, mailer }) }),
   log,
   reporter,

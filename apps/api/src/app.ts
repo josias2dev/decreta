@@ -27,6 +27,8 @@ export interface AppDeps {
   envio?: Hono;
   /** O conector MCP somente leitura (`/api/mcp`), com token pessoal no lugar da sessão. */
   mcp?: Hono;
+  /** O aviso de pagamento do Asaas de cada escritório (`/api/cobranca/asaas/<escritório>`), com o segredo do aviso no lugar da sessão. */
+  avisoDoAsaas?: Hono;
   /** Endpoint que o Inngest chama para rodar as funções (`inngest/hono`). */
   inngestHandler?: (c: Context) => Promise<Response>;
   log?: (msg: string, extra?: Record<string, unknown>) => void;
@@ -103,6 +105,11 @@ export function createApp(deps: AppDeps) {
 
   if (deps.envio) app.route("/api/envio", deps.envio);
   if (deps.mcp) app.route("/api/mcp", deps.mcp);
+  if (deps.avisoDoAsaas) {
+    // O Asaas manda os avisos de pagamento em rajada (e repete): um teto por minuto folgado, só contra quem tenta adivinhar o segredo.
+    app.use("/api/cobranca/asaas/*", limitarPorIp({ janelaMs: 60_000, maximo: 600 }, ipDoPedido));
+    app.route("/api/cobranca/asaas", deps.avisoDoAsaas);
+  }
 
   if (deps.rotas) {
     app.use("/api/app/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], exposeHeaders: ["x-peca-id"] }));

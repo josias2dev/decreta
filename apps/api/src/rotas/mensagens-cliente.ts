@@ -7,7 +7,7 @@ import { randomBytes } from "node:crypto";
 import { comLinkDeEnvio, corpoDaCobranca, documentosQueFaltam, formatarTelefone, hojeEm, instanteLocal, mensagemParaWhatsapp, somarDias, telefoneWhatsapp } from "@decreta/core";
 import { clientes, escritorios, mensagensCliente, prazos, processos, type Tx } from "@decreta/db";
 import { colherChamadas, IaRecusou, mensagemAoCliente, type Briefing, type ChamadaDaIa } from "@decreta/ia";
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
@@ -19,7 +19,7 @@ import { semIa, ClienteSemIa } from "../servicos/contexto.ts";
 import { hashDoSegredo, VALIDADE_DO_LINK_DIAS } from "./envio-pelo-cliente.ts";
 import { pessoasDoEscritorio, resumir, type Pessoa } from "../servicos/pessoas.ts";
 import { procedenciaDe } from "../servicos/procedencia.ts";
-import { comLimiteDaIa, corpo, falha, iaDaRota, id, ip, queryId, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, exigirFinanceiro, falha, iaDaRota, id, ip, queryId, temAcessoFinanceiro, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 type Mensagem = typeof mensagensCliente.$inferSelect;
 
@@ -79,6 +79,21 @@ async function carregar(tx: Tx, c: C, deps: DepsDasRotas, mensagemId: string) {
     .where(eq(mensagensCliente.id, mensagemId));
   if (!linha) falha(404, "nao_encontrado");
   return { ...linha, id_: await identidade(tx, c), pessoas: await pessoasDoEscritorio(deps.db, tx, c.get("orgId")) };
+}
+
+/** A mensagem como a tela mostra, para quem a criou fora desta rota (o lembrete de cobrança do Financeiro). */
+export async function mensagemNaTela(tx: Tx, c: C, deps: DepsDasRotas, mensagemId: string) {
+  const l = await carregar(tx, c, deps, mensagemId);
+  return naTela(l.m, l.cliente, l.id_, l.pessoas);
+}
+
+/**
+ * A mensagem de cobrança é dinheiro do cliente: ver, editar, descartar e enviar pedem o mesmo acesso ao Financeiro
+ * que a cobrança em si. As outras mensagens (decisão, documentos) seguem como eram.
+ */
+async function guardaDaCobranca(c: C, deps: DepsDasRotas, mensagemId: string): Promise<void> {
+  const [m] = await tenant(c, deps, (tx) => tx.select({ tipo: mensagensCliente.tipo }).from(mensagensCliente).where(eq(mensagensCliente.id, mensagemId)));
+  if (m?.tipo === "cobranca") await exigirFinanceiro(c, deps);
 }
 
 export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRotas) {
@@ -144,12 +159,14 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
     const clienteId = queryId(c, "cliente");
     const prazoId = queryId(c, "prazo");
     if (!clienteId && !prazoId) falha(400, "sem_filtro", "Diga o cliente ou o prazo.");
+    // As cobranças só aparecem para quem tem acesso ao Financeiro.
+    const veCobranca = await temAcessoFinanceiro(c, deps);
     return tenant(c, deps, async (tx) => {
       const linhas = await tx
         .select({ m: mensagensCliente, cliente: { id: clientes.id, nome: clientes.nome, telefone: clientes.telefone } })
         .from(mensagensCliente)
         .innerJoin(clientes, eq(clientes.id, mensagensCliente.clienteId))
-        .where(and(clienteId ? eq(mensagensCliente.clienteId, clienteId) : undefined, prazoId ? eq(mensagensCliente.prazoId, prazoId) : undefined))
+        .where(and(clienteId ? eq(mensagensCliente.clienteId, clienteId) : undefined, prazoId ? eq(mensagensCliente.prazoId, prazoId) : undefined, veCobranca ? undefined : ne(mensagensCliente.tipo, "cobranca")))
         .orderBy(desc(mensagensCliente.createdAt))
         .limit(50);
       const id_ = await identidade(tx, c);
@@ -161,6 +178,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
   /** O advogado edita o rascunho. Mensagem que já saiu não muda. */
   app.put("/mensagens-cliente/:id", async (c) => {
     const mensagemId = id(c);
+    await guardaDaCobranca(c, deps, mensagemId);
     const b = await corpo(c, z.object({ texto: z.string().trim().min(2).max(3000) }));
     return tenant(c, deps, async (tx) => {
       const [m] = await tx
@@ -194,6 +212,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
 
   app.post("/mensagens-cliente/:id/descartar", async (c) => {
     const mensagemId = id(c);
+    await guardaDaCobranca(c, deps, mensagemId);
     await tenant(c, deps, async (tx) => {
       const [m] = await tx
         .update(mensagensCliente)
@@ -211,6 +230,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
    */
   app.post("/mensagens-cliente/:id/enviar", async (c) => {
     const mensagemId = id(c);
+    await guardaDaCobranca(c, deps, mensagemId);
     const b = await corpo(c, z.object({ texto: z.string().trim().min(2).max(3000).optional() }));
     if (c.get("demonstracao")) falha(403, "demonstracao", "Na demonstração nada sai no WhatsApp: os clientes e os telefones são inventados.");
     const wameow = deps.wameow;
@@ -269,6 +289,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
   /** Envio sem confirmação: o advogado olha a conversa no WhatsApp e diz se saiu. Daqui nada é enviado. */
   app.post("/mensagens-cliente/:id/conferir-envio", async (c) => {
     const mensagemId = id(c);
+    await guardaDaCobranca(c, deps, mensagemId);
     const { saiu } = await corpo(c, z.object({ saiu: z.boolean() }));
     const clienteId = await tenant(c, deps, async (tx) => {
       const l = await carregar(tx, c, deps, mensagemId);

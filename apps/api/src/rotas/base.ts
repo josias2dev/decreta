@@ -1,14 +1,15 @@
 /** O que toda rota das telas tem: a sessão, o escritório ativo e os serviços. */
 import type { NomeDeEvento } from "@decreta/core";
 import type { Database, Tx } from "@decreta/db";
-import { withTenant } from "@decreta/db";
+import { equipe, withTenant } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
 import type { Ia, MetodoIa } from "@decreta/ia";
-import { type SQL, sql } from "drizzle-orm";
+import { type SQL, eq, sql } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { z } from "zod";
 import type { Auth } from "../auth.ts";
+import type { Cofre } from "../cofre.ts";
 import type { Mailer } from "../email.ts";
 import { registrarEvento } from "../eventos.ts";
 import { ipDoPedido } from "../limitador.ts";
@@ -63,6 +64,12 @@ export interface DepsDasRotas {
   log: (msg: string, extra?: Record<string, unknown>) => void;
   /** Limites da IA nas telas. Sem eles (testes), só mede. */
   limites?: LimitesDaIa;
+  /** O cofre das chaves do Asaas e da ZapSign dos escritórios. Sem ele, a cobrança e a assinatura ficam desligadas. */
+  cofre?: Cofre;
+  /** O `fetch` dos pedidos ao Asaas e à ZapSign (os testes põem um servidor de mentira no lugar). */
+  fetchDosProvedores?: typeof fetch;
+  /** O endereço público da API, de onde o Asaas manda os avisos de pagamento (BETTER_AUTH_URL). */
+  enderecoDaApi?: string;
 }
 
 export function tenant<T>(c: C, deps: { db: Database }, fn: (tx: Tx) => Promise<T>): Promise<T> {
@@ -173,6 +180,17 @@ export function id(c: C, nome = "id"): string {
 }
 
 export const ehSocio = (papel: string) => papel === "owner" || papel === "admin";
+
+/** Os sócios veem o Financeiro; quem não é sócio, só com a permissão que um sócio deu na Equipe. */
+export async function temAcessoFinanceiro(c: C, deps: { db: Database }): Promise<boolean> {
+  if (ehSocio(c.get("papel"))) return true;
+  const [e] = await withTenant(deps.db, c.get("orgId"), (tx) => tx.select({ financeiro: equipe.financeiro }).from(equipe).where(eq(equipe.userId, c.get("userId"))));
+  return !!e?.financeiro;
+}
+
+export async function exigirFinanceiro(c: C, deps: { db: Database }): Promise<void> {
+  if (!(await temAcessoFinanceiro(c, deps))) falha(403, "sem_acesso_financeiro", "O Financeiro é dos sócios e de quem eles liberarem na Equipe.");
+}
 
 export function ip(c: C): string | null {
   return ipDoPedido(c);

@@ -7,7 +7,7 @@
  * com percentual usam BigInt, para o produto de um valor grande por um
  * percentual nunca passar do que o número inteiro seguro aguenta.
  */
-import { diferencaEmDias, formatarDia, somarDias, type Dia } from "./datas.ts";
+import { diferencaEmDias, ehDia, formatarDia, somarDias, type Dia } from "./datas.ts";
 
 /* ------------------------------------------------------------------ */
 /* Dinheiro em centavos                                                */
@@ -125,6 +125,63 @@ export function vencimentosMensais(primeiro: Dia, n: number): Dia[] {
     const ultimo = new Date(Date.UTC(ano, mes + 1, 0)).getUTCDate();
     return `${String(ano).padStart(4, "0")}-${String(mes + 1).padStart(2, "0")}-${String(Math.min(d, ultimo)).padStart(2, "0")}`;
   });
+}
+
+export type TipoDeContrato = "fixo" | "mensal" | "exito" | "hibrido";
+
+export interface PlanoDoContrato {
+  tipo: TipoDeContrato;
+  fixo?: { valor: number; parcelas: number; primeiroVencimento: Dia };
+  mensal?: { valor: number; meses: number; primeiroVencimento: Dia };
+  exitoBp?: number;
+}
+
+export interface ParcelaPlanejada {
+  tipo: "fixo" | "mensal" | "exito";
+  numero: number;
+  descricao: string;
+  valor: number | null;
+  vencimento: Dia | null;
+}
+
+/** O máximo de parcelas ou de mensalidades criadas de uma vez. */
+export const MAXIMO_DE_PARCELAS = 60;
+
+const mesDoDia = (dia: Dia) => `${dia.slice(5, 7)}/${dia.slice(0, 4)}`;
+
+/**
+ * As parcelas que o contrato gera. O valor fixo vira parcelas com vencimento mensal (a soma
+ * fecha no centavo), a mensalidade vira uma parcela por mês, e o êxito nasce sem valor e sem
+ * vencimento: guarda só o percentual, e o valor entra quando sai o resultado.
+ */
+export function planejarParcelas(plano: PlanoDoContrato): ParcelaPlanejada[] {
+  const { tipo, fixo, mensal, exitoBp } = plano;
+  if (exitoBp !== undefined && tipo !== "exito" && tipo !== "hibrido") throw new Error("Êxito só no contrato de êxito ou no híbrido.");
+  if (fixo && tipo !== "fixo" && tipo !== "hibrido") throw new Error("Valor fixo só no contrato fixo ou no híbrido.");
+  if (mensal && tipo !== "mensal" && tipo !== "hibrido") throw new Error("Mensalidade só no contrato mensal ou no híbrido.");
+  if (tipo === "fixo" && !fixo) throw new Error("Informe o valor e as parcelas.");
+  if (tipo === "mensal" && !mensal) throw new Error("Informe a mensalidade.");
+  if (tipo === "hibrido" && !fixo && !mensal) throw new Error("O contrato híbrido combina o êxito com um valor fixo ou uma mensalidade.");
+  if ((tipo === "exito" || tipo === "hibrido") && exitoBp === undefined) throw new Error("Informe o percentual de êxito.");
+  if (exitoBp !== undefined && (!Number.isInteger(exitoBp) || exitoBp < 1 || exitoBp > 10_000)) throw new Error("O percentual de êxito vai de 0,01% a 100%.");
+
+  const parcelas: ParcelaPlanejada[] = [];
+  if (fixo) {
+    if (!Number.isInteger(fixo.parcelas) || fixo.parcelas < 1 || fixo.parcelas > MAXIMO_DE_PARCELAS) throw new Error(`De 1 a ${MAXIMO_DE_PARCELAS} parcelas.`);
+    if (!Number.isSafeInteger(fixo.valor) || fixo.valor <= 0) throw new Error("O valor precisa ser maior que zero.");
+    if (!ehDia(fixo.primeiroVencimento)) throw new Error("Vencimento inválido.");
+    const valores = dividirEmParcelas(fixo.valor, fixo.parcelas);
+    const datas = vencimentosMensais(fixo.primeiroVencimento, fixo.parcelas);
+    valores.forEach((valor, i) => parcelas.push({ tipo: "fixo", numero: i + 1, descricao: fixo.parcelas === 1 ? "Honorários" : `Honorários · parcela ${i + 1}/${fixo.parcelas}`, valor, vencimento: datas[i]! }));
+  }
+  if (mensal) {
+    if (!Number.isInteger(mensal.meses) || mensal.meses < 1 || mensal.meses > MAXIMO_DE_PARCELAS) throw new Error(`De 1 a ${MAXIMO_DE_PARCELAS} meses.`);
+    if (!Number.isSafeInteger(mensal.valor) || mensal.valor <= 0) throw new Error("O valor precisa ser maior que zero.");
+    if (!ehDia(mensal.primeiroVencimento)) throw new Error("Vencimento inválido.");
+    vencimentosMensais(mensal.primeiroVencimento, mensal.meses).forEach((vencimento, i) => parcelas.push({ tipo: "mensal", numero: i + 1, descricao: `Mensalidade · ${mesDoDia(vencimento)}`, valor: mensal.valor, vencimento }));
+  }
+  if (exitoBp !== undefined) parcelas.push({ tipo: "exito", numero: 1, descricao: `Honorário de êxito (${formatarBasePontos(exitoBp)})`, valor: null, vencimento: null });
+  return parcelas;
 }
 
 export type SituacaoDaParcela = "sem_valor" | "a_vencer" | "em_atraso" | "parcial" | "paga" | "cancelada";
@@ -300,4 +357,55 @@ export function resumirFinanceiro(parcelas: ParcelaParaResumo[], hoje: Dia): Res
   r.porCliente = [...clientes.values()].sort(ordem);
   r.porProcesso = [...processos.values()].sort(ordem);
   return r;
+}
+
+/* ------------------------------------------------------------------ */
+/* Lembretes de cobrança (a régua)                                     */
+/* ------------------------------------------------------------------ */
+
+export interface PassoDaRegua {
+  /** Dias a partir do vencimento: -3 é três dias antes, 0 é o dia, 3 é três dias depois. */
+  dias: number;
+  texto: string;
+}
+
+/** Os textos de partida da régua: o escritório os lê, ajusta e aprova antes de ligar. */
+export const PASSOS_PADRAO_DA_REGUA: PassoDaRegua[] = [
+  { dias: -3, texto: "Olá, {cliente}. Passando para lembrar que os honorários ({descricao}), no valor de {valor}, vencem em {vencimento}.\n{link}" },
+  { dias: 0, texto: "Olá, {cliente}. Hoje vence o pagamento dos honorários ({descricao}), no valor de {valor}.\n{link}\nQualquer dúvida, é só responder esta mensagem." },
+  { dias: 3, texto: "Olá, {cliente}. Não identificamos o pagamento dos honorários ({descricao}), de {valor}, que venceram em {vencimento}. Se já pagou, desconsidere esta mensagem.\n{link}" },
+];
+
+export interface DadosDoLembrete {
+  cliente: string;
+  descricao: string;
+  valorCentavos: number;
+  vencimento: Dia;
+  /** O link de pagamento da cobrança emitida. Sem cobrança, a linha do link sai do texto. */
+  link: string | null;
+  escritorio: string;
+}
+
+/**
+ * Preenche os campos do texto que o escritório aprovou: {cliente}, {descricao}, {valor},
+ * {vencimento}, {link} e {escritorio}. Sem link, a linha do link sai. Um campo que o texto
+ * não conhece fica como está, para quem aprova a mensagem ver.
+ */
+export function preencherLembrete(texto: string, d: DadosDoLembrete): string {
+  const valores: Record<string, string> = {
+    cliente: d.cliente,
+    descricao: d.descricao,
+    valor: formatarCentavos(d.valorCentavos),
+    vencimento: formatarDia(d.vencimento),
+    link: d.link ?? "",
+    escritorio: d.escritorio,
+  };
+  return texto
+    .split("\n")
+    .flatMap((linha) => {
+      if (!d.link && linha.includes("{link}") && linha.replaceAll("{link}", "").trim() === "") return [];
+      return [linha.replace(/\{([a-z]+)\}/g, (inteiro, campo: string) => valores[campo] ?? inteiro).trimEnd()];
+    })
+    .join("\n")
+    .trim();
 }

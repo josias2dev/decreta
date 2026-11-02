@@ -14,6 +14,7 @@ export * from "./publicacao.ts";
 export * from "./fontes.ts";
 export * from "./funil.ts";
 export * from "./honorarios.ts";
+export * from "./prestacao.ts";
 export * from "./legal.ts";
 export * from "./auditoria.ts";
 export * from "./automacao.ts";

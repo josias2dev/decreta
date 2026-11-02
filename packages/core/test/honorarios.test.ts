@@ -11,6 +11,9 @@ import {
   dividirEmParcelas,
   formatarCentavos,
   paraBasePontos,
+  PASSOS_PADRAO_DA_REGUA,
+  planejarParcelas,
+  preencherLembrete,
   resumirFinanceiro,
   situacaoDaParcela,
   textoDoCentavo,
@@ -296,5 +299,94 @@ describe("resumo do financeiro", () => {
       { id: "p1", aReceber: 100_000, emAtraso: 100_000, recebido: 0 },
       { id: "p2", aReceber: 20_000, emAtraso: 0, recebido: 0 },
     ]);
+  });
+});
+
+describe("o plano do contrato vira parcelas", () => {
+  test("valor fixo em 3 vezes: soma fecha, vencimento mensal e descrição de cada parcela", () => {
+    const r = planejarParcelas({ tipo: "fixo", fixo: { valor: 100_000, parcelas: 3, primeiroVencimento: "2026-11-10" } });
+    expect(r).toEqual([
+      { tipo: "fixo", numero: 1, descricao: "Honorários · parcela 1/3", valor: 33_334, vencimento: "2026-11-10" },
+      { tipo: "fixo", numero: 2, descricao: "Honorários · parcela 2/3", valor: 33_333, vencimento: "2026-12-10" },
+      { tipo: "fixo", numero: 3, descricao: "Honorários · parcela 3/3", valor: 33_333, vencimento: "2027-01-10" },
+    ]);
+  });
+
+  test("valor fixo à vista é uma parcela só, sem numeração", () => {
+    expect(planejarParcelas({ tipo: "fixo", fixo: { valor: 500_000, parcelas: 1, primeiroVencimento: "2026-11-30" } })).toEqual([{ tipo: "fixo", numero: 1, descricao: "Honorários", valor: 500_000, vencimento: "2026-11-30" }]);
+  });
+
+  test("mensal: uma parcela por mês, com o mês na descrição", () => {
+    const r = planejarParcelas({ tipo: "mensal", mensal: { valor: 150_000, meses: 3, primeiroVencimento: "2026-11-10" } });
+    expect(r.map((p) => [p.descricao, p.valor, p.vencimento])).toEqual([
+      ["Mensalidade · 11/2026", 150_000, "2026-11-10"],
+      ["Mensalidade · 12/2026", 150_000, "2026-12-10"],
+      ["Mensalidade · 01/2027", 150_000, "2027-01-10"],
+    ]);
+  });
+
+  test("êxito nasce sem valor e sem vencimento: guarda só o percentual", () => {
+    expect(planejarParcelas({ tipo: "exito", exitoBp: 3_000 })).toEqual([{ tipo: "exito", numero: 1, descricao: "Honorário de êxito (30%)", valor: null, vencimento: null }]);
+    expect(planejarParcelas({ tipo: "exito", exitoBp: 1_250 })[0]!.descricao).toBe("Honorário de êxito (12,5%)");
+  });
+
+  test("híbrido: a entrada fixa e o êxito sem valor", () => {
+    const r = planejarParcelas({ tipo: "hibrido", fixo: { valor: 200_000, parcelas: 2, primeiroVencimento: "2026-11-10" }, exitoBp: 2_000 });
+    expect(r.map((p) => [p.tipo, p.valor, p.vencimento])).toEqual([
+      ["fixo", 100_000, "2026-11-10"],
+      ["fixo", 100_000, "2026-12-10"],
+      ["exito", null, null],
+    ]);
+  });
+
+  test("híbrido com mensalidade e êxito", () => {
+    const r = planejarParcelas({ tipo: "hibrido", mensal: { valor: 80_000, meses: 2, primeiroVencimento: "2026-11-05" }, exitoBp: 1_500 });
+    expect(r.map((p) => p.tipo)).toEqual(["mensal", "mensal", "exito"]);
+  });
+
+  test("o que não combina com o tipo é recusado, com a frase do motivo", () => {
+    expect(() => planejarParcelas({ tipo: "fixo" })).toThrow("Informe o valor e as parcelas.");
+    expect(() => planejarParcelas({ tipo: "mensal" })).toThrow("Informe a mensalidade.");
+    expect(() => planejarParcelas({ tipo: "exito" })).toThrow("Informe o percentual de êxito.");
+    expect(() => planejarParcelas({ tipo: "hibrido", exitoBp: 2_000 })).toThrow("O contrato híbrido combina o êxito com um valor fixo ou uma mensalidade.");
+    expect(() => planejarParcelas({ tipo: "hibrido", fixo: { valor: 1_000, parcelas: 1, primeiroVencimento: "2026-11-10" } })).toThrow("Informe o percentual de êxito.");
+    expect(() => planejarParcelas({ tipo: "fixo", fixo: { valor: 1_000, parcelas: 1, primeiroVencimento: "2026-11-10" }, exitoBp: 2_000 })).toThrow("Êxito só no contrato de êxito ou no híbrido.");
+    expect(() => planejarParcelas({ tipo: "mensal", mensal: { valor: 80_000, meses: 2, primeiroVencimento: "2026-11-10" }, fixo: { valor: 1_000, parcelas: 1, primeiroVencimento: "2026-11-10" } })).toThrow("Valor fixo só no contrato fixo ou no híbrido.");
+  });
+
+  test("parcelas, meses, valor e vencimento fora do razoável são recusados", () => {
+    expect(() => planejarParcelas({ tipo: "fixo", fixo: { valor: 1_000, parcelas: 0, primeiroVencimento: "2026-11-10" } })).toThrow("De 1 a 60 parcelas.");
+    expect(() => planejarParcelas({ tipo: "fixo", fixo: { valor: 1_000, parcelas: 61, primeiroVencimento: "2026-11-10" } })).toThrow("De 1 a 60 parcelas.");
+    expect(() => planejarParcelas({ tipo: "mensal", mensal: { valor: 1_000, meses: 61, primeiroVencimento: "2026-11-10" } })).toThrow("De 1 a 60 meses.");
+    expect(() => planejarParcelas({ tipo: "fixo", fixo: { valor: 0, parcelas: 1, primeiroVencimento: "2026-11-10" } })).toThrow("O valor precisa ser maior que zero.");
+    expect(() => planejarParcelas({ tipo: "fixo", fixo: { valor: 1_000, parcelas: 1, primeiroVencimento: "2026-02-30" } })).toThrow("Vencimento inválido.");
+    expect(() => planejarParcelas({ tipo: "fixo", fixo: { valor: 2, parcelas: 3, primeiroVencimento: "2026-11-10" } })).toThrow("O valor não dá um centavo para cada parcela.");
+  });
+});
+
+describe("texto do lembrete de cobrança", () => {
+  const dados = { cliente: "Marina Duarte", descricao: "Mensalidade · 11/2026", valorCentavos: 150_000, vencimento: "2026-11-10", link: "https://www.asaas.com/i/abc", escritorio: "Souza & Freitas Advocacia" };
+
+  test("preenche os campos do texto que o escritório aprovou", () => {
+    const t = preencherLembrete("Olá, {cliente}. Lembramos do pagamento ({descricao}) de {valor}, com vencimento em {vencimento}. Pague por aqui: {link}", dados);
+    expect(t).toBe("Olá, Marina Duarte. Lembramos do pagamento (Mensalidade · 11/2026) de R$ 1.500,00, com vencimento em 10/11/2026. Pague por aqui: https://www.asaas.com/i/abc");
+  });
+
+  test("sem link de cobrança, a linha do link sai inteira em vez de deixar um campo vazio", () => {
+    const t = preencherLembrete("Olá, {cliente}. Honorários de {valor}, vencimento {vencimento}.\n{link}", { ...dados, link: null });
+    expect(t).toBe("Olá, Marina Duarte. Honorários de R$ 1.500,00, vencimento 10/11/2026.");
+    expect(t).not.toContain("{");
+  });
+
+  test("campo que o texto não conhece fica como está, para quem aprova ver", () => {
+    expect(preencherLembrete("Olá, {cliente} {desconhecido}", dados)).toBe("Olá, Marina Duarte {desconhecido}");
+  });
+
+  test("os textos de partida da régua só usam campos que existem", () => {
+    for (const p of PASSOS_PADRAO_DA_REGUA) {
+      const t = preencherLembrete(p.texto, dados);
+      expect(t).not.toMatch(/\{[a-z]+\}/);
+      expect(t.length).toBeGreaterThan(20);
+    }
   });
 });

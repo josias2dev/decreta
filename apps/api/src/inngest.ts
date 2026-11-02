@@ -14,6 +14,7 @@
  *   cópia dos dados pedida ── exportar-dados (planilhas e documentos em ZIP, e e-mail para quem pediu)
  *   04:20 (todo dia) ── limpar-copias-dos-dados (as cópias de mais de 7 dias saem)
  *   03:45 (todo dia) ── apagar-escritorios-encerrados (o escritório encerrado há 30 dias é apagado de vez)
+ *   08:00 (todo dia) ── lembretes-de-cobranca (rascunhos de lembrete das parcelas que chegaram num passo da régua)
  *
  * A captura de um escritório roda uma por vez; a sugestão da IA, duas por vez
  * por escritório. Repetir uma rodada é inócuo: publicação e movimentação
@@ -43,6 +44,7 @@ import { observarPrazo, type Observacao } from "./servicos/observacao.ts";
 import { IaDesligada, sugerirPrazoDaPublicacao } from "./servicos/prazos.ts";
 import { publicacoesParaReler } from "./servicos/publicacoes.ts";
 import { rascunhoDoPrazo } from "./servicos/rascunho.ts";
+import { gerarLembretesDoDia } from "./servicos/regua.ts";
 import { lerSentencaSozinha } from "./servicos/sentencas.ts";
 import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
 import { silentReporter, type Reporter } from "./sentry.ts";
@@ -443,5 +445,27 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn];
+  // A régua de cobrança: toda manhã, cada parcela que chegou num passo ganha um rascunho de lembrete. Nada sai sozinho: o advogado aprova e envia pela tela de mensagens.
+  const lembretesFn = inngest.createFunction(
+    { id: "lembretes-de-cobranca", triggers: [{ cron: "TZ=America/Sao_Paulo 0 8 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "lembretes-de-cobranca" }) },
+    async ({ step }) => {
+      const orgs = await step.run("escritorios", () => escritoriosAtivos(db));
+      let rascunhos = 0;
+      for (const org of orgs) {
+        rascunhos += await step.run(`escritorio-${org.id}`, async () => {
+          try {
+            return (await gerarLembretesDoDia(db, org.id, hojeEm(org.timezone), org.timezone)).rascunhos;
+          } catch (err) {
+            // Um escritório com problema não segura os outros.
+            log("lembretes de cobrança não saíram", { organizationId: org.id, error: err instanceof Error ? err.message : String(err) });
+            reporter.error(err, { funcao: "lembretes-de-cobranca", organizationId: org.id });
+            return 0;
+          }
+        });
+      }
+      return { rascunhos };
+    },
+  );
+
+  return [capturarCadernosFn, agendarCaptura, capturar, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn];
 }

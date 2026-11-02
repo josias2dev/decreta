@@ -1,5 +1,5 @@
 import { automacaoValida, ehDia, feriadosForenses, feriadosNacionais, formatarTelefone, hojeEm, nivelDaAcao, REGRAS_DE_AUTOMACAO, telefoneWhatsapp, temCalendarioProprio } from "@decreta/core";
-import { documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
+import { cobrancaConfig, documentos, equipe, escritorios, invitation, suspensoes, type Timbre } from "@decreta/db";
 import { chaveDoDocumento, MIME_DOCX, nomeDoArquivo } from "@decreta/documentos";
 import { tipoDePeca } from "@decreta/ia";
 import { and, asc, eq, gte } from "drizzle-orm";
@@ -34,8 +34,9 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.get("/escritorio", async (c) =>
     tenant(c, deps, async (tx) => {
       const [e] = await tx.select().from(escritorios).where(eq(escritorios.organizationId, c.get("orgId")));
+      const [cfg] = await tx.select({ zapsignChave: cobrancaConfig.zapsignChave, zapsignLigada: cobrancaConfig.zapsignLigada }).from(cobrancaConfig).where(eq(cobrancaConfig.organizationId, c.get("orgId")));
       const hoje = hojeEm(c.get("timezone"));
-      const susp = await tx.select().from(suspensoes).where(gte(suspensoes.dia, `${hoje.slice(0, 4)}-01-01`)).orderBy(asc(suspensoes.dia));
+      const susp =await tx.select().from(suspensoes).where(gte(suspensoes.dia, `${hoje.slice(0, 4)}-01-01`)).orderBy(asc(suspensoes.dia));
       return c.json({
         nome: c.get("orgNome"),
         tribunal: e?.tribunal ?? "TJSC",
@@ -45,6 +46,8 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         capturaDatajud: e?.capturaDatajud ?? true,
         demonstracao: c.get("demonstracao"),
         whatsappLigado: !!deps.wameow,
+        /** A assinatura eletrônica (ZapSign) do escritório está ligada: a tela do documento oferece "Enviar para assinatura". */
+        assinaturaLigada: !!cfg?.zapsignChave && !!cfg.zapsignLigada && !c.get("demonstracao"),
         whatsappOficial: e?.whatsappOficial ?? null,
         jeito: e?.jeito ?? {},
         /** O nível que vale em cada ação, já com o padrão e as travas. */
@@ -166,7 +169,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
       return c.json({
         pessoas: [...pessoas.values()].map((p) => {
           const perfil = perfis.find((x) => x.userId === p.id);
-          return { ...p, oabNumero: perfil?.oabNumero ?? null, oabUf: perfil?.oabUf ?? null };
+          return { ...p, oabNumero: perfil?.oabNumero ?? null, oabUf: perfil?.oabUf ?? null, financeiro: ehSocio(p.papel) || !!perfil?.financeiro };
         }),
         convites: convites.filter((x) => x.expiraEm.getTime() > Date.now()).map((x) => ({ ...x, expiraEm: x.expiraEm.toISOString(), link: `${deps.telas}/convite/${x.id}` })),
         emailLigado: deps.mailer.enabled,
@@ -187,8 +190,11 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         oabUf: z.string().regex(/^[A-Z]{2}$/).nullable().optional(),
         whatsapp: z.string().max(30).nullable().optional(),
         avisoManha: z.boolean().optional(),
+        /** Acesso ao Financeiro: os sócios têm sempre; aqui um sócio libera (ou tira) de quem não é. */
+        financeiro: z.boolean().optional(),
       }),
     );
+    if (b.financeiro !== undefined) soSocios(c);
     if (b.whatsapp && !telefoneWhatsapp(b.whatsapp)) falha(422, "whatsapp_invalido", "Confira o número: DDD e número, como (47) 99123-4567.");
     // A OAB abre a aprovação de mensagem ao cliente e guia a captura do Diário: só o sócio a grava, e com a UF.
     if (b.oabNumero !== undefined || b.oabUf !== undefined) soSocios(c);
@@ -203,6 +209,7 @@ export function rotasDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRotas) {
         .onConflictDoUpdate({ target: [equipe.organizationId, equipe.userId], set: valores });
     });
     if (b.oabNumero) await marcarEvento(c, deps, "oab_cadastrada");
+    if (b.financeiro !== undefined) await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "equipe.financeiro", detalhes: { pessoa: userId, financeiro: b.financeiro }, ip: ip(c) }, deps.log);
     return c.json({ ok: true });
   });
 

@@ -118,6 +118,8 @@ export async function consultarDocumento(conta: ContaZapSign, token: string): Pr
 
 /** Baixa o arquivo assinado do link temporário. Sem a chave: o link já vem assinado. */
 export async function baixarArquivoAssinado(url: string, buscar: typeof fetch = fetch): Promise<Uint8Array> {
+  // O link vem da resposta da ZapSign: só https, nunca um endereço de dentro do servidor.
+  if (!/^https:\/\//i.test(url)) throw new ZapSignErro(0, "O link do arquivo assinado não é seguro, e não foi baixado.");
   const res = await buscar(url, { signal: AbortSignal.timeout(TEMPO_MAXIMO_MS) }).catch(() => null);
   if (!res?.ok) throw new ZapSignErro(res?.status ?? 0, "Não deu para baixar o arquivo assinado agora. Tente de novo em alguns minutos.");
   return new Uint8Array(await res.arrayBuffer());

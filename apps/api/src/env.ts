@@ -59,6 +59,12 @@ const schema = z.object({
   R2_BUCKET: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
+  /**
+   * Segredo do cofre das chaves do Asaas e da ZapSign de cada escritório (AES-256-GCM).
+   * Vazio: usa o BETTER_AUTH_SECRET. Trocar o segredo invalida as chaves já guardadas:
+   * cada escritório as informa de novo.
+   */
+  COFRE_SECRET: z.string().default(""),
   /** Projeto da API no Sentry. Vazio desliga o envio de erros. */
   SENTRY_DSN: z.string().default(""),
   /** Resend (e-mail transacional). Vazio: os e-mails só vão para o log e a tela mostra o link para copiar. */
