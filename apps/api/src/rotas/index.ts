@@ -17,6 +17,7 @@ import { painelDoDia } from "../servicos/hoje.ts";
 import { ehSocio, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { rotasDaAgenda } from "./agenda.ts";
 import { rotasDosCalculos } from "./calculos.ts";
+import { rotasDosCamposComIa } from "./campos-com-ia.ts";
 import { rotasDasAssinaturas } from "./assinaturas.ts";
 import { rotasDosClientes } from "./clientes.ts";
 import { rotasDaCobranca } from "./cobranca.ts";
@@ -146,6 +147,7 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDosClientes(app, deps);
   rotasDasConsultas(app, deps);
   rotasDaIa(app, deps);
+  rotasDosCamposComIa(app, deps);
   rotasDasPecas(app, deps);
   rotasDosModelos(app, deps);
   rotasDosDocumentos(app, deps);

@@ -218,6 +218,13 @@
       "when": 1793655104004,
       "tag": "0030_honorarios_e_cobranca",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793656804811,
+      "tag": "0032_textos_da_ia",
+      "breakpoints": true
     }
   ]
 }
