@@ -38,7 +38,7 @@ import { cortado } from "../servicos/assistente.ts";
 import { citacoesDoTexto } from "../servicos/jurisprudencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { AVISOS, quantoResta, SEM_LIMITES, usoDoDia } from "../servicos/uso-ia.ts";
-import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, semAcentoNoBanco, tenant, termoSemAcento, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, semAcentoNoBanco, temAcessoFinanceiro, tenant, termoSemAcento, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 /** O nome de cada ação da IA como a equipe reconhece. */
 export const ROTULO_DA_ACAO: Record<string, string> = {
@@ -553,7 +553,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
           foco: preparado.foco,
         },
         historico: preparado.historico,
-        dados: dadosDoEscritorio({ db, organizationId: orgId, userId, timezone: c.get("timezone") }),
+        dados: dadosDoEscritorio({ db, organizationId: orgId, userId, timezone: c.get("timezone"), financeiro: await temAcessoFinanceiro(c, deps) }),
       },
       c.req.raw.signal,
     );

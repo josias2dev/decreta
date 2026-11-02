@@ -111,9 +111,23 @@ export const filtroDeAlvaras = z.object({
   etapa: z.enum(["pendentes", "novo", "aguardando_saque", "sacado", "repassado", "finalizado", "todos"]).optional().describe("pendentes = novo, aguardando saque e sacado sem repasse (padrão)"),
   processoId: idDe("do processo").optional(),
   clienteId: idDe("do cliente (os alvarás dos processos dele)").optional(),
+  parados: z.boolean().optional().describe("true: só os parados, que passaram do normal na etapa (expedido ou aguardando saque há mais de 15 dias; sacado há mais de 5 dias sem repassar ao cliente)"),
   limite,
 });
 export type FiltroDeAlvaras = z.infer<typeof filtroDeAlvaras>;
+
+export const filtroDeHonorarios = z.object({
+  situacao: z.enum(["a_receber", "em_atraso", "recebidos", "todos"]).optional().describe("a_receber = o que falta receber, vencido ou não (padrão). em_atraso = venceu e não foi pago. recebidos = parcelas com pagamento marcado."),
+  de: dia.optional().describe("Vence a partir deste dia (AAAA-MM-DD). \"No mês\": o primeiro dia do mês"),
+  ate: dia.optional().describe("Vence até este dia, inclusive (AAAA-MM-DD). \"No mês\": o último dia do mês"),
+  clienteId: idDe("do cliente").optional(),
+  processoId: idDe("do processo").optional(),
+  limite,
+});
+export type FiltroDeHonorarios = z.infer<typeof filtroDeHonorarios>;
+
+export const filtroDeDevedores = z.object({ limite });
+export type FiltroDeDevedores = z.infer<typeof filtroDeDevedores>;
 
 export const filtroDeNegocios = z.object({
   etapa: z.enum(["triagem", "repassado", "concluido", "desistiu", "todos"]).optional().describe("Padrão: triagem"),
@@ -272,7 +286,45 @@ export interface AlvaraNaIa {
   valorRecebido: string | null;
   etapa: string;
   expedidoEm: string | null;
+  /** Quando saiu do estado de antes (o saque, no sacado). */
+  sacadoEm?: string | null;
+  /** Há quantos dias o alvará está na etapa (desde a expedição, ou desde o saque no sacado). */
+  diasNaEtapa?: number | null;
+  /** Passou do normal na etapa: expedido ou aguardando saque há mais de 15 dias, sacado há mais de 5 sem repassar. */
+  parado?: boolean;
   processo: ProcessoCurto;
+}
+
+/** Uma parcela de honorários, com os valores em centavos e em texto ("R$ 1.500,00"): use o texto na resposta. */
+export interface HonorarioNaIa {
+  id: string;
+  descricao: string;
+  situacao: "a_vencer" | "em_atraso" | "parcial" | "paga" | "sem_valor";
+  vencimento: string | null;
+  diasEmAtraso: number;
+  valorCentavos: number | null;
+  valor: string | null;
+  pagoCentavos: number;
+  pago: string;
+  faltaCentavos: number | null;
+  falta: string | null;
+  contrato: string;
+  cliente: { id: string; nome: string } | null;
+  processo: ProcessoCurto | null;
+}
+
+/** Um cliente com honorários vencidos e não pagos. */
+export interface DevedorNaIa {
+  /** O id do cliente. */
+  id: string;
+  nome: string;
+  telefone: string | null;
+  parcelasEmAtraso: number;
+  emAtrasoCentavos: number;
+  emAtraso: string;
+  /** O vencimento mais antigo entre as parcelas em atraso. */
+  maisAntigaDesde: string;
+  diasDoMaisAntigo: number;
 }
 
 export interface NegocioNaIa {
@@ -356,6 +408,10 @@ export interface DadosDoEscritorio {
   documentos(f: FiltroDeDocumentos): Promise<Lista<DocumentoNaIa>>;
   documento(id: string): Promise<(DocumentoNaIa & { texto: string | null }) | null>;
   alvaras(f: FiltroDeAlvaras): Promise<Lista<AlvaraNaIa> & { valorTotal: string }>;
+  /** Honorários a receber, em atraso ou recebidos. Só para quem tem acesso ao Financeiro: sem ele, recusa com `PedidoErrado`. */
+  honorarios(f: FiltroDeHonorarios): Promise<Lista<HonorarioNaIa> & { valorTotalCentavos: number; valorTotal: string }>;
+  /** Quem está devendo. Só para quem tem acesso ao Financeiro. */
+  devedores(f: FiltroDeDevedores): Promise<Lista<DevedorNaIa> & { valorTotalCentavos: number; valorTotal: string }>;
   negocios(f: FiltroDeNegocios): Promise<Lista<NegocioNaIa>>;
   equipe(): Promise<{ itens: (PessoaNaIa & { nome: string; cargo: string | null; oab: string | null; prazosAbertos: number; prazosVencidos: number })[] }>;
   contarPrazo(p: PedidoDeContagemNaIa): Promise<ContagemNaIa>;
@@ -512,7 +568,21 @@ export function ferramentasDoEscritorio(d: DadosDoEscritorio) {
       async (f) => comDica(await d.documentos(f), f.busca, "Nada com essa busca. Tente uma palavra só, ou busque pelo processo (processoId)."),
     ),
     lerDocumento: consulta("Lê o texto de um documento.", z.object({ documentoId: idDe("do documento") }), async ({ documentoId }) => (await d.documento(documentoId)) ?? naoAchou("documento")),
-    buscarAlvaras: consulta("Alvarás judiciais: valor, etapa (novo, aguardando saque, sacado, repassado ao cliente, finalizado) e processo.", filtroDeAlvaras, (f) => d.alvaras(f)),
+    buscarAlvaras: consulta(
+      "Alvarás judiciais: valor, etapa (novo, aguardando saque, sacado, repassado ao cliente, finalizado), há quantos dias estão na etapa e se estão parados. Para \"alvarás parados\", use parados: true.",
+      filtroDeAlvaras,
+      (f) => d.alvaras(f),
+    ),
+    buscarHonorarios: consulta(
+      "Honorários do escritório (parcelas dos contratos): o que falta receber, o que está em atraso e o que já foi recebido, por período de vencimento, cliente ou processo. Os valores vêm em centavos e em texto (\"R$ 1.500,00\"): escreva o texto. Só quem tem acesso ao Financeiro (os sócios e quem eles liberaram); sem acesso, a ferramenta recusa e você diz isso. Para \"honorários a receber no mês\", use de e ate com o primeiro e o último dia do mês.",
+      filtroDeHonorarios,
+      (f) => d.honorarios(f),
+    ),
+    buscarDevedores: consulta(
+      "Quem está devendo honorários: os clientes com parcelas vencidas e não pagas, com o total em atraso, o vencimento mais antigo e o telefone. Só quem tem acesso ao Financeiro; sem acesso, a ferramenta recusa.",
+      filtroDeDevedores,
+      (f) => d.devedores(f),
+    ),
     buscarNegocios: consulta(
       "Novos negócios: pessoas que procuraram o escritório e ainda não viraram processo, com assunto, área e situação da pasta de documentos.",
       filtroDeNegocios,
@@ -763,6 +833,7 @@ A pessoa procura jurisprudência e teses. Você consulta o acervo do Decreta com
 - Contagem sem processo usa o calendário do tribunal do escritório, sem os feriados municipais: diga o calendário que usou (o campo calendario) e ofereça contar no calendário do processo.
 - Datas ditas pela pessoa ("sexta", "semana que vem", "mês que vem"): use o calendário de "Agora". "Na sexta" é a próxima sexta a partir de amanhã; "sexta que vem", dita numa sexta, é daqui a 7 dias. Na dúvida, diga a data que usou.
 - Pedido para lembrar, anotar ou agendar algo: use proporTarefa e diga que a tarefa está pronta no cartão para a pessoa conferir e criar. Se o dia cair em fim de semana ou feriado, avise.
+- Dinheiro dos clientes (quem está devendo, honorários a receber ou em atraso): buscarDevedores e buscarHonorarios. Escreva os valores pelo texto que a ferramenta devolve ("R$ 1.500,00"), sem refazer a conta. A ferramenta recusa quem não tem acesso ao Financeiro: diga isso, sem tentar outro caminho. Você não cobra nem dá baixa; isso é a pessoa, na tela Financeiro.
 - Você não cria, altera nem apaga nada sozinho. Ações (marcar prazo cumprido, criar tarefa, gerar peça) a pessoa faz pelos botões dos cartões ou nas telas do Decreta.
 - Você tem até ${PASSOS} rodadas de consulta por resposta. Faça na mesma rodada as consultas que não dependem uma da outra. Na última rodada não há ferramentas: responda com o que já consultou e diga o que faltou.`;
 

@@ -78,6 +78,7 @@ import {
   type ProcessoDemo,
   type Quem,
 } from "./demonstracao/dados.ts";
+import { criarHonorariosDaDemonstracao } from "./demonstracao/honorarios.ts";
 import { criarNovidades } from "./demonstracao/novidades.ts";
 import { DOMINIO_DA_DEMONSTRACAO, LOGIN_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 import { gerarVolume } from "./demonstracao/volume.ts";
@@ -578,6 +579,17 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
         repassadoEm: a.etapa === "repassado" || a.etapa === "finalizado" ? somarDias(expedidoEm, 6) : null,
       });
     }
+    // Honorários fictícios coerentes com os clientes, processos e alvarás: parcelas pagas, uma em atraso, o êxito sem valor e o alvará da Ana à espera da prestação de contas.
+    await criarHonorariosDaDemonstracao(tx, {
+      organizationId,
+      hoje,
+      pessoa: ids.beatriz,
+      clienteId,
+      processoId,
+      clienteDoProcesso: Object.fromEntries(Object.entries(processosDemo).map(([chave, p]) => [chave, p.cliente])),
+      chavesDoVolume: Object.keys(volume.processos),
+      criadoEm: (dia) => em(dia, "10:00"),
+    });
     for (const [i, a] of [...ATENDIMENTOS, ...volume.atendimentos].entries()) {
       const hora = i < ATENDIMENTOS.length ? "15:30" : `${String(9 + ((i * 7) % 9)).padStart(2, "0")}:${["05", "20", "35", "50"][i % 4]}`;
       await tx.insert(atendimentos).values({ organizationId, clienteId: clienteId[a.cliente]!, processoId: a.processo ? processoId[a.processo]! : null, em: em(somarDias(hoje, -a.haDias), hora), canal: a.canal, resumo: a.resumo, autorId: ids[a.autor] });

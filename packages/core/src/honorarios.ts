@@ -360,6 +360,16 @@ export function resumirFinanceiro(parcelas: ParcelaParaResumo[], hoje: Dia): Res
 }
 
 /* ------------------------------------------------------------------ */
+/* Alvará parado                                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Dias na etapa até o alvará chamar atenção: o dinheiro sacado é do cliente e sai logo. A tela de
+ * Alvarás e o Perguntar usam os mesmos números.
+ */
+export const DIAS_NA_ETAPA_DO_ALVARA = { novo: 15, aguardando_saque: 15, sacado: 5 } as const;
+
+/* ------------------------------------------------------------------ */
 /* Lembretes de cobrança (a régua)                                     */
 /* ------------------------------------------------------------------ */
 

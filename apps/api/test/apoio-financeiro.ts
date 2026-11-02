@@ -51,7 +51,7 @@ export function provedoresDeMentira() {
     const metodo = init.method ?? "GET";
     const cabecalhos = Object.fromEntries(new Headers(init.headers).entries());
     const corpo = init.body ? JSON.parse(String(init.body)) : null;
-    const servico = u.host.includes("asaas") ? "asaas" : u.host.includes("zapsign") ? "zapsign" : "arquivo";
+    const servico = u.host.endsWith("asaas.com") ? "asaas" : u.host.endsWith("api.zapsign.com.br") ? "zapsign" : "arquivo";
     const caminho = u.pathname + u.search;
     chamadas.push({ servico, metodo, caminho, cabecalhos, corpo });
     const falha = falhas.get(`${metodo} ${u.pathname}`);

@@ -55,8 +55,8 @@ export function rotasDasAssinaturas(app: Hono<Ambiente>, deps: DepsDasRotas) {
   /** Pergunta à ZapSign como está. Assinada por todos, o arquivo assinado entra na pasta do cliente. */
   app.post("/assinaturas/:id/atualizar", async (c) => {
     await exigirAdvogado(c);
-    const a = await atualizarAssinatura(dep(), c.get("orgId"), id(c));
-    if (a.situacao === "assinada") await auditar(c, "assinatura.concluida", { assinaturaId: a.id, documentoAssinadoId: a.documentoAssinadoId });
+    const { assinatura: a, concluidaAgora } = await atualizarAssinatura(dep(), c.get("orgId"), id(c));
+    if (concluidaAgora) await auditar(c, "assinatura.concluida", { assinaturaId: a.id, documentoAssinadoId: a.documentoAssinadoId });
     return c.json(noTela(a));
   });
 }

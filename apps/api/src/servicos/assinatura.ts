@@ -45,10 +45,10 @@ const falhaDaZapSign = (err: unknown): never => {
 
 /** Manda o documento da pasta do cliente para assinar. Só PDF e DOCX. */
 export async function enviarParaAssinatura(deps: DepsDaAssinatura, organizationId: string, userId: string, p: PedidoDeEnvio): Promise<Assinatura> {
-  const conta = await contaZapSign(deps, organizationId);
-  if (!conta) falha(409, "sem_zapsign", "A assinatura eletrônica não está ligada. Informe a chave da ZapSign nas Configurações, ou baixe o documento e anexe o assinado à pasta.");
   const doc = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(documentos).where(eq(documentos.id, p.documentoId)))[0]);
   if (!doc) falha(404, "nao_encontrado");
+  const conta = await contaZapSign(deps, organizationId);
+  if (!conta) falha(409, "sem_zapsign", "A assinatura eletrônica não está ligada. Informe a chave da ZapSign nas Configurações, ou baixe o documento e anexe o assinado à pasta.");
   const tipo = doc.mime === "application/pdf" ? "pdf" : doc.mime === MIME_DOCX ? "docx" : null;
   if (!tipo) falha(422, "formato_nao_aceito", "Só PDF e DOCX vão para assinatura.");
   const bytes = await deps.arquivos.read(doc.chave).catch(() => null);
@@ -77,10 +77,10 @@ export async function assinaturasDoDocumento(db: Database, organizationId: strin
  * Pergunta à ZapSign como está a assinatura. Assinada por todos, o arquivo assinado é baixado e fica na mesma pasta do
  * documento original (uma vez só: perguntar de novo não guarda de novo).
  */
-export async function atualizarAssinatura(deps: DepsDaAssinatura, organizationId: string, assinaturaId: string): Promise<Assinatura> {
+export async function atualizarAssinatura(deps: DepsDaAssinatura, organizationId: string, assinaturaId: string): Promise<{ assinatura: Assinatura; concluidaAgora: boolean }> {
   const a = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(assinaturas).where(eq(assinaturas.id, assinaturaId)))[0]);
   if (!a) falha(404, "nao_encontrado");
-  if (a.situacao === "assinada" && a.documentoAssinadoId) return a;
+  if (a.situacao === "assinada" && a.documentoAssinadoId) return { assinatura: a, concluidaAgora: false };
   const conta = await contaZapSign(deps, organizationId);
   if (!conta) falha(409, "sem_zapsign", "A assinatura eletrônica não está ligada neste escritório.");
   let atual;
@@ -92,7 +92,7 @@ export async function atualizarAssinatura(deps: DepsDaAssinatura, organizationId
   const signatarios = a.signatarios.map((s) => ({ ...s, situacao: atual.signatarios.find((x) => x.nome === s.nome)?.situacao ?? s.situacao }));
   if (atual.situacao !== "signed") {
     const [r] = await withTenant(deps.db, organizationId, (tx) => tx.update(assinaturas).set({ signatarios }).where(eq(assinaturas.id, assinaturaId)).returning());
-    return r!;
+    return { assinatura: r!, concluidaAgora: false };
   }
   let guardado: { id: string } | null = null;
   if (atual.arquivoAssinado) {
@@ -120,5 +120,5 @@ export async function atualizarAssinatura(deps: DepsDaAssinatura, organizationId
       .where(eq(assinaturas.id, assinaturaId))
       .returning(),
   );
-  return r!;
+  return { assinatura: r!, concluidaAgora: a.situacao !== "assinada" };
 }

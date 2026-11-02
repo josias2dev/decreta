@@ -7,7 +7,10 @@
 import {
   contarPrazo,
   dataDaPublicacao,
+  DIAS_NA_ETAPA_DO_ALVARA,
   diaDoInstante,
+  diferencaEmDias,
+  formatarCentavos,
   diaPorExtensoCurto,
   formatarDia,
   formatarDocumento,
@@ -59,6 +62,7 @@ import { calendarioDoEscritorio, tribunalPadrao } from "./calendario.ts";
 import { carregarContexto, semIa } from "./contexto.ts";
 import { buscarNoAcervo, conferirCitacaoNoAcervo } from "./jurisprudencia.ts";
 import { quandoDoPrazo } from "./hoje.ts";
+import { parcelasNaTela } from "./honorarios.ts";
 import { pessoasDoEscritorio, type Pessoa } from "./pessoas.ts";
 import { contagemNaTela } from "./prazos.ts";
 import { tituloDaPublicacao } from "./publicacoes.ts";
@@ -117,6 +121,8 @@ export interface Escopo {
   organizationId: string;
   userId: string;
   timezone: string;
+  /** A pessoa vê o Financeiro (sócio, ou liberada na Equipe). Sem isso, as ferramentas de honorários recusam. */
+  financeiro?: boolean;
 }
 
 /** Erro que volta para a IA como resultado da ferramenta (ela corrige o pedido ou explica para a pessoa). */
@@ -126,6 +132,10 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
   const hoje = () => hojeEm(e.timezone);
   const tx = <T>(fn: (tx: Tx) => Promise<T>) => withTenant(e.db, e.organizationId, fn);
   const diaLocal = (d: Date | null) => (d ? diaDoInstante(d, e.timezone) : null);
+  /** Honorários e quem está devendo são dinheiro do escritório: só quem tem acesso ao Financeiro. */
+  const semAcessoAoFinanceiro = () => {
+    if (!e.financeiro) throw new PedidoInvalido("Esta pessoa não tem acesso ao Financeiro: ele é dos sócios e de quem eles liberaram na Equipe. Diga isso a ela, sem tentar outro caminho.");
+  };
 
   // A equipe e o calendário mudam pouco: uma leitura por resposta basta.
   let pessoasP: Promise<Map<string, Pessoa>> | null = null;
@@ -764,11 +774,21 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
     async alvaras(f) {
       const sem = await foraDaIa();
       const etapa = f.etapa ?? "pendentes";
+      const dia = hoje();
       const onde: (SQL | undefined)[] = [processoComIa(sem, alvaras.processoId)];
       if (etapa === "pendentes") onde.push(inArray(alvaras.etapa, ["novo", "aguardando_saque", "sacado"]));
       else if (etapa !== "todos") onde.push(eq(alvaras.etapa, etapa));
       if (f.processoId) onde.push(eq(alvaras.processoId, f.processoId));
       if (f.clienteId) onde.push(eq(processos.clienteId, f.clienteId));
+      // Parado = passou do normal na etapa (os mesmos dias da tela de Alvarás).
+      if (f.parados) {
+        onde.push(
+          or(
+            and(inArray(alvaras.etapa, ["novo", "aguardando_saque"]), lt(alvaras.expedidoEm, somarDias(dia, -DIAS_NA_ETAPA_DO_ALVARA.novo))),
+            and(eq(alvaras.etapa, "sacado"), lt(alvaras.sacadoEm, somarDias(dia, -DIAS_NA_ETAPA_DO_ALVARA.sacado))),
+          ),
+        );
+      }
       return tx(async (t) => {
         const [linhas, [total]] = await Promise.all([
           t
@@ -783,7 +803,98 @@ export function dadosDoEscritorio(e: Escopo): DadosDoEscritorio {
         return {
           total: total?.n ?? 0,
           valorTotal: total?.valor ?? "0",
-          itens: linhas.map(({ a, processo }) => ({ id: a.id, descricao: a.descricao, valor: a.valor, valorRecebido: a.valorRecebido, etapa: a.etapa, expedidoEm: a.expedidoEm, processo })),
+          itens: linhas.map(({ a, processo }) => {
+            // Há quantos dias está na etapa: desde a expedição, ou desde o saque no sacado. Repassado e finalizado não esperam mais.
+            const desde = a.etapa === "sacado" ? a.sacadoEm : a.etapa === "novo" || a.etapa === "aguardando_saque" ? a.expedidoEm : null;
+            const diasNaEtapa = desde ? diferencaEmDias(desde, dia) : null;
+            const limiteDaEtapa = a.etapa === "novo" || a.etapa === "aguardando_saque" || a.etapa === "sacado" ? DIAS_NA_ETAPA_DO_ALVARA[a.etapa] : null;
+            return {
+              id: a.id,
+              descricao: a.descricao,
+              valor: a.valor,
+              valorRecebido: a.valorRecebido,
+              etapa: a.etapa,
+              expedidoEm: a.expedidoEm,
+              sacadoEm: a.sacadoEm,
+              diasNaEtapa,
+              parado: diasNaEtapa !== null && limiteDaEtapa !== null && diasNaEtapa > limiteDaEtapa,
+              processo,
+            };
+          }),
+        };
+      });
+    },
+
+    async honorarios(f) {
+      semAcessoAoFinanceiro();
+      const sem = await foraDaIa();
+      const dia = hoje();
+      const situacao = f.situacao ?? "a_receber";
+      return tx(async (t) => {
+        const todas = await parcelasNaTela(t, dia, { clienteId: f.clienteId, processoId: f.processoId });
+        const doEscritorio = todas.filter((p) => (!p.cliente || !sem.clientes.includes(p.cliente.id)) && (!p.processo || !sem.processos.includes(p.processo.id)));
+        const certas = doEscritorio
+          .filter((p) => (situacao === "todos" ? true : situacao === "a_receber" ? (p.falta ?? 0) > 0 : situacao === "em_atraso" ? p.situacao === "em_atraso" : p.pago > 0))
+          .filter((p) => (!f.de || (p.vencimento !== null && p.vencimento >= f.de)) && (!f.ate || (p.vencimento !== null && p.vencimento <= f.ate)))
+          .sort((a, b) => (a.vencimento ?? "9999-12-31").localeCompare(b.vencimento ?? "9999-12-31"));
+        // A soma é do que a pergunta pede: o que falta (a receber, em atraso), o que foi pago (recebidos) ou o valor das parcelas (todos).
+        const valorTotalCentavos = certas.reduce((s, p) => s + (situacao === "recebidos" ? p.pago : situacao === "todos" ? (p.valor ?? 0) : (p.falta ?? 0)), 0);
+        return {
+          total: certas.length,
+          valorTotalCentavos,
+          valorTotal: formatarCentavos(valorTotalCentavos),
+          itens: certas.slice(0, f.limite ?? LIMITE).map((p) => ({
+            id: p.id,
+            descricao: p.descricao,
+            situacao: p.situacao === "cancelada" ? ("sem_valor" as const) : p.situacao,
+            vencimento: p.vencimento,
+            diasEmAtraso: p.diasEmAtraso,
+            valorCentavos: p.valor,
+            valor: p.valor === null ? null : formatarCentavos(p.valor),
+            pagoCentavos: p.pago,
+            pago: formatarCentavos(p.pago),
+            faltaCentavos: p.falta,
+            falta: p.falta === null ? null : formatarCentavos(p.falta),
+            contrato: p.contratoTitulo,
+            cliente: p.cliente,
+            processo: p.processo,
+          })),
+        };
+      });
+    },
+
+    async devedores(f) {
+      semAcessoAoFinanceiro();
+      const sem = await foraDaIa();
+      const dia = hoje();
+      return tx(async (t) => {
+        const atrasadas = (await parcelasNaTela(t, dia)).filter((p) => p.situacao === "em_atraso" && p.cliente && !sem.clientes.includes(p.cliente.id) && (!p.processo || !sem.processos.includes(p.processo.id)));
+        const porCliente = new Map<string, { nome: string; centavos: number; n: number; maisAntiga: string }>();
+        for (const p of atrasadas) {
+          const g = porCliente.get(p.cliente!.id) ?? { nome: p.cliente!.nome, centavos: 0, n: 0, maisAntiga: p.vencimento! };
+          g.centavos += p.falta ?? 0;
+          g.n++;
+          if (p.vencimento! < g.maisAntiga) g.maisAntiga = p.vencimento!;
+          porCliente.set(p.cliente!.id, g);
+        }
+        const ordenados = [...porCliente.entries()].sort(([, a], [, b]) => b.centavos - a.centavos || a.nome.localeCompare(b.nome));
+        const ids = ordenados.slice(0, f.limite ?? LIMITE).map(([id]) => id);
+        const telefones = new Map((ids.length ? await t.select({ id: clientes.id, telefone: clientes.telefone }).from(clientes).where(inArray(clientes.id, ids)) : []).map((c) => [c.id, c.telefone]));
+        const valorTotalCentavos = ordenados.reduce((s, [, g]) => s + g.centavos, 0);
+        return {
+          total: ordenados.length,
+          valorTotalCentavos,
+          valorTotal: formatarCentavos(valorTotalCentavos),
+          itens: ordenados.slice(0, f.limite ?? LIMITE).map(([id, g]) => ({
+            id,
+            nome: g.nome,
+            telefone: telefones.get(id) ? formatarTelefone(telefones.get(id)!) : null,
+            parcelasEmAtraso: g.n,
+            emAtrasoCentavos: g.centavos,
+            emAtraso: formatarCentavos(g.centavos),
+            maisAntigaDesde: g.maisAntiga,
+            diasDoMaisAntigo: diferencaEmDias(g.maisAntiga, dia),
+          })),
         };
       });
     },
