@@ -25,7 +25,7 @@ const ETAPAS: { id: EtapaNegocio; rotulo: string }[] = [
   { id: "desistiu", rotulo: "Desistiram" },
 ];
 const PASTA: Record<Pasta, { rotulo: string; classe: string }> = {
-  completa: { rotulo: "Pasta completa", classe: "dc-selo--ok" },
+  completa: { rotulo: "Pasta completa", classe: "dc-selo--cumprido" },
   faltam_documentos: { rotulo: "Faltam documentos", classe: "dc-selo--breve" },
   sem_pasta: { rotulo: "Sem pasta", classe: "dc-selo--prazo" },
 };
@@ -43,25 +43,26 @@ export function NegociosPage() {
   const selecionado = itens.find((i) => i.id === aberto) ?? null;
   const sub = q.data ? `${n("triagem")} em triagem · ${n("repassado")} ${n("repassado") === 1 ? "repassado" : "repassados"} a um advogado` : " ";
 
+  /** O cartão do quadro: em cima a situação da pasta e o dia; embaixo, quem e o quê, com quem cuida. */
   const cartao = (i: Negocio) => {
     const feitos = i.checklist.filter((c) => c.feito).length;
     return (
-      <button key={i.id} type="button" className="dc-cartao w-full cursor-pointer text-left" onClick={() => setAberto(i.id)}>
-        <span className="flex items-start justify-between gap-2">
-          <span className="dc-cartao__titulo">{i.nome}</span>
-          <span className="dc-nota dc-num flex-none">{diaCurto(diaDoInstante(i.em))}</span>
-        </span>
-        <span className="dc-cartao__linha">{[i.assunto, i.area].filter(Boolean).join(" · ")}</span>
-        <span className="mt-1.5 flex items-center gap-2">
-          <span className={cn("dc-selo", PASTA[i.pasta].classe)}>{PASTA[i.pasta].rotulo}</span>
-          {i.checklist.length > 0 && (
-            <span className="dc-nota dc-num">
-              {feitos}/{i.checklist.length}
-            </span>
-          )}
-          <span className="ml-auto">
-            <Avatar pessoa={i.responsavel} />
+      <button key={i.id} type="button" className="dc-cartao dc-cartao-quadro" onClick={() => setAberto(i.id)}>
+        <span className="dc-cartao-quadro__topo">
+          <span className={cn("dc-pasta", `dc-pasta--${i.pasta}`)}>
+            {PASTA[i.pasta].rotulo}
+            {i.checklist.length > 0 && (
+              <span className="dc-num">
+                {feitos}/{i.checklist.length}
+              </span>
+            )}
           </span>
+          <span className="dc-cartao-quadro__lado dc-num">{diaCurto(diaDoInstante(i.em))}</span>
+        </span>
+        <span className="dc-cartao-quadro__titulo">{i.nome}</span>
+        <span className="dc-cartao-quadro__desc dc-cartao-quadro__desc-linha">
+          <span>{[i.assunto, i.area].filter(Boolean).join(" · ")}</span>
+          <Avatar pessoa={i.responsavel} />
         </span>
       </button>
     );
@@ -91,6 +92,7 @@ export function NegociosPage() {
           <div className="dc-chips">
             {ETAPAS.map((e) => (
               <Chip key={e.id} ligado={etapa === e.id} n={n(e.id)} onClick={() => setEtapa(e.id)}>
+                <span className={`dc-etapa-ponto dc-etapa dc-etapa--${e.id}`} aria-hidden />
                 {e.rotulo}
               </Chip>
             ))}
@@ -120,8 +122,8 @@ export function NegociosPage() {
           {ETAPAS.map((e) => {
             const daEtapa = itens.filter((i) => i.etapa === e.id);
             return (
-              <ColunaDoQuadro key={e.id} id={`negocios-${e.id}`} titulo={e.rotulo} valor={n(e.id)}>
-                {daEtapa.length ? daEtapa.map(cartao) : e.id === "triagem" ? <div className="dc-painel">{vazio(e.id)}</div> : <div className="dc-quadro__vazio">Nada aqui</div>}
+              <ColunaDoQuadro key={e.id} id={`negocios-${e.id}`} className={`dc-etapa dc-etapa--${e.id}`} titulo={e.rotulo} valor={n(e.id)}>
+                {daEtapa.length ? daEtapa.map(cartao) : <div className="dc-quadro__vazio">{e.id === "triagem" ? "Quem procura o escritório entra aqui até a pasta ficar pronta." : "Nada aqui"}</div>}
               </ColunaDoQuadro>
             );
           })}
@@ -270,7 +272,7 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
               {n.checklist.map((item, k) => (
                 <label key={k} className="dc-linhas__item cursor-pointer items-center">
                   <input type="checkbox" className="dc-checa" checked={item.feito} onChange={(e) => mudar.mutate({ checklist: n.checklist.map((x, j) => (j === k ? { ...x, feito: e.target.checked } : x)) })} />
-                  <span className={cn("text-[14px]", item.feito ? "text-[var(--tinta)]" : "text-[var(--tinta-2)]")}>{item.texto}</span>
+                  <span className={cn("dc-t-corpo", item.feito ? "text-[var(--tinta)]" : "text-[var(--tinta-2)]")}>{item.texto}</span>
                 </label>
               ))}
             </div>

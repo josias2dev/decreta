@@ -1,7 +1,7 @@
 /** Alvarás: do expedido ao repassado para o cliente, com quanto falta receber. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CircleCheck, Landmark, Plus, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
@@ -94,15 +94,15 @@ export function AlvarasPage() {
   const sub = !d ? " " : filtrando ? `${alvaras(achados)} ${achados === 1 ? "encontrado" : "encontrados"}` : `${alvaras(soma("novo", "aguardando_saque", "sacado").n)} em andamento`;
   const selecionado = todas.flatMap((e) => e.itens).find((i) => i.id === aberto) ?? null;
 
-  /** No desenho do cartão da agenda: em cima, na cor da etapa, o valor e há quanto tempo está nela (o finalizado não precisa); embaixo, quem e o quê. */
+  /** O cartão do quadro: em cima o valor e há quanto tempo está na etapa (o finalizado não precisa); embaixo, quem e o quê. */
   const cartao = (a: Item) => (
-    <button key={a.id} type="button" className={cn("dc-cartao dc-alvara", naEtapa(a).parado && "is-parado")} onClick={() => setAberto(a.id)}>
-      <span className="dc-alvara__topo">
-        <span className="dc-alvara__valor">{dinheiro(a.valor)}</span>
+    <button key={a.id} type="button" className="dc-cartao dc-cartao-quadro" onClick={() => setAberto(a.id)}>
+      <span className="dc-cartao-quadro__topo">
+        <span className="dc-cartao-quadro__valor">{dinheiro(a.valor)}</span>
         {a.etapa !== "finalizado" && <Quando a={a} />}
       </span>
-      <span className="dc-alvara__cliente">{a.cliente ?? a.processo.titulo}</span>
-      <span className="dc-alvara__desc">{a.descricao}</span>
+      <span className="dc-cartao-quadro__titulo">{a.cliente ?? a.processo.titulo}</span>
+      <span className="dc-cartao-quadro__desc">{a.descricao}</span>
     </button>
   );
   const campo = <CampoDeBusca valor={texto} aoMudar={setTexto} rotulo="Buscar alvará" placeholder="Cliente, processo ou descrição" />;
@@ -173,16 +173,16 @@ export function AlvarasPage() {
         <Carregando />
       ) : (
         <>
-          <div className="dc-numeros dc-numeros--alvaras" aria-label="Totais dos alvarás">
-            <Total icone={Landmark} etapa="aguardando_saque" rotulo="A sacar" {...soma("novo", "aguardando_saque")} />
-            <Total icone={Wallet} etapa="sacado" rotulo="A repassar" {...soma("sacado")} />
-            <Total icone={CircleCheck} etapa="repassado" rotulo="Já repassado" {...soma("repassado", "finalizado")} />
+          <div className="dc-numeros dc-numeros--totais" aria-label="Totais dos alvarás">
+            <Total rotulo="A sacar" {...soma("novo", "aguardando_saque")} />
+            <Total rotulo="A repassar" {...soma("sacado")} />
+            <Total rotulo="Já repassado" {...soma("repassado", "finalizado")} />
           </div>
           <div className="dc-filtros">
             {campo}
             {chipParados}
           </div>
-          <Quadro id="alvaras" className="dc-quadro--alvaras">
+          <Quadro id="alvaras">
             {etapas.map((e) => (
               <ColunaDoQuadro key={e.etapa} id={`alvaras-${e.etapa}`} className={`dc-etapa dc-etapa--${e.etapa}`} titulo={ETAPA[e.etapa]} valor={e.itens.length} sub={dinheiro(e.total)}>
                 {e.itens.length ? e.itens.map(cartao) : <div className="dc-quadro__vazio">{filtrando ? "Nada encontrado" : "Nada aqui"}</div>}
@@ -196,18 +196,13 @@ export function AlvarasPage() {
   );
 }
 
-/** Um dos três totais de cima, com o ícone na cor da etapa a que se refere. */
-function Total({ icone: Icone, etapa, rotulo, valor, n }: { icone: LucideIcon; etapa: EtapaAlvara; rotulo: string; valor: number; n: number }) {
+/** Um dos três totais de cima, nos mesmos números do Hoje. */
+function Total({ rotulo, valor, n }: { rotulo: string; valor: number; n: number }) {
   return (
-    <div className={`dc-contador dc-total dc-etapa--${etapa}`}>
-      <span className="dc-total__icone" aria-hidden>
-        <Icone />
-      </span>
-      <span className="dc-total__texto">
-        <span className="dc-total__rotulo">{rotulo}</span>
-        <span className="dc-total__valor">{dinheiro(valor)}</span>
-      </span>
-      <span className="dc-total__n">{alvaras(n)}</span>
+    <div className="dc-contador">
+      <span className="dc-contador__n">{dinheiro(valor)}</span>
+      <span className="dc-contador__rotulo">{rotulo}</span>
+      <span className="dc-contador__fim">{alvaras(n)}</span>
     </div>
   );
 }
