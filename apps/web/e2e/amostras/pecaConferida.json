@@ -1,0 +1,119 @@
+{
+  "path": "/pecas/a02ac3c8-2a8f-45ac-b95a-0961695ab883",
+  "corpo": {
+    "id": "a02ac3c8-2a8f-45ac-b95a-0961695ab883",
+    "processoId": "6c2c51e3-6836-45ed-adf9-f39e1829a003",
+    "prazoId": "a0a5adc9-c1f9-44c0-8694-e7c4e0ba3470",
+    "tipo": "manifestacao-laudo",
+    "titulo": "Manifestação sobre laudo pericial · Marina Duarte",
+    "instrucoes": "Concordar com o laudo e rebater o pedido da ré.",
+    "texto": "# Excelentíssimo Senhor Doutor Juiz de Direito da 2ª Vara Cível da Comarca de Joinville\n\n**MARINA DUARTE**, já qualificada nos autos, vem manifestar-se sobre o laudo pericial.\n\n## 1. Dos fatos\n\nO perito concluiu pelo nexo causal com o acidente de trânsito de 18/01/2026 (evento 87).\n\nO laudo fixou a incapacidade em 45% (evento 87).\n\nA seguradora sempre tratou a autora com descaso durante o atendimento do sinistro. [A COMPROVAR: prova do atendimento do sinistro]\n\nA intimação ocorreu em, o protocolo realizado na data de assegura a tempestividade. [A COMPROVAR: sem fonte nos autos]\n\n## 2. Do direito\n\nA indenização acompanha o grau da invalidez. [JURISPRUDÊNCIA: seguro invalidez parcial proporcional]\n\n## 3. Dos pedidos\n\nRequer a homologação do laudo, com o pagamento de R$ 77.000,00.\n\n[cidade], [data].\n\nBeatriz Souza, OAB/SC 41.233.",
+    "situacao": "rascunho",
+    "atualizadaEm": "2026-10-29T12:30:00.000Z",
+    "rodape": "Gerado por IA. Confira nos autos.",
+    "revisao": null,
+    "modelos": [
+      {
+        "id": "23c63a34-9524-4a0f-b89d-702023eed162",
+        "titulo": "Contrarrazões de apelação · servidor público contra o município"
+      },
+      {
+        "id": "a7438dce-5639-4836-8df8-051fc0045744",
+        "titulo": "Manifestação sobre laudo · invalidez no seguro de vida"
+      }
+    ],
+    "revisoes": [],
+    "semIa": false,
+    "verificacao": null,
+    "partes": [
+      {
+        "nome": "Marina Duarte",
+        "tipo": "pf",
+        "polo": "ativo",
+        "cliente": true
+      },
+      {
+        "nome": "Seguradora Alfa S.A.",
+        "tipo": null,
+        "polo": "passivo",
+        "cliente": false
+      }
+    ],
+    "geradaPorIa": true,
+    "conferencia": {
+      "em": "2026-10-29T12:30:00.000Z",
+      "fatos": [
+        {
+          "fonte": {
+            "ref": "D2",
+            "tipo": "documento",
+            "folha": null,
+            "evento": 87,
+            "rotulo": "Laudo pericial.docx · evento 87",
+            "documentoId": "3eedc508-d895-4432-9c98-41864bdaf0b0"
+          },
+          "motivo": null,
+          "trecho": "há nexo causal entre o acidente de trânsito de 18/01/2026 e as lesões",
+          "situacao": "conferido",
+          "afirmacao": "O perito concluiu pelo nexo causal com o acidente de trânsito de 18/01/2026 (evento 87)."
+        },
+        {
+          "fonte": {
+            "ref": "D2",
+            "tipo": "documento",
+            "folha": null,
+            "evento": 87,
+            "rotulo": "Laudo pericial.docx · evento 87",
+            "documentoId": "3eedc508-d895-4432-9c98-41864bdaf0b0"
+          },
+          "motivo": "O valor 45% não está em Laudo pericial.docx · evento 87.",
+          "trecho": "Incapacidade parcial e permanente, fixada em 40% segundo a tabela da Lei 6.194/74",
+          "situacao": "com_aviso",
+          "afirmacao": "O laudo fixou a incapacidade em 45% (evento 87)."
+        },
+        {
+          "fonte": null,
+          "motivo": "Sem fonte nos autos.",
+          "trecho": null,
+          "situacao": "a_comprovar",
+          "afirmacao": "A seguradora sempre tratou a autora com descaso durante o atendimento do sinistro."
+        },
+        {
+          "fonte": null,
+          "motivo": "A IA não ligou esta frase a nenhuma fonte.",
+          "trecho": null,
+          "situacao": "a_comprovar",
+          "afirmacao": "A intimação ocorreu em, o protocolo realizado na data de assegura a tempestividade."
+        }
+      ],
+      "avisos": [
+        {
+          "tipo": "valor",
+          "trecho": "R$ 77.000,00",
+          "mensagem": "O valor R$ 77.000,00 não aparece nos autos."
+        }
+      ],
+      "resumo": {
+        "comAviso": 1,
+        "aComprovar": 2,
+        "conferidos": 1
+      },
+      "semLigacao": null,
+      "hashDoTexto": "d79c86658af415dbf1c7ee90b68738a479dfe1ca49a3d93fa1bc7e14e2ea88b2",
+      "procedencia": {
+        "codigo": "f374b6b",
+        "chamadas": [
+          {
+            "alias": "mock-model-id",
+            "metodo": "ligar-fatos",
+            "modelo": "modelo-de-teste",
+            "prompt": "76f9fe883e4c"
+          }
+        ]
+      },
+      "atual": true
+    },
+    "estrategia": null,
+    "julgados": []
+  }
+}

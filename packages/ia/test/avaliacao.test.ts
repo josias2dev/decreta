@@ -5,8 +5,8 @@
  * de modelo ou de prompt: `bun run avaliar`.
  */
 import { describe, expect, test } from "bun:test";
-import { MockLanguageModelV4 } from "ai/test";
-import { avaliarConjunto, avaliarPrazo, avaliarResumo, placarEmTexto, type CasoDePrazo, type CasoDeResumo, type ConjuntoOuro } from "../src/avaliacao.ts";
+import { convertArrayToReadableStream, MockLanguageModelV4 } from "ai/test";
+import { avaliarConjunto, avaliarPeca, avaliarPrazo, avaliarResumo, placarEmTexto, type CasoDePeca, type CasoDePrazo, type CasoDeResumo, type ConjuntoOuro } from "../src/avaliacao.ts";
 import { CONJUNTO_OURO } from "../src/conjunto-ouro.ts";
 import type { Ia, MetodoIa } from "../src/index.ts";
 
@@ -18,6 +18,19 @@ const responde = (text: string): Resultado => ({
   warnings: [],
 });
 
+const textoEmPedacos = (texto: string) => ({
+  stream: convertArrayToReadableStream([
+    { type: "stream-start" as const, warnings: [] },
+    { type: "text-start" as const, id: "t" },
+    { type: "text-delta" as const, id: "t", delta: texto },
+    { type: "text-end" as const, id: "t" },
+    { type: "finish" as const, finishReason: { unified: "stop" as const, raw: "stop" }, usage: { inputTokens: { total: 100, noCache: 100, cacheRead: 0, cacheWrite: 0 }, outputTokens: { total: 20, text: 20, reasoning: 0 } } },
+  ]),
+});
+
+/** A IA de um caso de peça: a instrução do caso diz qual é, porque dois casos usam os mesmos autos. */
+const pecaDoPedido = (conjunto: ConjuntoOuro, pedido: string) => conjunto.pecas.find((c) => pedido.includes(JSON.stringify(c.instrucoes).slice(1, -1)));
+
 /** Responde, para cada pedido, a resposta do caso cujo material está no pedido. */
 function iaDoGabarito(conjunto: ConjuntoOuro, trocar: (metodo: MetodoIa, resposta: unknown) => unknown = (_m, r) => r): Ia {
   return {
@@ -25,15 +38,65 @@ function iaDoGabarito(conjunto: ConjuntoOuro, trocar: (metodo: MetodoIa, respost
       new MockLanguageModelV4({
         doGenerate: async (o) => {
           const pedido = JSON.stringify(o.prompt);
+          if (metodo === "ligar-fatos") return responde(JSON.stringify({ fatos: pecaDoPedido(conjunto, pedido)?.gabarito.fatos ?? [] }));
           const caso = [...conjunto.prazos.map((c) => ({ marca: c.publicacao.texto.slice(0, 60), gabarito: c.gabarito as unknown })), ...conjunto.resumos.map((c) => ({ marca: c.contexto.slice(0, 60), gabarito: c.gabarito as unknown }))].find((c) =>
             pedido.includes(JSON.stringify(c.marca).slice(1, -1)),
           );
           return responde(JSON.stringify(trocar(metodo, caso?.gabarito ?? {})));
         },
+        doStream: async (o) => textoEmPedacos(pecaDoPedido(conjunto, JSON.stringify(o.prompt))?.gabarito.texto ?? ""),
       }),
     transcrever: async () => "",
   };
 }
+
+/** A IA que escreve esta peça e liga estes fatos. */
+function iaDaPeca(texto: string, fatos: unknown[] = []): Ia {
+  return {
+    modelo: () => new MockLanguageModelV4({ doGenerate: async () => responde(JSON.stringify({ fatos })), doStream: async () => textoEmPedacos(texto) }),
+    transcrever: async () => "",
+  };
+}
+
+describe("as peças do conjunto-ouro", () => {
+  const contestacao = CONJUNTO_OURO.pecas.find((c) => c.id === "contestacao-peticao-ficticia") as CasoDePeca;
+  const comOGabarito = (troca: (texto: string) => string) => iaDaPeca(troca(contestacao.gabarito.texto), contestacao.gabarito.fatos);
+
+  test("tem o teste com os concorrentes, a lacuna silenciosa e o julgado de memória", () => {
+    expect(CONJUNTO_OURO.pecas.map((c) => c.id)).toEqual(["contestacao-peticao-ficticia", "replica-sem-datas-na-tempestividade", "julgado-so-do-acervo"]);
+  });
+
+  test("a peça certa passa, com o texto e a ligação do gabarito", async () => {
+    expect(await avaliarPeca(comOGabarito((t) => t), contestacao)).toMatchObject({ acertou: true, nota: 1, falhas: [] });
+  });
+
+  test("a prova inventada do Astrea reprova, mesmo com a IA dizendo a fonte", async () => {
+    const frase = "Os registros do checkout mostram a entrega no prazo.";
+    const r = await avaliarPeca(iaDaPeca(`${contestacao.gabarito.texto}\n\n${frase}`, [...contestacao.gabarito.fatos, { afirmacao: frase, fonte: "D1", trecho: "registros do checkout", falta: null }]), contestacao);
+    expect(r.acertou).toBe(false);
+    expect(r.falhas.join(" ")).toContain("prova que não foi anexada");
+  });
+
+  test("a frase quebrada, a etiqueta vazada e a ré tratada como física reprovam", async () => {
+    const quebrada = await avaliarPeca(comOGabarito((t) => t.replace("Requer a improcedência do pedido.", "A intimação ocorreu em, o protocolo realizado na data de assegura a tempestividade.")), contestacao);
+    expect(quebrada.falhas.join(" ")).toContain("Frase quebrada");
+    const etiqueta = await avaliarPeca(comOGabarito((t) => t.replace("Requer a improcedência", '<mention id="1"> Requer a improcedência')), contestacao);
+    expect(etiqueta.falhas.join(" ")).toContain("Marca interna");
+    const parte = await avaliarPeca(comOGabarito((t) => t.replace("**TESTE CLIENTE FICTICIO**, pessoa jurídica de direito privado,", "TESTE CLIENTE FICTICIO, brasileira, portadora do CPF,")), contestacao);
+    expect(parte.falhas.join(" ")).toContain("pessoa jurídica");
+  });
+
+  test("o julgado de memória e o valor que não está nos autos reprovam", async () => {
+    const r = await avaliarPeca(comOGabarito((t) => t.replace("Requer a improcedência do pedido.", "Conforme o REsp 1.737.412/SE, cabe devolver R$ 9.999,00.")), contestacao);
+    expect(r.falhas.join(" ")).toContain("REsp 1.737.412/SE não veio do acervo");
+    expect(r.falhas.join(" ")).toContain("O valor R$ 9.999,00 não aparece nos autos");
+  });
+
+  test("a IA que falha não vira nota boa", async () => {
+    const ia: Ia = { modelo: () => new MockLanguageModelV4({ doStream: async () => { throw new Error("o gateway caiu"); } }), transcrever: async () => "" };
+    expect(await avaliarPeca(ia, contestacao)).toMatchObject({ acertou: false, nota: 0 });
+  });
+});
 
 describe("conjunto-ouro", () => {
   test("com as respostas do gabarito, acerta tudo: o conjunto e o motor de prazos concordam no dia exato", async () => {
@@ -42,6 +105,7 @@ describe("conjunto-ouro", () => {
     expect(falhas).toEqual([]);
     expect(placar.prazos.acertos).toBe(CONJUNTO_OURO.prazos.length);
     expect(placar.resumos.nota).toBe(1);
+    expect(placar.pecas).toEqual({ nota: 1, total: CONJUNTO_OURO.pecas.length, problemas: 0 });
     expect(placar.citacoesForaDaFonte).toBe(0);
   });
 

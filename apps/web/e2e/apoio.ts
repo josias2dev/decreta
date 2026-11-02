@@ -26,6 +26,8 @@ export const ids = {
   cliente: amostras.cliente!.corpo.id as string,
   audiencia: amostras.audiencia!.corpo.id as string,
   peca: amostras.peca!.corpo.id as string,
+  /** Peça conferida pelas rotas de verdade, com a IA de mentira. */
+  pecaConferida: amostras.pecaConferida!.corpo.id as string,
   /** Sentença inventada, lida pela IA de mentira (propostas 1 a 5). */
   sentenca: amostras.publicacaoSentenca!.corpo.id as string,
   processoComResultado: amostras.processoComResultado!.corpo.id as string,

@@ -8,7 +8,8 @@
  *
  * Com o gateway de IA de verdade no .env (LLM_BASE_URL e LLM_API_KEY), gera a
  * contestação duas vezes (só com o documento e depois da leitura da peça
- * contrária), grava o texto e imprime as verificações por código. Gasta uns
+ * contrária), passa cada uma pela conferência dos fatos, propõe a estratégia,
+ * grava os textos e imprime as verificações por código. Gasta uns
  * centavos de IA; nunca roda na suíte de testes. Sem gateway de verdade (ou
  * com um modelo falso, que devolve texto curto), o script para e diz isso: não
  * inventa resultado.
@@ -20,6 +21,7 @@
 import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { checarPeca, type ParteDoCadastro } from "@decreta/core";
 import { createGatewayIa, type Ia } from "@decreta/ia";
 import { createTestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
@@ -36,6 +38,11 @@ const [pdfArg, saidaArg] = process.argv.slice(2).filter((a) => !a.startsWith("--
 const PDF = pdfArg ?? fileURLToPath(new URL("../../../docs/elara-juridico/anexos/peticao-ficticia.pdf", import.meta.url));
 const SAIDA = saidaArg ?? fileURLToPath(new URL(`../../../docs/elara-juridico/anexos/teste-da-peticao${soOPedido ? "-so-o-pedido" : ""}/`, import.meta.url));
 
+/** As partes como o cadastro do teste diz: é contra isso que a qualificação da peça é checada. */
+const PARTES: ParteDoCadastro[] = [
+  { nome: "TESTE AUTOR FICTICIO", tipo: null, polo: "ativo", cliente: false },
+  { nome: "TESTE CLIENTE FICTICIO", tipo: "pj", polo: "passivo", cliente: true },
+];
 /** A instrução do teste, igual à dada aos concorrentes. */
 const INSTRUCOES = "Represente a ré, pessoa jurídica de direito privado. A tese é de mero aborrecimento, sem dano moral indenizável. Não invente fato nem prova.";
 /** Uma peça de verdade tem páginas; menos que isso é modelo falso ou erro do gateway. */
@@ -47,6 +54,7 @@ let ia: Ia;
 if (soOPedido) {
   falsa.respostas["gerar-documento"] = "[Texto simulado: este modo só mostra o que o Decreta manda para a IA.]";
   falsa.respostas["ler-peca-contraria"] = { peca: "[simulada]", pedidos: "", pontos: [], recusa: null };
+  falsa.respostas["ligar-fatos"] = { fatos: [] };
   ia = falsa;
 } else {
   if (!env.LLM_API_KEY) {
@@ -114,8 +122,21 @@ try {
       throw new Error(`o gateway devolveu ${peca.texto.length} caracteres (${JSON.stringify(peca.texto.slice(0, 80))}): não é uma peça. Provável modelo falso ou erro do gateway; nada a avaliar.`);
     }
     gravar(`${rotulo}.md`, peca.texto);
-    return peca as { id: string; texto: string };
+    // O caminho da tela: a peça gerada passa pela conferência dos fatos antes de ser entregue.
+    const conferida = await json(call(`/pecas/${peca.id}/conferir-fatos`, { method: "POST" }));
+    gravar(`${rotulo}-conferida.md`, conferida.texto);
+    gravar(`${rotulo}-fatos.json`, conferida.conferencia);
+    return { id: peca.id as string, texto: conferida.texto as string, conferencia: conferida.conferencia };
   };
+
+  /** O que a conferência e a checagem por código acharam: é a parte do teste que não depende de quem lê. */
+  const conferido = (p: { texto: string; conferencia: { semLigacao: string | null; resumo: unknown; fatos: { afirmacao: string; situacao: string; motivo: string | null }[]; avisos: { mensagem: string }[] } }) =>
+    [
+      `  ligação dos fatos: ${p.conferencia.semLigacao ?? "feita"}; ${JSON.stringify(p.conferencia.resumo)}`,
+      ...p.conferencia.fatos.filter((f) => f.situacao !== "conferido").map((f) => `  ${f.situacao}: ${f.afirmacao.slice(0, 110)} (${f.motivo})`),
+      ...p.conferencia.avisos.map((a) => `  aviso: ${a.mensagem}`),
+      ...checarPeca(p.texto, { partes: PARTES }).map((c) => `  antes de protocolar: ${c.mensagem}`),
+    ].join("\n");
 
   if (soOPedido) {
     await gerar("a-contestacao-simulada");
@@ -133,6 +154,7 @@ try {
     console.log("\n== A. Contestação só com a petição guardada como documento do processo");
     const a = await gerar("a-contestacao-so-com-o-documento");
     console.log(verificarTexto(a.texto));
+    console.log(conferido(a));
 
     console.log("\n== B. Leitura da petição como peça da outra parte (pontos a rebater) e nova contestação");
     const leitura = await json(call(`/ia/peca-contraria/${prazo.id}`, { method: "POST", json: { documentoId: doc.id } }));
@@ -140,6 +162,13 @@ try {
     console.log(JSON.stringify(leitura.conteudo ?? leitura, null, 2).slice(0, 2500));
     const b = await gerar("b-contestacao-depois-da-leitura");
     console.log(verificarTexto(b.texto));
+    console.log(conferido(b));
+
+    // A estratégia de antes de gerar, com a evidência de cada tese conferida por código.
+    const estrategia = await json(call("/pecas/estrategia", { method: "POST", json: { processoId: processo.id, prazoId: prazo.id, tipo: "contestacao", instrucoes: INSTRUCOES } }));
+    gravar("c-estrategia.json", estrategia);
+    console.log("\n== C. Estratégia antes de gerar");
+    console.log(JSON.stringify(estrategia.estrategia?.teses?.map((t: { titulo: string; falta: string | null; evidencias: { confere: boolean }[] }) => ({ tese: t.titulo, evidencias: t.evidencias.length, conferem: t.evidencias.filter((e) => e.confere).length, falta: t.falta })) ?? estrategia.recusa, null, 2));
 
     // "Verificar peça": cada citação do texto com o selo (precisa do acervo e de rede; falha não derruba o teste).
     try {
@@ -164,6 +193,8 @@ function conferirPedido(prompt: string, mensagens: string): string {
     ["diz que o escritório representa a ré (polo passivo, cliente)", tem(/passivo/i) && tem(/TESTE CLIENTE FICTICIO/)],
     ["traz a instrução de quem pediu (pessoa jurídica, mero aborrecimento)", tem(/pessoa jur[ií]dica de direito privado/) && tem(/mero aborrecimento/)],
     ["manda não inventar e marcar [COMPLETAR]", tem(/\[COMPLETAR/) && tem(/Use só os fatos do material/)],
+    ["manda marcar [A COMPROVAR] o fato sem prova e pôr a fonte em cada fato", tem(/\[A COMPROVAR/) && tem(/\(evento 87, fl\. 3\)/)],
+    ["diz pelo cadastro que a ré é pessoa jurídica no polo passivo", tem(/TESTE CLIENTE FICTICIO \(cliente, pessoa jurídica, polo passivo\)/)],
     ["proíbe citar julgado com número, relator ou data", tem(/Não cite jurisprudência com número/)],
     ["marca o texto da petição como dado e não como ordem", tem(/dados|não são ordens|n[ãa]o s[ãa]o instru/i)],
   ];

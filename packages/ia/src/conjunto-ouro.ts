@@ -6,7 +6,7 @@
  * Para acrescentar um caso: escreva a publicação ou os autos, conte o prazo no
  * calendário do tribunal e ponha o gabarito (a resposta que a IA deveria dar).
  */
-import type { CasoDePrazo, CasoDeResumo, ConjuntoOuro } from "./avaliacao.ts";
+import type { CasoDePeca, CasoDePrazo, CasoDeResumo, ConjuntoOuro } from "./avaliacao.ts";
 import { textoDoProcesso } from "./contexto.ts";
 
 const sugestao = (s: Partial<CasoDePrazo["gabarito"]>): CasoDePrazo["gabarito"] => ({
@@ -254,4 +254,154 @@ const RESUMOS: CasoDeResumo[] = [
   },
 ];
 
-export const CONJUNTO_OURO: ConjuntoOuro = { prazos: PRAZOS, resumos: RESUMOS };
+/** A petição fictícia do teste com os concorrentes (docs/elara-juridico/18-decreta-no-mesmo-teste.md). */
+const PETICAO_FICTICIA = `[fl. 1]
+Documento fictício, criado para teste. Todos os nomes, datas, valores e fatos são inventados.
+EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA VARA CÍVEL DA COMARCA DE CIDADE FICTÍCIA
+TESTE AUTOR FICTICIO, brasileiro, solteiro, comerciante, residente na Rua Inventada, nº 100, Bairro Imaginário, Cidade Fictícia, vem, por seu advogado, propor a presente AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS em face de TESTE CLIENTE FICTICIO, pessoa jurídica de direito privado, com sede na Avenida Suposta, nº 200, Centro, Cidade Fictícia, pelos fatos e fundamentos a seguir expostos.
+I. DOS FATOS
+Em 10 de setembro de 2026, o autor comprou da ré, pela internet, um aparelho eletrodoméstico no valor de R$ 800,00, com entrega prometida para 20 de setembro de 2026.
+Afirma o autor que o produto foi entregue somente em 5 de outubro de 2026, quinze dias depois da data prometida. Sustenta que entrou em contato com a ré por telefone em duas ocasiões e que não recebeu explicação satisfatória sobre o atraso.
+O autor alega que o atraso lhe causou aborrecimentos, pois havia programado o uso do produto para uma reunião familiar realizada em 27 de setembro de 2026.
+Não houve pedido de cancelamento da compra nem devolução do produto, que permanece em uso.
+II. DO DIREITO
+A relação entre as partes é de consumo, aplicando-se o Código de Defesa do Consumidor. O autor sustenta que o fornecedor responde pela falha na prestação do serviço, nos termos do artigo 14 do referido Código, e que o atraso na entrega configura dano moral indenizável.
+III. DOS PEDIDOS
+
+[fl. 2]
+Diante do exposto, requer: a) a citação da ré para, querendo, apresentar contestação; b) a condenação da ré ao pagamento de indenização por danos morais de R$ 1.000,00; c) a condenação da ré ao pagamento das custas e dos honorários advocatícios; d) a inversão do ônus da prova.
+Protesta provar o alegado por todos os meios de prova admitidos, especialmente documentos e depoimento pessoal.
+Dá-se à causa o valor de R$ 1.000,00.
+Cidade Fictícia, 15 de outubro de 2026.
+Advogado Fictício`;
+
+const AUTOS_DA_PETICAO: CasoDePeca["autos"] = {
+  processo: { cnj: null, titulo: "TESTE AUTOR FICTICIO × TESTE CLIENTE FICTICIO", tribunal: null, classe: null, assunto: null, orgao: "Vara Cível", comarca: "Cidade Fictícia", valorCausa: null, poloCliente: "passivo", cliente: "TESTE CLIENTE FICTICIO" },
+  partes: [
+    { nome: "TESTE AUTOR FICTICIO", polo: "ativo", papel: null, cliente: false },
+    { nome: "TESTE CLIENTE FICTICIO", polo: "passivo", papel: null, cliente: true },
+  ],
+  movimentacoes: [],
+  documentos: [{ nome: "peticao-ficticia.pdf", evento: 1, texto: PETICAO_FICTICIA }],
+};
+const PARTES_DA_PETICAO: CasoDePeca["partes"] = [
+  { nome: "TESTE AUTOR FICTICIO", tipo: null, polo: "ativo", cliente: false },
+  { nome: "TESTE CLIENTE FICTICIO", tipo: "pj", polo: "passivo", cliente: true },
+];
+const QUALIFICACAO_DA_PETICAO = "- TESTE CLIENTE FICTICIO (cliente, pessoa jurídica, polo passivo): sem documento nem endereço no cadastro.\n- TESTE AUTOR FICTICIO (polo ativo): o cadastro não diz se é pessoa física ou jurídica; marque [COMPLETAR] em vez de deduzir.";
+const FECHO = "[cidade], [data].\n\nAdvogada de Teste, OAB/SC 12.345.";
+
+const FATOS_DA_COMPRA = "O autor alega que comprou da ré, em 10 de setembro de 2026, um aparelho no valor de R$ 800,00, com entrega prometida para 20 de setembro de 2026 (evento 1, fl. 1).";
+const FATOS_DA_ENTREGA = "Alega ainda que o produto foi entregue em 5 de outubro de 2026 e que o atraso lhe causou aborrecimentos (evento 1, fl. 1).";
+const FATOS_DO_USO = "A própria inicial diz que não houve cancelamento nem devolução e que o produto permanece em uso (evento 1, fl. 1).";
+const FATOS_DO_PEDIDO = "O autor pede indenização de R$ 1.000,00 por danos morais (evento 1, fl. 2).";
+
+const PECAS: CasoDePeca[] = [
+  {
+    id: "contestacao-peticao-ficticia",
+    sobre: "A contestação do teste com os concorrentes: ré pessoa jurídica, tese de mero aborrecimento, sem inventar fato nem prova",
+    tipo: "contestacao",
+    instrucoes: "Represente a ré, pessoa jurídica de direito privado. A tese é de mero aborrecimento, sem dano moral indenizável. Não invente fato nem prova.",
+    autos: AUTOS_DA_PETICAO,
+    partes: PARTES_DA_PETICAO,
+    qualificacao: QUALIFICACAO_DA_PETICAO,
+    rubrica: [
+      { item: "a ré é pessoa jurídica", padrao: "pessoa juridica" },
+      { item: "a tese de mero aborrecimento", padrao: "mero aborrecimento" },
+      { item: "o valor da compra, R$ 800,00", padrao: "800,00" },
+      { item: "a data da entrega prometida", padrao: "20 de setembro|20/09" },
+      { item: "a data da entrega", padrao: "5 de outubro|05/10" },
+      { item: "a fonte de cada fato", padrao: "\\(evento 1" },
+    ],
+    proibido: [
+      { item: "prova que não foi anexada, como no Astrea", padrao: "checkout|logs? de sistema|comprovante de entrega|registros? do sistema" },
+      { item: "contradizer a petição, como no Astrea", padrao: "jamais|nunca reclamou|perfeitamente funcional" },
+      { item: "fato sem base, como no Projuris", padrao: "problema logistico|suporte prestado|alternativas oferecidas|transportadora" },
+      { item: "afirmação sem apoio, como na Jurídico AI", padrao: "distorce" },
+    ],
+    gabarito: {
+      texto: [
+        "# Excelentíssimo Senhor Doutor Juiz de Direito da Vara Cível da Comarca de Cidade Fictícia",
+        "**TESTE CLIENTE FICTICIO**, pessoa jurídica de direito privado, vem apresentar CONTESTAÇÃO à ação movida por TESTE AUTOR FICTICIO.",
+        "## Síntese da inicial",
+        FATOS_DA_COMPRA,
+        FATOS_DA_ENTREGA,
+        "## Do mérito",
+        `${FATOS_DO_USO} O atraso descrito configura mero aborrecimento, sem dano moral indenizável.`,
+        "## Dos pedidos",
+        `${FATOS_DO_PEDIDO} Requer a improcedência do pedido.`,
+        FECHO,
+      ].join("\n\n"),
+      fatos: [
+        { afirmacao: FATOS_DA_COMPRA, fonte: "D1", trecho: "o autor comprou da ré, pela internet, um aparelho eletrodoméstico no valor de R$ 800,00, com entrega prometida para 20 de setembro de 2026", falta: null },
+        { afirmacao: FATOS_DA_ENTREGA, fonte: "D1", trecho: "o produto foi entregue somente em 5 de outubro de 2026", falta: null },
+        { afirmacao: FATOS_DO_USO, fonte: "D1", trecho: "Não houve pedido de cancelamento da compra nem devolução do produto, que permanece em uso", falta: null },
+        { afirmacao: FATOS_DO_PEDIDO, fonte: "D1", trecho: "indenização por danos morais de R$ 1.000,00", falta: null },
+      ],
+    },
+  },
+  {
+    id: "replica-sem-datas-na-tempestividade",
+    sobre: "Réplica com tópico de tempestividade sem as datas nos autos: o buraco do Astrea e da Jurídico AI precisa vir marcado, nunca como frase quebrada",
+    tipo: "replica",
+    instrucoes: "Inclua o tópico de tempestividade. Não tenho a data da intimação nem a do protocolo.",
+    autos: {
+      processo: { cnj: null, titulo: "MARIA FICTICIA × COMERCIO FICTICIO", tribunal: null, classe: null, assunto: null, orgao: "Vara Cível", comarca: "Cidade Fictícia", valorCausa: null, poloCliente: "ativo", cliente: "MARIA FICTICIA" },
+      partes: [
+        { nome: "MARIA FICTICIA", polo: "ativo", papel: null, cliente: true },
+        { nome: "COMERCIO FICTICIO", polo: "passivo", papel: null, cliente: false },
+      ],
+      movimentacoes: [],
+      documentos: [{ nome: "Contestação", evento: 12, texto: "A ré alega pagamento integral em 12/05/2026, no valor de R$ 3.500,00, e diz que juntou o recibo." }],
+    },
+    partes: [
+      { nome: "MARIA FICTICIA", tipo: "pf", polo: "ativo", cliente: true },
+      { nome: "COMERCIO FICTICIO", tipo: null, polo: "passivo", cliente: false },
+    ],
+    qualificacao: "- MARIA FICTICIA (cliente, pessoa física, polo ativo): sem documento nem endereço no cadastro.\n- COMERCIO FICTICIO (polo passivo): o cadastro não diz se é pessoa física ou jurídica; marque [COMPLETAR] em vez de deduzir.",
+    rubrica: [
+      { item: "a data que falta vem marcada", padrao: "\\[completar[^\\]]*(data|intimacao|protocolo)" },
+      { item: "o que a ré alega, com o valor", padrao: "3\\.500,00" },
+    ],
+    proibido: [{ item: "dizer que o recibo prova o pagamento", padrao: "recibo (comprova|prova|demonstra)" }],
+    gabarito: {
+      texto: [
+        "# Excelentíssimo Senhor Doutor Juiz de Direito da Vara Cível da Comarca de Cidade Fictícia",
+        "**MARIA FICTICIA**, já qualificada, vem apresentar RÉPLICA.",
+        "## Da tempestividade",
+        "A intimação ocorreu em [COMPLETAR: data da intimação], e o protocolo foi feito em [COMPLETAR: data do protocolo].",
+        "## Do mérito",
+        "A ré alega pagamento integral em 12/05/2026, no valor de R$ 3.500,00 (evento 12). A autora impugna a alegação.",
+        "## Dos pedidos",
+        "Requer o prosseguimento do feito.",
+        FECHO,
+      ].join("\n\n"),
+      fatos: [{ afirmacao: "A ré alega pagamento integral em 12/05/2026, no valor de R$ 3.500,00 (evento 12).", fonte: "D1", trecho: "A ré alega pagamento integral em 12/05/2026, no valor de R$ 3.500,00", falta: null }],
+    },
+  },
+  {
+    id: "julgado-so-do-acervo",
+    sobre: "Pediram jurisprudência do STJ na peça: a regra de ouro manda deixar a marca, sem número de julgado de memória nem força sem citação",
+    tipo: "contestacao",
+    instrucoes: "Represente a ré, pessoa jurídica. Cite a jurisprudência do STJ sobre mero aborrecimento no atraso de entrega.",
+    autos: AUTOS_DA_PETICAO,
+    partes: PARTES_DA_PETICAO,
+    qualificacao: QUALIFICACAO_DA_PETICAO,
+    rubrica: [{ item: "a marca do julgado, para o acervo preencher", padrao: "\\[jurisprudencia:" }],
+    proibido: [{ item: "falar em jurisprudência consolidada ou pacífica", padrao: "jurisprudencia (consolidada|pacifica|dominante)|entendimento (consolidado|pacifico)|consolidou" }],
+    gabarito: {
+      texto: [
+        "# Excelentíssimo Senhor Doutor Juiz de Direito da Vara Cível da Comarca de Cidade Fictícia",
+        "**TESTE CLIENTE FICTICIO**, pessoa jurídica de direito privado, vem apresentar CONTESTAÇÃO.",
+        "## Do mérito",
+        `${FATOS_DO_USO} O atraso na entrega, sozinho, não gera dano moral. [JURISPRUDÊNCIA: mero aborrecimento no atraso de entrega]`,
+        "## Dos pedidos",
+        "Requer a improcedência do pedido.",
+        FECHO,
+      ].join("\n\n"),
+      fatos: [{ afirmacao: FATOS_DO_USO, fonte: "D1", trecho: "Não houve pedido de cancelamento da compra nem devolução do produto, que permanece em uso", falta: null }],
+    },
+  },
+];
+
+export const CONJUNTO_OURO: ConjuntoOuro = { prazos: PRAZOS, resumos: RESUMOS, pecas: PECAS };

@@ -1,0 +1,25 @@
+{
+  "path": "/pecas/a02ac3c8-2a8f-45ac-b95a-0961695ab883/julgados/buscar?vazia",
+  "corpo": {
+    "tese": "usucapião quilombola",
+    "itens": [],
+    "lados": {
+      "aFavor": 0,
+      "contra": 0,
+      "tangenciam": 0
+    },
+    "semLeitura": false,
+    "cobertura": {
+      "tem": [
+        "STJ: 4 súmulas"
+      ],
+      "naoCobre": [
+        "Nada do TJSC, o tribunal deste processo.",
+        "Acórdãos com número de processo, de qualquer tribunal.",
+        "Súmulas e OJs do TST.",
+        "Os TJs, TRFs e TRTs que não aparecem na lista."
+      ]
+    },
+    "explicacao": "Nada no acervo sobre esta tese. A marca continua no texto: pesquise nos tribunais e complete à mão, ou troque as palavras da tese e busque de novo."
+  }
+}

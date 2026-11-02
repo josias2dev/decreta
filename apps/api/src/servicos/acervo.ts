@@ -102,7 +102,7 @@ function noBnp(c: Citacao): { orgao: string; tipo: string; numero: number; rotul
 /** Situações do tema do STJ sem tese firmada ou com tese mudada. */
 const TEMA_SEM_TESE = /^(afetado|em julgamento|sem processo vinculado)/i;
 
-export function seloDoDocumento(rotulo: string, d: typeof acervoDocumentos.$inferSelect): Pick<CitacaoVerificada, "selo" | "motivo"> {
+export function seloDoDocumento(rotulo: string, d: Pick<typeof acervoDocumentos.$inferSelect, "situacao" | "cancelado">): Pick<CitacaoVerificada, "selo" | "motivo"> {
   const base = `${rotulo}: ${d.situacao}.`;
   if (d.cancelado) return { selo: "com_ressalva", motivo: `${base} Não use como precedente sem conferir.` };
   if (/^revisad/i.test(d.situacao)) return { selo: "com_ressalva", motivo: `${base} A tese mudou; confira a atual.` };

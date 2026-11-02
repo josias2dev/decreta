@@ -1,19 +1,34 @@
 {
-  "path": "/pecas/preparar?prazo=69d78b66-2b41-42c0-b2f0-04cdcabd0704",
+  "path": "/pecas/preparar?prazo=a0a5adc9-c1f9-44c0-8694-e7c4e0ba3470",
   "corpo": {
     "processo": {
-      "id": "f84597e7-b1ae-4a9c-ae92-41fbe80405e6",
+      "id": "6c2c51e3-6836-45ed-adf9-f39e1829a003",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "orgao": "2ª Vara Cível",
       "semIa": false
     },
     "prazo": {
-      "id": "69d78b66-2b41-42c0-b2f0-04cdcabd0704",
+      "id": "a0a5adc9-c1f9-44c0-8694-e7c4e0ba3470",
       "tipo": "Manifestação sobre laudo pericial",
       "fim": "2026-11-23"
     },
     "tipoSugerido": "manifestacao-laudo",
+    "partes": [
+      {
+        "nome": "Marina Duarte",
+        "tipo": "pf",
+        "polo": "ativo",
+        "cliente": true
+      },
+      {
+        "nome": "Seguradora Alfa S.A.",
+        "tipo": null,
+        "polo": "passivo",
+        "cliente": false
+      }
+    ],
+    "estrategia": null,
     "leu": [
       "Petição da ré · pedido de esclarecimentos.docx · evento 89",
       "Laudo pericial.docx · evento 87",
@@ -25,11 +40,11 @@
     ],
     "modelos": [
       {
-        "id": "1b2b516f-39bc-47eb-8bd8-0cc98d2251c8",
+        "id": "a7438dce-5639-4836-8df8-051fc0045744",
         "titulo": "Manifestação sobre laudo · invalidez no seguro de vida"
       },
       {
-        "id": "3764f448-9cc1-4dd8-8847-3f593d583909",
+        "id": "23c63a34-9524-4a0f-b89d-702023eed162",
         "titulo": "Contrarrazões de apelação · servidor público contra o município"
       }
     ],

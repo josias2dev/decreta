@@ -1,9 +1,9 @@
 {
-  "path": "/pecas/781d4133-3944-492f-9f3f-94c90d4b3451?revisada",
+  "path": "/pecas/5c2c095a-941b-4f28-9ce6-28c546c6bb3c?revisada",
   "corpo": {
-    "id": "781d4133-3944-492f-9f3f-94c90d4b3451",
-    "processoId": "3d74c048-95d2-43fb-9c38-14aef140502b",
-    "prazoId": "0ce5903e-d6e9-4ced-98e3-8f907ed1c2f4",
+    "id": "5c2c095a-941b-4f28-9ce6-28c546c6bb3c",
+    "processoId": "ca54b3e8-06d4-4981-ab77-f7713768ec2f",
+    "prazoId": "ef67b021-4ff2-46a0-93f6-67b1c731eeaf",
     "tipo": "alegacoes-finais",
     "titulo": "Alegações finais · Roberto Kühn",
     "instrucoes": null,
@@ -13,7 +13,7 @@
     "rodape": "Gerado por IA. Confira nos autos.",
     "revisao": {
       "por": {
-        "id": "Q2SKh9HMpcZQ5ArbgQfac1IEwkUBlHaD",
+        "id": "cphzfzknb8FL9iYcEzoBPv0Kdr8lXZwn",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -24,10 +24,10 @@
     "modelos": [],
     "revisoes": [
       {
-        "id": "45a1784a-13ce-4e22-b8d8-6f1af5cc3703",
+        "id": "5716d151-2934-406b-be08-cd8a8b1b700f",
         "em": "2026-10-29T12:30:00.000Z",
         "por": {
-          "id": "Q2SKh9HMpcZQ5ArbgQfac1IEwkUBlHaD",
+          "id": "cphzfzknb8FL9iYcEzoBPv0Kdr8lXZwn",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -39,6 +39,24 @@
       }
     ],
     "semIa": false,
-    "verificacao": null
+    "verificacao": null,
+    "partes": [
+      {
+        "nome": "Roberto Kühn",
+        "tipo": "pf",
+        "polo": "ativo",
+        "cliente": true
+      },
+      {
+        "nome": "Transportes Serra Azul Ltda.",
+        "tipo": null,
+        "polo": "passivo",
+        "cliente": false
+      }
+    ],
+    "geradaPorIa": true,
+    "conferencia": null,
+    "estrategia": null,
+    "julgados": []
   }
 }
