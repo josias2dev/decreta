@@ -242,6 +242,14 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-aviso { display: flex; align-items: center; gap: var(--space-2-half); padding: var(--space-2-half) var(--space-3-half); border-radius: var(--radius-md); background: var(--primaria); color: var(--on-primaria); font: 500 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); box-shadow: var(--sombra-flutuante); pointer-events: auto; }
 .dc-aviso--erro { background: var(--vencido); color: var(--on-vencido); }
 .dc-aviso svg { width: 16px; height: 16px; flex: none; }
+.dc-aviso__texto { flex: 1; min-width: 0; }
+.dc-aviso__acao { flex: none; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-decoration: underline; text-underline-offset: var(--space-half); cursor: pointer; }
+.dc-aviso__fechar { flex: none; display: grid; place-items: center; width: var(--altura-controle-sm); height: var(--altura-controle-sm); margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-1-half)) calc(-1 * var(--space-1)) 0; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: inherit; cursor: pointer; }
+.dc-aviso__fechar:hover { background: color-mix(in srgb, currentColor 16%, transparent); }
+.dc-aviso__acao:focus-visible, .dc-aviso__fechar:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.dc-celular .dc-aviso { flex-wrap: wrap; }
+.dc-celular .dc-aviso__acao { min-height: 44px; }
+.dc-celular .dc-aviso__fechar { width: 44px; height: 44px; margin: calc(-1 * var(--space-2-half)) calc(-1 * var(--space-3-half)) calc(-1 * var(--space-2-half)) 0; }
 
 /* ---------- Folha da peça ---------- */
 .dc-folha { box-sizing: border-box; padding: var(--space-8) 40px; background: #fff; color: var(--tinta); border: 1px solid var(--borda); border-radius: var(--radius-sm); font: 400 var(--texto-leitura)/var(--linha-leitura) var(--font-sans); }

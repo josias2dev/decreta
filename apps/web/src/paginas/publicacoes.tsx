@@ -3,7 +3,7 @@
  * a selecionada à direita; no celular, a lista e uma tela por publicação.
  */
 import { lerPublicacaoColada, TIPOS_DE_COMUNICACAO } from "@decreta/core";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
@@ -384,6 +384,7 @@ export function PublicacaoPage() {
   };
   return (
     <VerPublicacao
+      key={id}
       pub={q.data}
       celular
       aoTerminar={aoTerminar}
@@ -395,9 +396,26 @@ export function PublicacaoPage() {
 
 type Modo = "prazo" | "audiencia" | "sem_prazo" | "feito";
 
+const TRATAR = ["publicacoes", "tratar"];
+
+/** Tira a publicação da caixa e acerta as contagens. Devolve como pôr de volta, no mesmo lugar. */
+function tirarDaCaixa(qc: QueryClient, id: string, de: SituacaoPublicacao, para: SituacaoPublicacao) {
+  const chave = ["publicacoes", de];
+  const antes = qc.getQueryData<CaixaDePublicacoes>(chave);
+  const lugar = antes?.itens.findIndex((i) => i.id === id) ?? -1;
+  if (!antes || lugar < 0) return () => {};
+  const item = antes.itens[lugar]!;
+  const contar = (c: CaixaDePublicacoes, n: number) => ({ ...c.contagens, [de]: c.contagens[de] - n, [para]: c.contagens[para] + n });
+  qc.setQueryData<CaixaDePublicacoes>(chave, (c) => c && { ...c, itens: c.itens.filter((i) => i.id !== id), contagens: contar(c, 1) });
+  return () => {
+    qc.setQueryData<CaixaDePublicacoes>(chave, (c) => c && { ...c, itens: [...c.itens.slice(0, lugar), item, ...c.itens.slice(lugar)], contagens: contar(c, -1) });
+  };
+}
+
 function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publicacao; celular: boolean; aoTerminar: () => void; titulo?: string; sobre?: string }) {
   const qc = useQueryClient();
   const avisar = useAviso();
+  const navigate = useNavigate();
   const eu = useQuery(euQuery);
   const [dialogo, setDialogo] = useState<"prazo" | "audiencia" | null>(null);
   const s = pub.sugestao;
@@ -411,10 +429,28 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
     avisar(texto);
     aoTerminar();
   };
+  // Confirmar e marcar: a publicação sai da caixa e a próxima abre na hora. O aviso de que deu certo só vem com a
+  // resposta; se o servidor recusar, ela volta ao mesmo lugar, com aviso. Com várias em seguida, a lista só é pedida
+  // de novo depois da última resposta, para não trazer de volta as que ainda estão a caminho.
+  const sairDaCaixa = async (para: SituacaoPublicacao) => {
+    await qc.cancelQueries({ queryKey: ["publicacoes"] });
+    const devolver = tirarDaCaixa(qc, pub.id, pub.situacao, para);
+    aoTerminar();
+    return { devolver };
+  };
+  const seForAUltima = () => {
+    if (qc.isMutating({ mutationKey: TRATAR }) === 1) void atualizarPrazos(qc);
+  };
   const confirmar = useMutation({
+    mutationKey: TRATAR,
     mutationFn: () => api<{ prazoId: string; fim: string }>(`/publicacoes/${pub.id}/confirmar`, { json: { tipo: c!.tipo, fundamento: c!.fundamento, dias: c!.dias!, contagem: c!.contagem, responsavelId: s?.responsavel?.id } }),
-    onSuccess: (r) => pronto(`Prazo confirmado: vence em ${diaCompleto(r.fim)}.`),
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+    onMutate: () => sairDaCaixa("vinculada"),
+    onSuccess: (r) => avisar(`Prazo confirmado: vence em ${diaCompleto(r.fim)}.`),
+    onError: (err, _v, ctx) => {
+      ctx?.devolver();
+      avisar(`O prazo não foi confirmado. ${mensagemDoErro(err)} A publicação voltou para a caixa.`, { erro: true, fixo: true, acao: { rotulo: "Voltar à publicação", fazer: () => void navigate({ to: "/publicacoes/$id", params: { id: pub.id } }) } });
+    },
+    onSettled: seForAUltima,
   });
   const agendar = useMutation({
     mutationFn: () => api(`/publicacoes/${pub.id}/audiencia`, { json: { dia: c!.audiencia!.data, hora: c!.audiencia!.hora, tipo: c!.audiencia!.tipo, porVideo: c!.audiencia!.porVideo } }),
@@ -422,9 +458,15 @@ function VerPublicacao({ pub, celular, aoTerminar, titulo, sobre }: { pub: Publi
     onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
   const marcar = useMutation({
+    mutationKey: TRATAR,
     mutationFn: (o: "sem-prazo" | "pendente") => api(`/publicacoes/${pub.id}/${o}`, { method: "POST" }),
-    onSuccess: (_r, o) => pronto(o === "pendente" ? "Ficou em Pendentes." : "Marcada como lida, sem prazo."),
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+    onMutate: (o) => sairDaCaixa(o === "pendente" ? "pendente" : "lida"),
+    onSuccess: (_r, o) => avisar(o === "pendente" ? "Ficou em Pendentes." : "Marcada como lida, sem prazo."),
+    onError: (err, _o, ctx) => {
+      ctx?.devolver();
+      avisar(`A publicação não foi marcada. ${mensagemDoErro(err)} Ela voltou para a caixa.`, { erro: true });
+    },
+    onSettled: seForAUltima,
   });
   const refazer = useMutation({
     mutationFn: () => api(`/publicacoes/${pub.id}/sugerir`, { method: "POST" }),

@@ -216,6 +216,18 @@ function NovoNegocio({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => vo
   );
 }
 
+type MudancaNoNegocio = Partial<Pick<Negocio, "etapa" | "checklist" | "observacoes" | "pasta">> & { responsavelId?: string | null };
+
+/** A lista como ficará depois da mudança: a coluna, as contagens das colunas e quem cuida. A pasta vem na resposta: quem conta é o servidor. */
+function mudarNoQuadro(l: Lista, id: string, { responsavelId, ...corpo }: MudancaNoNegocio, equipe: Negocio["responsavel"][]): Lista {
+  const de = l.itens.find((i) => i.id === id)?.etapa;
+  const para = corpo.etapa;
+  return {
+    contagens: de && para && para !== de ? { ...l.contagens, [de]: (l.contagens[de] ?? 0) - 1, [para]: (l.contagens[para] ?? 0) + 1 } : l.contagens,
+    itens: l.itens.map((i) => (i.id !== id ? i : { ...i, ...corpo, ...(responsavelId !== undefined ? { responsavel: equipe.find((p) => p?.id === responsavelId) ?? null } : {}) })),
+  };
+}
+
 function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
   const qc = useQueryClient();
   const avisar = useAviso();
@@ -227,10 +239,20 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
     void qc.invalidateQueries({ queryKey: ["eu"] });
     void qc.invalidateQueries({ queryKey: ["hoje"] });
   };
+  // O quadro muda na hora: o cartão troca de coluna antes da resposta. Se o servidor recusar, volta, com aviso.
   const mudar = useMutation({
-    mutationFn: (corpo: Partial<Pick<Negocio, "etapa" | "checklist" | "observacoes" | "pasta">> & { responsavelId?: string | null }) => api(`/negocios/${n.id}`, { method: "PUT", json: corpo }),
-    onSuccess: atualizar,
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+    mutationFn: (corpo: MudancaNoNegocio) => api(`/negocios/${n.id}`, { method: "PUT", json: corpo }),
+    onMutate: async (corpo) => {
+      await qc.cancelQueries({ queryKey: ["negocios"] });
+      const antes = qc.getQueryData<Lista>(["negocios"]);
+      if (antes) qc.setQueryData<Lista>(["negocios"], mudarNoQuadro(antes, n.id, corpo, eu.data?.equipe ?? []));
+      return { antes };
+    },
+    onError: (err, corpo, ctx) => {
+      if (ctx?.antes) qc.setQueryData(["negocios"], ctx.antes);
+      avisar(`${corpo.etapa ? "O negócio não mudou de etapa." : "A mudança não foi salva."} ${mensagemDoErro(err)}`, { erro: true });
+    },
+    onSettled: atualizar,
   });
   const concluir = useMutation({
     mutationFn: () => api<{ clienteId: string }>(`/negocios/${n.id}/concluir`, { json: {} }),

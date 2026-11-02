@@ -335,23 +335,56 @@ function NovoAlvara({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => voi
   );
 }
 
+type MudancaNoAlvara = { etapa?: EtapaAlvara; sacadoEm?: string | null; repassadoEm?: string | null; valor?: number | string | null; valorRecebido?: number | string | null; observacoes?: string | null };
+
+/** O quadro com o alvará já na etapa nova e o total das duas colunas acertado. */
+function moverNoQuadro(q: QuadroDeAlvaras, id: string, { etapa, sacadoEm, repassadoEm }: MudancaNoAlvara): QuadroDeAlvaras {
+  const de = q.etapas.find((e) => e.itens.some((i) => i.id === id));
+  const a = de?.itens.find((i) => i.id === id);
+  if (!de || !a) return q;
+  const novo = { ...a, ...(sacadoEm ? { sacadoEm } : {}), ...(repassadoEm ? { repassadoEm } : {}) };
+  const somar = (total: string, n: number) => String(Number(total) + n);
+  return {
+    ...q,
+    etapas: q.etapas.map((e) =>
+      e.etapa === de.etapa ? { ...e, total: somar(e.total, -Number(a.valor)), itens: e.itens.filter((i) => i.id !== id) } : e.etapa === etapa ? { ...e, total: somar(e.total, Number(a.valor)), itens: [novo, ...e.itens] } : e,
+    ),
+  };
+}
+
 function VerAlvara({ a, aoFechar }: { a: Alvara & { etapa: EtapaAlvara }; aoFechar: () => void }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const eu = useQuery(euQuery);
   const financeiro = useFinanceiroLiberado();
   const [f, setF] = useState({ valor: valorNoCampo(a.valor), valorRecebido: valorNoCampo(a.valorRecebido), sacadoEm: a.sacadoEm ?? "", repassadoEm: a.repassadoEm ?? "", observacoes: a.observacoes ?? "" });
+  // Avançar de etapa: o cartão muda de coluna e o diálogo fecha na hora. Se o servidor recusar, o cartão volta, com aviso.
   const salvar = useMutation({
-    mutationFn: (corpo: Record<string, unknown>) => api(`/alvaras/${a.id}`, { method: "PUT", json: corpo }),
+    mutationFn: (corpo: MudancaNoAlvara) => api(`/alvaras/${a.id}`, { method: "PUT", json: corpo }),
+    onMutate: async (corpo) => {
+      if (!corpo.etapa) return;
+      await qc.cancelQueries({ queryKey: ["alvaras"] });
+      const antes = qc.getQueryData<QuadroDeAlvaras>(["alvaras"]);
+      if (antes) qc.setQueryData<QuadroDeAlvaras>(["alvaras"], moverNoQuadro(antes, a.id, corpo));
+      // Sacado: quem vê o Financeiro fica no alvará, onde o Decreta mostra a conta do honorário e do cliente.
+      if (!(financeiro && corpo.etapa === "sacado")) aoFechar();
+      return { antes };
+    },
     onSuccess: (_r, corpo) => {
+      // A conta do alvará sacado depende desta resposta: ela pode ter sido pedida antes.
+      if (corpo.etapa === "sacado") void qc.invalidateQueries({ queryKey: ["financeiro", "conta", a.id] });
+      avisar(corpo.etapa ? `Agora em ${ETAPA[corpo.etapa].toLocaleLowerCase("pt-BR")}.` : "Alvará atualizado.");
+      if (!corpo.etapa) aoFechar();
+    },
+    onError: (err, corpo, ctx) => {
+      if (ctx?.antes) qc.setQueryData(["alvaras"], ctx.antes);
+      avisar(corpo.etapa ? `O alvará não mudou de etapa. ${mensagemDoErro(err)}` : mensagemDoErro(err), { erro: true });
+    },
+    onSettled: () => {
       void qc.invalidateQueries({ queryKey: ["alvaras"] });
       void qc.invalidateQueries({ queryKey: ["eu"] });
       void qc.invalidateQueries({ queryKey: ["processo"] });
-      avisar(corpo.etapa ? `Agora em ${ETAPA[corpo.etapa as EtapaAlvara].toLocaleLowerCase("pt-BR")}.` : "Alvará atualizado.");
-      // Sacado: quem vê o Financeiro fica no alvará, onde o Decreta mostra a conta do honorário e do cliente.
-      if (!(financeiro && corpo.etapa === "sacado")) aoFechar();
     },
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
   const seguinte = proxima(a.etapa);
   const hoje = eu.data?.hoje;

@@ -1,6 +1,6 @@
 /** Agenda (audiências, vencimentos e tarefas: em lista, na semana ou no mês) e a tela da audiência com a preparação da IA. */
 import * as Menu from "@radix-ui/react-dropdown-menu";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { CalendarDays, CalendarRange, Check, ChevronDown, ChevronLeft, ChevronRight, Gavel, List, ListTodo, Plus, Video, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -62,6 +62,10 @@ function passo(vista: VistaDaAgenda, dia: string, n: number, hoje: string) {
 }
 const contar = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
+function marcarTarefa(qc: QueryClient, id: string, feita: boolean) {
+  qc.setQueriesData<Agenda>({ queryKey: ["agenda"] }, (a) => a && { ...a, dias: a.dias.map((d) => ({ ...d, itens: d.itens.map((i) => (i.tipo === "tarefa" && i.id === id ? { ...i, concluida: feita } : i)) })) });
+}
+
 export function AgendaPage() {
   const celular = useCelular();
   const eu = useQuery(euQuery);
@@ -107,14 +111,27 @@ export function AgendaPage() {
   }, [vista, dia, hoje, qc]);
 
   const [nova, setNova] = useState<"tarefa" | "audiencia" | null>(null);
+  // A marca muda na hora, em todo período já carregado; se o servidor recusar, volta, com aviso. A agenda só é pedida
+  // de novo depois da última resposta, para não desfazer a marca de outra tarefa ainda a caminho.
   const tarefa = useMutation({
+    mutationKey: ["tarefa"],
     mutationFn: ({ id, feita }: { id: string; feita: boolean }) => api(`/tarefas/${id}/${feita ? "concluir" : "reabrir"}`, { method: "POST" }),
+    onMutate: async ({ id, feita }) => {
+      await qc.cancelQueries({ queryKey: ["agenda"] });
+      marcarTarefa(qc, id, feita);
+    },
     onSuccess: (_r, v) => {
-      void qc.invalidateQueries({ queryKey: ["agenda"] });
-      void qc.invalidateQueries({ queryKey: ["hoje"] });
       if (v.feita) avisar("Tarefa feita.");
     },
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+    onError: (err, v) => {
+      marcarTarefa(qc, v.id, !v.feita);
+      avisar(`${v.feita ? "A tarefa não foi marcada como feita." : "A tarefa não foi reaberta."} ${mensagemDoErro(err)}`, { erro: true });
+    },
+    onSettled: () => {
+      if (qc.isMutating({ mutationKey: ["tarefa"] }) > 1) return;
+      void qc.invalidateQueries({ queryKey: ["agenda"] });
+      void qc.invalidateQueries({ queryKey: ["hoje"] });
+    },
   });
   const marcar = (i: ItemDaAgenda, feita: boolean) => tarefa.mutate({ id: i.id, feita });
 

@@ -1,7 +1,7 @@
 /** Prazo e briefing: o que o juízo decidiu, o que fazer, a contagem e o histórico. */
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { Check, ExternalLink, FileText, RotateCcw } from "lucide-react";
+import { Check, ExternalLink, FileText, LoaderCircle, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Cancelada } from "@/componentes/captura-do-djen";
@@ -21,7 +21,7 @@ import type { Briefing, Contagem, Prazo, PreviaDaConta } from "@/lib/tipos";
 
 /** Tudo que mostra prazo muda junto: a lista, o Hoje, os números do menu e a caixa de publicações. */
 export function atualizarPrazos(qc: QueryClient) {
-  for (const k of ["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda"]) void qc.invalidateQueries({ queryKey: [k] });
+  return Promise.all(["prazo", "prazos", "hoje", "eu", "publicacoes", "publicacao", "processo", "agenda"].map((k) => qc.invalidateQueries({ queryKey: [k] })));
 }
 
 const FONTE = { djen: "DJEN", datajud: "DataJud", manual: "Publicação digitada" } as const;
@@ -36,13 +36,18 @@ export function PrazoPage() {
   const q = useQuery({ queryKey: ["prazo", id], queryFn: () => api<Prazo>(`/prazos/${id}`) });
   const [dialogo, setDialogo] = useState<"ajustar" | "descartar" | null>(null);
 
+  // A tela muda enquanto o pedido está no ar, a partir do que foi pedido, e não do que está guardado: se o servidor
+  // recusar, ela volta sozinha, e nunca fica nada dizendo que o prazo foi confirmado sem a resposta dele.
   const acao = useMutation({
     mutationFn: (o: "confirmar" | "cumprir" | "reabrir") => api(`/prazos/${id}/${o}`, { method: "POST" }),
-    onSuccess: (_r, o) => {
-      atualizarPrazos(qc);
+    onSuccess: async (_r, o) => {
       avisar(o === "confirmar" ? "Prazo confirmado." : o === "cumprir" ? "Prazo cumprido." : "Prazo reaberto.");
+      await atualizarPrazos(qc);
     },
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+    onError: (err, o) => {
+      if (o === "confirmar") avisar(`O prazo não foi confirmado. ${mensagemDoErro(err)} Ele continua como sugestão, sem valer como confirmado.`, { erro: true, fixo: true });
+      else avisar(`${o === "cumprir" ? "O prazo não foi marcado como cumprido." : "O prazo não foi reaberto."} ${mensagemDoErro(err)}`, { erro: true });
+    },
   });
   const refazer = useMutation({
     mutationFn: () => api(`/ia/briefing/${id}`, { method: "POST" }),
@@ -62,7 +67,12 @@ export function PrazoPage() {
     );
   }
 
-  const aberto = p.situacao === "aberto";
+  const pedido = acao.isPending ? acao.variables : undefined;
+  const situacao = pedido === "cumprir" ? "cumprido" : pedido === "reabrir" ? "aberto" : p.situacao;
+  const aberto = situacao === "aberto";
+  const confirmando = pedido === "confirmar" && !p.confirmado;
+  // Enquanto o pedido está no ar, as ações que dependem dele esperam.
+  const jaConfirmado = p.confirmado || confirmando;
   // Confiança baixa: não confirma num clique; a pessoa abre o ajuste e confere os números.
   const conferir = p.conferencia?.confianca === "baixa";
   const confirmar = conferir ? () => setDialogo("ajustar") : () => acao.mutate("confirmar");
@@ -73,11 +83,11 @@ export function PrazoPage() {
 
   const selos = (
     <>
-      {p.situacao === "cumprido" ? (
+      {situacao === "cumprido" ? (
         <Selo urgencia="cumprido">
           <Check /> Cumprido
         </Selo>
-      ) : p.situacao === "descartado" ? (
+      ) : situacao === "descartado" ? (
         <Selo urgencia="prazo">Descartado</Selo>
       ) : (
         <Selo urgencia={p.urgencia}>
@@ -87,6 +97,10 @@ export function PrazoPage() {
       {p.confirmado ? (
         <span className="dc-selo dc-selo--ok">
           <Check /> Confirmado{p.confirmadoPor ? ` por ${p.confirmadoPor.apelido}` : ""}
+        </span>
+      ) : confirmando ? (
+        <span className="dc-selo dc-selo--prazo">
+          <LoaderCircle className="animate-spin" /> Confirmando…
         </span>
       ) : (
         aberto && <span className="dc-selo dc-selo--ia">Sugestão da IA · confira e confirme</span>
@@ -181,26 +195,26 @@ export function PrazoPage() {
 
   if (celular) {
     const rodape = !aberto ? (
-      <Botao bloco onClick={() => acao.mutate("reabrir")} ocupado={acao.isPending}>
+      <Botao bloco onClick={() => acao.mutate("reabrir")} disabled={acao.isPending}>
         <RotateCcw /> Reabrir prazo
       </Botao>
-    ) : p.confirmado ? (
+    ) : jaConfirmado ? (
       <>
-        <Botao variante="primaria" bloco onClick={irParaPeca}>
+        <Botao variante="primaria" bloco onClick={irParaPeca} disabled={acao.isPending}>
           <FileText /> {rotuloPeca}
         </Botao>
         <div className="dc-rodape__par">
-          <Botao bloco onClick={() => acao.mutate("cumprir")} ocupado={acao.isPending && acao.variables === "cumprir"}>
+          <Botao bloco onClick={() => acao.mutate("cumprir")} disabled={acao.isPending}>
             <Check /> Cumprir
           </Botao>
-          <Botao variante="perigo" bloco onClick={() => setDialogo("descartar")}>
+          <Botao variante="perigo" bloco onClick={() => setDialogo("descartar")} disabled={acao.isPending}>
             Descartar
           </Botao>
         </div>
       </>
     ) : (
       <>
-        <Botao variante="primaria" bloco onClick={confirmar} ocupado={acao.isPending && acao.variables === "confirmar"}>
+        <Botao variante="primaria" bloco onClick={confirmar}>
           <Check /> {rotuloConfirmar}
         </Botao>
         <div className="dc-rodape__par">
@@ -271,18 +285,18 @@ export function PrazoPage() {
           }
           acoes={
             !aberto ? (
-              <Botao onClick={() => acao.mutate("reabrir")} ocupado={acao.isPending}>
+              <Botao onClick={() => acao.mutate("reabrir")} disabled={acao.isPending}>
                 <RotateCcw /> Reabrir prazo
               </Botao>
-            ) : p.confirmado ? (
+            ) : jaConfirmado ? (
               <>
-                <Botao variante="perigo" onClick={() => setDialogo("descartar")}>
+                <Botao variante="perigo" onClick={() => setDialogo("descartar")} disabled={acao.isPending}>
                   Descartar
                 </Botao>
-                <Botao onClick={() => acao.mutate("cumprir")} ocupado={acao.isPending && acao.variables === "cumprir"}>
+                <Botao onClick={() => acao.mutate("cumprir")} disabled={acao.isPending}>
                   <Check /> Cumprir
                 </Botao>
-                <Botao variante="primaria" onClick={irParaPeca}>
+                <Botao variante="primaria" onClick={irParaPeca} disabled={acao.isPending}>
                   <FileText /> {rotuloPeca}
                 </Botao>
               </>
@@ -292,7 +306,7 @@ export function PrazoPage() {
                   Descartar
                 </Botao>
                 <Botao onClick={() => setDialogo("ajustar")}>Ajustar</Botao>
-                <Botao variante="primaria" onClick={confirmar} ocupado={acao.isPending && acao.variables === "confirmar"}>
+                <Botao variante="primaria" onClick={confirmar}>
                   <Check /> {rotuloConfirmar}
                 </Botao>
               </>
