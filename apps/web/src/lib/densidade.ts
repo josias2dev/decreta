@@ -3,11 +3,22 @@
  * pessoa neste navegador e vale por um atributo na raiz, que troca os tokens
  * (estilos/tokens.css). Sem nada guardado, ou com o navegador bloqueando, é compacto.
  */
+import { useSyncExternalStore } from "react";
+
 export type Densidade = "compacto" | "confortavel";
+
+export const DENSIDADES: { id: Densidade; rotulo: string }[] = [
+  { id: "compacto", rotulo: "Compacto" },
+  { id: "confortavel", rotulo: "Confortável" },
+];
 
 /** A última usada aqui, para a tela não pular ao recarregar, antes de saber quem está logado. */
 const ULTIMA = "decreta:densidade";
 const daPessoa = (id: string) => `decreta:densidade:${id}`;
+
+/** Com o navegador sem armazenamento, a escolha vale até fechar a página. */
+const nestaVisita = new Map<string, Densidade>();
+const ouvintes = new Set<() => void>();
 
 function ler(chave: string): Densidade | null {
   try {
@@ -36,11 +47,25 @@ export function aplicarUltimaDensidade() {
 }
 
 export function densidadeDaPessoa(id: string): Densidade {
-  return ler(daPessoa(id)) ?? "compacto";
+  return nestaVisita.get(id) ?? ler(daPessoa(id)) ?? "compacto";
 }
 
 export function escolherDensidade(id: string, densidade: Densidade) {
+  nestaVisita.set(id, densidade);
   guardar(daPessoa(id), densidade);
   guardar(ULTIMA, densidade);
   aplicarDensidade(densidade);
+  for (const avisar of ouvintes) avisar();
+}
+
+/** A densidade da pessoa e como trocar: o menu da conta e a tela /conta andam juntos. */
+export function useDensidade(id: string): [Densidade, (densidade: Densidade) => void] {
+  const densidade = useSyncExternalStore(
+    (avisar) => {
+      ouvintes.add(avisar);
+      return () => ouvintes.delete(avisar);
+    },
+    () => densidadeDaPessoa(id),
+  );
+  return [densidade, (nova) => escolherDensidade(id, nova)];
 }

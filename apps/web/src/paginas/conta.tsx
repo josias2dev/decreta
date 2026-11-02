@@ -1,6 +1,5 @@
 /** Minha conta: perfil, senha, conector MCP, verificação em duas etapas e sair. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { LogOut, ShieldCheck } from "lucide-react";
 import QRCode from "qrcode";
 import { useState } from "react";
@@ -8,29 +7,22 @@ import { useAviso } from "@/componentes/avisos";
 import { ConectorMcp } from "@/componentes/conector-mcp";
 import { Dialogo } from "@/componentes/dialogo";
 import { UsoDaIaHoje } from "@/componentes/limite-da-ia";
+import { sessaoQuery, useSair } from "@/componentes/menu-da-conta";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Segmentos } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { authCall, authClient } from "@/lib/auth";
 import { useCelular } from "@/lib/celular";
 import { euQuery } from "@/lib/consultas";
-import { densidadeDaPessoa, escolherDensidade, type Densidade } from "@/lib/densidade";
+import { DENSIDADES, useDensidade } from "@/lib/densidade";
 import { telefone } from "@/lib/formato";
 import { equipeQuery } from "./equipe";
 
 export function ContaPage() {
   const celular = useCelular();
-  const navigate = useNavigate();
-  const qc = useQueryClient();
   const eu = useQuery(euQuery);
-  const sessao = useQuery({ queryKey: ["sessao"], queryFn: () => authCall(authClient.getSession()) });
-  const sair = useMutation({
-    mutationFn: () => authCall(authClient.signOut()),
-    onSettled: () => {
-      qc.clear();
-      void navigate({ to: "/entrar", replace: true });
-    },
-  });
+  const sessao = useQuery(sessaoQuery);
+  const sair = useSair();
   const u = eu.data?.usuario;
   // A conta da demonstração é de todos: senha e verificação em duas etapas não mudam.
   const demonstracao = !!eu.data?.escritorio.demonstracao;
@@ -78,14 +70,9 @@ export function ContaPage() {
   );
 }
 
-const DENSIDADES: { id: Densidade; rotulo: string }[] = [
-  { id: "compacto", rotulo: "Compacto" },
-  { id: "confortavel", rotulo: "Confortável" },
-];
-
-/** Compacto cabe mais na tela; confortável tem letra maior e mais ar. Vale para esta pessoa, neste navegador. */
+/** Compacto é o padrão; confortável tem letra maior e ainda mais espaço. Vale para esta pessoa, neste navegador. */
 function DensidadeDaTela({ usuarioId }: { usuarioId: string }) {
-  const [densidade, setDensidade] = useState(() => densidadeDaPessoa(usuarioId));
+  const [densidade, escolher] = useDensidade(usuarioId);
   return (
     <Painel titulo="Densidade da tela">
       <div className="flex flex-col items-start gap-2">
@@ -93,12 +80,9 @@ function DensidadeDaTela({ usuarioId }: { usuarioId: string }) {
           rotulo="Densidade da tela"
           opcoes={DENSIDADES}
           valor={densidade}
-          aoMudar={(d) => {
-            setDensidade(d);
-            escolherDensidade(usuarioId, d);
-          }}
+          aoMudar={escolher}
         />
-        <p className="dc-nota m-0">Compacto cabe mais na tela. Confortável tem letra maior e mais espaço. Fica guardado neste navegador.</p>
+        <p className="dc-nota m-0">Confortável tem a letra um pouco maior e mais espaço entre as coisas. Fica guardado neste navegador.</p>
       </div>
     </Painel>
   );

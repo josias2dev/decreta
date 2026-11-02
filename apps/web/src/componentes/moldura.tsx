@@ -1,6 +1,6 @@
 /**
  * A moldura das telas logadas. No computador: menu lateral cinza (o escritório
- * no topo, a busca, os itens e a conta embaixo) e cada tela numa folha branca
+ * no topo, a busca, os itens e o menu da pessoa embaixo) e cada tela numa folha branca
  * que rola por dentro. No celular: cada tela tem o
  * próprio topo, e embaixo ficam a navegação e o botão Perguntar.
  */
@@ -12,7 +12,6 @@ import {
   BookMarked,
   Building2,
   CalendarDays,
-  ChevronRight,
   FileText,
   FolderOpen,
   Hourglass,
@@ -41,7 +40,8 @@ import { comecarJaAberto, marcarComecarAberto } from "@/paginas/comecar";
 import { Avisos } from "./avisos";
 import { Busca } from "./busca";
 import { Marca } from "./marca";
-import { Avatar, Botao, Carregando } from "./ui";
+import { MenuDaConta } from "./menu-da-conta";
+import { Botao, Carregando } from "./ui";
 
 type Destino = "/hoje" | "/prazos" | "/publicacoes" | "/agenda" | "/perguntar" | "/processos" | "/clientes" | "/negocios" | "/alvaras" | "/documentos" | "/modelos" | "/equipe" | "/configuracoes";
 
@@ -253,14 +253,7 @@ function Moldura({ eu }: { eu: Eu }) {
           ))}
         </div>
         <div className="dc-menu__pe">
-          <Link to="/conta" className="dc-menu__conta" title={recolhido ? eu.usuario.nome : undefined}>
-            <Avatar pessoa={eu.usuario} />
-            <span className="min-w-0">
-              <strong className="truncate">{eu.usuario.nome}</strong>
-              <small className="truncate">{eu.usuario.cargo ?? "Equipe"}</small>
-            </span>
-            <ChevronRight className="dc-menu__seta" />
-          </Link>
+          <MenuDaConta eu={eu} recolhido={recolhido} />
         </div>
       </nav>
       <div className="dc-conteudo" data-scroll-restoration-id="folha">
