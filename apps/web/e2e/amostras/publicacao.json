@@ -1,7 +1,7 @@
 {
-  "path": "/publicacoes/43a76bea-93e3-447b-a5b8-9077866f05cc",
+  "path": "/publicacoes/f6e1ff02-a601-4773-8735-cd4e2fe44735",
   "corpo": {
-    "id": "43a76bea-93e3-447b-a5b8-9077866f05cc",
+    "id": "f6e1ff02-a601-4773-8735-cd4e2fe44735",
     "situacao": "nova",
     "fonte": "djen",
     "disponibilizadaEm": "2026-10-28",
@@ -30,14 +30,14 @@
       }
     ],
     "processo": {
-      "id": "c24481d1-fc5d-47de-b36a-dc419c70d366",
+      "id": "ff64fba0-6605-4068-b72c-9fe584d8a980",
       "titulo": "Marina Duarte × Seguradora Alfa S.A.",
       "cnj": "5004321-25.2026.8.24.0038",
       "classe": "Procedimento comum cível",
       "orgao": "2ª Vara Cível",
       "comarca": "Joinville",
       "responsavel": {
-        "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+        "id": "RWbNA8pAzHU9tYFAKWUMekluJ8P5h6nc",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -46,7 +46,7 @@
       "semIa": false
     },
     "sugestao": {
-      "id": "0b373c67-8c42-4d93-85c1-a147266ab481",
+      "id": "d993ed40-9136-44f2-adac-70b1866c2897",
       "acao": "sugerir-prazo",
       "situacao": "pronto",
       "conteudo": {
@@ -55,6 +55,7 @@
         "regra": "Dias úteis (CPC, art. 219)",
         "recusa": null,
         "resumo": "Intimação para falar do laudo pericial do evento 87.",
+        "trecho": "Intimem-se as partes para, querendo, manifestarem-se sobre o laudo pericial juntado no evento 87, no prazo comum de 15 (quinze) dias.",
         "assunto": "laudo pericial",
         "contagem": "uteis",
         "audiencia": null,
@@ -66,7 +67,8 @@
           ],
           "confianca": "alta"
         },
-        "responsavelId": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+        "responsavelId": "RWbNA8pAzHU9tYFAKWUMekluJ8P5h6nc",
+        "trechoConfere": true,
         "contagemCalculada": {
           "fim": "2026-11-23",
           "dias": 15,
@@ -94,7 +96,7 @@
       "desatualizada": false,
       "erro": null,
       "responsavel": {
-        "id": "0rJBxVvSrqtuBXvxfyatiN3ToMmGFMZy",
+        "id": "RWbNA8pAzHU9tYFAKWUMekluJ8P5h6nc",
         "nome": "Beatriz Souza",
         "apelido": "Beatriz",
         "iniciais": "BS",
@@ -102,7 +104,7 @@
       }
     },
     "prazo": {
-      "id": "7c1212d1-7965-4177-931b-38e2c23871a3",
+      "id": "1788b1cd-2969-479a-a3d5-07534eb733d9",
       "confirmado": false,
       "fim": "2026-11-23",
       "tipo": "Manifestação sobre laudo pericial"

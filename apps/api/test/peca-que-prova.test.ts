@@ -190,6 +190,14 @@ describe.skipIf(!hasTestDatabase)("a peça que prova o que diz", () => {
       expect(conferencia.avisos).toEqual([{ tipo: "valor", trecho: "R$ 90,00", mensagem: "O valor R$ 90,00 não aparece nos autos." }]);
     });
 
+    test("o que a pessoa respondeu na estratégia conta como fonte: é informação dela, não invenção", async () => {
+      const estrategia = { teoria: "", teses: [], provas: [], capitulos: [], perguntas: [{ id: "q1", pergunta: "Quando foi o contato?", muda: "Entra um tópico.", resposta: "O contato foi em 02/03/2026." }] };
+      const pecaId = await gerar({ estrategia }, "O contato com a ré foi feito em 02/03/2026, por telefone.");
+      ia.respostas["ligar-fatos"] = { fatos: [{ afirmacao: "O contato com a ré foi feito em 02/03/2026, por telefone.", fonte: "I", trecho: "O contato foi em 02/03/2026.", falta: null }] };
+      const { conferencia } = await json(call(`/pecas/${pecaId}/conferir-fatos`, { method: "POST" }));
+      expect(conferencia.fatos[0]).toMatchObject({ situacao: "conferido", fonte: { rotulo: "Instruções de quem pediu" } });
+    });
+
     test("o DOCX sai limpo, e o registro diz quantos pontos ficaram em aberto", async () => {
       const pecaId = await gerar();
       ia.respostas["ligar-fatos"] = ligados;

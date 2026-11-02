@@ -73,7 +73,9 @@ export async function conferirFatosDaPeca(deps: DepsDosFatos, organizationId: st
     const [peca] = await tx.select().from(pecas).where(eq(pecas.id, pecaId));
     if (!peca) return null;
     const [prazo] = peca.prazoId ? await tx.select().from(prazos).where(eq(prazos.id, peca.prazoId)) : [];
-    const { fontes, eventos } = await fontesDaPeca(tx, { organizationId, processoId: peca.processoId, prazo: prazo ?? null, tipo: peca.tipo, instrucoes: peca.instrucoes });
+    // O que a pessoa respondeu na estratégia é informação dela, como as instruções.
+    const respostas = (peca.estrategia?.perguntas ?? []).map((q) => q.resposta).filter((r) => r.trim());
+    const { fontes, eventos } = await fontesDaPeca(tx, { organizationId, processoId: peca.processoId, prazo: prazo ?? null, tipo: peca.tipo, instrucoes: [peca.instrucoes, ...respostas].filter(Boolean).join("\n") });
     const chaves = extrairCitacoes(peca.texto)
       .filter((c) => c.tipo !== "dispositivo")
       .map((c) => c.chave);

@@ -135,6 +135,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         verificacao: p.verificacao ? { ...p.verificacao, atual: p.verificacao.hashDoTexto === hashDoTexto(p.texto) } : null,
         /** As partes como o cadastro diz, para a checagem da qualificação. */
         partes: (await paraQualificar(tx, p.processoId)).partes,
+        geradaPorIa: p.textoGerado !== null,
         /** Cada fato ligado ao trecho; `atual` cai quando o texto muda depois da conferência. */
         conferencia: p.conferencia ? { ...p.conferencia, atual: p.conferencia.hashDoTexto === hashDoTexto(p.texto) } : null,
         estrategia: p.estrategia,
@@ -176,6 +177,7 @@ export function rotasDasPecas(app: Hono<Ambiente>, deps: DepsDasRotas) {
         if (!p) return null;
         if (await semIa(tx, { processoId: p.id })) throw new ClienteSemIa();
         const [prazo] = b.prazoId ? await tx.select().from(prazos).where(eq(prazos.id, b.prazoId)) : [];
+        if (b.prazoId && !prazo) return null;
         const montado = await montarPedidoDePeca(db, tx, { organizationId: orgId, nomeDoEscritorio: c.get("orgNome"), quem: { id: c.get("userId"), nome: c.get("userNome") }, processo: p, prazo: prazo ?? null, tipo, instrucoes: b.instrucoes });
         const { fontes } = await fontesDaPeca(tx, { organizationId: orgId, processoId: p.id, prazo: prazo ?? null, tipo: tipo.id, instrucoes: b.instrucoes });
         const jeito = montado.pedido.jeito;

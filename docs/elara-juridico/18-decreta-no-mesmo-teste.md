@@ -34,6 +34,12 @@ A instrução foi a mesma dada aos concorrentes: *"Represente a ré, pessoa jur�
 
 Uma coisa a registrar: na primeira execução do script, a cliente ficou no polo "ativo" porque esqueci de informar `poloCliente`, e o pedido saiu com "Nosso cliente: TESTE CLIENTE FICTICIO, no polo ativo (autor)" ao lado de "TESTE CLIENTE FICTICIO (passivo, nosso cliente)". Foi erro do script, já corrigido: o formulário de novo processo mantém o polo e as partes juntos. Mas a API aceita os dois dados em desacordo, e o modelo recebe a contradição. Não mudei isso.
 
+### Depois da Onda 5
+
+A coluna "Fato ou prova sem base" deixou de depender só de instrução: a peça gerada passa pela conferência dos fatos (a IA liga cada afirmação a um trecho, e o código confere se o trecho existe e se datas e valores batem; o que não confere sai `[A COMPROVAR: ...]`), pela checagem "antes de protocolar" (frase quebrada, campo em branco, marca interna, força sem citação e parte diferente do cadastro) e, nos julgados, pelo acervo. A ré pessoa jurídica agora vem do cadastro, mesmo sem CNPJ na ficha.
+
+**Continua sem medida com o modelo de verdade.** Os testes usam IA de mentira, e o que está acima é a régua, não o resultado. Para medir, com o gateway no `.env`: `bun run peticao-ficticia` (imprime a conferência de cada contestação) e `bun run avaliar` (o conjunto-ouro ganhou três casos de peça: este teste, a lacuna silenciosa da tempestividade e o julgado de memória).
+
 ### O que isso deixa em aberto
 
 - A tabela do documento 07 recebe uma linha do Decreta com "saída não medida". Ela só vira prova de venda depois de rodar o script com o gateway de verdade e ler as peças.

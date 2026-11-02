@@ -5,7 +5,7 @@
  * "jurisprudência consolidada" sem julgado do Projuris.
  */
 import { describe, expect, test } from "bun:test";
-import { checarPeca } from "../src/checagem-da-peca.ts";
+import { checarPeca, forcaSemBase, fraseAntesDaMarca } from "../src/checagem-da-peca.ts";
 
 const tipos = (texto: string) => checarPeca(texto).map((p) => p.tipo);
 const trechos = (texto: string) => checarPeca(texto).map((p) => p.trecho);
@@ -71,6 +71,10 @@ describe("campo vazio", () => {
   test("valor, data e número completos passam", () => {
     expect(checarPeca("Comprou por R$ 1.000,00 em 10/09/2026, CNPJ nº 12.345.678/0001-90, CPF: 529.982.247-25.")).toEqual([]);
   });
+
+  test("o número com ponto depois do nº não é campo em branco", () => {
+    expect(checarPeca("Inscrita no CPF nº. 529.982.247-25 e no CNPJ n. 12.345.678/0001-90, nos termos da Lei nº. 9.099/95.")).toEqual([]);
+  });
 });
 
 describe("colchetes", () => {
@@ -135,6 +139,10 @@ describe("força sem citação", () => {
   test("com a citação na mesma frase, o selo de quem cita resolve", () => {
     expect(checarPeca("O STJ consolidou o entendimento na Súmula 608 do STJ.")).toEqual([]);
   });
+
+  test("consolidar a propriedade do imóvel não é falar de jurisprudência", () => {
+    expect(checarPeca("O banco consolidou a propriedade do imóvel em seu nome.")).toEqual([]);
+  });
 });
 
 describe("qualificação das partes, conferida com o cadastro", () => {
@@ -166,6 +174,20 @@ describe("qualificação das partes, conferida com o cadastro", () => {
 
   test("o que vem depois do ponto é outra frase", () => {
     expect(checarPeca("A ré é TESTE CLIENTE FICTICIO. O autor, brasileiro, portador do CPF, reclama.", { partes })).toEqual([]);
+  });
+});
+
+describe("a frase que o julgado sustenta", () => {
+  test("a palavra de força que o trecho não diz vem de volta; com base no trecho, não", () => {
+    expect(forcaSemBase("O STJ consolidou que o atraso gera dano moral.", "O atraso na entrega gera dano moral.")).toBe("consolidou");
+    expect(forcaSemBase("O STJ consolidou que o atraso gera dano moral.", "É firme o entendimento de que o atraso gera dano moral.")).toBeNull();
+    expect(forcaSemBase("O atraso gera dano moral.", "O atraso gera dano moral.")).toBeNull();
+  });
+
+  test("a frase é a última do parágrafo antes da marca", () => {
+    const texto = "Primeira frase do parágrafo. O atraso gera mero aborrecimento. [JURISPRUDÊNCIA: tese]";
+    expect(fraseAntesDaMarca(texto, texto.indexOf("["))).toBe("O atraso gera mero aborrecimento.");
+    expect(fraseAntesDaMarca("Outro parágrafo.\n\n[JURISPRUDÊNCIA: tese]", 18)).toBeNull();
   });
 });
 

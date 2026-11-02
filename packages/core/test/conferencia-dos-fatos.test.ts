@@ -189,6 +189,11 @@ describe("cobertura: o que a IA não listou", () => {
     expect(r.texto).not.toContain("alegado na inicial. [A COMPROVAR");
   });
 
+  test("a frase que cita lei e a seção de fatos e direito juntos não viram fato sem fonte", () => {
+    const texto = ["## Dos fatos", "A relação entre as partes é de consumo, nos termos do art. 3º do CDC, como já se disse.", "## Dos fatos e do direito", "O fornecedor responde independentemente de culpa pelos danos causados ao consumidor."].join("\n\n");
+    expect(conferirFatos({ texto, fontes, listados: [] }).texto).toBe(texto);
+  });
+
   test("sem a lista da IA, não há o que cobrir", () => {
     const texto = "## Dos fatos\n\nA ré sempre prestou todo o suporte necessário ao autor.";
     expect(conferirFatos({ texto, fontes, listados: null }).texto).toBe(texto);

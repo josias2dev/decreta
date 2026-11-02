@@ -47,6 +47,11 @@ export function lacunas(texto: string): number {
   return texto.split("\n").reduce((n, linha) => n + trechos(linha).filter((t) => t.marcar).length, 0);
 }
 
+/** Cada marca [JURISPRUDÊNCIA: tese] do texto: é o que a busca no acervo preenche. */
+export function marcasDeJurisprudencia(texto: string): { tese: string; inicio: number; fim: number }[] {
+  return [...texto.matchAll(/\[JURISPRUD[ÊE]NCIA\s*:?\s*([^\]\n]*)\]/g)].map((m) => ({ tese: m[1]!.trim(), inicio: m.index!, fim: m.index! + m[0].length }));
+}
+
 /** A etiqueta vazada de outro sistema, fechada ou cortada, como `<mention id="1">`. */
 export const ETIQUETA_INTERNA = /<\/?[a-zA-Z][\w:-]*(?:\s[^<>\n]*)?\/?>|<\/?(?:mention|cite|citation|source|ref)\b[^<>\n]{0,120}/g;
 /** O aviso que a tela põe quando a geração cai no meio. */

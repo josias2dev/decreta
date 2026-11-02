@@ -49,8 +49,8 @@ const CAMPO_VAZIO: readonly [RegExp, string][] = [
   [/,[^\S\n]*\.(?!\.)|(?<!\.)\.\.(?!\.)/g, "Pontuação repetida: há um campo em branco aqui."],
   [/R\$[^\S\n]*(?:,\d{0,2}|\.(?!\d))/g, "Valor em branco."],
   [/R\$[^\S\n]*[Xx]+(?:[.,][Xx]+)*|\bn[º°]\.?[^\S\n]*[Xx]{2,}\b|\b[Xx]{4,}\b|\bxxx\b/gu, "Número por preencher."],
-  [/\b(?:CPF|CNPJ|RG|CEP|OAB|CTPS|PIS)(?:\/MF)?[^\S\n]*(?:(?:sob[^\S\n]+o[^\S\n]+)?n[º°o]?\.?[^\S\n]*|:[^\S\n]*)(?:[,;.]|$)/gmu, "Documento em branco."],
-  [/\bn[º°]\.?[^\S\n]*[,;.]/gu, "Número em branco."],
+  [/\b(?:CPF|CNPJ|RG|CEP|OAB|CTPS|PIS)(?:\/MF)?[^\S\n]*(?:(?:sob[^\S\n]+o[^\S\n]+)?n[º°o]?\.?[^\S\n]*|:[^\S\n]*)(?:[,;.](?![^\S\n]*\d)|$)/gmu, "Documento em branco."],
+  [/\bn[º°]\.?[^\S\n]*[,;.](?![^\S\n]*\d)/gu, "Número em branco."],
   [/_+(?:\/_+)+|_{3,}/g, "Campo em branco."],
   [/\([^\S\n]*\)/g, "Parênteses vazios: faltou o que ia dentro."],
 ];
@@ -69,7 +69,7 @@ const MARCAS_INTERNAS: readonly RegExp[] = [
 ];
 
 const FORCA =
-  /jurisprud[êe]ncia\s+(?:consolidada|pac[íi]fica|dominante|un[íi]ssona|remansosa|majorit[áa]ria|firme|assente|mansa)|entendimento\s+(?:consolidado|pac[íi]fico|dominante|un[âa]nime|majorit[áa]rio|firme|assente)|orienta[çc][ãa]o\s+(?:consolidada|pac[íi]fica|dominante|majorit[áa]ria|firme)|\b(?:consolidou|pacificou|uniformizou|sedimentou)\b/giu;
+  /jurisprud[êe]ncia\s+(?:consolidada|pac[íi]fica|dominante|un[íi]ssona|remansosa|majorit[áa]ria|firme|assente|mansa)|entendimento\s+(?:consolidado|pac[íi]fico|dominante|un[âa]nime|majorit[áa]rio|firme|assente)|orienta[çc][ãa]o\s+(?:consolidada|pac[íi]fica|dominante|majorit[áa]ria|firme)|\b(?:consolidou(?!\s+a\s+propriedade)|pacificou|uniformizou|sedimentou)\b/giu;
 
 /**
  * A palavra de força da frase que o trecho do julgado não diz ("consolidou",

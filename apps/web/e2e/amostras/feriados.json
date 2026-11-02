@@ -3,6 +3,7 @@
   "corpo": {
     "ano": 2026,
     "tribunal": "TJSC",
+    "calendarioCompleto": true,
     "dias": [
       {
         "dia": "2026-01-01",
@@ -93,7 +94,7 @@
         "nome": "Instabilidade do eproc (portaria da Presidência)",
         "tipo": "forense",
         "origem": "TJSC",
-        "id": "6f554428-81b9-4119-96fc-3624a9ca3e72"
+        "id": "117e31eb-43f3-4add-89b6-da60dc6f0ed6"
       },
       {
         "dia": "2026-12-08",

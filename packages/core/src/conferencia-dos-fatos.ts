@@ -177,6 +177,8 @@ export function localizarTrecho(documento: string, trecho: string): { folha: num
 
 /** O título da seção que narra os fatos: nela, toda frase precisa de fonte. */
 const SECAO_DE_FATOS = /\b(?:fatos?|s[íi]ntese|relat[óo]rio|hist[óo]rico|contrato de trabalho)\b/iu;
+/** "Dos fatos e do direito": mistura tese com fato, e a frase de tese não pede fonte. */
+const SECAO_MISTA = /\b(?:direito|fundamentos?|m[ée]rito)\b/iu;
 /** Frase curta na seção de fatos não afirma nada ("É o relato."). */
 const FRASE_MINIMA = 40;
 const MARCA_DE_REVISAO = /\[(?:COMPLETAR|A COMPROVAR|JURISPRUD[ÊE]NCIA)[^\]]*\]/g;
@@ -277,12 +279,12 @@ export function conferirFatos(entrada: {
     let naSecaoDeFatos = false;
     for (const b of blocosComPosicao(texto)) {
       if (b.tipo === "secao" || b.tipo === "subtitulo") {
-        if (b.tipo === "secao") naSecaoDeFatos = SECAO_DE_FATOS.test(b.texto);
+        if (b.tipo === "secao") naSecaoDeFatos = SECAO_DE_FATOS.test(b.texto) && !SECAO_MISTA.test(b.texto);
         continue;
       }
       if (!naSecaoDeFatos || b.tipo === "enderecamento") continue;
       for (const frase of frasesDe(texto.slice(b.inicio, b.fim), b.inicio)) {
-        if (frase.texto.length < FRASE_MINIMA || frase.texto.search(MARCA_DE_REVISAO) >= 0) continue;
+        if (frase.texto.length < FRASE_MINIMA || frase.texto.search(MARCA_DE_REVISAO) >= 0 || extrairCitacoes(frase.texto).length) continue;
         if (fatos.some((f) => f.inicio < frase.fim && f.fim > frase.inicio)) continue;
         fatos.push({ afirmacao: frase.texto, situacao: "a_comprovar", fonte: null, trecho: null, motivo: "A IA não ligou esta frase a nenhuma fonte.", inicio: frase.inicio, fim: frase.fim });
         marcar(frase.fim, "sem fonte nos autos");

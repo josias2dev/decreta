@@ -4,7 +4,7 @@
  * citação a partir do banco, nunca o modelo. A frase que o julgado sustenta passa
  * pela conferência de força. Sem resultado, a marca continua, com a explicação.
  */
-import { forcaSemBase, fraseAntesDaMarca } from "@decreta/core";
+import { forcaSemBase, fraseAntesDaMarca, marcasDeJurisprudencia } from "@decreta/core";
 import { acervoDocumentos, type Database, type JulgadoDaPeca } from "@decreta/db";
 import { citarNoAcervo, papelDosJulgados, type Ia, type PapelDoJulgado } from "@decreta/ia";
 import { sql } from "drizzle-orm";
@@ -129,10 +129,7 @@ export async function buscarJulgados(deps: { db: Database; ia: Ia | null; log: (
 
 /** A marca da tese no texto, onde ela está. */
 export function marcaDaTese(texto: string, tese: string): { inicio: number; fim: number } | null {
-  for (const m of texto.matchAll(/\[JURISPRUD[ÊE]NCIA\s*:?\s*([^\]\n]*)\]/g)) {
-    if (m[1]!.trim().toLocaleLowerCase("pt-BR") === tese.trim().toLocaleLowerCase("pt-BR")) return { inicio: m.index!, fim: m.index! + m[0].length };
-  }
-  return null;
+  return marcasDeJurisprudencia(texto).find((m) => m.tese.toLocaleLowerCase("pt-BR") === tese.trim().toLocaleLowerCase("pt-BR")) ?? null;
 }
 
 export class ForaDoAcervo extends Error {}
