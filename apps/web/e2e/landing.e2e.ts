@@ -98,17 +98,17 @@ test.describe("a contagem animada", () => {
 });
 
 test.describe("o teste do feriado", () => {
-  test("a data é sempre a do próximo feriado nacional, calculada ao abrir", async ({ page }) => {
+  test("a data é sempre a do próximo feriado nacional em dia de semana, calculada ao abrir", async ({ page }) => {
     await abrirLanding(page, "2026-10-29T09:30:00-03:00");
     await expect(page.locator(".lp-teste__data")).toHaveText("02/11/2026");
     await expect(page.locator(".lp-folhinha__nome")).toHaveText("Finados");
     await expect(page.locator(".lp-aviso")).toContainText("02/11/2026 é feriado (Finados). O próximo dia útil é 03/11/2026.");
   });
 
-  test("dias depois, a página já fala do feriado seguinte", async ({ page }) => {
+  test("dias depois, a página já fala do feriado seguinte e pula o que cai no domingo", async ({ page }) => {
     await abrirLanding(page, "2026-11-02T09:30:00-03:00");
-    await expect(page.locator(".lp-teste__data")).toHaveText("15/11/2026");
-    await expect(page.locator(".lp-aviso")).toContainText("15/11/2026 é domingo e feriado (Proclamação da República). O próximo dia útil é 16/11/2026.");
+    await expect(page.locator(".lp-teste__data")).toHaveText("20/11/2026");
+    await expect(page.locator(".lp-aviso")).toContainText("20/11/2026 é feriado (Consciência Negra). O próximo dia útil é 23/11/2026.");
   });
 });
 

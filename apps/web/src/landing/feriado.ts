@@ -1,5 +1,5 @@
 /**
- * O teste do feriado: o texto da seção, sempre com o próximo feriado nacional.
+ * O teste do feriado: o texto da seção, sempre com o próximo feriado nacional em dia de semana.
  * Sai pronto no build e é recalculado ao abrir a página, para nunca convidar a
  * digitar uma data que já passou.
  */

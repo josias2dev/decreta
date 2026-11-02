@@ -3,7 +3,7 @@
  * motivo de ter contado ou ficado de fora. Os exemplos foram contados à mão.
  */
 import { describe, expect, test } from "bun:test";
-import { abrirConta, calendarioPara, contarPrazo, proximoFeriadoNacional } from "../src/index.ts";
+import { abrirConta, calendarioPara, contarPrazo, proximoFeriadoEmDiaDeSemana } from "../src/index.ts";
 
 const contados = (c: ReturnType<typeof abrirConta>) => c.linha.filter((d) => d.tipo === "contado").map((d) => d.dia);
 const doTipo = (c: ReturnType<typeof abrirConta>, tipo: string) => c.linha.filter((d) => d.tipo === tipo);
@@ -93,17 +93,20 @@ describe("a conta aberta", () => {
   });
 });
 
-describe("o próximo feriado nacional", () => {
+describe("o próximo feriado nacional em dia de semana", () => {
   test("sempre depois de hoje, mesmo quando hoje é feriado", () => {
-    expect(proximoFeriadoNacional("2026-11-02")).toMatchObject({ dia: "2026-11-15", nome: "Proclamação da República" });
-    expect(proximoFeriadoNacional("2026-11-01")).toMatchObject({ dia: "2026-11-02", nome: "Finados" });
+    expect(proximoFeriadoEmDiaDeSemana("2026-11-01")).toMatchObject({ dia: "2026-11-02", nome: "Finados" });
+  });
+
+  test("pula o feriado que cai no fim de semana: aviso de domingo qualquer sistema daria", () => {
+    expect(proximoFeriadoEmDiaDeSemana("2026-11-02")).toMatchObject({ dia: "2026-11-20", nome: "Consciência Negra" });
   });
 
   test("a Sexta-feira da Paixão entra, porque muda de data todo ano", () => {
-    expect(proximoFeriadoNacional("2026-03-20")).toMatchObject({ dia: "2026-04-03", nome: "Sexta-feira da Paixão" });
+    expect(proximoFeriadoEmDiaDeSemana("2026-03-20")).toMatchObject({ dia: "2026-04-03", nome: "Sexta-feira da Paixão" });
   });
 
   test("no fim do ano, vira para o ano seguinte", () => {
-    expect(proximoFeriadoNacional("2026-12-25")).toMatchObject({ dia: "2027-01-01", nome: "Confraternização Universal" });
+    expect(proximoFeriadoEmDiaDeSemana("2026-12-25")).toMatchObject({ dia: "2027-01-01", nome: "Confraternização Universal" });
   });
 });

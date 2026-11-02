@@ -195,8 +195,6 @@
 .lp-sigilo__lista li { padding: 14px 0 16px; border-top: 1px solid var(--borda-forte); }
 .lp-sigilo__lista h3 { margin: 0 0 4px; font-size: 15px; line-height: 21px; font-weight: 600; }
 .lp-sigilo__lista p { margin: 0; font-size: 14px; line-height: 21px; color: var(--tinta-2); text-wrap: pretty; }
-.lp-sigilo__quem { font-size: 14px; line-height: 21px; color: var(--tinta-2); }
-.lp-sigilo__quem b { font-weight: 600; color: var(--tinta); }
 
 /* ---------- § 8 Preço ---------- */
 .lp-preco { padding-top: 72px; }

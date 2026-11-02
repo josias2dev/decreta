@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import type { Connect, Plugin } from "vite";
 import { TRIBUNAIS_COM_CALENDARIO } from "../../../packages/core/src/calendario.ts";
 import { avisoDoDiaSemExpediente } from "../../../packages/core/src/prazos.ts";
-import { calendarioPara, proximoFeriadoNacional } from "../../../packages/core/src/calendario.ts";
+import { calendarioPara, proximoFeriadoEmDiaDeSemana } from "../../../packages/core/src/calendario.ts";
 import { abrirConta } from "../../../packages/core/src/conta-aberta.ts";
 import { hojeEm } from "../../../packages/core/src/datas.ts";
 import { EMPRESA } from "../../../packages/core/src/legal.ts";
@@ -40,7 +40,7 @@ function opcoesDeTribunal(): string {
 
 /** O teste do feriado sai com o próximo feriado no dia do build; no navegador, a data é recalculada ao abrir (landing/main.ts). */
 function feriadoNoBuild() {
-  const f = proximoFeriadoNacional(hojeEm());
+  const f = proximoFeriadoEmDiaDeSemana(hojeEm());
   return dadosDoFeriado(f, avisoDoDiaSemExpediente(f.dia, calendarioPara({ tribunal: "nacional" }))!.aviso);
 }
 

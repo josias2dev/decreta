@@ -6,7 +6,7 @@
 import "../estilos/tokens.css";
 import "../estilos/landing.css";
 import "../estilos/landing-secoes.css";
-import { avisoDoDiaSemExpediente, calendarioPara, ehEventoDoSite, hojeEm, proximoFeriadoNacional } from "@decreta/core";
+import { avisoDoDiaSemExpediente, calendarioPara, ehEventoDoSite, hojeEm, proximoFeriadoEmDiaDeSemana } from "@decreta/core";
 import { API_URL } from "@/lib/api";
 import { registrarEventoDoSite } from "@/lib/eventos";
 import { ligarFundoAscii } from "@/lib/fundo-ascii";
@@ -27,7 +27,7 @@ document.addEventListener("click", (e) => {
 });
 
 function atualizarFeriado() {
-  const f = proximoFeriadoNacional(hojeEm());
+  const f = proximoFeriadoEmDiaDeSemana(hojeEm());
   const aviso = avisoDoDiaSemExpediente(f.dia, calendarioPara({ tribunal: "nacional" }));
   const dados = dadosDoFeriado(f, aviso?.aviso ?? "");
   for (const el of document.querySelectorAll<HTMLElement>("[data-feriado]")) el.textContent = dados[el.dataset.feriado as keyof typeof dados];

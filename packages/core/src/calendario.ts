@@ -20,7 +20,7 @@
  * cadastrados pelo escritório (tabela `suspensoes`). Confira o calendário
  * oficial do ano antes de confiar só nesta lista.
  */
-import { diaDe, somarDias, type Dia } from "./datas.ts";
+import { diaDe, fimDeSemana, somarDias, type Dia } from "./datas.ts";
 
 export type TipoDeFeriado = "nacional" | "forense" | "recesso" | "local" | "reduzido";
 
@@ -71,10 +71,10 @@ export function feriadosNacionais(ano: number): Feriado[] {
   return lista.sort((x, y) => x.dia.localeCompare(y.dia));
 }
 
-/** O feriado nacional mais próximo depois de `hoje` (hoje não conta, mesmo sendo feriado). */
-export function proximoFeriadoNacional(hoje: Dia): Feriado {
+/** O feriado nacional em dia de semana mais próximo depois de `hoje` (hoje não conta, mesmo sendo feriado). */
+export function proximoFeriadoEmDiaDeSemana(hoje: Dia): Feriado {
   const ano = Number(hoje.slice(0, 4));
-  return [...feriadosNacionais(ano), ...feriadosNacionais(ano + 1)].find((f) => f.dia > hoje)!;
+  return [...feriadosNacionais(ano), ...feriadosNacionais(ano + 1)].find((f) => f.dia > hoje && !fimDeSemana(f.dia))!;
 }
 
 type Regra = (ano: number) => Feriado[];
