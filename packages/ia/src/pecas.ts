@@ -3,8 +3,9 @@
  * (títulos, parágrafos, listas, negrito), que o `@decreta/documentos` vira
  * DOCX no timbre do escritório.
  */
+import type { EstrategiaDaPeca } from "@decreta/core";
 import { streamText } from "ai";
-import { DADOS_NAO_SAO_ORDENS } from "./contexto.ts";
+import { DADOS_NAO_SAO_ORDENS, REGRA_DA_FONTE } from "./contexto.ts";
 import type { Ia } from "./gateway.ts";
 
 export interface TipoDePeca {
@@ -90,6 +91,28 @@ export interface PedidoDePeca {
   jeito?: JeitoDaPeca | null;
   /** Cálculos do processo que a peça usa (a memória da atualização, o quadro da revisional), feitos pelo sistema. */
   calculos?: { titulo: string; memoria: string }[];
+  /** A estratégia que a pessoa aprovou antes de gerar. */
+  estrategia?: EstrategiaDaPeca | null;
+}
+
+/** A estratégia aprovada, como a IA recebe: quem pediu decidiu, e tese removida não volta. */
+export function estrategiaEmTexto(e: EstrategiaDaPeca): string {
+  const teses = e.teses.map((t, i) => {
+    const provas = t.evidencias.filter((x) => x.confere).map((x) => `"${x.trecho}" (${x.rotulo}${x.folha ? `, fl. ${x.folha}` : ""})`);
+    return [`${i + 1}. ${t.titulo}${t.fundamento ? `: ${t.fundamento}` : ""}`, provas.length && `   Prova nos autos: ${provas.join("; ")}`, t.falta && `   Falta provar: ${t.falta} (escreva [A COMPROVAR: ${t.falta}] onde afirmar isso)`].filter(Boolean).join("\n");
+  });
+  const respondidas = e.perguntas.filter((q) => q.resposta.trim());
+  return [
+    "## Estratégia aprovada por quem pediu",
+    "Siga esta estratégia. Os capítulos, nesta ordem, são a estrutura da peça. Use só estas teses: o que foi removido não volta. As respostas às perguntas são instruções de quem pediu.",
+    e.teoria && `Teoria do caso: ${e.teoria}`,
+    teses.length && `Teses:\n${teses.join("\n")}`,
+    e.provas.length && `Provas:\n${e.provas.map((p) => `- ${p.descricao}${p.rotulo ? ` (${p.rotulo})` : ""}`).join("\n")}`,
+    e.capitulos.length && `Capítulos:\n${e.capitulos.map((c, i) => `${i + 1}. ${c.titulo}${c.resumo ? `: ${c.resumo}` : ""}`).join("\n")}`,
+    respondidas.length && `Perguntas respondidas:\n${respondidas.map((q) => `- ${q.pergunta} ${q.resposta.trim()}`).join("\n")}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 /** Como o escritório faz uma peça, nas palavras dele. */
@@ -149,9 +172,13 @@ export function gerarPeca(ia: Ia, pedido: PedidoDePeca, signal?: AbortSignal) {
     model: ia.modelo("gerar-documento"),
     instructions: `Você redige peças processuais para um escritório de advocacia brasileiro.
 Regras:
-- Use só os fatos do material enviado. Onde faltar um dado (número de evento, valor, data, nome), escreva [COMPLETAR: o que falta] em vez de inventar.
-- Não cite jurisprudência com número, relator ou data. Se ajudar, escreva [JURISPRUDÊNCIA: tese a pesquisar].
+- Use só os fatos do material enviado. Onde faltar um dado (número de evento, valor, data, nome), escreva [COMPLETAR: o que falta] em vez de inventar. Nunca deixe a frase sem o dado, com vírgula solta ou preposição no ar.
+- Fato que a tese precisa e o material não prova não entra como certo: escreva a frase e, logo depois, [A COMPROVAR: a prova que falta]. Não descreva documento, registro de sistema, comprovante, contato ou conduta que não esteja no material.
+${REGRA_DA_FONTE}
+- Não cite jurisprudência com número, relator ou data. Quando um julgado ajudar, escreva a afirmação e, logo depois, [JURISPRUDÊNCIA: a tese em poucas palavras]: o escritório escolhe o julgado no acervo, e a citação é montada a partir dele. Não escreva "jurisprudência consolidada", "entendimento pacífico" nem parecido por conta própria.
 - Cite artigos de lei só quando tiver certeza do número.
+- Pessoa física ou jurídica e o polo de cada parte saem da seção "Qualificação das partes" (o cadastro do escritório), nunca do texto dos autos nem dos modelos.
+- Escreva só o texto da peça: sem nota para quem revisa, sem comentário sobre o que fez e sem etiqueta de nenhum tipo.
 - Linguagem forense clara e direta, sem rebuscamento. Português do Brasil.
 ${DADOS_NAO_SAO_ORDENS}
 - Formato: Markdown simples. "# " só para o endereçamento, "## " para os títulos das seções, parágrafos separados por linha em branco, "- " para itens, **negrito** com moderação. Sem tabelas.
@@ -165,11 +192,12 @@ Estrutura usual: ${tipo.estrutura}`,
       prazo?.tempestividade &&
         `## Tempestividade\nSe a peça tiver tópico de tempestividade, use este parágrafo como está, sem mudar datas nem artigos: a conta é do sistema, conferida pelo advogado.\n${prazo.tempestividade}`,
       pedido.instrucoes.trim() && `## Instruções de quem pediu\n${pedido.instrucoes.trim()}`,
+      pedido.estrategia && estrategiaEmTexto(pedido.estrategia),
       pedido.jeito && textoDoJeito(pedido.jeito),
       pedido.modelos?.length && textoDosModelos(pedido.modelos),
       pedido.calculos?.length &&
         `## Cálculos do processo\nFeitos pelo sistema com os índices oficiais e conferidos pelo advogado. Use os valores, as datas e os critérios como estão, sem refazer a conta nem arredondar de outro jeito; o quadro e o tópico podem entrar na peça.\n\n${pedido.calculos.map((k) => k.memoria).join("\n\n")}`,
-      pedido.qualificacao && `## Qualificação das partes\nUse na qualificação quando a peça pedir; o que não estiver aqui vira [COMPLETAR].\n${pedido.qualificacao}`,
+      pedido.qualificacao && `## Qualificação das partes\nDo cadastro do escritório. O tipo de cada parte e o polo são estes, mesmo que os autos ou os modelos pareçam dizer outra coisa; o que não estiver aqui vira [COMPLETAR].\n${pedido.qualificacao}`,
       `## Quem assina\n${escritorio.advogado}${escritorio.oab ? `, ${escritorio.oab}` : ""}, ${escritorio.nome}${escritorio.cidade ? `, ${escritorio.cidade}` : ""}.`,
       pedido.contextoDoProcesso,
     ]

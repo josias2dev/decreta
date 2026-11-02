@@ -49,6 +49,10 @@ export const METODOS = [
   "mensagem-cliente",
   "conferir-citacao",
   "observar-prazo",
+  "estrategia-peca",
+  "ligar-fatos",
+  "ajustar-peca",
+  "papel-do-julgado",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -72,6 +76,10 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "mensagem-cliente": "juridico",
   "conferir-citacao": "juridico",
   "observar-prazo": "juridico",
+  "estrategia-peca": "autos",
+  "ligar-fatos": "autos",
+  "ajustar-peca": "documentos",
+  "papel-do-julgado": "juridico",
 };
 
 /**
@@ -79,9 +87,21 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
  * ao gateway como uma que ele já tem. O título da conversa vai como o chat; a
  * leitura da peça contrária, como o briefing do prazo (o mesmo tipo de leitura);
  * a conferência de uma citação (o trecho sustenta a afirmação?), como a jurisprudência;
- * a leitura em observação de um candidato, como a sugestão de prazo.
+ * a leitura em observação de um candidato, como a sugestão de prazo. Na peça: a
+ * estratégia e a ligação dos fatos leem os autos como o resumo, o ajuste é redação
+ * de peça, e o papel de um julgado na tese é jurisprudência.
  */
-const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = { "titulo-conversa": "perguntar", "ler-peca-contraria": "briefing-prazo", "mensagem-cliente": "briefing-prazo", "conferir-citacao": "jurisprudencia", "observar-prazo": "sugerir-prazo" };
+const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = {
+  "titulo-conversa": "perguntar",
+  "ler-peca-contraria": "briefing-prazo",
+  "mensagem-cliente": "briefing-prazo",
+  "conferir-citacao": "jurisprudencia",
+  "observar-prazo": "sugerir-prazo",
+  "estrategia-peca": "resumo-autos",
+  "ligar-fatos": "resumo-autos",
+  "ajustar-peca": "gerar-documento",
+  "papel-do-julgado": "jurisprudencia",
+};
 
 /** O teto do dia não passa em segundos: a AI SDK não deve pedir de novo (a pessoa esperava o aviso uns 2 s a mais). */
 function semNovaTentativaNoTeto(err: unknown): never {
@@ -150,6 +170,10 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
   "ler-peca-contraria": "high",
   "mensagem-cliente": "medium",
   "conferir-citacao": "low",
+  "estrategia-peca": "high",
+  "ligar-fatos": "medium",
+  "ajustar-peca": "high",
+  "papel-do-julgado": "medium",
 };
 
 /**

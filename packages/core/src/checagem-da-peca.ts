@@ -71,6 +71,24 @@ const MARCAS_INTERNAS: readonly RegExp[] = [
 const FORCA =
   /jurisprud[êe]ncia\s+(?:consolidada|pac[íi]fica|dominante|un[íi]ssona|remansosa|majorit[áa]ria|firme|assente|mansa)|entendimento\s+(?:consolidado|pac[íi]fico|dominante|un[âa]nime|majorit[áa]rio|firme|assente)|orienta[çc][ãa]o\s+(?:consolidada|pac[íi]fica|dominante|majorit[áa]ria|firme)|\b(?:consolidou|pacificou|uniformizou|sedimentou)\b/giu;
 
+/**
+ * A palavra de força da frase que o trecho do julgado não diz ("consolidou",
+ * "entendimento pacífico"). Nulo quando a frase não tem força a mais ou quando o
+ * próprio trecho fala nesses termos.
+ */
+export function forcaSemBase(afirmacao: string, trecho: string): string | null {
+  const m = new RegExp(FORCA.source, "iu").exec(afirmacao);
+  if (!m) return null;
+  return /consolid|pac[íi]fic|dominante|uniformiz|sediment|reiterad|firme/iu.test(trecho) ? null : m[0];
+}
+
+/** A frase logo antes da marca do julgado: é ela que o julgado precisa sustentar. Sem frase no parágrafo, nulo. */
+export function fraseAntesDaMarca(texto: string, inicioDaMarca: number): string | null {
+  const paragrafo = texto.slice(texto.lastIndexOf("\n", inicioDaMarca - 1) + 1, inicioDaMarca).trim();
+  const partes = paragrafo.split(/(?<=[.!?])\s+(?=[\p{Lu}"“(])/u).filter(Boolean);
+  return partes.at(-1) ?? null;
+}
+
 /** Letras sem acento e em minúsculas, uma a uma: a posição no texto continua a mesma. */
 const dobrar = (t: string) => t.replace(/\p{L}/gu, (c) => c.normalize("NFD")[0]!).toLowerCase();
 

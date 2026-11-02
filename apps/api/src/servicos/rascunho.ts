@@ -8,8 +8,10 @@ import { colherChamadas, gerarPeca, pecaParaPrazo, type ChamadaDaIa, type Ia } f
 import { eq } from "drizzle-orm";
 import { registrar } from "../auditoria.ts";
 import { nivelNoEscritorio } from "./automacao.ts";
+import { paraQualificar, qualificacaoDasPartes } from "./cadastros.ts";
 import { ehDemonstracao } from "./captura.ts";
 import { semIa } from "./contexto.ts";
+import { conferirFatosDaPeca } from "./fatos-da-peca.ts";
 import { montarPedidoDePeca } from "./pecas.ts";
 import { procedenciaDe } from "./procedencia.ts";
 import { IaDesligada } from "./prazos.ts";
@@ -44,13 +46,15 @@ export async function rascunhoDoPrazo(deps: DepsDoRascunho, organizationId: stri
     if (!processo) return { situacao: "sem-prazo" as const };
     if (!deps.ia) throw new IaDesligada();
     const montado = await montarPedidoDePeca(db, tx, { organizationId, nomeDoEscritorio: org?.nome ?? "", quem: null, processo, prazo, tipo, instrucoes: "" });
-    return { situacao: "montado" as const, prazo, processo, tipo, montado };
+    return { situacao: "montado" as const, prazo, processo, tipo, montado, qualificar: await paraQualificar(tx, processo.id) };
   });
   if (preparado.situacao !== "montado") return preparado;
-  const { prazo, processo, tipo, montado } = preparado;
+  const { prazo, processo, tipo, montado, qualificar } = preparado;
+  // A Receita é consultada fora da transação: pode levar alguns segundos.
+  const qualificacao = await qualificacaoDasPartes({ log: deps.log }, qualificar, false);
 
   const chamadas: ChamadaDaIa[] = [];
-  const texto = await colherChamadas(chamadas, () => gerarPeca(deps.ia!, montado.pedido).text);
+  const texto = await colherChamadas(chamadas, () => gerarPeca(deps.ia!, { ...montado.pedido, qualificacao }).text);
   if (!texto.trim()) throw new Error("A IA devolveu a peça vazia");
   const pecaId = await withTenant(db, organizationId, async (tx) => {
     // Alguém pode ter gerado a peça pela tela enquanto a IA escrevia: a da pessoa fica.
@@ -63,6 +67,8 @@ export async function rascunhoDoPrazo(deps: DepsDoRascunho, organizationId: stri
     return linha!.id;
   });
   if (!pecaId) return { situacao: "ja-tem-peca" };
+  // O rascunho feito sozinho chega com os fatos conferidos. Falhou, a tela oferece conferir: o rascunho não se perde.
+  await conferirFatosDaPeca(deps, organizationId, pecaId).catch((err) => deps.log("a conferência do rascunho falhou", { pecaId, error: err instanceof Error ? err.message : String(err) }));
   await registrar(db, { organizationId, acao: "peca.preparada", detalhes: { pecaId, prazoId: prazo.id, tipo: tipo.id } }, deps.log);
   return { situacao: "pronto", pecaId };
 }

@@ -10,6 +10,7 @@ export * from "./peca.ts";
 export * from "./checagem-da-peca.ts";
 export * from "./conferencia-dos-fatos.ts";
 export * from "./diferenca.ts";
+export * from "./estrategia-da-peca.ts";
 export * from "./pjecalc.ts";
 export * from "./prazos.ts";
 export * from "./previdenciario.ts";
