@@ -302,7 +302,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 /* A lista, o teor no meio e a decisão à direita: cada coluna rola por si, e tudo fica à vista sem rolar a página. */
 .dc-caixa { --largura-lista: calc(340px * var(--escala-coluna)); --largura-decisao: calc(340px * var(--escala-coluna)); display: grid; grid-template-columns: var(--largura-lista) minmax(0, 1fr) var(--largura-decisao); gap: var(--vao-bloco); align-items: stretch; }
 .dc-caixa__lista { position: sticky; top: var(--space-4); max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; }
-.dc-caixa__lista > .dc-abas { padding: 0 var(--space-2-half); flex: none; }
+.dc-caixa__lista > .dc-abas { padding: 0 var(--space-3); flex: none; justify-content: space-between; }
 .dc-caixa__lista > .dc-linhas { overflow-y: auto; }
 .dc-pub { position: relative; display: flex; flex-direction: column; gap: var(--space-half); width: 100%; padding: var(--space-2) var(--respiro-painel); text-align: left; background: transparent; border: 0; color: var(--tinta); cursor: pointer; text-decoration: none; font: inherit; transition: background-color var(--transicao); }
 .dc-pub:hover { background: color-mix(in srgb, var(--superficie-2) 55%, transparent); }
@@ -366,7 +366,7 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-ia__sec li + li { margin-top: var(--space-half); }
 /* As quatro abas da caixa dividem a largura da lista e cabem sem rolar. */
 .dc-caixa__lista .dc-abas { gap: 0; }
-.dc-caixa__lista .dc-aba { flex: 1 0 auto; justify-content: center; padding: 0 var(--space-1-half); }
+.dc-caixa__lista .dc-aba { height: var(--altura-painel-topo); padding: 0 var(--space-1); gap: var(--space-1); }
 
 /* Cor do timbre: só a amostra, com o código ao lado. */
 .dc input.dc-cor { width: 44px; height: var(--altura-controle); padding: var(--space-half); flex: none; cursor: pointer; }
@@ -1306,21 +1306,21 @@ a.dc-marca:focus-visible { outline: none; box-shadow: var(--sombra-foco); }
 .dc-caixa__carregando { grid-column: 2 / -1; }
 .dc-caixa__teor, .dc-caixa__decisao { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .dc-caixa__topo { flex: none; padding: var(--space-3) var(--respiro-painel); border-bottom: 1px solid var(--borda); }
-.dc-caixa__teor > .dc-caixa__leitura { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-5); padding: var(--respiro-painel) var(--space-5) var(--space-5); }
+.dc-caixa__teor > .dc-caixa__leitura { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-5); padding: var(--respiro-painel) var(--respiro-painel) var(--space-5); }
 .dc-caixa__fatos { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 .dc-caixa__fatos > .dc-faixa { flex: none; margin: var(--space-3) var(--respiro-painel) 0; }
-.dc-caixa__fatos > .dc-ia { flex: 1 0 auto; display: flex; flex-direction: column; border: 0; border-radius: 0; }
+.dc-caixa__fatos > .dc-ia { flex: 1 0 auto; display: flex; flex-direction: column; padding-top: var(--space-3); border: 0; border-radius: 0; }
 .dc-caixa__fatos > .dc-faixa + .dc-ia { margin-top: var(--space-3); border-top: 1px solid var(--acento-borda); }
 .dc-caixa__fatos > .dc-ia .dc-ia__pe { margin-top: auto; }
 .dc-caixa__fatos > .dc-ia .dc-ia__fonte { margin-left: 0; flex-basis: 100%; }
 .dc-caixa__botoes { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); padding: var(--space-3) var(--respiro-painel) var(--respiro-painel); border-top: 1px solid var(--borda); }
 .dc-caixa__botoes > .dc-btn { padding-inline: var(--space-1); }
 .dc-caixa__botoes > :nth-child(-n + 2), .dc-caixa__botoes > :last-child:nth-child(odd) { grid-column: 1 / -1; }
-/* Abaixo de 1500 px as colunas de fora encolhem, para o teor ter onde ler; abaixo de 1200 a decisão desce para baixo dele. */
+/* Abaixo de 1500 px a decisão encolhe, para o teor ter onde ler; abaixo de 1280 ela desce para baixo dele. */
 @media (max-width: 1500px) {
-  .dc-caixa { --largura-lista: calc(320px * var(--escala-coluna)); --largura-decisao: calc(304px * var(--escala-coluna)); }
+  .dc-caixa { --largura-decisao: calc(304px * var(--escala-coluna)); }
 }
-@media (max-width: 1199px) {
+@media (max-width: 1279px) {
   .dc-caixa { grid-template-columns: var(--largura-lista) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   .dc-caixa__lista { grid-row: 1 / -1; }
   .dc-caixa__decisao { grid-column: 2; max-height: 52vh; }

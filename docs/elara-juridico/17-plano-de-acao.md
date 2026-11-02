@@ -79,26 +79,28 @@ Cinco princípios, com o que cada um muda em relação ao mercado.
 
 ### De, para
 
-Valores de partida para o computador, a validar na tela.
+Valores que ficaram no computador, conferidos na tela. A escala de fontes ficou como a proposta. O espaço voltou: a primeira versão, com linhas de 44 a 48 px e botões de 28 px, ficou apertada demais, e a meta de 12 linhas foi retirada.
 
-| Elemento | Hoje | Proposta |
-|---|---|---|
-| Tamanhos de fonte | 22 | 6, em tokens |
-| Legenda e rótulo | 10,5 a 12 px | 11/14 |
-| Metadado, CNJ e data | 12 a 13,5 px | 12/16 |
-| Corpo e linhas de lista | 14/20 | 13/18 |
-| Título de tela | 19 a 20 px | 15/20 |
-| Número de destaque | 24/32 | 20/24 |
-| Leitura longa (teor, briefing, peça) | 14/22 | **14/21, mantido** |
-| Botão e campo | 32 px | 28 px |
-| Filtro em chip | 28 px | 24 px |
-| Linha de lista | 79 a 97 px | 44 a 56 px, em duas linhas |
-| Cabeçalho da tela | 81 px | 48 a 52 px, com subtítulo na mesma linha |
-| Números do dia | 82 px | 44 px, número e rótulo na mesma linha |
-| Menu lateral | 232 px | 208 px, recolhível para 52 px |
-| Respiro de painel | 16 px | 12 px |
+| Elemento | Antes | Compacto (padrão) | Confortável |
+|---|---|---|---|
+| Tamanhos de fonte | 22 | 6, em tokens | 6, em tokens |
+| Legenda e rótulo | 10,5 a 12 px | 11/14 | 12 |
+| Metadado, CNJ e data | 12 a 13,5 px | 12/16 | 13 |
+| Corpo e linhas de lista | 14/20 | 13/18 | 14 |
+| Título de tela | 19 a 20 px | 15/20 | 17 |
+| Número de destaque | 24/32 | 20/24 | 22 |
+| Leitura longa (teor, briefing, peça) | 14/22 | **14/21** | 15 |
+| Botão e campo | 32 px | 32 px | 36 px |
+| Filtro em chip | 28 px | 28 px | 32 px |
+| Linha de lista | 79 a 97 px | 56 px, em duas linhas | 66 px |
+| Item de Publicações | 92 px | 70 px, em três linhas, com as partes inteiras | Maior na mesma proporção |
+| Cabeçalho da tela | 81 px | 56 px, com subtítulo na mesma linha | 64 px |
+| Números do dia | 82 px | 56 px, número e rótulo na mesma linha | 68 px |
+| Menu lateral | 232 px | 208 px, recolhível para 52 px | 232 px |
+| Respiro de painel | 16 px | 16 px | 20 px |
+| Margem da página | Variava por tela | 24 px em toda tela | 32 px |
 
-**Resultado esperado em 1366×768:** cerca de 12 linhas no Hoje e 12 itens em Publicações, contra 5 e 7 de hoje.
+**Resultado em 1366×768:** 8 linhas no Hoje, 8 itens em Publicações e 10 linhas em Processos e Clientes, contra 5 no Hoje e 7 em Publicações. Em 1710×880 cabem 10, 10 e 12.
 
 **O que não encolhe:**
 
@@ -124,14 +126,14 @@ O problema é real, e o código mostra onde está. Alvarás e Novos negócios us
 |---|---|---|---|---|---|
 | 1.1 | Escala de tipo e espaço em tokens | Nada direto | 6 tamanhos, grade de 4 px e fim dos valores soltos | Base de todo o resto | 2 d |
 | 1.2 | Componentes-base densos | Nada direto | Botão, chip, campo, tabela, painel, cabeçalho e menu recolhível | Compactos sem parecer planilha | 2 a 3 d |
-| 1.3 | Linhas de lista em duas linhas | Tela Hoje como núcleo [07] | Título, depois partes · vara · CNJ numa linha só, em Hoje, Prazos, Publicações, Processos e Clientes | O dobro de itens à vista | 3 a 4 d |
+| 1.3 | Linhas de lista em duas linhas | Tela Hoje como núcleo [07] | Título, depois partes · vara · CNJ numa linha só, em Hoje, Prazos, Processos e Clientes. Publicações tem três linhas, para as partes não serem cortadas | Mais itens à vista, com respiro | 3 a 4 d |
 | 1.4 | Um só quadro | Quadros em todos os concorrentes [06, 08, 10] | Unificar Alvarás e Novos negócios, como descrito acima | Interno: coerência | 1,5 d |
 | 1.5 | Telas de detalhe | Nada direto | Prazo, Processo, Peça, Perguntar e Agenda, com o bloco "Prazo sugerido" da sua foto mais enxuto | Decisão de prazo em menos rolagem | 5 d |
 | 1.6 | Cor só com significado e decisão de identidade | Nada direto | Vermelho e âmbar para urgência, verde para confirmado, um único acento para a IA | A marca da IA fica sempre visível, o que mostra o que precisa de revisão | 1 d |
-| 1.7 | Preferência de densidade | Nada direto | Compacto como padrão e "Confortável" opcional, por pessoa | Quem prefere letra maior não fica de fora | 0,5 d |
+| 1.7 | Preferências de tela | Nada direto | Compacto como padrão e "Confortável" opcional, e uma chave de modo escuro que começa desligada e nunca segue o sistema. Ambos por pessoa, no menu rápido e em `/conta` | Quem prefere letra maior ou tela escura não fica de fora | 0,5 d |
 | 1.8 | Conferência visual automática | Nada direto | Capturas em 1366 e 390 px sobre a API de mentira dos testes | Evita regressão em cada tela | 1 d |
 
-**O ramo `claude/identidade-visual-ba4ae6`:** propõe papel quente, grafite e Geist Mono, e tira o azul. Recomendo aproveitar a Geist Mono para CNJ, datas e valores, e o papel quente, que afasta o visual do branco e azul comum. Recomendo manter um acento só para a IA, porque sem ele a marca "IA" perde destaque. Vale ver os dois lado a lado já na versão compacta.
+**O ramo `claude/identidade-visual-ba4ae6`:** propunha papel quente, grafite e Geist Mono, e tirava o azul. Ficaram o papel quente e o grafite, que afastam o visual do branco e azul comum. A Geist Mono saiu, porque deixava a linha irregular: CNJ, datas e valores usam a Geist com algarismos de largura fixa, que alinham do mesmo jeito. O azul ficou como acento único da IA, porque sem ele a marca "IA" perde destaque.
 
 ## Onda 2: landing, demonstração e primeiro minuto
 
@@ -257,7 +259,7 @@ A nova ordem segue as perguntas de quem avalia: o que é, funciona mesmo, como f
 
 | Métrica | Meta | Origem |
 |---|---|---|
-| Linhas à vista em 1366×768 | Hoje de 5 para cerca de 12 | Proposta |
+| Linhas à vista em 1366×768 | Hoje de 5 para 8, sem apertar | Proposta |
 | Tamanhos de fonte no CSS | De 22 para 6 | Proposta |
 | Conta nova até a primeira publicação na tela | Menos de 2 minutos | Proposta |
 | Ativação em 7 dias | 40% | [04] |

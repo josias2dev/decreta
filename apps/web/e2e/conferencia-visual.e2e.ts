@@ -182,8 +182,35 @@ test.describe("no computador", () => {
     await expect(page.locator(".dc-caixa__botoes").getByRole("button", { name: "Confirmar prazo" })).toBeInViewport();
   });
 
-  test("Publicações abaixo de 1200 px: a decisão desce para baixo do teor", async ({ page }) => {
-    await page.setViewportSize({ width: 1100, height: 800 });
+  for (const largura of [1366, 1710]) {
+    test(`Publicações em ${largura} px: as abas cabem, a primeira linha das três colunas se alinha e o teor tem uma margem só`, async ({ page }) => {
+      await page.setViewportSize({ width: largura, height: 880 });
+      await abrir(page, `/publicacoes?id=${ids.publicacao}`);
+      await telaPronta(page);
+      const abas = page.locator(".dc-caixa__lista .dc-abas");
+      expect(await abas.evaluate((e) => e.scrollWidth - e.clientWidth)).toBe(0);
+      const meio = async (s: string) => {
+        const r = (await page.locator(s).first().boundingBox())!;
+        return r.y + r.height / 2;
+      };
+      const aba = await meio(".dc-caixa__lista .dc-aba");
+      expect(Math.abs((await meio(".dc-caixa__topo strong")) - aba)).toBeLessThanOrEqual(2);
+      expect(Math.abs((await meio(".dc-caixa__decisao .dc-ia__marca")) - aba)).toBeLessThanOrEqual(2);
+      const esquerda = async (s: string) => (await page.locator(s).first().boundingBox())!.x;
+      expect(await esquerda(".dc-lido__titulo")).toBe(await esquerda(".dc-caixa__topo strong"));
+    });
+  }
+
+  test("o rótulo acompanha o centro da foto, nos dados", async ({ page }) => {
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`);
+    await telaPronta(page);
+    const rotulo = (await page.locator(".dc-dados dt", { hasText: "Responsável" }).boundingBox())!;
+    const foto = (await page.locator(".dc-dados .dc-pessoa").first().boundingBox())!;
+    expect(Math.abs(rotulo.y + rotulo.height / 2 - (foto.y + foto.height / 2))).toBeLessThanOrEqual(1);
+  });
+
+  test("Publicações abaixo de 1280 px: a decisão desce para baixo do teor", async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
     await abrir(page, `/publicacoes?id=${ids.publicacao}`);
     await telaPronta(page);
     const teor = (await page.locator(".dc-caixa__teor").boundingBox())!;
