@@ -14,6 +14,7 @@ import { createLogMailer } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { criarEscritorio } from "../src/escritorio-novo.ts";
 import type { Pedido } from "../src/rotas/base.ts";
+import { CONSULTAS_QUE_VAO_A_FONTE_POR_MINUTO } from "../src/rotas/campos-com-ia.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { guardarLeisDaTabela } from "../src/servicos/acervo.ts";
 import { criarPrazoSugerido } from "../src/servicos/prazos.ts";
@@ -45,6 +46,8 @@ describe.skipIf(!hasTestDatabase)("base legal", () => {
   let t: TestDatabase;
   let app: ReturnType<typeof createApp>;
   let semIaLigada: ReturnType<typeof createApp>;
+  let autenticacao: ReturnType<typeof createAuth>;
+  let entrarNoEscritorio: (email: string, organizationId: string) => Promise<string>;
   let cookie = "";
   let cookieDaDemo = "";
   let orgId = "";
@@ -81,12 +84,13 @@ describe.skipIf(!hasTestDatabase)("base legal", () => {
     const deps = { db: t.db, auth, arquivos, mailer: createLogMailer(() => {}), telas: "https://decreta.local", captura: { db: t.db, datajudKey: "", fetch: normasFalso }, maxArquivoBytes: 5e6, enfileirar: async (p: Pedido) => void pedidos.push(p), log: () => {} };
     app = createApp({ db: t.db, env, auth, rotas: createRotas({ ...deps, ia, limites }), log: () => {} });
     semIaLigada = createApp({ db: t.db, env, auth, rotas: createRotas({ ...deps, ia: null }), log: () => {} });
-    const entrar = async (email: string, organizationId: string) => {
+    autenticacao = auth;
+    const entrar = (entrarNoEscritorio = async (email: string, organizationId: string) => {
       const r = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email, password: "senha-bem-longa-123" }) });
       const c = r.headers.get("set-cookie")?.split(";")[0] ?? "";
       await app.request("/api/auth/organization/set-active", { method: "POST", headers: { "content-type": "application/json", cookie: c, origin: env.WEB_ORIGIN }, body: JSON.stringify({ organizationId }) });
       return c;
-    };
+    });
     ({ organizationId: orgId, userId: usuarioId } = await criarEscritorio(t.db, auth, { nome: "Souza Advocacia", slug: "souza", dono: { email: "beatriz@souza.adv.br", nome: "Beatriz Souza", senha: "senha-bem-longa-123" } }));
     cookie = await entrar("beatriz@souza.adv.br", orgId);
     const demo = await criarEscritorio(t.db, auth, { nome: "Demonstração", slug: SLUG_DA_DEMONSTRACAO, dono: { email: "demo@decreta.local", nome: "Sócia", senha: "senha-bem-longa-123" } });
@@ -210,6 +214,37 @@ describe.skipIf(!hasTestDatabase)("base legal", () => {
       const antes = pedidosAoNormas;
       expect((await json(chamar(app, "/base-legal", { fundamento: "CPC, art. 335" }, cookieDaDemo))).lei[0]).toMatchObject({ selo: "verificada", texto: expect.stringContaining("contestação") });
       expect(pedidosAoNormas).toBe(antes);
+    });
+  });
+
+  describe("quantas vezes a consulta vai à fonte", () => {
+    test("passou do limite por pessoa: responde só com o que está guardado, sem falhar e sem ir à fonte; outra pessoa não paga por isso", async () => {
+      const { organizationId } = await criarEscritorio(t.db, autenticacao, { nome: "Lima Advocacia", slug: "lima", dono: { email: "lima@exemplo.adv.br", nome: "Ana Lima", senha: "senha-bem-longa-123" } });
+      const daLima = await entrarNoEscritorio("lima@exemplo.adv.br", organizationId);
+      // O normas de mentira não conhece esta lei: nada fica guardado, e cada consulta iria à fonte de novo.
+      const consulta = () => json(chamar(app, "/base-legal", { fundamento: "art. 1º do CTN" }, daLima));
+      for (let i = 0; i < CONSULTAS_QUE_VAO_A_FONTE_POR_MINUTO; i++) await consulta();
+      const antes = pedidosAoNormas;
+      const r = await consulta();
+      expect(pedidosAoNormas).toBe(antes);
+      expect(r.lei[0]).toMatchObject({ selo: "nao_verificada", texto: null, motivo: "Não está no acervo guardado. Confira na fonte antes de usar." });
+      // O que já está no acervo continua vindo com o texto.
+      await consultar({ fundamento: "CPC, art. 335" });
+      expect((await json(chamar(app, "/base-legal", { fundamento: "CPC, art. 335" }, daLima))).lei[0]).toMatchObject({ selo: "verificada", texto: expect.stringContaining("contestação") });
+      // A tabela também não para, com a IA ligada ou não.
+      expect((await json(chamar(app, "/base-legal", { tipo: "Contestação" }, daLima))).tabela.fundamento).toBe("CPC, art. 335");
+      // Outra pessoa continua indo à fonte.
+      await consultar({ fundamento: "art. 1º do CTN" });
+      expect(pedidosAoNormas).toBeGreaterThan(antes);
+    });
+
+    test("digitar o que não é artigo não gasta a vez", async () => {
+      const { organizationId } = await criarEscritorio(t.db, autenticacao, { nome: "Dias Advocacia", slug: "dias", dono: { email: "dias@exemplo.adv.br", nome: "Ana Dias", senha: "senha-bem-longa-123" } });
+      const daDias = await entrarNoEscritorio("dias@exemplo.adv.br", organizationId);
+      for (let i = 0; i < CONSULTAS_QUE_VAO_A_FONTE_POR_MINUTO + 1; i++) await chamar(app, "/base-legal", { fundamento: "contrato de 2019" }, daDias);
+      const antes = pedidosAoNormas;
+      await json(chamar(app, "/base-legal", { fundamento: "art. 1º do CTN" }, daDias));
+      expect(pedidosAoNormas).toBeGreaterThan(antes);
     });
   });
 

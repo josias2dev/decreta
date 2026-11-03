@@ -2,7 +2,8 @@
  * A IA nos campos de texto e a base legal. Uma rota para todos os campos: o campo
  * diz o contexto e o prompt. Nada entra no campo por aqui: a rota devolve a prévia,
  * e a tela só usa com o clique da pessoa. A consulta da base legal não passa pelos
- * limites nem pela IA: a tabela e o texto da lei valem com a IA desligada.
+ * limites da IA nem pela IA: a tabela e o texto da lei valem com a IA desligada. Ir buscar a lei nas fontes
+ * tem limite por pessoa; acima dele, a consulta responde com o que já está guardado.
  */
 import { baseLegalDaTabela, CAMPOS_COM_IA, citacaoDaBaseLegal, MODOS_DO_CAMPO, ritoDoProcesso, type Rito } from "@decreta/core";
 import { processos, publicacoes, textosDaIa, type ConteudoDoTextoDaIa } from "@decreta/db";
@@ -10,6 +11,7 @@ import { colherChamadas, ehTetoDoGateway, escreverNoCampo, IaRecusou, sugerirBas
 import { and, eq, isNull } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
+import { limitador } from "../limitador.ts";
 import { verificarCitacoes } from "../servicos/acervo.ts";
 import { materialDoCampo } from "../servicos/campos-com-ia.ts";
 import { ClienteSemIa, semIa } from "../servicos/contexto.ts";
@@ -20,6 +22,9 @@ import { comLimiteDaIa, corpo, falha, iaDaRota, id, temAcessoFinanceiro, tenant,
 /** Um pouco mais que o maior campo das telas (a mensagem ao cliente vai até 3.000). */
 const TETO_DO_RASCUNHO = 8_000;
 const FORA_DO_AR = "A IA não respondeu agora. O seu texto continua no campo. Tente de novo em instantes.";
+
+/** Quantas consultas da base legal de uma pessoa podem ir às fontes por minuto. A tela consulta ao parar de digitar: isto é folga para quem escreve, e não para quem varre. */
+export const CONSULTAS_QUE_VAO_A_FONTE_POR_MINUTO = 30;
 
 const uuid = z.string().uuid().optional();
 
@@ -100,10 +105,13 @@ export function rotasDosCamposComIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
     });
   };
 
+  /** Cada artigo novo pode pedir várias leis às fontes. Passou do limite da pessoa, a resposta vem só do acervo guardado: a tela segue, com a IA ligada ou não. */
+  const idasAFonte = limitador({ janelaMs: 60_000, maximo: CONSULTAS_QUE_VAO_A_FONTE_POR_MINUTO });
+
   /** O texto da lei para o que está no campo. Vazio quando o texto não diz um artigo. */
   const textoDaLei = async (c: C, fundamento: string | null | undefined) => {
     const citacao = fundamento ? citacaoDaBaseLegal(fundamento) : "";
-    const lei = citacao ? await verificarCitacoes({ db, fetch: deps.captura.fetch, log: deps.log }, c.get("orgId"), citacao) : [];
+    const lei = citacao ? await verificarCitacoes({ db, fetch: deps.captura.fetch, log: deps.log }, c.get("orgId"), citacao, { soAcervo: !idasAFonte.permitir(c.get("userId")) }) : [];
     return { reconhecida: !!citacao, lei: lei.map(({ trecho, selo, motivo, texto, fonte }) => ({ trecho, selo, motivo, texto, fonte })) };
   };
 
