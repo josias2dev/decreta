@@ -4,6 +4,7 @@
  * O texto da lei fica ao lado, e sem o texto a tela diz isso. A pessoa continua
  * podendo digitar qualquer coisa, e nada aqui confirma o prazo ou mexe na data.
  */
+import { citacaoDaBaseLegal, extrairCitacoes } from "@decreta/core";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -28,7 +29,16 @@ function useAtrasado<T>(valor: T): T {
   return atrasado;
 }
 
-const igual = (a: string, b: string) => a.replace(/\s+/g, " ").trim().toLowerCase() === b.replace(/\s+/g, " ").trim().toLowerCase();
+const artigosDe = (t: string) =>
+  extrairCitacoes(citacaoDaBaseLegal(t))
+    .map((c) => c.chave)
+    .join("|");
+
+/** O mesmo texto, ou o mesmo artigo escrito de outro jeito: "CPC, art. 335" e "art. 335 do CPC". */
+function igual(a: string, b: string): boolean {
+  const limpo = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
+  return limpo(a) === limpo(b) || (!!artigosDe(a) && artigosDe(a) === artigosDe(b));
+}
 
 /** A marca que diz de onde veio. Da IA, "sugerida" fica até o artigo ser achado no acervo. */
 function MarcaDaBase({ origem, achada }: { origem: "tabela" | "ia"; achada: boolean }) {

@@ -141,6 +141,16 @@ test("a pessoa digita o que quiser: o que ela escreveu fica, sem marca, e a tabe
   await expect(campoDaBase(dialogo)).toHaveValue("");
 });
 
+test("o mesmo artigo escrito de outro jeito conta como o da tabela, sem oferecer trocar", async ({ page }) => {
+  const api = new ApiFalsa().responder("/eu", euComIa).responder("POST /base-legal", { tabela: TABELA, semIa: false, reconhecida: true, lei: [LEI] });
+  const dialogo = await abrirNovoPrazo(page, api);
+  await campoDaBase(dialogo).fill("art. 335 do CPC");
+  await oQueFazer(dialogo).fill("Contestação");
+  await expect(dialogo.getByText("Da tabela do Decreta")).toBeVisible();
+  await expect(dialogo.getByRole("button", { name: /Usar o da tabela/ })).toHaveCount(0);
+  await expect(campoDaBase(dialogo)).toHaveValue("art. 335 do CPC");
+});
+
 test("preencher a base legal não confirma o prazo nem muda a data", async ({ page }) => {
   const sentenca = amostras.publicacaoMarina!.corpo;
   const c = sentenca.sugestao.conteudo;
