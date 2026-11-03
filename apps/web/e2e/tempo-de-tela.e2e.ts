@@ -90,7 +90,16 @@ async function umaVez(browser: Browser, d: Destino, como: Como, atraso: number):
   } else {
     await link.click();
   }
-  const medida = await page.evaluate(() => window.__medida);
+  // Tela que não fica pronta é defeito, e não demora: falha logo, dizendo qual foi e como estava.
+  const medida = await Promise.race([
+    page.evaluate(() => window.__medida),
+    new Promise<never>((_, recusar) =>
+      setTimeout(async () => {
+        const estado = await page.evaluate(() => `${location.href} | ${document.querySelector("h1")?.textContent ?? "sem título"} | esqueleto: ${!!document.querySelector('[aria-label="Carregando"]')} | erro: ${document.querySelector(".dc-erro-na-tela")?.textContent ?? "nenhum"}`).catch(() => "página sem resposta");
+        recusar(new Error(`${d.nome} não ficou pronta em 20 s: ${estado}`));
+      }, 20_000),
+    ),
+  ]);
   await contexto.close();
   return medida;
 }
