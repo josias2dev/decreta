@@ -65,6 +65,9 @@ linha do modelo explica a sua):
 
 - **Domínio**: `BETTER_AUTH_URL` e `WEB_ORIGIN` com `https://` e o domínio do passo 1.
 - **Segredo da sessão**: `BETTER_AUTH_SECRET` com `openssl rand -hex 32`.
+- **Cofre das chaves**: `COFRE_SECRET` com outro `openssl rand -hex 32`, com uma cópia fora do servidor.
+  Ele cifra as chaves do Asaas e da ZapSign de cada escritório. Vazio, a API usa o `BETTER_AUTH_SECRET`
+  e registra um aviso ao subir: trocar o segredo da sessão faria as chaves guardadas não abrirem mais.
 - **Inngest**: `INNGEST_EVENT_KEY` e `INNGEST_SIGNING_KEY` são as mesmas do AgenteHost.
   Elas estão no arquivo que aparece em `EnvironmentFile=` de `systemctl cat plataforma-api`.
   Copie de um arquivo para o outro sem imprimir na tela.

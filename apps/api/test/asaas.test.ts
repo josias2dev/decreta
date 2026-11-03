@@ -6,7 +6,7 @@
 import { describe, expect, test } from "bun:test";
 import { AsaasErro, buscarOuCriarCliente, conferirChave, criarAutorizacaoPix, criarCobranca, criarWebhook, EVENTOS_DO_WEBHOOK, removerCobranca, removerWebhook, type ContaAsaas } from "../src/servicos/asaas-do-escritorio.ts";
 
-const CHAVE = "$aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjAwMDAwMDAwMDAwMDAwNDA0OTc6OiRhYWNoXzJmNDBhNGM0";
+const CHAVE = "$aact_hmlg_CHAVE_DE_MENTIRA_SO_PARA_OS_TESTES";
 
 interface Chamada {
   url: string;

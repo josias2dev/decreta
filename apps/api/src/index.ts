@@ -5,7 +5,7 @@ import { createGatewayIa } from "@decreta/ia";
 import { serve } from "inngest/hono";
 import { createApp } from "./app.ts";
 import { createAuth } from "./auth.ts";
-import { criarCofre } from "./cofre.ts";
+import { criarCofre, segredoDoCofre } from "./cofre.ts";
 import { createLogMailer, createResendMailer } from "./email.ts";
 import { readEnv } from "./env.ts";
 import { createFunctions, eventoDoPedido, inngest } from "./inngest.ts";
@@ -73,7 +73,7 @@ const rotas = createRotas({
   limites,
   cobranca,
   plataformaEmails,
-  cofre: criarCofre(env.COFRE_SECRET || env.BETTER_AUTH_SECRET),
+  cofre: criarCofre(segredoDoCofre(env, { producao: process.env.NODE_ENV === "production", log })),
   enderecoDaApi: env.BETTER_AUTH_URL,
 });
 

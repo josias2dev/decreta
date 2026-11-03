@@ -1,9 +1,36 @@
 /** O cofre das chaves de Asaas e ZapSign do escritório: cifra no banco, nunca em texto. */
 import { describe, expect, test } from "bun:test";
-import { criarCofre } from "../src/cofre.ts";
+import { criarCofre, segredoDoCofre } from "../src/cofre.ts";
 
 const SEGREDO = "um-segredo-do-servidor-bem-longo-0123456789abcdef";
-const CHAVE = "$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjAwMDAwMDAwMDAwMDAwNDA0OTc6OiRhYWNoXzJmNDBhNGM0";
+const CHAVE = "$aact_prod_CHAVE_DE_MENTIRA_SO_PARA_OS_TESTES";
+
+describe("o segredo do cofre", () => {
+  const avisos = () => {
+    const logs: string[] = [];
+    return { logs, log: (msg: string) => void logs.push(msg) };
+  };
+
+  test("com COFRE_SECRET, vale ele, sem aviso", () => {
+    const a = avisos();
+    expect(segredoDoCofre({ COFRE_SECRET: "o-do-cofre", BETTER_AUTH_SECRET: "o-da-sessao" }, { producao: true, log: a.log })).toBe("o-do-cofre");
+    expect(a.logs).toEqual([]);
+  });
+
+  test("sem ele em produção, recai no segredo da sessão e avisa, sem dizer nenhum dos dois", () => {
+    const a = avisos();
+    expect(segredoDoCofre({ COFRE_SECRET: "", BETTER_AUTH_SECRET: "o-da-sessao" }, { producao: true, log: a.log })).toBe("o-da-sessao");
+    expect(a.logs).toHaveLength(1);
+    expect(a.logs[0]).toContain("COFRE_SECRET");
+    expect(a.logs[0]).not.toContain("o-da-sessao");
+  });
+
+  test("fora de produção, recai sem aviso", () => {
+    const a = avisos();
+    expect(segredoDoCofre({ COFRE_SECRET: "", BETTER_AUTH_SECRET: "o-da-sessao" }, { producao: false, log: a.log })).toBe("o-da-sessao");
+    expect(a.logs).toEqual([]);
+  });
+});
 
 describe("cofre", () => {
   test("cifra e decifra a chave do escritório", () => {

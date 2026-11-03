@@ -23,7 +23,7 @@ import type { Wameow } from "../src/servicos/avisos.ts";
 
 export const SENHA = "senha-bem-longa-123";
 export const HOJE = hojeEm("America/Sao_Paulo");
-export const CHAVE_DE_TESTE = "$aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjAwMDAwMDAwMDAwMDAwNDA0OTc6OiRhYWNoXzJmNDBhNGM0";
+export const CHAVE_DE_TESTE = "$aact_hmlg_CHAVE_DE_MENTIRA_SO_PARA_OS_TESTES";
 export const CHAVE_DA_ZAPSIGN = "c7f35c84-7893-4087-b4fb-d1f06c23aaaa-8f3e2d1c-bbbb-4cde-9fa0-0123456789ab";
 
 export interface Chamada {

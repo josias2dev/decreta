@@ -36,6 +36,22 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas", () => {
     return organizationId;
   };
 
+  test("as rotas do Better Auth não devolvem a assinatura, o valor nem o link do escritório a quem é da equipe", async () => {
+    const organizationId = await escritorioEmTeste("campos", "Campos Advocacia", "link_campos");
+    await porNaAssinatura(t, organizationId, { asaas_assinatura_id: "sub_campos", asaas_cliente_id: "cus_campos", asaas_link_url: "https://sandbox.asaas.com/c/link_campos", valor_mensal_centavos: 9900 });
+    const pessoa = await m.novo({ nome: "Outro de quem entra", slug: "outro-campos", email: "equipe-campos@exemplo.adv.br", pessoa: "Equipe" });
+    await t.owner`insert into member (id, organization_id, user_id, role) values (${crypto.randomUUID()}, ${organizationId}, ${pessoa.userId}, 'member')`;
+    const cookie = await m.entrar("equipe-campos@exemplo.adv.br");
+    const pedir = (metodo: string, caminho: string, json?: unknown) => m.app.request(`/api/auth${caminho}`, { method: metodo, headers: { "content-type": "application/json", origin: m.env.WEB_ORIGIN, cookie }, body: json === undefined ? undefined : JSON.stringify(json) });
+    const respostas = [await pedir("POST", "/organization/set-active", { organizationId }), await pedir("GET", `/organization/get-full-organization?organizationId=${organizationId}`), await pedir("GET", "/organization/list")];
+    for (const r of respostas) {
+      expect(r.status).toBe(200);
+      const texto = await r.text();
+      expect(texto).toContain("Campos Advocacia");
+      for (const dado of ["sub_campos", "cus_campos", "link_campos", "9900", "asaas", "valorMensal", "testeAte", "situacao"]) expect(texto).not.toContain(dado);
+    }
+  });
+
   describe("o aviso do Asaas", () => {
     let souza = "";
     let cookie = "";

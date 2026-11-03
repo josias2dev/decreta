@@ -20,6 +20,16 @@ export interface Cofre {
   decifrar(guardado: string, contexto: string): string;
 }
 
+/**
+ * O segredo do cofre. Sem COFRE_SECRET vale o da sessão, para o servidor não parar; em produção isso é um risco de operação:
+ * trocar o segredo da sessão faria as chaves guardadas não abrirem mais. Por isso o aviso ao subir.
+ */
+export function segredoDoCofre(env: { COFRE_SECRET: string; BETTER_AUTH_SECRET: string }, opcoes: { producao: boolean; log: (msg: string) => void }): string {
+  if (env.COFRE_SECRET) return env.COFRE_SECRET;
+  if (opcoes.producao) opcoes.log("AVISO: COFRE_SECRET vazio em produção. As chaves do Asaas e da ZapSign estão cifradas com o BETTER_AUTH_SECRET: se ele for trocado, elas não abrem mais. Defina COFRE_SECRET antes de guardar chaves (veja deploy/INSTALL.md).");
+  return env.BETTER_AUTH_SECRET;
+}
+
 export function criarCofre(segredo: string): Cofre {
   if (segredo.length < 32) throw new Error("O segredo do cofre precisa ter pelo menos 32 caracteres.");
   const chave = Buffer.from(hkdfSync("sha256", segredo, SAL, USO, 32));
