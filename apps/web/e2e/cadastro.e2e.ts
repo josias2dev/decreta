@@ -69,7 +69,7 @@ test.describe("confirmar o e-mail", () => {
     const api = new ApiFalsa();
     api.logado = false;
     await api.ligar(page);
-    await page.route("**/api/convites/*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ email: "rafael@souza.adv.br", papel: "member", status: "pending", escritorio: "Souza & Mendes Advocacia" }) }));
+    await page.route("**/api/convites/*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ email: "rafael@souza.adv.br", papel: "member", status: "pending", escritorio: "Souza & Mendes Advocacia", confirmaEmail: true }) }));
     await page.goto(`/convite/${CONVITE}`);
     await page.getByLabel("Seu nome").fill("Rafael Lima");
     await page.getByLabel("Crie uma senha").fill("senha-bem-longa-123");
