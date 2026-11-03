@@ -12,8 +12,9 @@ DOMINIO {
 		max_size 45MB
 	}
 
-	# O link de envio do cliente carrega o segredo no endereço: fora do log de acesso.
-	@segredo path /api/envio/* /enviar/*
+	# Quem carrega um segredo no endereço fica fora do log de acesso: o link de envio do cliente,
+	# o token de trocar a senha e de confirmar o e-mail, e o id do convite (que vale como senha de entrar na equipe).
+	@segredo path /api/envio/* /enviar/* /redefinir-senha /api/auth/reset-password /api/auth/reset-password/* /api/auth/verify-email /convite/* /api/convites/* /api/auth/organization/get-invitation
 	log_skip @segredo
 
 	# O aviso do Asaas leva o token no cabeçalho (asaas-access-token), que o log de acesso gravaria em claro: fora do log.

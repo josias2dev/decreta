@@ -289,6 +289,26 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
       expect((await s.t.owner`select 1 from eventos_cobranca where organization_id = ${s.souza.orgId} and externo_id = 'evt_1'`).length).toBe(0);
     });
 
+    test("o aviso com o segredo certo nunca cai no teto por endereço, mesmo vindo do mesmo IP em rajada", async () => {
+      const token = s.provedores.webhooks.at(-1)!.authToken;
+      const pedido = () => s.aviso(s.souza.orgId, { id: "evt_rajada", event: "PAYMENT_CREATED", payment: { id: "pay_que_nao_existe", value: 1 } }, { "asaas-access-token": token, "x-forwarded-for": "203.0.113.200" });
+      for (let i = 0; i < 620; i += 20) {
+        const lote = await Promise.all(Array.from({ length: 20 }, pedido));
+        expect(lote.map((r) => r.status)).toEqual(Array(20).fill(200));
+      }
+    }, 120_000);
+
+    test("segredo errado continua limitado por endereço, e o aviso verdadeiro do mesmo endereço passa", async () => {
+      const ip = "203.0.113.201";
+      const errado = () => s.aviso(s.souza.orgId, { id: "evt_x", event: "PAYMENT_RECEIVED", payment: { id: "pay_x", value: 1 } }, { "asaas-access-token": "segredo-errado-segredo-errado-segredo-errado", "x-forwarded-for": ip });
+      for (let i = 0; i < 20; i++) expect((await errado()).status).toBe(401);
+      const barrado = await errado();
+      expect(barrado.status).toBe(429);
+      expect(barrado.headers.get("retry-after")).toBe("60");
+      const token = s.provedores.webhooks.at(-1)!.authToken;
+      expect((await s.aviso(s.souza.orgId, { id: "evt_ok_depois", event: "PAYMENT_CREATED", payment: { id: "pay_que_nao_existe", value: 1 } }, { "asaas-access-token": token, "x-forwarded-for": ip })).status).toBe(200);
+    });
+
     test("aviso sem id ou sem evento, ou que nem é JSON, é recusado", async () => {
       const token = s.provedores.webhooks.at(-1)!.authToken;
       expect((await s.aviso(s.souza.orgId, { event: "PAYMENT_RECEIVED" }, { "asaas-access-token": token })).status).toBe(400);

@@ -129,11 +129,8 @@ export function createApp(deps: AppDeps) {
 
   if (deps.envio) app.route("/api/envio", deps.envio);
   if (deps.mcp) app.route("/api/mcp", deps.mcp);
-  if (deps.avisoDoAsaas) {
-    // O Asaas manda os avisos de pagamento em rajada (e repete): um teto por minuto folgado, só contra quem tenta adivinhar o segredo.
-    app.use("/api/cobranca/asaas/*", limitarPorIp({ janelaMs: 60_000, maximo: 600 }, ipDoPedido));
-    app.route("/api/cobranca/asaas", deps.avisoDoAsaas);
-  }
+  // O Asaas manda os avisos em rajada, de poucos endereços: só a tentativa com o segredo errado é limitada por endereço (dentro da rota).
+  if (deps.avisoDoAsaas) app.route("/api/cobranca/asaas", deps.avisoDoAsaas);
 
   if (deps.plataforma) {
     app.use("/api/plataforma/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "OPTIONS"] }));

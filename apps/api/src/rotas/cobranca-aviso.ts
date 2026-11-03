@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { ACAO_DO_PAGAMENTO_SEM_PARCELA, registrar } from "../auditoria.ts";
+import { ipDoPedido, limitador } from "../limitador.ts";
 import { configDoEscritorio, segredoConfere, tratarAvisoDoAsaas, type AvisoDoAsaas } from "../servicos/cobranca-de-honorarios.ts";
 
 const ORG = /^[A-Za-z0-9_-]{1,64}$/;
@@ -27,10 +28,15 @@ export interface DepsDoAviso {
 export function rotasDoAvisoDoAsaas(deps: DepsDoAviso) {
   const { db, log } = deps;
   const app = new Hono();
+  const tentativasComSegredoErrado = limitador({ janelaMs: 60_000, maximo: 20 });
   app.post("/:org", bodyLimit({ maxSize: TETO_DO_AVISO_BYTES, onError: (c) => c.json({ erro: "muito_grande" }, 413) }), async (c) => {
     const orgId = c.req.param("org");
-    // Escritório que não existe, sem aviso ligado ou segredo errado: a mesma resposta, sem dizer qual.
-    const nao = () => c.json({ erro: "nao_autorizado" }, 401);
+    // Escritório que não existe, sem aviso ligado ou segredo errado: a mesma resposta, sem dizer qual. Só isto é limitado por endereço: o aviso verdadeiro nunca disputa a vez com quem tenta adivinhar.
+    const nao = () => {
+      const origem = ipDoPedido(c);
+      if (origem && !tentativasComSegredoErrado.permitir(origem)) return c.json({ erro: "muitas_tentativas" }, 429, { "retry-after": "60" });
+      return c.json({ erro: "nao_autorizado" }, 401);
+    };
     if (!ORG.test(orgId)) return nao();
     const cfg = await configDoEscritorio(db, orgId);
     if (!cfg || !segredoConfere(c.req.header("asaas-access-token"), cfg.asaasWebhookTokenHash)) return nao();
