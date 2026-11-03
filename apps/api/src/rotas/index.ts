@@ -69,7 +69,8 @@ export function createRotas(deps: DepsDasRotas) {
     c.set("timezone", org?.timezone ?? "America/Sao_Paulo");
     c.set("userId", sessao.user.id);
     c.set("userEmail", sessao.user.email);
-    c.set("emailConfirmado", sessao.user.emailVerified);
+    // Com o e-mail desligado não há o que confirmar: a tela não pede um link que não chegaria.
+    c.set("emailConfirmado", sessao.user.emailVerified || !deps.mailer.enabled);
     c.set("userNome", sessao.user.name || sessao.user.email);
     c.set("papel", papel);
     await next();

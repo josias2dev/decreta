@@ -63,14 +63,14 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
 
   beforeAll(async () => {
     t = await createTestDatabase();
-    const auth = createAuth(t.db, env, { mailer: {
-        enabled: true,
-        send: async (e) => {
-          emails.push(e);
-          if (e.subject.startsWith("Convite")) convites.push(e.to);
-        },
+    const mailer = {
+      enabled: true,
+      send: async (e: Email) => {
+        emails.push(e);
+        if (e.subject.startsWith("Convite")) convites.push(e.to);
       },
-    });
+    };
+    const auth = createAuth(t.db, env, { mailer });
     const wameow = {
       url: "http://wameow.local",
       token: "token-de-teste",
@@ -79,8 +79,8 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
         return new Response("{}", { status: 200 });
       }) as unknown as typeof fetch,
     };
-    const rotas = createRotas({ db: t.db, auth, ia: null, wameow, arquivos: armazenamentoEmMemoria(), mailer: createLogMailer(() => {}), telas: "https://decreta.local", captura: { db: t.db, datajudKey: "" }, maxArquivoBytes: 5e6, enfileirar: async () => {}, log: () => {} });
-    app = createApp({ db: t.db, env, auth, rotas, log: () => {} });
+    const rotas = createRotas({ db: t.db, auth, ia: null, wameow, arquivos: armazenamentoEmMemoria(), mailer, telas: "https://decreta.local", captura: { db: t.db, datajudKey: "" }, maxArquivoBytes: 5e6, enfileirar: async () => {}, log: () => {} });
+    app = createApp({ db: t.db, env, auth, rotas, emailLigado: true, log: () => {} });
   });
 
   afterAll(async () => {
@@ -206,6 +206,46 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
       expect(emails.filter((e) => e.to === "rui@exemplo.adv.br").length).toBe(antes + 1);
       await abrirLink(linkPara("rui@exemplo.adv.br"));
       expect((await pedir(cookie, "/send-verification-email", { email: "rui@exemplo.adv.br" })).status).toBe(400);
+    });
+
+    test("com o e-mail ligado, a tela do convite sabe que precisa pedir a confirmação", async () => {
+      const { conviteId } = await convidar("com-email@exemplo.adv.br");
+      expect((await json(app.request(`/api/convites/${conviteId}`))).confirmaEmail).toBe(true);
+    });
+
+    describe("com o e-mail desligado (sem RESEND_API_KEY)", () => {
+      // O convite chega pelo link copiado na tela da Equipe, e nenhum e-mail de confirmação sairia.
+      const appSemEmail = () => {
+        const mailer = createLogMailer(() => {});
+        const auth = createAuth(t.db, env, { mailer });
+        const rotas = createRotas({ db: t.db, auth, ia: null, arquivos: armazenamentoEmMemoria(), mailer, telas: "https://decreta.local", captura: { db: t.db, datajudKey: "" }, maxArquivoBytes: 5e6, enfileirar: async () => {}, log: () => {} });
+        return createApp({ db: t.db, env, auth, rotas, emailLigado: false, log: () => {} });
+      };
+
+      test("quem chega pelo convite cria a conta e entra na equipe, sem esperar uma confirmação que não chegaria", async () => {
+        const semEmail = appSemEmail();
+        const email = "convidada@exemplo.adv.br";
+        const { conviteId, escritorio } = await convidar(email);
+        expect((await json(semEmail.request(`/api/convites/${conviteId}`))).confirmaEmail).toBe(false);
+        const conta = await semEmail.request("/api/auth/sign-up/email", {
+          method: "POST",
+          headers: { "content-type": "application/json", origin: env.WEB_ORIGIN },
+          body: JSON.stringify({ email, password: "senha-bem-longa-123", name: "Convidada Lima", termosVersao: VERSAO_DOS_TERMOS, callbackURL: `${env.WEB_ORIGIN}/convite/${conviteId}` }),
+        });
+        expect(conta.status).toBe(200);
+        const aceite = await semEmail.request("/api/auth/organization/accept-invitation", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, cookie: cookieDe(conta) }, body: JSON.stringify({ invitationId: conviteId }) });
+        expect(aceite.status).toBe(200);
+        expect((await t.owner`select 1 from member m join "user" u on u.id = m.user_id where m.organization_id = ${escritorio} and u.email = ${email}`).length).toBe(1);
+      });
+
+      test("a tela não pede para confirmar o e-mail, e a conta continua sem confirmar para quando o e-mail for ligado", async () => {
+        const semEmail = appSemEmail();
+        const r = await semEmail.request("/api/cadastro", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, "x-forwarded-for": "203.0.113.47" }, body: JSON.stringify({ termos: VERSAO_DOS_TERMOS, ...pessoa("bia") }) });
+        expect(r.status).toBe(201);
+        const eu = await json(semEmail.request("/api/app/eu", { headers: { origin: env.WEB_ORIGIN, cookie: cookieDe(r) } }));
+        expect(eu.usuario.emailConfirmado).toBe(true);
+        expect(await verificado("bia@exemplo.adv.br")).toBe(false);
+      });
     });
 
     test("o e-mail que não saiu não atrapalha o cadastro", async () => {

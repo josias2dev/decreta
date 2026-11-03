@@ -48,6 +48,8 @@ export interface AppDeps {
   reporter?: Reporter;
   /** O fetch da lista de tribunais do DJEN, na cobertura (os testes passam um de mentira). */
   fetchDoDjen?: typeof fetch;
+  /** Se o e-mail sai de verdade. Desligado, a tela do convite não pede a confirmação que nunca chegaria. */
+  emailLigado?: boolean;
 }
 
 export function createApp(deps: AppDeps) {
@@ -124,7 +126,7 @@ export function createApp(deps: AppDeps) {
       .where(eq(invitation.id, c.req.param("id")));
     if (!row) return c.json({ erro: "nao_encontrado" }, 404);
     const status = row.status === "pending" && row.expiresAt.getTime() < Date.now() ? "expirado" : row.status;
-    return c.json({ email: row.email, papel: row.role, status, escritorio: row.escritorio });
+    return c.json({ email: row.email, papel: row.role, status, escritorio: row.escritorio, confirmaEmail: deps.emailLigado ?? true });
   });
 
   if (deps.envio) app.route("/api/envio", deps.envio);

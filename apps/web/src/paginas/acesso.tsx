@@ -9,7 +9,7 @@ import { API_URL } from "@/lib/api";
 import { authCall, authClient, papelLabel } from "@/lib/auth";
 import { CaixaDeEntrada } from "./entrar";
 
-type Convite = { email: string; papel: string; status: "pending" | "accepted" | "rejected" | "canceled" | "expirado"; escritorio: string };
+type Convite = { email: string; papel: string; status: "pending" | "accepted" | "rejected" | "canceled" | "expirado"; escritorio: string; confirmaEmail: boolean };
 
 export function ConvitePage() {
   const { id } = useParams({ from: "/convite/$id" });
@@ -90,7 +90,7 @@ export function ConvitePage() {
     </>
   );
 
-  if (logado && logado.email.toLowerCase() === c.email.toLowerCase() && !logado.emailVerified) {
+  if (logado && logado.email.toLowerCase() === c.email.toLowerCase() && !logado.emailVerified && c.confirmaEmail) {
     return (
       <CaixaDeEntrada titulo={titulo} sub={sub}>
         <Faixa tipo="nota">Falta confirmar que este e-mail é seu. Enviamos um link para {c.email}: abra o link, e o convite volta aqui.</Faixa>

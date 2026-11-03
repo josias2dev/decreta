@@ -33,10 +33,10 @@ test.describe("confirmar o e-mail", () => {
   });
 
   const CONVITE = "c0a80123-0000-4000-8000-000000000001";
-  const noConvite = async (page: import("@playwright/test").Page, verificado: boolean) => {
+  const noConvite = async (page: import("@playwright/test").Page, verificado: boolean, confirmaEmail = true) => {
     const api = new ApiFalsa();
     await api.ligar(page);
-    await page.route("**/api/convites/*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ email: "rafael@souza.adv.br", papel: "member", status: "pending", escritorio: "Souza & Mendes Advocacia" }) }));
+    await page.route("**/api/convites/*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ email: "rafael@souza.adv.br", papel: "member", status: "pending", escritorio: "Souza & Mendes Advocacia", confirmaEmail }) }));
     await page.route("**/api/auth/get-session", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ session: { id: "s", userId: "u" }, user: { id: "u", name: "Rafael", email: "rafael@souza.adv.br", emailVerified: verificado } }) }));
     await page.goto(`/convite/${CONVITE}`);
     return api;
@@ -54,6 +54,13 @@ test.describe("confirmar o e-mail", () => {
 
   test("convite com o e-mail confirmado: entra na equipe como antes", async ({ page }) => {
     const api = await noConvite(page, true);
+    await page.getByRole("button", { name: "Entrar na equipe" }).click();
+    await expect.poll(() => api.pedidos.filter((p) => p.caminho === "/organization/accept-invitation").length).toBe(1);
+  });
+
+  test("sem e-mail ligado no servidor: entra na equipe sem pedir uma confirmação que não chegaria", async ({ page }) => {
+    const api = await noConvite(page, false, false);
+    await expect(page.getByText("Falta confirmar que este e-mail é seu.")).toHaveCount(0);
     await page.getByRole("button", { name: "Entrar na equipe" }).click();
     await expect.poll(() => api.pedidos.filter((p) => p.caminho === "/organization/accept-invitation").length).toBe(1);
   });

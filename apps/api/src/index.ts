@@ -86,6 +86,7 @@ const app = createApp({
   env,
   auth,
   rotas,
+  emailLigado: mailer.enabled,
   envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log, cobrancaAtiva: env.COBRANCA_ATIVA }),
   mcp: rotasDoMcp({ db, log, cobrancaAtiva: env.COBRANCA_ATIVA }),
   avisoDoAsaas: rotasDoAvisoDoAsaas({ db, log }),

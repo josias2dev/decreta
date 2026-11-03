@@ -173,7 +173,8 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
     },
     // O e-mail confirmado só é exigido para aceitar convite e ver convites: entrar e trabalhar não dependem dele.
     emailVerification: {
-      sendOnSignUp: true,
+      // Com o e-mail desligado, o link só iria parar no log do servidor.
+      sendOnSignUp: opts.mailer?.enabled === true,
       expiresIn: HORAS_DO_LINK_DE_CONFIRMAR * 60 * 60,
       sendVerificationEmail: async ({ user, url }) =>
         enviar({
@@ -210,7 +211,8 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
         invitationExpiresIn: DIAS_DO_CONVITE * 24 * 60 * 60,
         cancelPendingInvitationsOnReInvite: true,
         // Sem isto, quem cadastrasse antes o e-mail de outra pessoa entraria na equipe para a qual ela foi convidada.
-        requireEmailVerificationOnInvitation: true,
+        // Só vale com o e-mail ligado: sem ele a confirmação nunca chegaria, e ninguém novo conseguiria entrar na equipe.
+        requireEmailVerificationOnInvitation: opts.mailer?.enabled === true,
         sendInvitationEmail: async ({ id, email, role, organization: org, inviter }) =>
           enviar({
             to: email,
