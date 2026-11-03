@@ -1368,7 +1368,6 @@ export interface EstadoDaCobranca {
   pixAutomatico: boolean;
   regua: { ligada: boolean; passos: PassoDaRegua[]; aprovadaPor?: string | null; aprovadaEm?: string | null };
   zapsign: { configurado: boolean; ligada: boolean; ambiente: "sandbox" | "producao" | null };
-  nfse: { disponivel: false };
   podeEditar: boolean;
   cofreLigado: boolean;
   textosPadrao: PassoDaRegua[];

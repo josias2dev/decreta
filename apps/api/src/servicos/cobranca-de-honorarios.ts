@@ -69,8 +69,6 @@ export interface EstadoDaCobranca {
   pixAutomatico: boolean;
   regua: ReguaDeLembretes;
   zapsign: { configurado: boolean; ligada: boolean; ambiente: AmbienteDoProvedor | null };
-  /** A NFS-e pelo Asaas depende dos dados fiscais do escritório e ainda não é emitida pelo Decreta. */
-  nfse: { disponivel: false };
 }
 
 export function estadoDaCobranca(cfg: ConfigDeCobranca | null, organizationId: string, enderecoDaApi?: string): EstadoDaCobranca {
@@ -85,7 +83,6 @@ export function estadoDaCobranca(cfg: ConfigDeCobranca | null, organizationId: s
     pixAutomatico: cfg?.pixAutomatico ?? false,
     regua: cfg?.regua ?? { ligada: false, passos: [] },
     zapsign: { configurado: !!cfg?.zapsignChave, ligada: !!cfg?.zapsignChave && !!cfg.zapsignLigada, ambiente: cfg?.zapsignChave ? cfg.zapsignAmbiente : null },
-    nfse: { disponivel: false },
   };
 }
 

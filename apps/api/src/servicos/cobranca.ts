@@ -475,7 +475,7 @@ export async function planoDoEscritorio(deps: Pick<DepsDoPlano, "db" | "asaas" |
   const naoPodeAssinar = motivoDeNaoPoderAssinar(deps, o, estado);
   /** Tem uma assinatura viva no Asaas, tenha ela já cobrado ou não. */
   const assinante = !!o.asaasAssinaturaId;
-  const aviso: AvisoDaAssinatura | null = deps.cobrancaAtiva ? avisoDaAssinatura(estado, hoje) : null;
+  const aviso: AvisoDaAssinatura | null = deps.cobrancaAtiva ? avisoDaAssinatura(estado) : null;
   return {
     cobrancaAtiva: deps.cobrancaAtiva,
     plano: { nome: PLANO.nome, testeDias: PLANO.testeDias, valorMensalCentavos: PLANO.valorMensalCentavos },
@@ -531,7 +531,7 @@ export async function enviarAvisosDaAssinatura(deps: { db: Database; mailer: Mai
     const hoje = hojeEm(o.timezone, agora);
     const estado = estadoDoEscritorio(o, true, agora);
     const tipo = janelaDoAvisoDoTeste(estado) ?? janelaDoAvisoDoAtraso(estado);
-    const aviso = avisoDaAssinatura(estado, hoje);
+    const aviso = avisoDaAssinatura(estado);
     if (!tipo || !aviso) continue;
     // O aviso vale uma vez por teste ou por atraso: a data de referência o distingue do próximo.
     const chave = `assinatura:${tipo}:${tipo.startsWith("teste") ? o.testeAte : o.inadimplenteDesde}`;

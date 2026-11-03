@@ -282,22 +282,6 @@ export async function prepararAudiencia(ia: Ia, entrada: { audiencia: { tipo: st
 /* Resumo de atendimento                                               */
 /* ------------------------------------------------------------------ */
 
-export const resumoDeAtendimentoSchema = z.object({
-  resumo: z.string().describe("O que o cliente contou e pediu, em 3 a 6 frases."),
-  pedidos: z.array(z.string()).describe("O que o cliente quer do escritório."),
-  documentosPendentes: z.array(z.string()).describe("Documentos que faltam e foram mencionados."),
-  proximosPassos: z.array(z.string()).describe("O que o escritório combinou de fazer."),
-  recusa,
-});
-export type ResumoDeAtendimento = z.infer<typeof resumoDeAtendimentoSchema>;
-
-export async function resumirAtendimento(ia: Ia, transcricao: string, signal?: AbortSignal) {
-  if (transcricao.trim().length < 80) throw new IaRecusou("A gravação ficou curta demais para resumir. Confira o áudio ou escreva o resumo.");
-  return exigir(
-    await gerarObjeto(ia, "resumo-atendimento", resumoDeAtendimentoSchema, "Resuma o atendimento gravado para a ficha do cliente.", transcricao, signal),
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Leitura da peça contrária                                           */
 /* ------------------------------------------------------------------ */

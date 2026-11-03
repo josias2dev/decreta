@@ -42,7 +42,7 @@ describe("escritório antigo e cortesia nunca são travados", () => {
       const e = estadoDaAssinatura(f, hoje);
       expect(e.situacao).toBe("cortesia");
       expect(e.acesso).toBe("total");
-      expect(avisoDaAssinatura(e, hoje)).toBeNull();
+      expect(avisoDaAssinatura(e)).toBeNull();
     }
   });
 });
@@ -77,13 +77,13 @@ describe("teste", () => {
   });
 
   test("o aviso do teste é discreto até faltarem 3 dias, depois chama atenção com a data, e depois do fim é grave", () => {
-    const cedo = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-05"), "2026-11-05");
+    const cedo = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-05"));
     expect(cedo?.nivel).toBe("info");
-    const perto = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-13"), "2026-11-13");
+    const perto = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-13"));
     expect(perto?.nivel).toBe("atencao");
     expect(perto?.texto).toContain("16/11/2026");
     expect(perto?.texto).toContain("publicações");
-    const fim = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-17"), "2026-11-17");
+    const fim = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-17"));
     expect(fim?.nivel).toBe("grave");
     expect(fim?.texto).toContain("só para leitura");
     expect(fim?.texto).toContain("publicações");
@@ -106,14 +106,14 @@ describe("inadimplência", () => {
   });
 
   test("cada passo avisa com a data do próximo", () => {
-    const a1 = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-11"), "2026-11-11");
+    const a1 = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-11"));
     expect(a1?.nivel).toBe("atencao");
     expect(a1?.texto).toContain("17/11/2026");
-    const a2 = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-17"), "2026-11-17");
+    const a2 = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-17"));
     expect(a2?.nivel).toBe("grave");
     expect(a2?.texto).toContain("25/11/2026");
     expect(a2?.texto).toContain("publicações");
-    const a3 = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-25"), "2026-11-25");
+    const a3 = avisoDaAssinatura(estadoDaAssinatura(f, "2026-11-25"));
     expect(a3?.nivel).toBe("grave");
   });
 
@@ -127,14 +127,14 @@ describe("cancelamento", () => {
     const f = ficha({ situacao: "ativo", acessoAte: "2026-12-14" });
     const dentro = estadoDaAssinatura(f, "2026-12-14");
     expect(dentro).toMatchObject({ situacao: "ativo", acesso: "total", cancelamentoAgendado: true });
-    expect(avisoDaAssinatura(dentro, "2026-12-14")?.texto).toContain("14/12/2026");
+    expect(avisoDaAssinatura(dentro)?.texto).toContain("14/12/2026");
     expect(estadoDaAssinatura(f, "2026-12-15")).toMatchObject({ situacao: "cancelado", acesso: "leitura", motivo: "cancelada" });
   });
 
   test("assinatura ativa sem cancelamento fica em dia, sem aviso", () => {
     const e = estadoDaAssinatura(ficha({ situacao: "ativo" }), "2027-06-01");
     expect(e).toMatchObject({ situacao: "ativo", acesso: "total", cancelamentoAgendado: false });
-    expect(avisoDaAssinatura(e, "2027-06-01")).toBeNull();
+    expect(avisoDaAssinatura(e)).toBeNull();
   });
 });
 

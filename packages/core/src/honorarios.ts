@@ -7,7 +7,7 @@
  * com percentual usam BigInt, para o produto de um valor grande por um
  * percentual nunca passar do que o número inteiro seguro aguenta.
  */
-import { diferencaEmDias, ehDia, formatarDia, somarDias, type Dia } from "./datas.ts";
+import { diferencaEmDias, ehDia, formatarDia, type Dia } from "./datas.ts";
 
 /* ------------------------------------------------------------------ */
 /* Dinheiro em centavos                                                */
@@ -233,11 +233,6 @@ export function vencimentoDaCobranca(vencimentoDaParcela: Dia | null, hoje: Dia)
 /** Quantos dias a parcela está vencida (zero se não está). */
 export function diasEmAtraso(vencimento: Dia | null, hoje: Dia): number {
   return vencimento !== null && vencimento < hoje ? diferencaEmDias(vencimento, hoje) : 0;
-}
-
-/** O dia depois de `dias` dias do vencimento, para a régua de lembretes (negativo, antes). */
-export function diaDoLembrete(vencimento: Dia, dias: number): Dia {
-  return somarDias(vencimento, dias);
 }
 
 /* ------------------------------------------------------------------ */

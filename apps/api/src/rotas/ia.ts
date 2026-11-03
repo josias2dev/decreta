@@ -16,7 +16,6 @@ import {
   PedidoErrado,
   prepararAudiencia,
   resultadoParaGuardar,
-  resumirAtendimento,
   resumirAutos,
   RODAPE_IA,
   IaRecusou,
@@ -708,18 +707,6 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
       },
     });
     return new Response(corpoDaResposta, { headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff", "x-accel-buffering": "no" } });
-  });
-
-  app.post("/ia/atendimento", comIa, async (c) => {
-    const ia = iaDaRota(c);
-    const { transcricao, clienteId } = await corpo(c, z.object({ transcricao: z.string().trim().min(1).max(200_000), clienteId: z.string().uuid().nullable().optional() }));
-    if (clienteId && (await tenant(c, deps, (tx) => semIa(tx, { clienteId })))) throw new ClienteSemIa();
-    try {
-      return c.json({ situacao: "pronto", conteudo: await resumirAtendimento(ia, transcricao) });
-    } catch (err) {
-      if (err instanceof IaRecusou) return c.json({ situacao: "recusa", conteudo: { recusa: err.motivo } });
-      throw err;
-    }
   });
 
   /** Áudio do atendimento → texto (pela rota de transcrição do gateway). O gasto fica anotado pela IA medida. */

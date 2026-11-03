@@ -1,7 +1,7 @@
 /**
  * A conta aberta: a contagem do motor (`contarPrazo`) dia a dia, da publicação
  * ao vencimento, com o motivo de cada dia ter contado ou ficado de fora. É o que
- * a landing desenha no calendário, sem servidor e sem login.
+ * a data viva desenha no calendário, em qualquer tela.
  */
 import { calendarioPara, type Calendario, type Tribunal } from "./calendario.ts";
 import { fimDeSemana, somarDias, type Dia } from "./datas.ts";

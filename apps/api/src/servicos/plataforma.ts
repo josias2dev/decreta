@@ -193,15 +193,6 @@ export async function auditoriaDaPlataformaRecente(db: Database, limite = 100): 
 export const ACOES_DA_PLATAFORMA = ["liberar", "estender_teste", "so_leitura", "bloquear", "cortesia", "reativar"] as const;
 export type NomeDaAcao = (typeof ACOES_DA_PLATAFORMA)[number];
 
-export const ROTULO_DA_ACAO: Record<NomeDaAcao, string> = {
-  liberar: "Liberou da avaliação",
-  estender_teste: "Estendeu o teste",
-  so_leitura: "Pôs em só leitura",
-  bloquear: "Bloqueou",
-  cortesia: "Deu cortesia",
-  reativar: "Reativou",
-};
-
 export class RecusaDaPlataforma extends Error {
   constructor(
     readonly status: 404 | 409 | 422,

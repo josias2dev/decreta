@@ -86,7 +86,7 @@ describe.skipIf(!hasTestDatabase)("cliente sem IA: nada dos casos dele vai a um 
     await recusada(call(`/ia/briefing/${prazo!.id}`, { method: "POST" }));
     await recusada(call("/pecas", { method: "POST", json: { processoId, tipo: "manifestacao-laudo", instrucoes: "" } }));
     await recusada(call("/ia/perguntar", { method: "POST", json: { texto: "Resuma este processo.", processoId } }));
-    await recusada(call("/ia/atendimento", { method: "POST", json: { transcricao: "A cliente ligou pedindo notícias do laudo.", clienteId } }));
+    await recusada(call("/ia/campo", { method: "POST", json: { campo: "resumo-atendimento", modo: "escrever", texto: "A cliente ligou pedindo notícias do laudo.", alvo: { clienteId } } }));
     expect(ia.chamadas).toEqual([]);
   });
 

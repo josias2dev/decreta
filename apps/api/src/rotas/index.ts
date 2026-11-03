@@ -103,7 +103,7 @@ export function createRotas(deps: DepsDasRotas) {
         // `onboarding`: a configuração inicial ainda está pendente, e esta pessoa (sócia) pode fazê-la.
         escritorio: { id: c.get("orgId"), nome: c.get("orgNome"), pessoas: pessoas.size, timezone: c.get("timezone"), logo: !!esc?.timbre?.logoDocumentoId, demonstracao: c.get("demonstracao"), onboarding: !!esc && !esc.onboardingConcluidoEm && ehSocio(c.get("papel")) },
         // A assinatura só aparece com a cobrança ligada: o aviso (com data) que a moldura mostra em toda tela e o que o escritório pode fazer.
-        ...(cobrancaAtiva ? { assinatura: { situacao: c.get("assinatura").situacao, acesso: c.get("assinatura").acesso, aviso: avisoDaAssinatura(c.get("assinatura"), hoje) } } : {}),
+        ...(cobrancaAtiva ? { assinatura: { situacao: c.get("assinatura").situacao, acesso: c.get("assinatura").acesso, aviso: avisoDaAssinatura(c.get("assinatura")) } } : {}),
         // Só o operador da plataforma vê o link do painel.
         ...(ehOperador(deps.plataformaEmails ?? new Set(), c.get("userEmail")) ? { plataforma: true } : {}),
         hoje,

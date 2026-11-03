@@ -149,8 +149,7 @@ const dias = (n: number) => (n === 1 ? "1 dia" : `${n} dias`);
 const SEM_PUBLICACAO = "nada novo pode ser salvo e as publicações do DJEN deixam de chegar";
 
 /** O que a tela e o e-mail dizem sobre a situação, sempre com a data do próximo passo. Nulo quando está tudo em dia. */
-export function avisoDaAssinatura(e: EstadoDaAssinatura, hoje: Dia): AvisoDaAssinatura | null {
-  void hoje;
+export function avisoDaAssinatura(e: EstadoDaAssinatura): AvisoDaAssinatura | null {
   switch (e.situacao) {
     case "teste": {
       const n = e.diasRestantesDoTeste;

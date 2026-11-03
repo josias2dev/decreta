@@ -38,7 +38,7 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas", () => {
 
   test("as rotas do Better Auth não devolvem a assinatura, o valor nem o link do escritório a quem é da equipe", async () => {
     const organizationId = await escritorioEmTeste("campos", "Campos Advocacia", "link_campos");
-    await porNaAssinatura(t, organizationId, { asaas_assinatura_id: "sub_campos", asaas_cliente_id: "cus_campos", asaas_link_url: "https://sandbox.asaas.com/c/link_campos", valor_mensal_centavos: 9900 });
+    await t.owner`update organization set asaas_assinatura_id = 'sub_campos', asaas_cliente_id = 'cus_campos', asaas_link_url = 'https://sandbox.asaas.com/c/link_campos', valor_mensal_centavos = 9900 where id = ${organizationId}`;
     const pessoa = await m.novo({ nome: "Outro de quem entra", slug: "outro-campos", email: "equipe-campos@exemplo.adv.br", pessoa: "Equipe" });
     await t.owner`insert into member (id, organization_id, user_id, role) values (${crypto.randomUUID()}, ${organizationId}, ${pessoa.userId}, 'member')`;
     const cookie = await m.entrar("equipe-campos@exemplo.adv.br");
