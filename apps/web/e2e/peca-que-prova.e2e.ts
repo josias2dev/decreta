@@ -27,6 +27,29 @@ test.describe("no computador", () => {
     await expect(pontos.getByText("Falta o julgado sobre: seguro invalidez parcial proporcional.")).toBeVisible();
   });
 
+  test("tipo de peça: cada grupo tem o seu ícone, e o tipo aberto fica alinhado ao nome do grupo", async ({ page }) => {
+    await abrir(page, `/pecas?prazo=${ids.prazo}`);
+    const grupos = page.getByRole("listbox", { name: "Tipo de peça" }).locator("> button:not(.dc-catalogo__tipo)");
+    await expect(grupos.first()).toBeVisible();
+    const total = await grupos.count();
+    expect(total).toBeGreaterThan(1);
+    const desenhos = new Set<string>();
+    for (let i = 0; i < total; i++) {
+      const icone = grupos.nth(i).locator("svg");
+      await expect(icone).toHaveCount(1);
+      desenhos.add((await icone.getAttribute("class")) ?? "");
+    }
+    expect(desenhos.size).toBe(total);
+    await grupos.first().click();
+    const nome = await grupos.first().locator(".dc-catalogo__nome").evaluate((e) => {
+      const texto = document.createRange();
+      texto.selectNodeContents(e.lastChild!);
+      return texto.getBoundingClientRect().left;
+    });
+    const tipo = page.getByRole("option").first().locator("span").first();
+    expect(Math.abs((await tipo.boundingBox())!.x - nome)).toBeLessThan(1);
+  });
+
   test("o clique no ponto leva ao parágrafo, em destaque", async ({ page }) => {
     await abrir(page, emPeca);
     await lista(page).getByRole("button", { name: "Campo sem preencher: [cidade]." }).click();
