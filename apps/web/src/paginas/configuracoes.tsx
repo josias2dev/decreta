@@ -40,8 +40,10 @@ export function ConfiguracoesPage() {
   useEffect(() => {
     if (abaDoEndereco) setAba(abaDoEndereco);
   }, [abaDoEndereco]);
+  // O /eu só traz a assinatura com a cobrança ligada: desligada, a aba do Plano não existe.
+  const comPlano = socio && !!eu.data?.assinatura;
   // As abas só dos sócios não abrem para quem não é: cai no Timbre.
-  const aba = !socio && (abaEscolhida === "plano" || abaEscolhida === "dados" || abaEscolhida === "financeiro") ? "escritorio" : abaEscolhida;
+  const aba = (!socio && (abaEscolhida === "dados" || abaEscolhida === "financeiro")) || (!comPlano && abaEscolhida === "plano") ? "escritorio" : abaEscolhida;
   const abas = (
     <Abas
       pagina={!celular}
@@ -58,7 +60,7 @@ export function ConfiguracoesPage() {
           ? [
               ...(celular ? [] : [{ id: "financeiro" as const, rotulo: "Financeiro" }]),
               { id: "ia" as const, rotulo: "IA" },
-              { id: "plano" as const, rotulo: "Plano" },
+              ...(comPlano ? [{ id: "plano" as const, rotulo: "Plano" }] : []),
               { id: "registro" as const, rotulo: "Registro" },
               { id: "dados" as const, rotulo: "Dados" },
             ]

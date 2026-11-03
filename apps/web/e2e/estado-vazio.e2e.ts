@@ -386,15 +386,9 @@ test.describe("no computador", () => {
   });
 
   test.describe("Plano", () => {
-    test("Faturas: sem cobrança aberta, não promete fatura", async ({ page }) => {
-      await abrir(page, "/configuracoes?aba=plano");
-      await expect(vazio(page).getByText("Nenhuma fatura ainda")).toBeVisible();
-      await expect(vazio(page).getByText(/não há nada a pagar/)).toBeVisible();
-    });
-
     test("Faturas: com cobrança aberta e sem assinar, diz como começar", async ({ page }) => {
       const plano = { ...amostras.plano!.corpo, cobrancaAtiva: true, situacao: "teste", testeAte: "2026-11-07", diasRestantesDoTeste: 9, podeAssinar: true, faturas: [] };
-      await abrir(page, "/configuracoes?aba=plano", new ApiFalsa().responder("GET /plano", plano));
+      await abrir(page, "/configuracoes?aba=plano", new ApiFalsa().responder("/eu", { ...eu, assinatura: { situacao: "teste", acesso: "total", aviso: null } }).responder("GET /plano", plano));
       await expect(vazio(page).getByText(/A primeira aparece aqui quando o escritório assina/)).toBeVisible();
       await expect(page.getByRole("button", { name: "Assinar o plano" })).toBeVisible();
     });

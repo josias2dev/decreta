@@ -50,14 +50,20 @@ function tamanhosNaTela(page: Page) {
 test.describe("no computador", () => {
   test.use({ viewport: { width: 1366, height: 768 } });
 
-  test("cobrança desligada: a aba Plano diz que a cobrança não abriu, e a tela não ganha aviso nenhum", async ({ page }) => {
-    await abrir(page, "/configuracoes");
-    await page.getByRole("tab", { name: "Plano" }).click();
-    await expect(page.getByText("A cobrança ainda não foi aberta: por enquanto nada é cobrado e nada é bloqueado.")).toBeVisible();
-    await expect(page.getByText("Cobrança ainda não aberta")).toBeVisible();
+  test("cobrança desligada: não existe aba Plano, o endereço dela cai no Timbre, e a tela não ganha aviso nenhum", async ({ page }) => {
+    const api = await abrir(page, "/configuracoes?aba=plano");
+    await expect(page.getByRole("tab", { name: "Timbre", selected: true })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Plano" })).toHaveCount(0);
+    await expect(page.getByRole("tab", { name: "Registro" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Assinar o plano" })).toHaveCount(0);
     await expect(page.locator(".dc-faixa-plano")).toHaveCount(0);
-    await expect(page.getByText("Nenhuma fatura ainda")).toBeVisible();
+    expect(api.pedidos.filter((p) => p.caminho === "/plano")).toHaveLength(0);
+  });
+
+  test("cobrança ligada: o sócio vê a aba Plano", async ({ page }) => {
+    await abrir(page, "/configuracoes", comAssinatura("teste", "total", AVISO_DO_TESTE).responder("/plano", plano({ situacao: "teste", testeAte: "2026-11-07", diasRestantesDoTeste: 9, podeAssinar: true })));
+    await page.getByRole("tab", { name: "Plano" }).click();
+    await expect(page.getByRole("tab", { name: "Plano", selected: true })).toBeVisible();
   });
 
   test("durante o teste o aviso é discreto e só no Hoje; a faixa de toda tela não aparece", async ({ page }) => {
