@@ -14,13 +14,13 @@ import { Dialogo } from "@/componentes/dialogo";
 import { casoDaParcela, NovoContrato, ParcelaDialogo, SeloDaParcela, useAtualizarFinanceiro } from "@/componentes/honorarios";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Rolagem } from "@/componentes/rolagem";
-import { Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Segmentos, Vazio } from "@/componentes/ui";
+import { Botao, Cabecalho, CampoDeBusca, Carregando, Chip, Faixa, Segmentos, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro, SO_LEITURA } from "@/lib/api";
 import { useCelular } from "@/lib/celular";
 import { euQuery, podeCriar } from "@/lib/consultas";
-import { numero, reais } from "@/lib/formato";
+import { diaCurto, diaDoInstante, numero, reais } from "@/lib/formato";
 import type { SituacaoDoFinanceiro } from "@/lib/rotas";
-import type { AlvaraParaPrestar, FinanceiroGeral, GrupoDoResumo, ParcelaDeHonorario } from "@/lib/tipos";
+import type { AlvaraParaPrestar, FinanceiroGeral, GrupoDoResumo, PagamentoSemParcela, ParcelaDeHonorario } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
 type Periodo = "mes" | "30" | "tudo";
@@ -83,6 +83,12 @@ function filtrar(parcelas: ParcelaDeHonorario[], situacao: Situacao, busca: stri
     return !b || semAcento([p.descricao, p.cliente?.nome, p.processo?.titulo, p.contratoTitulo].join(" ")).includes(b);
   });
 }
+
+const MOTIVO_SEM_PARCELA: Record<PagamentoSemParcela["motivo"], string> = {
+  parcela_cancelada: "parcela cancelada",
+  parcela_sem_valor: "parcela ainda sem valor",
+  pagamento_recusado: "pagamento recusado pela parcela",
+};
 
 const RESUMO_VAZIO: Record<Exclude<Visao, "parcelas">, { titulo: string; texto: string }> = {
   clientes: { titulo: "Nenhum cliente com honorário", texto: "Cada cliente com contrato aparece aqui, com o que há a receber, em atraso e já recebido." },
@@ -222,6 +228,19 @@ export function FinanceiroPage() {
         </Botao>
       )}
     </div>
+  );
+
+  const semParcela = d && d.pagamentosSemParcela.length > 0 && (
+    <Faixa tipo="aviso">
+      <strong>{d.pagamentosSemParcela.length === 1 ? "O Asaas recebeu um pagamento que não entrou no Decreta." : `O Asaas recebeu ${numero(d.pagamentosSemParcela.length)} pagamentos que não entraram no Decreta.`}</strong> O dinheiro está na conta do Asaas. Confira lá: devolva ao cliente, ou marque o pagamento à mão em outra parcela.
+      <ul className="m-0 mt-1 list-disc pl-5">
+        {d.pagamentosSemParcela.map((p) => (
+          <li key={p.cobranca}>
+            {reais(p.valor)} em {diaCurto(diaDoInstante(p.em))}: {p.descricao}, {MOTIVO_SEM_PARCELA[p.motivo]}
+          </li>
+        ))}
+      </ul>
+    </Faixa>
   );
 
   const primeiroContrato = pode && (
@@ -377,6 +396,7 @@ export function FinanceiroPage() {
               </div>
               <div className="px-[var(--respiro-painel)] pb-3">{periodoSegmentos}</div>
             </div>
+            {semParcela}
             {afazer}
             <Segmentos
               rotulo="Ver por"
@@ -476,6 +496,7 @@ export function FinanceiroPage() {
               {periodoSegmentos}
             </div>
           </div>
+          {semParcela}
           {afazer}
           <section className="dc-painel">
             {visao !== "parcelas" ? (

@@ -12,7 +12,7 @@ import { organization, type Database } from "@decreta/db";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { registrar } from "../auditoria.ts";
+import { ACAO_DO_PAGAMENTO_SEM_PARCELA, registrar } from "../auditoria.ts";
 import { configDoEscritorio, segredoConfere, tratarAvisoDoAsaas, type AvisoDoAsaas } from "../servicos/cobranca-de-honorarios.ts";
 
 const ORG = /^[A-Za-z0-9_-]{1,64}$/;
@@ -42,6 +42,11 @@ export function rotasDoAvisoDoAsaas(deps: DepsDoAviso) {
     const r = await tratarAvisoDoAsaas(db, orgId, aviso, hojeEm(org.timezone));
     if (!r.duplicado && (r.resultado === "baixa_feita" || r.resultado === "estornado")) {
       await registrar(db, { organizationId: orgId, userId: null, nome: "Asaas", acao: r.resultado === "baixa_feita" ? "cobranca.baixa_automatica" : "cobranca.estorno_automatico", detalhes: { parcelaId: r.parcelaId ?? null, evento: String(aviso.event ?? "") } }, log);
+    }
+    if (r.semParcela) {
+      // Sem parcela para receber, o dinheiro está no Asaas e o Decreta não registrou nada: quem resolve é o sócio.
+      log("pagamento do Asaas sem parcela válida", { organizationId: orgId, parcelaId: r.semParcela.parcelaId, cobranca: r.semParcela.cobranca, motivo: r.semParcela.motivo, valor: r.semParcela.valor });
+      await registrar(db, { organizationId: orgId, userId: null, nome: "Asaas", acao: ACAO_DO_PAGAMENTO_SEM_PARCELA, detalhes: { ...r.semParcela, evento: String(aviso.event ?? "") } }, log);
     }
     return c.json({ recebido: true, duplicado: r.duplicado });
   });

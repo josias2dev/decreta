@@ -150,6 +150,9 @@ export interface Cenario {
   zap: ReturnType<typeof wameowDeMentira>;
   arquivos: ReturnType<typeof armazenamentoEmMemoria>;
   pedidos: Pedido[];
+  cofre?: ReturnType<typeof criarCofre>;
+  /** O que a API escreveu no log. */
+  logs: { msg: string; extra?: Record<string, unknown> }[];
   souza: { orgId: string; beatriz: string; rafael: string; camila: string; tiago: string; clienteId: string; processoId: string; cookies: Record<"beatriz" | "rafael" | "camila" | "tiago" | "bianca", string>; userIds: Record<"beatriz" | "rafael" | "camila" | "tiago" | "bianca", string> };
   mendes: { orgId: string; cookie: string; clienteId: string; processoId: string };
   demo: { orgId: string; cookie: string };
@@ -174,6 +177,9 @@ export async function montarCenario(opcoes: { cofre?: boolean; wameow?: boolean 
   const provedores = provedoresDeMentira();
   const zap = wameowDeMentira();
   const pedidos: Pedido[] = [];
+  const cofre = opcoes.cofre === false ? undefined : criarCofre(randomBytes(32).toString("hex"));
+  const logs: Cenario["logs"] = [];
+  const log = (msg: string, extra?: Record<string, unknown>) => void logs.push({ msg, extra });
   const rotas = createRotas({
     db: t.db,
     auth,
@@ -187,12 +193,12 @@ export async function montarCenario(opcoes: { cofre?: boolean; wameow?: boolean 
     enfileirar: async (p) => {
       pedidos.push(p);
     },
-    log: () => {},
-    cofre: opcoes.cofre === false ? undefined : criarCofre(randomBytes(32).toString("hex")),
+    log,
+    cofre,
     fetchDosProvedores: provedores.fetch,
     enderecoDaApi: "https://api.decreta.local",
   });
-  const app = createApp({ db: t.db, env, auth, rotas, avisoDoAsaas: rotasDoAvisoDoAsaas({ db: t.db, log: () => {} }), log: () => {} });
+  const app = createApp({ db: t.db, env, auth, rotas, avisoDoAsaas: rotasDoAvisoDoAsaas({ db: t.db, log }), log });
 
   const novo = (nome: string, slug: string, email: string, pessoa: string, oab = true) => criarEscritorio(t.db, auth, { nome, slug, dono: { email, nome: pessoa, senha: SENHA, cargo: "Advogada", ...(oab ? { oabNumero: "41233", oabUf: "SC" } : {}), whatsapp: "5547991234567" } });
   const { organizationId: souzaId, userId: beatriz } = await novo("Souza & Mendes Advocacia", "souza-mendes", "beatriz@souza.adv.br", "Beatriz Souza");
@@ -255,6 +261,8 @@ export async function montarCenario(opcoes: { cofre?: boolean; wameow?: boolean 
     zap,
     arquivos,
     pedidos,
+    cofre,
+    logs,
     souza: { orgId: souzaId, beatriz, rafael: outros.rafael, camila: outros.camila, tiago: outros.tiago, ...casoSouza, cookies, userIds: { beatriz, ...outros } },
     mendes: { orgId: mendesId, cookie: cookieMendes, ...casoMendes },
     demo: { orgId: demoId, cookie: cookieDemo },

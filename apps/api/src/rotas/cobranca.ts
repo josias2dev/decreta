@@ -10,8 +10,7 @@ import { asc, desc, eq, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
-import { removerWebhook } from "../servicos/asaas-do-escritorio.ts";
-import { autorizarPixAutomatico, cancelarCobranca, configDoEscritorio, contaAsaas, emitirCobranca, estadoDaCobranca, ligarOAviso, removerChaveDoAsaas, salvarChaveDoAsaas, type DepsDaCobranca } from "../servicos/cobranca-de-honorarios.ts";
+import { autorizarPixAutomatico, cancelarCobranca, configDoEscritorio, contaAsaas, emitirCobranca, estadoDaCobranca, ligarOAviso, removerChaveDoAsaas, salvarChaveDoAsaas, tirarOAvisoAntigo, type DepsDaCobranca } from "../servicos/cobranca-de-honorarios.ts";
 import { parcelaNaTela } from "../servicos/honorarios.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { criarLembrete } from "../servicos/regua.ts";
@@ -100,7 +99,7 @@ export function rotasDaCobranca(app: Hono<Ambiente>, deps: DepsDasRotas) {
     if (b.pixAutomatico !== undefined && b.pixAutomatico !== (antes?.pixAutomatico ?? false) && antes?.asaasChave && !c.get("demonstracao")) {
       const conta = contaAsaas(dc(c), c.get("orgId"), antes);
       if (conta) {
-        if (antes.asaasWebhookId) await removerWebhook(conta, antes.asaasWebhookId).catch(() => {});
+        if (antes.asaasWebhookId) await tirarOAvisoAntigo(deps, c.get("orgId"), conta, antes.asaasWebhookId);
         aviso = await ligarOAviso(dc(c), c.get("orgId"), { email: await emailDeQuemPediu(c) }, conta, b.pixAutomatico);
       }
     }

@@ -16,6 +16,7 @@ import {
   contratosDe,
   criarContrato,
   estornarPagamento,
+  pagamentosSemParcela,
   parcelaNaTela,
   parcelasNaTela,
   processosSemHonorario,
@@ -76,6 +77,7 @@ function contratoNaTela({ c, cliente, processo }: Contratos[number], parcelas: P
 export function rotasDoFinanceiro(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
   const auditar = (c: C, acao: string, detalhes: Record<string, unknown>) => registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao, detalhes, ip: ip(c) }, deps.log);
+  const daCobranca = { db, cofre: deps.cofre, fetch: deps.fetchDosProvedores, log: deps.log, enderecoDaApi: deps.enderecoDaApi };
 
   /** O Financeiro: o que há a receber, o recebido e o atraso, por mês, cliente e processo, com as parcelas e o que espera uma pessoa. */
   app.get("/financeiro", async (c) => {
@@ -84,8 +86,8 @@ export function rotasDoFinanceiro(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return tenant(c, deps, async (tx) => {
       const parcelas = await parcelasNaTela(tx, hoje);
       const resumo = resumirFinanceiro(parcelas.map(paraResumo), hoje);
-      const [alvarasAPrestar, semHonorario, lembretes] = await Promise.all([alvarasParaPrestar(tx), processosSemHonorario(tx), lembretesParaAprovar(tx)]);
-      return c.json({ hoje, resumo, parcelas, alvarasParaPrestar: alvarasAPrestar, semHonorario, lembretesParaAprovar: lembretes });
+      const [alvarasAPrestar, semHonorario, lembretes, semParcela] = await Promise.all([alvarasParaPrestar(tx), processosSemHonorario(tx), lembretesParaAprovar(tx), pagamentosSemParcela(tx)]);
+      return c.json({ hoje, resumo, parcelas, alvarasParaPrestar: alvarasAPrestar, semHonorario, lembretesParaAprovar: lembretes, pagamentosSemParcela: semParcela });
     });
   });
 
@@ -207,19 +209,22 @@ export function rotasDoFinanceiro(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const cancelar = c.req.param("situacao") === "cancelar";
     const b = await corpo(c, z.object({ motivo: z.string().trim().max(300).optional() }));
     const hoje = hojeEm(c.get("timezone"));
-    const comCobranca: string[] = [];
+    // As cobranças saem do Asaas antes: se alguma não sair, a pessoa sabe e tenta de novo, em vez de ficar um link de pagamento vivo de um contrato cancelado.
+    if (cancelar) {
+      const comCobranca = await tenant(c, deps, async (tx) => {
+        const atual = await contratoDoEscritorio(tx, contratoId);
+        if (atual.situacao !== "ativo") falha(409, "ja_fechado", "Este contrato já foi encerrado ou cancelado.");
+        return (await parcelasNaTela(tx, hoje, { contratoId })).filter((x) => x.pago === 0 && x.cobranca);
+      });
+      for (const p of comCobranca) await cancelarCobranca(daCobranca, c.get("orgId"), p.id);
+    }
     await tenant(c, deps, async (tx) => {
       const atual = await contratoDoEscritorio(tx, contratoId);
       if (atual.situacao !== "ativo") falha(409, "ja_fechado", "Este contrato já foi encerrado ou cancelado.");
       await tx.update(contratosHonorarios).set({ situacao: cancelar ? "cancelado" : "encerrado" }).where(eq(contratosHonorarios.id, contratoId));
       if (!cancelar) return;
-      for (const p of (await parcelasNaTela(tx, hoje, { contratoId })).filter((x) => x.pago === 0)) {
-        if (p.cobranca) comCobranca.push(p.id);
-        await cancelarParcela(tx, p.id, b.motivo || "Contrato cancelado.");
-      }
+      for (const p of (await parcelasNaTela(tx, hoje, { contratoId })).filter((x) => x.pago === 0)) await cancelarParcela(tx, p.id, b.motivo || "Contrato cancelado.");
     });
-    // As cobranças emitidas dessas parcelas saem do Asaas (o que não sair fica registrado no log).
-    for (const parcelaId of comCobranca) await cancelarCobranca({ db, cofre: deps.cofre, fetch: deps.fetchDosProvedores, log: deps.log, enderecoDaApi: deps.enderecoDaApi }, c.get("orgId"), parcelaId).catch((err) => deps.log("cobrança não saiu do Asaas ao cancelar o contrato", { parcelaId, error: err instanceof Error ? err.message : String(err) }));
     await auditar(c, cancelar ? "contrato.cancelado" : "contrato.encerrado", { contratoId });
     return c.json(await contratoDetalhado(c, contratoId, hoje));
   });
@@ -282,12 +287,11 @@ export function rotasDoFinanceiro(app: Hono<Ambiente>, deps: DepsDasRotas) {
     const parcelaId = id(c);
     const b = await corpo(c, z.object({ motivo: z.string().trim().max(300).optional() }));
     const hoje = hojeEm(c.get("timezone"));
-    const tinhaCobranca = await tenant(c, deps, async (tx) => {
-      const p = await parcelaNaTela(tx, hoje, parcelaId);
-      await cancelarParcela(tx, parcelaId, b.motivo || "Cancelada pela equipe.");
-      return !!p.cobranca;
-    });
-    if (tinhaCobranca) await cancelarCobranca({ db, cofre: deps.cofre, fetch: deps.fetchDosProvedores, log: deps.log, enderecoDaApi: deps.enderecoDaApi }, c.get("orgId"), parcelaId).catch((err) => deps.log("cobrança não saiu do Asaas ao cancelar a parcela", { parcelaId, error: err instanceof Error ? err.message : String(err) }));
+    // A cobrança sai do Asaas antes: se não sair, a parcela fica como estava e a pessoa sabe, em vez de ficar um link de pagamento vivo de uma parcela cancelada.
+    // Parcela com pagamento ou já cancelada não tem o que cancelar: a recusa vem de cancelarParcela, sem mexer no Asaas.
+    const p = await tenant(c, deps, (tx) => parcelaNaTela(tx, hoje, parcelaId));
+    if (p.cobranca && p.pago === 0 && p.situacao !== "cancelada") await cancelarCobranca(daCobranca, c.get("orgId"), parcelaId);
+    await tenant(c, deps, (tx) => cancelarParcela(tx, parcelaId, b.motivo || "Cancelada pela equipe."));
     await auditar(c, "parcela.cancelada", { parcelaId });
     return c.json(await tenant(c, deps, (tx) => parcelaNaTela(tx, hoje, parcelaId)));
   });

@@ -10,7 +10,8 @@ import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
-import { confirmarPrestacao, contaDoAlvara, desfazerPrestacao, estornarRepasse, prestacaoPorId, registrarRepasse, prestacaoDoAlvara } from "../servicos/prestacao.ts";
+import { cancelarCobranca } from "../servicos/cobranca-de-honorarios.ts";
+import { conferirDesfazer, confirmarPrestacao, contaDoAlvara, desfazerPrestacao, estornarRepasse, prestacaoPorId, registrarRepasse, prestacaoDoAlvara } from "../servicos/prestacao.ts";
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { docxNoTimbre, timbreDoEscritorio } from "../servicos/timbre.ts";
 import { corpo, exigirFinanceiro, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
@@ -58,6 +59,9 @@ export function rotasDaPrestacao(app: Hono<Ambiente>, deps: DepsDasRotas) {
     await exigirFinanceiro(c, deps);
     const prestacaoId = id(c);
     const b = await corpo(c, z.object({ motivo: z.string().trim().min(3).max(300) }));
+    // A parcela do êxito pode ter cobrança emitida: ela sai do Asaas antes, para o desfazer não deixar um link de pagamento vivo. Se o Asaas recusar, nada é desfeito.
+    const { cobrancaDaParcela } = await tenant(c, deps, (tx) => conferirDesfazer(tx, prestacaoId));
+    if (cobrancaDaParcela) await cancelarCobranca({ db: deps.db, cofre: deps.cofre, fetch: deps.fetchDosProvedores, log: deps.log, enderecoDaApi: deps.enderecoDaApi }, c.get("orgId"), cobrancaDaParcela);
     const alvaraId = await tenant(c, deps, async (tx) => {
       const p = await prestacaoPorId(tx, prestacaoId);
       await desfazerPrestacao(tx, prestacaoId, c.get("userId"), b.motivo);

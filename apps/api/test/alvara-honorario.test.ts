@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { somarDias } from "@decreta/core";
 import { hasTestDatabase } from "@decreta/db/testing";
 import JSZip from "jszip";
-import { HOJE, montarCenario, type Cenario } from "./apoio-financeiro.ts";
+import { CHAVE_DE_TESTE, HOJE, montarCenario, type Cenario } from "./apoio-financeiro.ts";
 
 // Banco de verdade e muitos pedidos por teste: com o computador ocupado, 5 s é pouco.
 setDefaultTimeout(60_000);
@@ -33,6 +33,48 @@ describe.skipIf(!hasTestDatabase)("do alvará ao honorário e à prestação de 
   const conta = async (alvaraId: string, quem: "beatriz" | "camila" | "tiago" | "mendes" = "beatriz", contrato?: string) => s.json(s.com(quem, `/financeiro/alvaras/${alvaraId}/conta${contrato ? `?contrato=${contrato}` : ""}`));
   const confirmar = (alvaraId: string, corpo: Record<string, unknown>, quem: "beatriz" | "tiago" | "mendes" = "beatriz") => s.com(quem, `/financeiro/alvaras/${alvaraId}/prestacao`, { json: corpo });
   const recebidoTotal = async () => (await s.json(s.com("beatriz", "/financeiro"))).resumo.recebido as number;
+
+  describe("a cobrança da parcela de êxito ao desfazer a prestação", () => {
+    const confirmada = async (titulo: string) => {
+      const processo = await processoNovo(titulo);
+      await contratoDeExito(processo, 3000);
+      const a = await alvaraSacado(processo, "1000.00");
+      const prestacaoId = (await (await confirmar(a, { honorario: 30_000, cliente: 70_000 })).json()).prestacao.id as string;
+      const [p] = await s.t.owner<{ parcela_id: string }[]>`select parcela_id from prestacoes_de_contas where id = ${prestacaoId}`;
+      return { prestacaoId, parcelaId: p!.parcela_id };
+    };
+    const cobrancaId = async (parcelaId: string) => (await s.t.owner<{ cobranca_id: string | null }[]>`select cobranca_id from parcelas_honorarios where id = ${parcelaId}`)[0]!.cobranca_id;
+    const canceladaEm = async (id: string) => (await s.t.owner<{ cancelada_em: Date | null }[]>`select cancelada_em from prestacoes_de_contas where id = ${id}`)[0]!.cancelada_em;
+
+    beforeAll(async () => {
+      expect((await s.com("beatriz", "/financeiro/cobranca/asaas", { metodo: "PUT", json: { chave: CHAVE_DE_TESTE, ambiente: "sandbox" } })).status).toBe(200);
+    });
+
+    test("desfazer tira a cobrança do Asaas, e o Asaas recusando, nada é desfeito", async () => {
+      const { prestacaoId, parcelaId } = await confirmada("Desfazer com cobrança");
+      expect((await s.com("beatriz", `/financeiro/parcelas/${parcelaId}/cobranca`, { json: { vencimento: HOJE } })).status).toBe(201);
+      const pay = (await cobrancaId(parcelaId))!;
+      s.provedores.falhas.set(`DELETE /v3/payments/${pay}`, { status: 400, corpo: { errors: [{ description: "Cobrança em processamento." }] } });
+      const recusado = await s.com("beatriz", `/financeiro/prestacoes/${prestacaoId}/desfazer`, { json: { motivo: "Valor estava errado." } });
+      expect(recusado.status).toBe(422);
+      expect(await canceladaEm(prestacaoId)).toBeNull();
+      s.provedores.falhas.delete(`DELETE /v3/payments/${pay}`);
+      expect((await s.com("beatriz", `/financeiro/prestacoes/${prestacaoId}/desfazer`, { json: { motivo: "Valor estava errado." } })).status).toBe(200);
+      expect(await canceladaEm(prestacaoId)).not.toBeNull();
+      expect(s.provedores.cobrancas.has(pay)).toBe(false);
+    });
+
+    test("o que impede desfazer não apaga a cobrança no caminho", async () => {
+      const { prestacaoId, parcelaId } = await confirmada("Desfazer com pagamento");
+      expect((await s.com("beatriz", `/financeiro/parcelas/${parcelaId}/cobranca`, { json: { vencimento: HOJE } })).status).toBe(201);
+      const pay = (await cobrancaId(parcelaId))!;
+      await s.com("beatriz", `/financeiro/parcelas/${parcelaId}/pagamentos`, { json: { pagoEm: HOJE, valor: 1_000 } });
+      const r = await s.com("beatriz", `/financeiro/prestacoes/${prestacaoId}/desfazer`, { json: { motivo: "Valor estava errado." } });
+      expect(r.status).toBe(409);
+      expect((await r.json()).erro).toBe("tem_pagamento");
+      expect(s.provedores.cobrancas.has(pay)).toBe(true);
+    });
+  });
 
   describe("a conta", () => {
     test("alvará sem contrato: nenhum honorário, o valor todo é do cliente, e a conta diz que falta o contrato", async () => {

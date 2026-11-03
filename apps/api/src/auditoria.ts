@@ -24,6 +24,8 @@ export const ROTULO: Record<string, string> = {
   "convite.aceito": "Aceitou o convite",
   "membro.removido": "Tirou alguém da equipe",
   "membro.papel": "Mudou o papel de alguém",
+  "plano.cancelamento_pendente": "A assinatura não saiu do Asaas ao encerrar: o sistema tenta de novo",
+  "cobranca.pagamento_sem_parcela": "O Asaas avisou de um pagamento que a parcela não aceitou",
   "prazo.confirmado": "Confirmou um prazo",
   "prazo.criado": "Criou um prazo",
   "prazo.ajustado": "Ajustou um prazo",
@@ -90,6 +92,9 @@ export const ROTULO: Record<string, string> = {
   "assinatura.enviada": "Mandou um documento para assinatura eletrônica",
   "assinatura.concluida": "Um documento mandado para assinatura foi assinado",
 };
+
+/** O registro do pagamento que o Asaas avisou e a parcela não aceitou: o Financeiro lê daqui o aviso que mostra aos sócios. */
+export const ACAO_DO_PAGAMENTO_SEM_PARCELA = "cobranca.pagamento_sem_parcela";
 
 export async function registrar(db: Database, r: Registro, log?: (msg: string, extra?: Record<string, unknown>) => void): Promise<void> {
   try {

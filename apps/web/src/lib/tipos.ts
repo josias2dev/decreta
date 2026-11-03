@@ -1265,6 +1265,17 @@ export interface FinanceiroGeral {
   alvarasParaPrestar: AlvaraParaPrestar[];
   semHonorario: { total: number; itens: { id: string; titulo: string; cnj: string | null; cliente: { id: string; nome: string } | null }[] };
   lembretesParaAprovar: number;
+  /** O que o Asaas avisou que recebeu e nenhuma parcela aceitou (cancelada ou sem valor). */
+  pagamentosSemParcela: PagamentoSemParcela[];
+}
+
+export interface PagamentoSemParcela {
+  em: string;
+  parcelaId: string;
+  cobranca: string;
+  descricao: string;
+  valor: number;
+  motivo: "parcela_cancelada" | "parcela_sem_valor" | "pagamento_recusado";
 }
 
 export interface ContratoDeHonorarios {

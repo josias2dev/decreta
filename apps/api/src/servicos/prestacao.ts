@@ -249,13 +249,28 @@ export async function confirmarPrestacao(tx: Tx, organizationId: string, userId:
   return { prestacao: (await prestacaoDoAlvara(tx, alvaraId))!, parcelaId };
 }
 
-/** Desfaz a prestação confirmada por engano: só sem repasse registrado e sem pagamento do honorário marcado. */
-export async function desfazerPrestacao(tx: Tx, prestacaoId: string, userId: string, motivo: string): Promise<void> {
+/**
+ * O que impede desfazer a prestação (repasse registrado, pagamento do honorário que não seja o retido no alvará). Sem
+ * impedimento, diz a parcela que ainda tem cobrança emitida, para ela sair do Asaas antes de desfazer.
+ */
+export async function conferirDesfazer(tx: Tx, prestacaoId: string): Promise<{ cobrancaDaParcela: string | null }> {
   const [p] = await tx.select().from(prestacoesDeContas).where(eq(prestacoesDeContas.id, prestacaoId)).for("update");
   if (!p) falha(404, "nao_encontrado");
   if (p.canceladaEm) falha(409, "ja_desfeita", "Esta prestação de contas já foi desfeita.");
   const feitos = await tx.select({ id: repassesDeAlvara.id }).from(repassesDeAlvara).where(and(eq(repassesDeAlvara.prestacaoId, prestacaoId), isNull(repassesDeAlvara.estornadoEm)));
   if (feitos.length) falha(409, "tem_repasse", "Há repasse registrado. Desfaça os repasses antes de desfazer a prestação de contas.");
+  if (!p.parcelaId) return { cobrancaDaParcela: null };
+  const pagos = await tx.select({ forma: pagamentosHonorarios.forma }).from(pagamentosHonorarios).where(and(eq(pagamentosHonorarios.parcelaId, p.parcelaId), isNull(pagamentosHonorarios.estornadoEm)));
+  if (pagos.some((g) => g.forma !== "retido_no_alvara")) falha(409, "tem_pagamento", "O honorário desta prestação já tem pagamento marcado. Estorne o pagamento antes de desfazer a prestação de contas.");
+  const [parcela] = await tx.select({ cobrancaId: parcelasHonorarios.cobrancaId }).from(parcelasHonorarios).where(eq(parcelasHonorarios.id, p.parcelaId));
+  return { cobrancaDaParcela: parcela?.cobrancaId ? p.parcelaId : null };
+}
+
+/** Desfaz a prestação confirmada por engano: só sem repasse registrado e sem pagamento do honorário marcado. */
+export async function desfazerPrestacao(tx: Tx, prestacaoId: string, userId: string, motivo: string): Promise<void> {
+  await conferirDesfazer(tx, prestacaoId);
+  const [p] = await tx.select().from(prestacoesDeContas).where(eq(prestacoesDeContas.id, prestacaoId)).for("update");
+  if (!p) falha(404, "nao_encontrado");
   if (p.parcelaId) {
     const [parcela] = await tx.select().from(parcelasHonorarios).where(eq(parcelasHonorarios.id, p.parcelaId));
     if (parcela) {
@@ -269,7 +284,6 @@ export async function desfazerPrestacao(tx: Tx, prestacaoId: string, userId: str
 /** O pagamento "retido no alvará" nasceu da própria prestação: sai com ela. Qualquer outro pagamento da parcela segura o desfazer. */
 async function estornarPagamentosRetidos(tx: Tx, parcelaId: string, userId: string): Promise<void> {
   const feitos = await tx.select().from(pagamentosHonorarios).where(and(eq(pagamentosHonorarios.parcelaId, parcelaId), isNull(pagamentosHonorarios.estornadoEm)));
-  if (feitos.some((g) => g.forma !== "retido_no_alvara")) falha(409, "tem_pagamento", "O honorário desta prestação já tem pagamento marcado. Estorne o pagamento antes de desfazer a prestação de contas.");
   for (const g of feitos) await estornarPagamento(tx, g.id, { userId, motivo: "Prestação de contas desfeita." });
 }
 

@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { somarDias } from "@decreta/core";
 import { hasTestDatabase } from "@decreta/db/testing";
 import JSZip from "jszip";
+import { emitirCobranca } from "../src/servicos/cobranca-de-honorarios.ts";
 import { gerarLembretesDoDia } from "../src/servicos/regua.ts";
 import { prepararExportacao } from "../src/servicos/exportacao.ts";
 import { CHAVE_DE_TESTE, HOJE, montarCenario, type Cenario } from "./apoio-financeiro.ts";
@@ -208,6 +209,55 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
       expect((await s.com("beatriz", `/financeiro/parcelas/${c.parcelas[1].id}/cobranca`, { metodo: "DELETE" })).status).toBe(409);
     });
 
+    test("cancelar a parcela tira a cobrança do Asaas antes; se o Asaas recusar, a parcela fica como estava, e a pessoa sabe", async () => {
+      const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 20_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 9) } });
+      const parcela = c.parcelas[0].id;
+      await s.com("beatriz", `/financeiro/parcelas/${parcela}/cobranca`, { json: {} });
+      const pay = (await cobrancaId(parcela))!;
+      s.provedores.falhas.set(`DELETE /v3/payments/${pay}`, { status: 400, corpo: { errors: [{ code: "invalid_action", description: "Cobrança em processamento." }] } });
+      const recusado = await s.com("beatriz", `/financeiro/parcelas/${parcela}/cancelar`, { json: {} });
+      expect(recusado.status).toBe(422);
+      expect(await recusado.json()).toMatchObject({ erro: "asaas_recusou", detalhe: "Cobrança em processamento." });
+      expect((await s.json(s.com("beatriz", `/financeiro/contratos/${c.id}`))).parcelas[0].situacao).not.toBe("cancelada");
+      expect(await cobrancaId(parcela)).toBe(pay);
+
+      s.provedores.falhas.delete(`DELETE /v3/payments/${pay}`);
+      const r = await s.com("beatriz", `/financeiro/parcelas/${parcela}/cancelar`, { json: {} });
+      expect(r.status).toBe(200);
+      expect((await r.json()).situacao).toBe("cancelada");
+      expect(s.provedores.cobrancas.has(pay)).toBe(false);
+    });
+
+    test("parcela com pagamento à mão não cancela, e a cobrança dela não sai do Asaas por causa do pedido recusado", async () => {
+      const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 20_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 9) } });
+      const parcela = c.parcelas[0].id;
+      await s.com("beatriz", `/financeiro/parcelas/${parcela}/cobranca`, { json: {} });
+      const pay = (await cobrancaId(parcela))!;
+      await s.com("beatriz", `/financeiro/parcelas/${parcela}/pagamentos`, { json: { pagoEm: HOJE, valor: 5_000 } });
+      const r = await s.com("beatriz", `/financeiro/parcelas/${parcela}/cancelar`, { json: {} });
+      expect(r.status).toBe(409);
+      expect((await r.json()).erro).toBe("tem_pagamento");
+      expect(s.provedores.cobrancas.has(pay)).toBe(true);
+    });
+
+    test("cancelar o contrato tira as cobranças do Asaas antes; se uma não sair, o contrato continua e a pessoa sabe", async () => {
+      const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 20_000, parcelas: 2, primeiroVencimento: somarDias(HOJE, 9) } });
+      for (const p of c.parcelas) await s.com("beatriz", `/financeiro/parcelas/${p.id}/cobranca`, { json: {} });
+      const ids = [(await cobrancaId(c.parcelas[0].id))!, (await cobrancaId(c.parcelas[1].id))!];
+      s.provedores.falhas.set(`DELETE /v3/payments/${ids[1]}`, { status: 400, corpo: { errors: [{ description: "Cobrança em processamento." }] } });
+      const recusado = await s.com("beatriz", `/financeiro/contratos/${c.id}/cancelar`, { json: {} });
+      expect(recusado.status).toBe(422);
+      expect((await s.json(s.com("beatriz", `/financeiro/contratos/${c.id}`))).situacao).toBe("ativo");
+
+      s.provedores.falhas.delete(`DELETE /v3/payments/${ids[1]}`);
+      const r = await s.com("beatriz", `/financeiro/contratos/${c.id}/cancelar`, { json: {} });
+      expect(r.status).toBe(200);
+      const depois = await r.json();
+      expect(depois.situacao).toBe("cancelado");
+      expect(depois.parcelas.map((p: { situacao: string }) => p.situacao)).toEqual(["cancelada", "cancelada"]);
+      for (const id of ids) expect(s.provedores.cobrancas.has(id)).toBe(false);
+    });
+
     test("com cobrança emitida, valor e vencimento da parcela não mudam sem cancelar a cobrança antes", async () => {
       const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 20_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 9) } });
       await s.com("beatriz", `/financeiro/parcelas/${c.parcelas[0].id}/cobranca`, { json: {} });
@@ -348,6 +398,65 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
       const id = (await cobrancaId(c.parcelas[0].id))!;
       await aviso("PAYMENT_DELETED", id, { deleted: true });
       expect(await cobrancaId(c.parcelas[0].id)).toBeNull();
+    });
+
+    describe("pagamento que não tem parcela válida", () => {
+      const resultado = async (id: string) => (await s.t.owner<{ resultado: string | null }[]>`select resultado from eventos_cobranca where organization_id = ${s.souza.orgId} and externo_id = ${id}`)[0]?.resultado;
+      const registros = async (cobranca: string) => [...(await s.t.owner<{ nome: string; detalhes: Record<string, unknown> }[]>`select nome, detalhes from auditoria where organization_id = ${s.souza.orgId} and acao = 'cobranca.pagamento_sem_parcela' and detalhes->>'cobranca' = ${cobranca}`)];
+      /** Uma parcela que a API cancelou com a cobrança ainda viva no Asaas: o cenário que o aviso precisa aguentar. */
+      const parcelaCanceladaComCobranca = async (valor: number) => {
+        const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor, parcelas: 1, primeiroVencimento: somarDias(HOJE, 12) }, titulo: "Contrato cancelado" });
+        const parcela = c.parcelas[0].id;
+        await s.com("beatriz", `/financeiro/parcelas/${parcela}/cobranca`, { json: {} });
+        await s.t.owner`update parcelas_honorarios set cancelada_em = now(), motivo_cancelamento = 'Cancelada pela equipe.' where id = ${parcela}`;
+        return { parcela, pay: (await cobrancaId(parcela))! };
+      };
+
+      test("parcela cancelada: responde 200, grava o desfecho, e o Asaas não precisa repetir", async () => {
+        const { parcela, pay } = await parcelaCanceladaComCobranca(12_300);
+        const id = `evt_cancelada_${pay}`;
+        const r = await aviso("PAYMENT_RECEIVED", pay, { value: 123, paymentDate: HOJE }, id);
+        expect(r.status).toBe(200);
+        expect(await r.json()).toEqual({ recebido: true, duplicado: false });
+        expect(await resultado(id)).toBe("pagamento_sem_parcela_valida");
+        expect(await pagamentos(parcela)).toEqual([]);
+        expect(await (await aviso("PAYMENT_RECEIVED", pay, { value: 123, paymentDate: HOJE }, id)).json()).toEqual({ recebido: true, duplicado: true });
+      });
+
+      test("o sócio vê no Financeiro e no registro, com o valor; confirmado e recebido do mesmo pagamento avisam uma vez só", async () => {
+        const { parcela, pay } = await parcelaCanceladaComCobranca(45_600);
+        await aviso("PAYMENT_CONFIRMED", pay, { value: 456, paymentDate: HOJE });
+        await aviso("PAYMENT_RECEIVED", pay, { value: 456, paymentDate: HOJE });
+        expect(await registros(pay)).toEqual([{ nome: "Asaas", detalhes: expect.objectContaining({ parcelaId: parcela, cobranca: pay, valor: 45_600, motivo: "parcela_cancelada" }) }]);
+        const lista = (await s.json(s.com("beatriz", "/financeiro"))).pagamentosSemParcela;
+        expect(lista.filter((x: { cobranca: string }) => x.cobranca === pay)).toEqual([expect.objectContaining({ cobranca: pay, parcelaId: parcela, valor: 45_600, motivo: "parcela_cancelada", descricao: expect.any(String), em: expect.any(String) })]);
+        // Quem tem o Financeiro liberado também vê; quem não tem nem abre.
+        expect((await s.json(s.com("camila", "/financeiro"))).pagamentosSemParcela.some((x: { cobranca: string }) => x.cobranca === pay)).toBe(true);
+        expect((await s.com("tiago", "/financeiro")).status).toBe(403);
+        // Outro escritório não vê o aviso deste.
+        expect((await s.json(s.com("mendes", "/financeiro"))).pagamentosSemParcela).toEqual([]);
+      });
+
+      test("parcela sem valor (o êxito que ainda não virou conta) segue o mesmo caminho", async () => {
+        const c = await contrato({ tipo: "exito", clienteId: s.souza.clienteId, exitoBp: 2_000, processoId: s.souza.processoId });
+        const parcela = c.parcelas[0];
+        expect(parcela.valor).toBeNull();
+        const pay = `pay_sem_valor_${crypto.randomUUID()}`;
+        await s.t.owner`update parcelas_honorarios set cobranca_id = ${pay}, cobranca_provedor = 'asaas' where id = ${parcela.id}`;
+        const id = `evt_${pay}`;
+        const r = await aviso("PAYMENT_RECEIVED", pay, { value: 77, paymentDate: HOJE }, id);
+        expect(r.status).toBe(200);
+        expect(await resultado(id)).toBe("pagamento_sem_parcela_valida");
+        expect(await registros(pay)).toEqual([{ nome: "Asaas", detalhes: expect.objectContaining({ motivo: "parcela_sem_valor", valor: 7_700 }) }]);
+      });
+
+      test("sem nenhum problema, o Financeiro não mostra aviso nenhum dessa parcela", async () => {
+        const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 1_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 12) } });
+        await s.com("beatriz", `/financeiro/parcelas/${c.parcelas[0].id}/cobranca`, { json: {} });
+        const pay = (await cobrancaId(c.parcelas[0].id))!;
+        await aviso("PAYMENT_RECEIVED", pay, { value: 10, paymentDate: HOJE });
+        expect((await s.json(s.com("beatriz", "/financeiro"))).pagamentosSemParcela.some((x: { cobranca: string }) => x.cobranca === pay)).toBe(false);
+      });
     });
 
     test("escritório encerrado recebe o aviso e não faz nada", async () => {
@@ -528,6 +637,72 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas do escritório", () => {
     });
   });
 
+  describe("a chave que não abre mais", () => {
+    test("informar a chave de novo conserta: a antiga, que não abre, não atrapalha, e o log diz que o aviso antigo ficou no Asaas", async () => {
+      await s.t.owner`update cobranca_config set asaas_chave = 'isto-nao-abre' where organization_id = ${s.souza.orgId}`;
+      const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 2_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 9) } });
+      const presa = await s.com("beatriz", `/financeiro/parcelas/${c.parcelas[0].id}/cobranca`, { json: {} });
+      expect(presa.status).toBe(409);
+      expect((await presa.json()).erro).toBe("chave_ilegivel");
+
+      s.logs.length = 0;
+      const r = await s.com("beatriz", "/financeiro/cobranca/asaas", { metodo: "PUT", json: { chave: CHAVE_DE_TESTE, ambiente: "sandbox" } });
+      expect(r.status).toBe(200);
+      expect((await s.com("beatriz", `/financeiro/parcelas/${c.parcelas[0].id}/cobranca`, { json: {} })).status).toBe(201);
+      const nota = s.logs.find((l) => l.msg.includes("aviso antigo"));
+      expect(nota?.extra).toMatchObject({ organizationId: s.souza.orgId });
+      expect(JSON.stringify(s.logs)).not.toContain(CHAVE_DE_TESTE);
+    });
+
+    test("cancelar a cobrança com a chave que não abre solta a parcela, e o log diz que ela continua no Asaas", async () => {
+      const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 2_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 9) } });
+      const parcela = c.parcelas[0].id;
+      await s.com("beatriz", `/financeiro/parcelas/${parcela}/cobranca`, { json: {} });
+      const pay = (await cobrancaId(parcela))!;
+      const [{ asaas_chave: boa }] = (await s.t.owner`select asaas_chave from cobranca_config where organization_id = ${s.souza.orgId}`) as unknown as [{ asaas_chave: string }];
+      await s.t.owner`update cobranca_config set asaas_chave = 'isto-nao-abre' where organization_id = ${s.souza.orgId}`;
+      s.logs.length = 0;
+      expect((await s.com("beatriz", `/financeiro/parcelas/${parcela}/cobranca`, { metodo: "DELETE" })).status).toBe(200);
+      await s.t.owner`update cobranca_config set asaas_chave = ${boa} where organization_id = ${s.souza.orgId}`;
+      expect(await cobrancaId(parcela)).toBeNull();
+      expect(s.provedores.cobrancas.has(pay)).toBe(true);
+      const nota = s.logs.find((l) => l.msg.includes("continua no Asaas"));
+      expect(nota?.extra).toMatchObject({ organizationId: s.souza.orgId, parcelaId: parcela, cobrancaId: pay });
+    });
+
+    test("tirar o aviso do Asaas falhou: o log diz, com o contexto e sem a chave", async () => {
+      const webhook = (await s.t.owner<{ asaas_webhook_id: string }[]>`select asaas_webhook_id from cobranca_config where organization_id = ${s.souza.orgId}`)[0]!.asaas_webhook_id;
+      s.provedores.falhas.set(`DELETE /v3/webhooks/${webhook}`, { status: 500, corpo: {} });
+      const pixAgora = (await s.json(s.com("beatriz", "/financeiro/cobranca"))).pixAutomatico as boolean;
+      s.logs.length = 0;
+      expect((await s.com("beatriz", "/financeiro/cobranca/opcoes", { metodo: "PUT", json: { pixAutomatico: !pixAgora } })).status).toBe(200);
+      s.provedores.falhas.delete(`DELETE /v3/webhooks/${webhook}`);
+      const nota = s.logs.find((l) => l.msg.includes("aviso antigo"));
+      expect(nota?.extra).toMatchObject({ organizationId: s.souza.orgId, webhookId: webhook });
+      expect(JSON.stringify(s.logs)).not.toContain(CHAVE_DE_TESTE);
+      await s.com("beatriz", "/financeiro/cobranca/opcoes", { metodo: "PUT", json: { pixAutomatico: pixAgora } });
+    });
+
+    test("duas pessoas cobraram ao mesmo tempo e a cobrança repetida não saiu do Asaas: o log diz qual ficou", async () => {
+      const c = await contrato({ tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 2_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 9) } });
+      const parcela = c.parcelas[0].id;
+      // A outra pessoa grava a cobrança dela no meio do caminho: logo depois que esta falou com o Asaas.
+      const falsa = async (url: string, init: RequestInit = {}) => {
+        const r = await s.provedores.fetch(url as never, init);
+        if (init.method === "POST" && String(url).endsWith("/payments")) {
+          await s.t.owner`update parcelas_honorarios set cobranca_id = 'pay_da_outra_pessoa' where id = ${parcela}`;
+          s.provedores.falhas.set(`DELETE /v3/payments/${((await r.clone().json()) as { id: string }).id}`, { status: 500, corpo: {} });
+        }
+        return r;
+      };
+      s.logs.length = 0;
+      const r = emitirCobranca({ db: s.t.db, cofre: s.cofre, fetch: falsa as unknown as typeof fetch, log: (msg, extra) => s.logs.push({ msg, extra }) }, s.souza.orgId, s.souza.beatriz, parcela, HOJE);
+      await expect(r).rejects.toThrow();
+      const nota = s.logs.find((l) => l.msg.includes("cobrança repetida"));
+      expect(nota?.extra).toMatchObject({ organizationId: s.souza.orgId, parcelaId: parcela, cobrancaId: expect.stringMatching(/^pay_/) });
+    });
+  });
+
   describe("tirar a chave", () => {
     test("a chave sai do banco, o aviso sai do Asaas, e a cobrança volta a ser só manual", async () => {
       const webhooksAntes = s.provedores.chamadasDe("asaas").filter((x) => x.metodo === "DELETE" && x.caminho.startsWith("/v3/webhooks/")).length;
@@ -552,6 +727,12 @@ describe.skipIf(!hasTestDatabase)("sem o cofre das chaves", () => {
       expect((await r.json()).erro).toBe("cofre_desligado");
       expect((await s.json(s.com("beatriz", "/financeiro/cobranca"))).cofreLigado).toBe(false);
       expect((await s.com("beatriz", "/financeiro")).status).toBe(200);
+      // Chave guardada de quando o cofre existia: a resposta é o cofre desligado, não que a chave não abre.
+      await s.t.owner`insert into cobranca_config (organization_id, asaas_chave) values (${s.souza.orgId}, 'cifrada-de-outro-tempo')`;
+      const c = await s.json(s.com("beatriz", "/financeiro/contratos", { json: { tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 2_000, parcelas: 1, primeiroVencimento: somarDias(HOJE, 9) } } }));
+      const emitir = await s.com("beatriz", `/financeiro/parcelas/${c.parcelas[0].id}/cobranca`, { json: {} });
+      expect(emitir.status).toBe(503);
+      expect((await emitir.json()).erro).toBe("cofre_desligado");
     } finally {
       await s.encerrar();
     }

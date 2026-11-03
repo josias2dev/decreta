@@ -34,6 +34,27 @@ const comAsaas = { ...cobranca, cofreLigado: true, asaas: { configurado: true, a
 /** O que o servidor devolve depois de marcar o pagamento inteiro. */
 const paga = (p: Parcela) => ({ ...p, pago: p.valor, falta: 0, situacao: "paga", pagamentos: [{ id: uuid(900), valor: p.valor, pagoEm: HOJE, forma: "pix", origem: "manual", observacao: null, estornado: false, motivoEstorno: null }] });
 
+test.describe("pagamento que o Asaas recebeu e nenhuma parcela aceitou", () => {
+  const geral = amostras.financeiro!.corpo;
+  const achado = { em: "2026-10-28T12:00:00.000Z", parcelaId: uuid(901), cobranca: "pay_1", descricao: "Honorários, parcela 1/3", valor: 45_600, motivo: "parcela_cancelada" };
+
+  test("o Financeiro avisa, com o valor, a parcela e o que fazer", async ({ page }) => {
+    await abrir(page, "/financeiro", new ApiFalsa().responder("/financeiro", { ...geral, pagamentosSemParcela: [achado] }));
+    const aviso = page.locator(".dc-faixa", { hasText: "O Asaas recebeu um pagamento que não entrou no Decreta." });
+    await expect(aviso).toBeVisible();
+    await expect(aviso).toContainText("R$ 456,00");
+    await expect(aviso).toContainText("Honorários, parcela 1/3");
+    await expect(aviso).toContainText("parcela cancelada");
+    await expect(aviso).toContainText("marque o pagamento à mão");
+  });
+
+  test("sem nada assim, não há aviso", async ({ page }) => {
+    await abrir(page, "/financeiro", new ApiFalsa().responder("/financeiro", { ...geral, pagamentosSemParcela: [] }));
+    await expect(page.getByRole("heading").first()).toBeVisible();
+    await expect(page.getByText("não entrou no Decreta")).toHaveCount(0);
+  });
+});
+
 test("Financeiro: o atraso aparece e o pagamento só entra com o clique em Marcar como pago", async ({ page }) => {
   const api = new ApiFalsa().responder(`POST /financeiro/parcelas/${emAtraso.id}/pagamentos`, paga(emAtraso));
   await abrir(page, "/financeiro", api);

@@ -10,10 +10,11 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { vencimentoDaCobranca, type Dia } from "@decreta/core";
 import { clientes, cobrancaConfig, contratosHonorarios, eventosCobranca, pagamentosHonorarios, parcelasHonorarios, withTenant, type AmbienteDoProvedor, type Database, type ReguaDeLembretes } from "@decreta/db";
 import { and, eq, isNull } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 import type { Cofre } from "../cofre.ts";
 import { falha } from "../rotas/base.ts";
 import { AsaasErro, buscarOuCriarCliente, conferirChave, criarAutorizacaoPix, criarCobranca, criarWebhook, removerCobranca, removerWebhook, type ContaAsaas } from "./asaas-do-escritorio.ts";
-import { estornarPagamento, parcelasNaTela, registrarPagamento } from "./honorarios.ts";
+import { estornarPagamento, parcelasNaTela, registrarPagamento, type PagamentoSemParcela } from "./honorarios.ts";
 
 export type ConfigDeCobranca = typeof cobrancaConfig.$inferSelect;
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
@@ -49,13 +50,17 @@ function exigirCofre(deps: DepsDaCobranca): Cofre {
 /** A conta do Asaas do escritório, com a chave aberta só aqui, em memória. `null`: sem chave guardada. */
 export function contaAsaas(deps: DepsDaCobranca, organizationId: string, cfg: ConfigDeCobranca | null): ContaAsaas | null {
   if (!cfg?.asaasChave) return null;
+  const cofre = exigirCofre(deps);
   try {
-    return { chave: exigirCofre(deps).decifrar(cfg.asaasChave, organizationId), ambiente: cfg.asaasAmbiente, fetch: deps.fetch };
+    return { chave: cofre.decifrar(cfg.asaasChave, organizationId), ambiente: cfg.asaasAmbiente, fetch: deps.fetch };
   } catch {
     // A chave guardada não abre (o segredo do servidor mudou): o escritório informa a chave de novo.
     return falha(409, "chave_ilegivel", "A chave do Asaas guardada não abre mais. Informe a chave de novo nas Configurações.");
   }
 }
+
+/** A frase do erro, para o log. A chave do Asaas nunca entra nela: vai só no cabeçalho do pedido. */
+const motivoDoErro = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 const PREFIXO_DA_CHAVE = { producao: "$aact_prod_", sandbox: "$aact_hmlg_" } as const;
 
@@ -107,12 +112,21 @@ export async function salvarChaveDoAsaas(deps: DepsDaCobranca, organizationId: s
   }
   // O aviso da chave anterior sai da conta de quem a tinha, para não ficar mandando para o Decreta à toa.
   const antes = await configDoEscritorio(deps.db, organizationId);
-  const antiga = contaAsaas({ ...deps, cofre }, organizationId, antes);
-  if (antiga && antes?.asaasWebhookId) await removerWebhook(antiga, antes.asaasWebhookId).catch(() => {});
+  if (antes?.asaasChave && antes.asaasWebhookId) {
+    // A chave guardada pode não abrir: é justamente para isso que a pessoa está informando outra.
+    const antiga = contaAsaasSemErro({ ...deps, cofre }, organizationId, antes);
+    if (antiga) await tirarOAvisoAntigo(deps, organizationId, antiga, antes.asaasWebhookId);
+    else deps.log("o aviso antigo ficou no Asaas: a chave guardada não abre", { organizationId, webhookId: antes.asaasWebhookId });
+  }
 
   const base = { asaasChave: cofre.cifrar(chave, organizationId), asaasAmbiente: p.ambiente, asaasConferidaEm: new Date(), asaasWebhookId: null, asaasWebhookTokenHash: null };
   await guardar(deps.db, organizationId, base);
   return ligarOAviso(deps, organizationId, quem, conta, antes?.pixAutomatico ?? false);
+}
+
+/** Tira o aviso antigo da conta do Asaas. Se não sair, ele continua mandando para o Decreta à toa (com segredo que não vale mais): não trava nada, e fica no log. */
+export async function tirarOAvisoAntigo(deps: Pick<DepsDaCobranca, "log">, organizationId: string, conta: ContaAsaas, webhookId: string): Promise<void> {
+  await removerWebhook(conta, webhookId).catch((err: unknown) => deps.log("o aviso antigo não saiu do Asaas", { organizationId, webhookId, error: motivoDoErro(err) }));
 }
 
 /** Cria o aviso de pagamento na conta do Asaas do escritório, com um segredo novo. */
@@ -136,7 +150,10 @@ export async function removerChaveDoAsaas(deps: DepsDaCobranca, organizationId: 
   const cfg = await configDoEscritorio(deps.db, organizationId);
   if (!cfg?.asaasChave) return;
   const conta = deps.cofre ? contaAsaasSemErro(deps, organizationId, cfg) : null;
-  if (conta && cfg.asaasWebhookId) await removerWebhook(conta, cfg.asaasWebhookId).catch(() => {});
+  if (cfg.asaasWebhookId) {
+    if (conta) await tirarOAvisoAntigo(deps, organizationId, conta, cfg.asaasWebhookId);
+    else deps.log("o aviso antigo ficou no Asaas: a chave guardada não abre", { organizationId, webhookId: cfg.asaasWebhookId });
+  }
   await guardar(deps.db, organizationId, { asaasChave: null, asaasWebhookId: null, asaasWebhookTokenHash: null, asaasConferidaEm: null, pixAutomatico: false });
 }
 
@@ -215,7 +232,7 @@ export async function emitirCobranca(deps: DepsDaCobranca, organizationId: strin
   );
   if (!gravou.length) {
     // Duas pessoas cobraram a mesma parcela ao mesmo tempo: a segunda desfaz a que criou no Asaas.
-    await removerCobranca(conta, emitida.id).catch(() => {});
+    await removerCobranca(conta, emitida.id).catch((err: unknown) => deps.log("a cobrança repetida não saiu do Asaas: apague lá", { organizationId, parcelaId, cobrancaId: emitida.id, error: motivoDoErro(err) }));
     falha(409, "ja_cobrada", "Esta parcela já tem uma cobrança emitida.");
   }
   return emitida;
@@ -237,6 +254,8 @@ export async function cancelarCobranca(deps: DepsDaCobranca, organizationId: str
       if (!(err instanceof AsaasErro && err.status === 404)) falha(err instanceof AsaasErro && err.status !== 0 ? 422 : 504, "asaas_recusou", err instanceof AsaasErro ? err.message : "O Asaas não respondeu.");
     }
   }
+  // Sem chave que abra não há como apagar lá: a parcela solta, e a cobrança segue valendo no Asaas. Que fique no log.
+  else deps.log("a cobrança continua no Asaas: sem chave que abra para apagar", { organizationId, parcelaId, cobrancaId: parcela.cobrancaId });
   await soltarCobranca(deps.db, organizationId, parcelaId);
 }
 
@@ -292,6 +311,9 @@ const EVENTOS_DE_PAGAMENTO = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
 const EVENTOS_DE_ESTORNO = new Set(["PAYMENT_REFUNDED", "PAYMENT_RECEIVED_IN_CASH_UNDONE", "PAYMENT_CHARGEBACK_REQUESTED"]);
 const EVENTOS_DA_AUTORIZACAO = new Set(["PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED", "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED", "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED", "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED"]);
 
+/** O desfecho do aviso de um pagamento que a parcela não aceitou. */
+const PAGAMENTO_SEM_PARCELA = "pagamento_sem_parcela_valida";
+
 const texto = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 /** O valor do aviso vem em reais, como número JSON: vira centavos inteiros, arredondando o que o ponto flutuante sujou (19,99 × 100 = 1998,9999…). */
 export const centavosDoAviso = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.round(v * 100) : null);
@@ -311,7 +333,7 @@ export interface ResultadoDoAviso {
  * transação da baixa. Se algo falhar, a transação volta inteira (o evento também) e o Asaas manda de novo.
  * A baixa só nasce de um pagamento confirmado pelo Asaas, e o mesmo pagamento nunca é baixado duas vezes.
  */
-export async function tratarAvisoDoAsaas(db: Database, organizationId: string, aviso: AvisoDoAsaas, hoje: Dia): Promise<ResultadoDoAviso & { parcelaId?: string }> {
+export async function tratarAvisoDoAsaas(db: Database, organizationId: string, aviso: AvisoDoAsaas, hoje: Dia): Promise<ResultadoDoAviso & { parcelaId?: string; semParcela?: PagamentoSemParcela }> {
   const idDoEvento = texto(aviso.id);
   const tipo = texto(aviso.event);
   if (!idDoEvento || !tipo) falha(400, "aviso_invalido", "Aviso sem id ou sem evento.");
@@ -345,7 +367,17 @@ export async function tratarAvisoDoAsaas(db: Database, organizationId: string, a
       if (!valor) return fim("valor_invalido", parcela.id);
       const pagoEm = diaDoTexto(aviso.payment?.paymentDate) ?? diaDoTexto(aviso.payment?.clientPaymentDate) ?? diaDoTexto(aviso.payment?.confirmedDate) ?? diaDoTexto(aviso.dateCreated) ?? hoje;
       const forma = FORMA_PELO_TIPO[texto(aviso.payment?.billingType) ?? ""] ?? "outro";
-      const g = await registrarPagamento(tx, organizationId, { parcelaId: parcela.id, valor, pagoEm: pagoEm > hoje ? hoje : pagoEm, forma, origem: "asaas", externoId: `asaas:${pagamentoId}`, observacao: "Baixa automática pelo aviso de pagamento do Asaas." });
+      let g;
+      try {
+        g = await registrarPagamento(tx, organizationId, { parcelaId: parcela.id, valor, pagoEm: pagoEm > hoje ? hoje : pagoEm, forma, origem: "asaas", externoId: `asaas:${pagamentoId}`, observacao: "Baixa automática pelo aviso de pagamento do Asaas." });
+      } catch (err) {
+        // A recusa da parcela não melhora se o Asaas repetir: o dinheiro já entrou lá, o evento fica gravado e o sócio é avisado. Erro de banco, não: volta tudo, e o Asaas manda de novo.
+        if (!(err instanceof HTTPException)) throw err;
+        // Confirmado e recebido do mesmo pagamento são dois eventos: o sócio é avisado uma vez.
+        const [jaAvisado] = await tx.select({ id: eventosCobranca.id }).from(eventosCobranca).where(and(eq(eventosCobranca.provedor, "asaas"), eq(eventosCobranca.recurso, pagamentoId), eq(eventosCobranca.resultado, PAGAMENTO_SEM_PARCELA)));
+        const motivo = parcela.canceladaEm ? "parcela_cancelada" : parcela.valor === null ? "parcela_sem_valor" : "pagamento_recusado";
+        return { ...(await fim(PAGAMENTO_SEM_PARCELA, parcela.id)), semParcela: jaAvisado ? undefined : { parcelaId: parcela.id, cobranca: pagamentoId, descricao: parcela.descricao, valor, motivo } };
+      }
       // O Asaas manda "confirmado" e depois "recebido" do mesmo pagamento: o segundo não baixa de novo.
       return fim(g ? "baixa_feita" : "ja_baixado", parcela.id);
     }

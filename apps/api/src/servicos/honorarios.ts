@@ -5,8 +5,9 @@
  * do Asaas), e só os não estornados contam. Sem pagamento marcado, nada aparece como recebido.
  */
 import { diasEmAtraso, planejarParcelas, situacaoDaParcela, vencimentoDaCobranca, type Dia, type PlanoDoContrato, type SituacaoDaParcela, type TipoDeContrato, type VencimentoDaCobranca } from "@decreta/core";
-import { clientes, contratosHonorarios, pagamentosHonorarios, parcelasHonorarios, processos, type Tx } from "@decreta/db";
-import { and, asc, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { auditoria, clientes, contratosHonorarios, pagamentosHonorarios, parcelasHonorarios, processos, type Tx } from "@decreta/db";
+import { and, asc, desc, eq, gte, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { ACAO_DO_PAGAMENTO_SEM_PARCELA } from "../auditoria.ts";
 import { falha } from "../rotas/base.ts";
 
 export type Contrato = typeof contratosHonorarios.$inferSelect;
@@ -277,6 +278,28 @@ export async function registrarPagamento(tx: Tx, organizationId: string, p: Pedi
     .onConflictDoNothing()
     .returning();
   return g ?? null;
+}
+
+/** O Asaas recebeu o dinheiro e a parcela não aceitou o pagamento: o que o sócio precisa saber para resolver lá. */
+export interface PagamentoSemParcela {
+  parcelaId: string;
+  cobranca: string;
+  descricao: string;
+  valor: number;
+  motivo: "parcela_cancelada" | "parcela_sem_valor" | "pagamento_recusado";
+}
+
+/** Por quantos dias o Financeiro mostra o pagamento que não entrou. Depois disso, ele continua no registro de atividades. */
+const DIAS_DO_AVISO_SEM_PARCELA = 30;
+
+/** Os pagamentos que o Asaas avisou nos últimos dias e nenhuma parcela aceitou, do mais novo para o mais antigo. */
+export async function pagamentosSemParcela(tx: Tx): Promise<(PagamentoSemParcela & { em: string })[]> {
+  const desde = new Date(Date.now() - DIAS_DO_AVISO_SEM_PARCELA * 24 * 60 * 60 * 1000);
+  const linhas = await tx.select({ em: auditoria.createdAt, detalhes: auditoria.detalhes }).from(auditoria).where(and(eq(auditoria.acao, ACAO_DO_PAGAMENTO_SEM_PARCELA), gte(auditoria.createdAt, desde))).orderBy(desc(auditoria.createdAt)).limit(20);
+  return linhas.map(({ em, detalhes }) => {
+    const { parcelaId, cobranca, descricao, valor, motivo } = detalhes as unknown as PagamentoSemParcela;
+    return { em: em.toISOString(), parcelaId, cobranca, descricao, valor, motivo };
+  });
 }
 
 export async function estornarPagamento(tx: Tx, pagamentoId: string, quem: { userId: string | null; motivo: string }): Promise<Pagamento> {
