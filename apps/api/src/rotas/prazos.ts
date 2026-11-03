@@ -4,12 +4,13 @@ import { and, asc, desc, eq, inArray, isNull, lt, lte, sql, type SQL } from "dri
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
+import { artigoAchadoNoAcervo } from "../servicos/acervo.ts";
 import { naTela, ultimaAnalise } from "../servicos/analises.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { antecedenciaDoInterno, conferenciaDoPrazo, contaDoPrazo, contagemNaTela, contaParaAbrir, contarParaProcesso } from "../servicos/prazos.ts";
+import { antecedenciaDoInterno, baseLegalVeioDaIa, conferenciaDoPrazo, contaDoPrazo, contagemNaTela, contaParaAbrir, contarParaProcesso } from "../servicos/prazos.ts";
 import { corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const QUANDO = ["hoje", "semana", "vencidos", "abertos", "cumpridos"] as const;
@@ -22,6 +23,8 @@ const novoPrazo = z.object({
   processoId: z.string().uuid(),
   tipo: z.string().trim().min(2).max(200),
   fundamento: z.string().trim().max(200).nullable().optional(),
+  /** O artigo no campo é o que a IA sugeriu. */
+  fundamentoDaIa: z.boolean().optional(),
   dias: z.number().int().min(1).max(3650),
   contagem: z.enum(["uteis", "corridos"]),
   publicadoEm: dia,
@@ -33,13 +36,15 @@ const novoPrazo = z.object({
   observacoes: z.string().max(2000).nullable().optional(),
 });
 
-const ajuste = novoPrazo.omit({ processoId: true }).partial();
+/** `confirmar`: a pessoa clicou em Salvar e confirmar. Sem isso, mudar só a base legal não mexe no resto do prazo. */
+const ajuste = novoPrazo.omit({ processoId: true }).partial().extend({ confirmar: z.boolean().optional() });
 
 /** O que a coluna Situação mostra. */
 export type SituacaoNaLista = "a_confirmar" | "confirmado" | "peca_em_revisao" | "cumprido" | "descartado";
 
 export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const { db } = deps;
+  const doAcervo = { db, fetch: deps.captura.fetch, log: deps.log };
 
   async function lista(c: C, filtros: { quando: Quando; responsavel?: string; processo?: string }) {
     const hoje = hojeEm(c.get("timezone"));
@@ -82,6 +87,10 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
           )
         : new Set<string | null>();
 
+      // A marca da base legal só aparece na lista do processo: a lista geral não paga a conferência.
+      const daIa = filtros.processo ? [...new Set(linhas.flatMap((l) => (l.prazo.fundamentoDaIa && l.prazo.fundamento ? [l.prazo.fundamento] : [])))] : [];
+      const achados = new Map(await Promise.all(daIa.map(async (f) => [f, await artigoAchadoNoAcervo(doAcervo, c.get("orgId"), f)] as const)));
+
       // Contagens dos chips: sempre sobre os abertos (e os cumpridos à parte), com o filtro de responsável.
       const n = sql<number>`count(*)::int`;
       const [chips] = await tx
@@ -117,6 +126,8 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
             dias: prazo.dias,
             contagem: prazo.contagem,
             fundamento: prazo.fundamento,
+            fundamentoDaIa: prazo.fundamentoDaIa,
+            fundamentoAchado: !!prazo.fundamento && !!achados.get(prazo.fundamento),
             fim: prazo.fim,
             urgencia,
             quando: prazo.situacao === "cumprido" ? diaPorExtensoCurto(prazo.fim, hoje) : quandoDoPrazo(urgencia, prazo.fim, hoje),
@@ -227,6 +238,8 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         id: prazo.id,
         tipo: prazo.tipo,
         fundamento: prazo.fundamento,
+        fundamentoDaIa: prazo.fundamentoDaIa,
+        fundamentoAchado: prazo.fundamentoDaIa && !!prazo.fundamento && (await artigoAchadoNoAcervo(doAcervo, c.get("orgId"), prazo.fundamento)),
         dias: prazo.dias,
         contagem: prazo.contagem,
         publicadoEm: prazo.publicadoEm,
@@ -269,6 +282,7 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
           processoId: b.processoId,
           tipo: b.tipo,
           fundamento: b.fundamento ?? null,
+          fundamentoDaIa: baseLegalVeioDaIa(b.fundamento ?? null, b.fundamentoDaIa),
           dias: b.dias,
           contagem: b.contagem,
           publicadoEm: b.publicadoEm,
@@ -290,26 +304,38 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
     return c.json(novo, 201);
   });
 
-  /** Ajustar: muda o que a pessoa mandou e reconta se mexeu em dias, contagem ou publicação. Ajustar também confirma. */
+  /**
+   * Ajustar: muda o que a pessoa mandou e reconta se mexeu em dias, contagem ou publicação. Ajustar também confirma.
+   * Só a base legal é outra coisa: preencher o artigo não confirma o prazo nem muda a data, e quem confirmou continua sendo quem confirmou.
+   */
   app.put("/prazos/:id", async (c) => {
     const prazoId = id(c);
     const b = await corpo(c, ajuste);
-    await tenant(c, deps, async (tx) => {
+    const soABase = await tenant(c, deps, async (tx) => {
       const [p] = await tx.select().from(prazos).where(eq(prazos.id, prazoId));
       if (!p) falha(404, "nao_encontrado");
       const dias = b.dias ?? p.dias;
       const contagem = b.contagem ?? p.contagem;
       const publicadoEm = b.publicadoEm ?? p.publicadoEm;
       const intimadoNoSistemaEm = b.intimadoNoSistemaEm === undefined ? p.intimadoNoSistemaEm : b.intimadoNoSistemaEm;
-      const r = await contarParaProcesso(tx, c.get("orgId"), p.processoId, { publicacao: publicadoEm, intimacaoNoSistema: intimadoNoSistemaEm, dias, contagem });
+      const fundamento = b.fundamento === undefined ? p.fundamento : b.fundamento;
+      const fundamentoDaIa = baseLegalVeioDaIa(fundamento, b.fundamentoDaIa, p);
       // A data digitada à mão fica quando a conta não mudou e ninguém mandou outra: trocar o responsável não refaz o prazo.
       const contaIgual = dias === p.dias && contagem === p.contagem && publicadoEm === p.publicadoEm && intimadoNoSistemaEm === p.intimadoNoSistemaEm;
+      const fimIgual = b.fimManual === undefined || (b.fimManual === null ? !p.fimDigitado : p.fimDigitado && b.fimManual === p.fim);
+      const restoIgual = contaIgual && fimIgual && (b.tipo ?? p.tipo) === p.tipo && (b.responsavelId === undefined || b.responsavelId === p.responsavelId) && (b.observacoes === undefined || b.observacoes === p.observacoes);
+      if (!b.confirmar && restoIgual && (fundamento !== p.fundamento || fundamentoDaIa !== p.fundamentoDaIa)) {
+        await tx.update(prazos).set({ fundamento, fundamentoDaIa }).where(eq(prazos.id, prazoId));
+        return true;
+      }
+      const r = await contarParaProcesso(tx, c.get("orgId"), p.processoId, { publicacao: publicadoEm, intimacaoNoSistema: intimadoNoSistemaEm, dias, contagem });
       const manterManual = b.fimManual === undefined && p.fimDigitado && contaIgual;
       await tx
         .update(prazos)
         .set({
           tipo: b.tipo ?? p.tipo,
-          fundamento: b.fundamento === undefined ? p.fundamento : b.fundamento,
+          fundamento,
+          fundamentoDaIa,
           dias,
           contagem,
           publicadoEm,
@@ -325,9 +351,10 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
         })
         .where(eq(prazos.id, prazoId));
       if (p.publicacaoId) await tx.update(publicacoes).set({ situacao: "vinculada", tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, p.publicacaoId));
+      return false;
     });
-    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "prazo.ajustado", detalhes: { prazoId, ...b }, ip: ip(c) }, deps.log);
-    await pedirRascunho(c, deps, prazoId);
+    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: soABase ? "prazo.base_legal" : "prazo.ajustado", detalhes: { prazoId, ...b }, ip: ip(c) }, deps.log);
+    if (!soABase) await pedirRascunho(c, deps, prazoId);
     return c.json({ ok: true });
   });
 

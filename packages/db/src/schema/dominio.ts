@@ -387,6 +387,8 @@ export const prazos = pgTable(
     tipo: text("tipo").notNull(),
     /** "art. 477, § 1º, CPC". */
     fundamento: text("fundamento"),
+    /** O artigo veio da IA: a marca de sugerido fica até ele ser achado no acervo. Se a pessoa escreve outro, sai. */
+    fundamentoDaIa: boolean("fundamento_da_ia").notNull().default(false),
     dias: integer("dias").notNull(),
     contagem: contagem("contagem").notNull().default("uteis"),
     publicadoEm: date("publicado_em", { mode: "string" }).notNull(),

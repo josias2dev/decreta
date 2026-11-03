@@ -188,6 +188,10 @@ export interface PrazoNaLista {
   dias: number;
   contagem: Contagem;
   fundamento: string | null;
+  /** O artigo veio da IA. */
+  fundamentoDaIa: boolean;
+  /** O artigo que veio da IA já foi achado no acervo. */
+  fundamentoAchado: boolean;
   fim: string;
   urgencia: Urgencia;
   quando: string;
@@ -233,6 +237,10 @@ export interface Prazo {
   id: string;
   tipo: string;
   fundamento: string | null;
+  /** O artigo veio da IA. */
+  fundamentoDaIa: boolean;
+  /** O artigo que veio da IA já foi achado no acervo. */
+  fundamentoAchado: boolean;
   dias: number;
   contagem: Contagem;
   publicadoEm: string;

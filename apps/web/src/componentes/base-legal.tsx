@@ -41,7 +41,7 @@ function igual(a: string, b: string): boolean {
 }
 
 /** A marca que diz de onde veio. Da IA, "sugerida" fica até o artigo ser achado no acervo. */
-function MarcaDaBase({ origem, achada }: { origem: "tabela" | "ia"; achada: boolean }) {
+export function MarcaDaBase({ origem, achada }: { origem: "tabela" | "ia"; achada: boolean }) {
   if (origem === "tabela") return <span className="dc-base-legal__marca dc-base-legal__marca--tabela">Da tabela do Decreta</span>;
   return <span className={cn("dc-base-legal__marca", achada ? "dc-base-legal__marca--achada" : "dc-base-legal__marca--sugerida")}>{achada ? "Da IA, artigo achado no acervo" : "Sugerida pela IA"}</span>;
 }
@@ -91,7 +91,8 @@ export function CampoBaseLegal({
 }: {
   id: string;
   valor: string;
-  aoMudar: (v: string) => void;
+  /** `daIa`: o que ficou no campo é o artigo que a IA sugeriu. */
+  aoMudar: (v: string, daIa: boolean) => void;
   /** "O que fazer". */
   tipo: string;
   processoId?: string | null;
@@ -115,6 +116,7 @@ export function CampoBaseLegal({
   const tabela = consulta.data?.tabela ?? null;
   const iaDisponivel = useIaDisponivel(semIa || consulta.data?.semIa);
   const [daIa, setDaIa] = useState<{ fundamento: string; explicacao: string | null } | null>(sugeridaPelaIa ? { fundamento: sugeridaPelaIa, explicacao: null } : null);
+  const mudar = (novo: string) => aoMudar(novo, !!daIa && igual(novo, daIa.fundamento));
 
   // A tabela preenche o campo vazio e troca o que ela mesma pôs. O que a pessoa digitou, apagou ou aceitou da IA fica.
   const ultimaDaTabela = useRef<string | null>(null);
@@ -123,7 +125,7 @@ export function CampoBaseLegal({
     if (novaDaTabela === undefined || novaDaTabela === ultimaDaTabela.current) return;
     const antiga = ultimaDaTabela.current;
     ultimaDaTabela.current = novaDaTabela;
-    if (!valor.trim() || valor === antiga) aoMudar(novaDaTabela ?? "");
+    if (!valor.trim() || valor === antiga) mudar(novaDaTabela ?? "");
     // Só quando a tabela muda: `valor` entra na decisão, mas digitar não é motivo para decidir de novo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [novaDaTabela]);
@@ -150,13 +152,13 @@ export function CampoBaseLegal({
 
   /** O texto que estava no campo antes de um clique trocar. Voltar troca os dois: nada se perde. */
   const [antes, setAntes] = useState<string | null>(null);
-  const trocarPor = (novo: string) => {
+  const guardarOQueEstava = (novo: string) => {
     if (preenchido && !igual(valor, novo)) setAntes(valor);
-    aoMudar(novo);
   };
   const usarSugestao = (resposta: Extract<RespostaDaBaseLegal, { situacao: "pronto" }>) => {
     setDaIa({ fundamento: resposta.fundamento, explicacao: resposta.explicacao });
-    trocarPor(resposta.fundamento);
+    guardarOQueEstava(resposta.fundamento);
+    aoMudar(resposta.fundamento, true);
     void api(`/ia/campo/${resposta.id}/usado`, { method: "POST" }).catch(() => {});
     sugerir.reset();
   };
@@ -166,7 +168,7 @@ export function CampoBaseLegal({
       <div className={cn("dc-base-legal__colunas", mostrarLei && "tem-lei")}>
         <div className="dc-base-legal__campo">
           <Campo rotulo="Base legal" htmlFor={id}>
-            <input id={id} value={valor} onChange={(e) => aoMudar(e.target.value)} placeholder={placeholder} autoComplete="off" />
+            <input id={id} value={valor} onChange={(e) => mudar(e.target.value)} placeholder={placeholder} autoComplete="off" />
           </Campo>
           {origem && <MarcaDaBase origem={origem} achada={origem === "ia" && atual && todasAchadas(consulta.data?.lei)} />}
           {origem === "tabela" && tabela && (
@@ -182,7 +184,10 @@ export function CampoBaseLegal({
             </>
           )}
           {tabela && origem !== "tabela" && (
-            <button type="button" className="dc-link dc-base-legal__usar" onClick={() => trocarPor(tabela.fundamento)}>
+            <button type="button" className="dc-link dc-base-legal__usar" onClick={() => {
+                guardarOQueEstava(tabela.fundamento);
+                mudar(tabela.fundamento);
+              }}>
               Usar o da tabela: {tabela.fundamento}
             </button>
           )}
@@ -191,7 +196,7 @@ export function CampoBaseLegal({
               type="button"
               className="dc-link dc-base-legal__usar"
               onClick={() => {
-                aoMudar(antes);
+                mudar(antes);
                 setAntes(valor);
               }}
             >
@@ -265,8 +270,8 @@ export function CampoBaseLegal({
   );
 }
 
-/** A base legal que a IA leu da publicação, na coluna da decisão: com a marca, e a lei a um clique. */
-export function BaseLegalLida({ fundamento, processoId }: { fundamento: string; processoId?: string | null }) {
+/** A base legal que veio da IA, na coluna da decisão e na ficha do prazo: com a marca, e a lei a um clique. */
+export function BaseLegalLida({ fundamento, processoId, achada }: { fundamento: string; processoId?: string | null; achada?: boolean }) {
   const eu = useQuery(euQuery);
   const [aberta, setAberta] = useState(false);
   // Só para leitura, a API não aceita a consulta: melhor não oferecer do que falhar sem explicar.
@@ -282,7 +287,7 @@ export function BaseLegalLida({ fundamento, processoId }: { fundamento: string; 
     <div className="dc-base-lida">
       <span>{fundamento}</span>
       <div className="dc-base-lida__linha">
-        <MarcaDaBase origem="ia" achada={todasAchadas(consulta.data?.lei)} />
+        <MarcaDaBase origem="ia" achada={!!achada || todasAchadas(consulta.data?.lei)} />
         {!aberta && podeBuscar && (
           <button type="button" className="dc-link" onClick={() => setAberta(true)}>
             Ver a lei

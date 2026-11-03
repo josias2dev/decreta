@@ -486,6 +486,7 @@ export async function criarDemonstracao(db: Database, auth: Auth, o: OpcoesDaDem
           publicacaoId,
           tipo: z.tipo,
           fundamento: z.fundamento,
+          fundamentoDaIa: z.fonte === "djen" && !!z.fundamento,
           dias: z.dias,
           contagem,
           publicadoEm: r.publicacao,

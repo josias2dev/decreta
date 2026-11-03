@@ -336,6 +336,15 @@ export async function sugerirPrazoDaPublicacao(deps: Deps, organizationId: strin
   return analise;
 }
 
+/**
+ * De onde veio a base legal que vai ser gravada. A tela diz quando sabe (a pessoa clicou em Usar, ou o artigo é o que a
+ * IA leu); sem ela dizer, o mesmo texto continua com a origem que tinha, e outro texto é da pessoa.
+ */
+export function baseLegalVeioDaIa(fundamento: string | null, disse: boolean | undefined, atual?: { fundamento: string | null; fundamentoDaIa: boolean }): boolean {
+  if (!fundamento) return false;
+  return disse ?? (!!atual?.fundamentoDaIa && atual.fundamento === fundamento);
+}
+
 /** O prazo "Confirmar sugestão". Se a pessoa já confirmou, a sugestão nova não mexe nele. */
 export async function criarPrazoSugerido(db: Database, organizationId: string, publicacaoId: string, s: SugestaoNaTela) {
   await withTenant(db, organizationId, async (tx) => {
@@ -351,6 +360,7 @@ export async function criarPrazoSugerido(db: Database, organizationId: string, p
     const valores = {
       tipo: s.tipo || "Prazo",
       fundamento: s.fundamento,
+      fundamentoDaIa: !!s.fundamento,
       dias: c.dias,
       contagem: c.contagem,
       publicadoEm: c.publicacao,

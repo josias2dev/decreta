@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ExternalLink, FileText, LoaderCircle, RotateCcw } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
-import { CampoBaseLegal } from "@/componentes/base-legal";
+import { BaseLegalLida, CampoBaseLegal } from "@/componentes/base-legal";
 import { Cancelada } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosParaConferir, PainelDaConta, PreviaNoDialogo } from "@/componentes/conta-do-prazo";
 import { DataDoInterno, DataViva } from "@/componentes/data-viva";
@@ -138,7 +138,7 @@ export function PrazoPage() {
       linhas={[
         ["Tipo", p.tipo],
         ["Prazo", prazoEmDias(p.dias, p.contagem)],
-        ["Base legal", p.fundamento ?? "—"],
+        ["Base legal", p.fundamento && p.fundamentoDaIa ? <BaseLegalLida key="base" fundamento={p.fundamento} processoId={p.processo.id} achada={p.fundamentoAchado} /> : (p.fundamento ?? "—")],
         [
           "Data final",
           <span key="fim">
@@ -401,6 +401,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
   const inicial = () => ({
     tipo: prazo.tipo,
     fundamento: prazo.fundamento ?? "",
+    fundamentoDaIa: prazo.fundamentoDaIa,
     dias: String(prazo.dias),
     contagem: prazo.contagem,
     publicadoEm: prazo.publicadoEm,
@@ -429,13 +430,19 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
     // Digitando a data, o aviso do tribunal não pisca a cada tecla; o aviso do dia só vale para o dia de que fala.
     placeholderData: f.sabeData ? keepPreviousData : undefined,
   });
+  // Só a base legal é outra conta: não confirma nem mexe na data. Confirmar é o botão que diz confirmar.
+  const salvo = inicial();
+  const mudouABase = f.fundamento.trim() !== salvo.fundamento.trim() || f.fundamentoDaIa !== salvo.fundamentoDaIa;
+  const restoIgual = f.tipo === salvo.tipo && f.dias === salvo.dias && f.contagem === salvo.contagem && f.publicadoEm === salvo.publicadoEm && f.intimadoNoSistemaEm === salvo.intimadoNoSistemaEm && f.responsavelId === salvo.responsavelId && f.observacoes === salvo.observacoes && f.sabeData === salvo.sabeData && (!f.sabeData || f.fimManual === salvo.fimManual);
+  const soABase = mudouABase && restoIgual;
   const salvar = useMutation({
-    mutationFn: () =>
+    mutationFn: (oQue: "base" | "tudo") =>
       api(`/prazos/${prazo.id}`, {
         method: "PUT",
-        json: {
+        json: oQue === "base" ? { fundamento: f.fundamento.trim() || null, fundamentoDaIa: f.fundamentoDaIa } : {
           tipo: f.tipo,
           fundamento: f.fundamento || null,
+          fundamentoDaIa: f.fundamentoDaIa,
           dias,
           contagem: f.contagem,
           publicadoEm: f.publicadoEm,
@@ -443,15 +450,25 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
           responsavelId: f.responsavelId || null,
           observacoes: f.observacoes || null,
           fimManual: f.sabeData ? f.fimManual : null,
+          ...(prazo.confirmado ? {} : { confirmar: true }),
         },
       }),
-    onSuccess: () => {
+    onSuccess: (_r, oQue) => {
       atualizarPrazos(qc);
-      avisar(prazo.confirmado ? "Prazo ajustado." : "Prazo ajustado e confirmado.");
+      avisar(oQue === "base" ? "Base legal salva. A data e a confirmação do prazo ficam como estão." : prazo.confirmado ? "Prazo ajustado." : "Prazo ajustado e confirmado.");
       aoFechar();
     },
   });
   const fim = f.sabeData ? f.fimManual : conta.data?.fim;
+  const aData = f.sabeData ? "fica com a data digitada" : "conta a data de novo";
+  const oQueOsBotoesFazem = prazo.confirmado
+    ? soABase
+      ? "Só a base legal mudou: ao salvar, a data e a confirmação ficam como estão."
+      : `Salvar ${aData} e registra você como quem confirmou.`
+    : soABase
+      ? `Salvar só a base legal guarda o artigo e deixa o prazo sem confirmar, com a mesma data. Salvar e confirmar confirma o prazo e ${aData}.`
+      : `Salvar e confirmar ${aData} e confirma o prazo em seu nome.`;
+  const podeContar = f.tipo.trim().length >= 2 && dias >= 1 && (f.sabeData || !!conta.data);
   return (
     <Dialogo
       aberto={aberto}
@@ -464,7 +481,12 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
           <Botao variante="fantasma" onClick={aoFechar}>
             Cancelar
           </Botao>
-          <Botao variante="primaria" onClick={() => salvar.mutate()} ocupado={salvar.isPending} disabled={f.tipo.trim().length < 2 || !(dias >= 1) || (!f.sabeData && !conta.data)}>
+          {soABase && !prazo.confirmado && (
+            <Botao onClick={() => salvar.mutate("base")} ocupado={salvar.isPending && salvar.variables === "base"} disabled={salvar.isPending}>
+              Salvar só a base legal
+            </Botao>
+          )}
+          <Botao variante="primaria" onClick={() => salvar.mutate(soABase && prazo.confirmado ? "base" : "tudo")} ocupado={salvar.isPending && (salvar.variables === "tudo" || prazo.confirmado)} disabled={salvar.isPending || (soABase && prazo.confirmado ? false : !podeContar)}>
             {prazo.confirmado ? "Salvar" : "Salvar e confirmar"}
           </Botao>
         </>
@@ -499,7 +521,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
             </select>
           </Campo>
         </div>
-        <CampoBaseLegal id="aj-fund" valor={f.fundamento} aoMudar={(fundamento) => setF((atual) => ({ ...atual, fundamento }))} tipo={f.tipo} processoId={prazo.processo.id} semIa={prazo.processo.semIa} placeholder="art. 477, § 1º, CPC" />
+        <CampoBaseLegal id="aj-fund" valor={f.fundamento} aoMudar={(fundamento, fundamentoDaIa) => setF((atual) => ({ ...atual, fundamento, fundamentoDaIa }))} tipo={f.tipo} processoId={prazo.processo.id} semIa={prazo.processo.semIa} sugeridaPelaIa={prazo.fundamentoDaIa ? prazo.fundamento : null} placeholder="art. 477, § 1º, CPC" />
         <CampoIntimacaoNoSistema id="aj-sistema" valor={f.intimadoNoSistemaEm} aoMudar={(v) => setF({ ...f, intimadoNoSistemaEm: v })} />
         <label className="dc-opcao">
           <input type="checkbox" className="dc-checa" checked={f.sabeData} onChange={(e) => setF({ ...f, sabeData: e.target.checked })} />
@@ -516,6 +538,7 @@ function Ajustar({ prazo, aberto, aoFechar }: { prazo: Prazo; aberto: boolean; a
           </IaNoCampo>
         </Campo>
         {fim && <PreviaNoDialogo fim={fim} previa={conta.data} sabeData={f.sabeData} />}
+        <p className="dc-nota m-0">{oQueOsBotoesFazem}</p>
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
       </div>
     </Dialogo>

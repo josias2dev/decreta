@@ -27,6 +27,7 @@ export const ROTULO: Record<string, string> = {
   "prazo.confirmado": "Confirmou um prazo",
   "prazo.criado": "Criou um prazo",
   "prazo.ajustado": "Ajustou um prazo",
+  "prazo.base_legal": "Mudou a base legal de um prazo",
   "prazo.cumprido": "Marcou um prazo como cumprido",
   "prazo.reaberto": "Reabriu um prazo",
   "prazo.descartado": "Descartou um prazo",

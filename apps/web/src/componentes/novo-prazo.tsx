@@ -53,7 +53,7 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
   const avisar = useAviso();
   const eu = useQuery(euQuery);
   const [proc, setProc] = useState(processo ?? null);
-  const [f, setF] = useState({ tipo: "", fundamento: "", dias: "15", contagem: "uteis" as Contagem, publicadoEm: eu.data?.hoje ?? "", responsavelId: "", fimManual: "" });
+  const [f, setF] = useState({ tipo: "", fundamento: "", fundamentoDaIa: false, dias: "15", contagem: "uteis" as Contagem, publicadoEm: eu.data?.hoje ?? "", responsavelId: "", fimManual: "" });
   const dias = Number(f.dias);
   const conta = useQuery({
     queryKey: ["calcular", proc?.id, f.publicadoEm, dias, f.contagem],
@@ -68,7 +68,7 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
   const criar = useMutation({
     mutationFn: () =>
       api<{ id: string }>("/prazos", {
-        json: { processoId: proc!.id, tipo: f.tipo, fundamento: f.fundamento || null, dias, contagem: f.contagem, publicadoEm: f.publicadoEm, responsavelId: f.responsavelId || undefined, ...(fimManual ? { fimManual } : {}) },
+        json: { processoId: proc!.id, tipo: f.tipo, fundamento: f.fundamento || null, fundamentoDaIa: f.fundamentoDaIa, dias, contagem: f.contagem, publicadoEm: f.publicadoEm, responsavelId: f.responsavelId || undefined, ...(fimManual ? { fimManual } : {}) },
       }),
     onSuccess: (r) => {
       void qc.invalidateQueries({ queryKey: ["prazos"] });
@@ -127,7 +127,7 @@ export function NovoPrazo({ aberto, aoFechar, processo }: { aberto: boolean; aoF
             </select>
           </Campo>
         </div>
-        <CampoBaseLegal id="np-fund" valor={f.fundamento} aoMudar={(fundamento) => setF((atual) => ({ ...atual, fundamento }))} tipo={f.tipo} processoId={proc?.id} placeholder="art. 351, CPC" />
+        <CampoBaseLegal id="np-fund" valor={f.fundamento} aoMudar={(fundamento, fundamentoDaIa) => setF((atual) => ({ ...atual, fundamento, fundamentoDaIa }))} tipo={f.tipo} processoId={proc?.id} placeholder="art. 351, CPC" />
         {semConta && (
           <>
             <Faixa tipo="erro">Não consegui contar este prazo agora. Digite a data final ou tente de novo.</Faixa>

@@ -9,7 +9,7 @@
  * ficam guardados. A demonstração nunca vai às fontes: confere só no acervo.
  */
 import { createHash } from "node:crypto";
-import { extrairCitacoes, formatarDia, type Citacao } from "@decreta/core";
+import { citacaoDaBaseLegal, extrairCitacoes, formatarDia, type Citacao } from "@decreta/core";
 import { acervoDocumentos, acervoNormas, acervoNovidades, type Database, type DispositivoNoAcervo, type SeloDaCitacao, type VerificacaoDaPeca } from "@decreta/db";
 import { acharDispositivo, baixarNorma, baixarTemasDoStj, buscarNoBnp, urnDaNorma, type NormaDoNormasLeg, type PrecedenteDoBnp } from "@decreta/tribunais";
 import { eq, sql } from "drizzle-orm";
@@ -258,6 +258,14 @@ export async function verificarCitacoes(deps: DepsDoAcervo, organizationId: stri
   // Uma por vez: as fontes pedem calma, e a mesma lei citada duas vezes é baixada uma só.
   for (const c of extrairCitacoes(texto)) saida.push({ chave: c.chave, trecho: c.trecho, inicio: c.inicio, ...(await conferir(ctx, c)) });
   return saida;
+}
+
+/** O artigo da base legal está no acervo guardado: a marca de sugerido sai. Não vai às fontes, porque as fichas e as listas não esperam download. */
+export async function artigoAchadoNoAcervo(deps: DepsDoAcervo, organizationId: string, fundamento: string): Promise<boolean> {
+  const citacao = citacaoDaBaseLegal(fundamento);
+  if (!citacao) return false;
+  const lei = await verificarCitacoes(deps, organizationId, citacao, { soAcervo: true });
+  return lei.length > 0 && lei.every((l) => l.selo === "verificada");
 }
 
 export function resumoDaVerificacao(citacoes: { selo: SeloDaCitacao }[]): VerificacaoDaPeca["resumo"] {

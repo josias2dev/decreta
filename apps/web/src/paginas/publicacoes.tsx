@@ -540,7 +540,7 @@ function VerPublicacao({ pub, celular, aoTerminar, aoDevolver, titulo, sobre }: 
   };
   const confirmar = useMutation({
     mutationKey: TRATAR,
-    mutationFn: () => api<{ prazoId: string; fim: string }>(`/publicacoes/${pub.id}/confirmar`, { json: { tipo: c!.tipo, fundamento: c!.fundamento, dias: c!.dias!, contagem: c!.contagem, responsavelId: s?.responsavel?.id } }),
+    mutationFn: () => api<{ prazoId: string; fim: string }>(`/publicacoes/${pub.id}/confirmar`, { json: { tipo: c!.tipo, fundamento: c!.fundamento, fundamentoDaIa: !!c!.fundamento, dias: c!.dias!, contagem: c!.contagem, responsavelId: s?.responsavel?.id } }),
     onMutate: () => sairDaCaixa("vinculada"),
     onSuccess: (r) => avisar(`Prazo confirmado: vence em ${diaCompleto(r.fim)}.`),
     onError: (err, _v, ctx) => {
@@ -1132,6 +1132,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
   const inicial = () => ({
     tipo: sugestao?.geraPrazo ? sugestao.tipo : "",
     fundamento: sugestao?.fundamento ?? "",
+    fundamentoDaIa: !!sugestao?.fundamento,
     dias: String(sugestao?.dias ?? 15),
     contagem: (sugestao?.contagem ?? "uteis") as Contagem,
     responsavelId: pub.sugestao?.responsavel?.id ?? pub.processo?.responsavel?.id ?? "",
@@ -1159,7 +1160,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
   const salvar = useMutation({
     mutationFn: () =>
       api<{ prazoId: string; fim: string }>(`/publicacoes/${pub.id}/confirmar`, {
-        json: { tipo: f.tipo, fundamento: f.fundamento || null, dias, contagem: f.contagem, responsavelId: f.responsavelId || null, intimadoNoSistemaEm, fimManual: f.sabeData ? f.fimManual : null },
+        json: { tipo: f.tipo, fundamento: f.fundamento || null, fundamentoDaIa: f.fundamentoDaIa, dias, contagem: f.contagem, responsavelId: f.responsavelId || null, intimadoNoSistemaEm, fimManual: f.sabeData ? f.fimManual : null },
       }),
     onSuccess: (r) => {
       aoFechar();
@@ -1211,7 +1212,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
             ))}
           </select>
         </Campo>
-        <CampoBaseLegal id="cf-fund" valor={f.fundamento} aoMudar={(fundamento) => setF((atual) => ({ ...atual, fundamento }))} tipo={f.tipo} processoId={pub.processo?.id} publicacaoId={pub.id} semIa={!!pub.processo?.semIa} sugeridaPelaIa={sugestao?.fundamento} placeholder="art. 477, § 1º, CPC" />
+        <CampoBaseLegal id="cf-fund" valor={f.fundamento} aoMudar={(fundamento, fundamentoDaIa) => setF((atual) => ({ ...atual, fundamento, fundamentoDaIa }))} tipo={f.tipo} processoId={pub.processo?.id} publicacaoId={pub.id} semIa={!!pub.processo?.semIa} sugeridaPelaIa={sugestao?.fundamento} placeholder="art. 477, § 1º, CPC" />
         <CampoIntimacaoNoSistema id="cf-sistema" valor={f.intimadoNoSistemaEm} aoMudar={(v) => setF({ ...f, intimadoNoSistemaEm: v })} />
         <label className="dc-opcao">
           <input type="checkbox" className="dc-checa" checked={f.sabeData} onChange={(e) => setF({ ...f, sabeData: e.target.checked })} />

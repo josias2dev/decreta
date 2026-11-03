@@ -10,7 +10,7 @@ import { certidaoDaPublicacao, saudeDaCaptura } from "../servicos/captura.ts";
 import { calendarioDoEscritorio, tribunalPadrao } from "../servicos/calendario.ts";
 import { semIa } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { contaDaPublicacao, contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
+import { baseLegalVeioDaIa, contaDaPublicacao, contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
 import { comLimiteDaIa, corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { leituraParada, tituloDaPublicacao } from "../servicos/publicacoes.ts";
@@ -35,6 +35,8 @@ const confirmacao = z.object({
   processoId: z.string().uuid().optional(),
   tipo: z.string().trim().min(2).max(200),
   fundamento: z.string().trim().max(200).nullable().optional(),
+  /** O artigo no campo é o que a IA leu ou sugeriu. */
+  fundamentoDaIa: z.boolean().optional(),
   dias: z.number().int().min(1).max(3650),
   contagem: z.enum(["uteis", "corridos"]),
   responsavelId: z.string().min(1).nullable().optional(),
@@ -238,6 +240,7 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
         processoId,
         tipo: b.tipo,
         fundamento: b.fundamento ?? null,
+        fundamentoDaIa: baseLegalVeioDaIa(b.fundamento ?? null, b.fundamentoDaIa, existente),
         dias: b.dias,
         contagem: b.contagem,
         publicadoEm: pub.publicadaEm,

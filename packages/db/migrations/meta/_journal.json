@@ -232,6 +232,13 @@
       "when": 1793662933768,
       "tag": "0032_textos_da_ia",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793703986604,
+      "tag": "0033_base_legal_da_ia",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { SeloDoAlerta } from "@/componentes/alerta-do-documento";
 import { SEM_IA, SeloSemIa } from "@/componentes/uso-de-ia";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
+import { MarcaDaBase } from "@/componentes/base-legal";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { NovoPrazo } from "@/componentes/novo-prazo";
@@ -690,6 +691,7 @@ function AbaPrazos({ p, celular }: { p: Processo; celular: boolean }) {
                       <span className="dc-celula">
                         <span className="dc-celula__1">{i.tipo}</span>
                         <span className="dc-celula__2">{[prazoEmDias(i.dias, i.contagem), i.fundamento].filter(Boolean).join(" · ")}</span>
+                        {i.fundamento && i.fundamentoDaIa && <MarcaDaBase origem="ia" achada={i.fundamentoAchado} />}
                       </span>
                     </td>
                     <td>

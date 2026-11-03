@@ -242,6 +242,149 @@ test("Ajustar prazo também tem a base legal explicada", async ({ page }) => {
   await expect(dialogo.getByRole("region", { name: "O que diz a lei" })).toContainText("O réu poderá oferecer contestação");
 });
 
+test.describe("salvar na ficha do prazo", () => {
+  async function abrirAjuste(page: Page, api: ApiFalsa) {
+    await abrir(page, `/prazos/${ids.prazo}`, api.responder("/eu", euComIa).responder("POST /prazos/calcular", previa));
+    await page.getByRole("button", { name: "Ajustar" }).first().click();
+    return page.getByRole("dialog", { name: "Ajustar prazo" });
+  }
+
+  test("sem confirmar: mudar só a base legal oferece salvar sem confirmar, e a tela diz o que cada botão faz", async ({ page }) => {
+    const api = new ApiFalsa();
+    const dialogo = await abrirAjuste(page, api);
+    await expect(dialogo.getByRole("button", { name: "Salvar só a base legal" })).toHaveCount(0);
+    await campoDaBase(dialogo).fill("art. 396, CPC");
+    await expect(dialogo.getByText("Salvar só a base legal guarda o artigo e deixa o prazo sem confirmar, com a mesma data. Salvar e confirmar confirma o prazo e conta a data de novo.")).toBeVisible();
+    await dialogo.getByRole("button", { name: "Salvar só a base legal" }).click();
+    await expect.poll(() => api.mudancas(`/prazos/${ids.prazo}`).map((p) => p.corpo)).toEqual([{ fundamento: "art. 396, CPC", fundamentoDaIa: false }]);
+    await expect(page.getByText("Base legal salva. A data e a confirmação do prazo ficam como estão.")).toBeVisible();
+    expect(api.mudancas(`/prazos/${ids.prazo}/confirmar`)).toHaveLength(0);
+  });
+
+  test("Salvar e confirmar continua confirmando, e diz isso", async ({ page }) => {
+    const api = new ApiFalsa();
+    const dialogo = await abrirAjuste(page, api);
+    await expect(dialogo.getByText("Salvar e confirmar conta a data de novo e confirma o prazo em seu nome.")).toBeVisible();
+    await campoDaBase(dialogo).fill("art. 396, CPC");
+    await dialogo.getByRole("button", { name: "Salvar e confirmar" }).click();
+    await expect.poll(() => api.mudancas(`/prazos/${ids.prazo}`)[0]?.corpo).toMatchObject({ fundamento: "art. 396, CPC", confirmar: true, dias: prazo.dias });
+    await expect(page.getByText("Prazo ajustado e confirmado.")).toBeVisible();
+  });
+
+  test("mudou outra coisa além da base legal: só existe o botão que confirma", async ({ page }) => {
+    const dialogo = await abrirAjuste(page, new ApiFalsa());
+    await campoDaBase(dialogo).fill("art. 396, CPC");
+    await expect(dialogo.getByRole("button", { name: "Salvar só a base legal" })).toBeVisible();
+    await dialogo.getByLabel("Dias").fill("10");
+    await expect(dialogo.getByRole("button", { name: "Salvar só a base legal" })).toHaveCount(0);
+    await expect(dialogo.getByRole("button", { name: "Salvar e confirmar" })).toBeVisible();
+  });
+
+  test("já confirmado: Salvar com só a base legal diferente não mexe na data nem em quem confirmou, e a tela diz", async ({ page }) => {
+    const api = new ApiFalsa().responder(`GET /prazos/${ids.prazo}`, { ...prazo, confirmado: true, conferencia: null });
+    const dialogo = await abrirAjuste(page, api);
+    await expect(dialogo.getByText("Salvar conta a data de novo e registra você como quem confirmou.")).toBeVisible();
+    await campoDaBase(dialogo).fill("art. 396, CPC");
+    await expect(dialogo.getByText("Só a base legal mudou: ao salvar, a data e a confirmação ficam como estão.")).toBeVisible();
+    await dialogo.getByRole("button", { name: "Salvar", exact: true }).click();
+    await expect.poll(() => api.mudancas(`/prazos/${ids.prazo}`).map((p) => p.corpo)).toEqual([{ fundamento: "art. 396, CPC", fundamentoDaIa: false }]);
+  });
+});
+
+test.describe("a marca fica depois de salvar", () => {
+  const FICHA = `GET /prazos/${ids.prazo}`;
+  const linhaDaBase = (page: Page) => page.locator(".dc-dados dd").filter({ hasText: "art. 477" });
+
+  test("na ficha, o artigo da IA fica com a marca de sugerida", async ({ page }) => {
+    await abrir(page, `/prazos/${ids.prazo}`, new ApiFalsa().responder(FICHA, { ...prazo, fundamentoDaIa: true, fundamentoAchado: false }));
+    await expect(linhaDaBase(page).getByText("Sugerida pela IA")).toBeVisible();
+    await expect(linhaDaBase(page).getByRole("button", { name: "Ver a lei" })).toBeVisible();
+  });
+
+  test("na ficha, achado no acervo, a marca deixa de dizer sugerida", async ({ page }) => {
+    await abrir(page, `/prazos/${ids.prazo}`, new ApiFalsa().responder(FICHA, { ...prazo, fundamentoDaIa: true, fundamentoAchado: true }));
+    await expect(linhaDaBase(page).getByText("Da IA, artigo achado no acervo")).toBeVisible();
+    await expect(linhaDaBase(page).getByText("Sugerida pela IA")).toHaveCount(0);
+  });
+
+  test("na ficha, o artigo que a pessoa escreveu não tem marca", async ({ page }) => {
+    await abrir(page, `/prazos/${ids.prazo}`, new ApiFalsa().responder(FICHA, { ...prazo, fundamentoDaIa: false, fundamentoAchado: false }));
+    await expect(linhaDaBase(page)).toBeVisible();
+    await expect(linhaDaBase(page).getByText("Sugerida pela IA")).toHaveCount(0);
+  });
+
+  test("o Ajustar abre com a marca e não a perde ao salvar outra coisa; escrever outro artigo tira", async ({ page }) => {
+    const api = new ApiFalsa().responder("/eu", euComIa).responder(FICHA, { ...prazo, fundamentoDaIa: true, fundamentoAchado: false }).responder("POST /prazos/calcular", previa);
+    await abrir(page, `/prazos/${ids.prazo}`, api);
+    await page.getByRole("button", { name: "Ajustar" }).first().click();
+    const dialogo = page.getByRole("dialog", { name: "Ajustar prazo" });
+    await expect(dialogo.getByText("Sugerida pela IA")).toBeVisible();
+    await campoDaBase(dialogo).fill("art. 400, CPC");
+    await expect(dialogo.getByText("Sugerida pela IA")).toHaveCount(0);
+    await campoDaBase(dialogo).fill(prazo.fundamento);
+    await expect(dialogo.getByText("Sugerida pela IA")).toBeVisible();
+    await dialogo.getByLabel("Dias").fill("10");
+    await dialogo.getByRole("button", { name: "Salvar e confirmar" }).click();
+    await expect.poll(() => api.mudancas(`/prazos/${ids.prazo}`)[0]?.corpo).toMatchObject({ fundamento: prazo.fundamento, fundamentoDaIa: true });
+  });
+
+  test("usar a sugestão no Ajustar manda a origem junto", async ({ page }) => {
+    const semBase = { ...prazo, fundamento: null, fundamentoDaIa: false, fundamentoAchado: false };
+    const api = new ApiFalsa().responder("/eu", euComIa).responder(FICHA, semBase).responder("POST /prazos/calcular", previa).responder("POST /ia/base-legal", sugestao());
+    await abrir(page, `/prazos/${ids.prazo}`, api);
+    await page.getByRole("button", { name: "Ajustar" }).first().click();
+    const dialogo = page.getByRole("dialog", { name: "Ajustar prazo" });
+    await dialogo.getByRole("button", { name: "Sugerir com a IA" }).click();
+    await dialogo.getByRole("region", { name: "Sugestão da IA" }).getByRole("button", { name: "Usar" }).click();
+    await dialogo.getByRole("button", { name: "Salvar só a base legal" }).click();
+    await expect.poll(() => api.mudancas(`/prazos/${ids.prazo}`).map((p) => p.corpo)).toEqual([{ fundamento: "art. 396, CPC", fundamentoDaIa: true }]);
+  });
+
+  test("novo prazo com o artigo da IA manda a origem", async ({ page }) => {
+    const api = new ApiFalsa().responder("/eu", euComIa).responder("POST /ia/base-legal", sugestao()).responder("POST /prazos", { id: ids.prazo });
+    await abrir(page, `/processos/${ids.processo}?aba=prazos`, api.responder("POST /prazos/calcular", previa));
+    await page.getByRole("button", { name: "Novo prazo" }).click();
+    const dialogo = page.getByRole("dialog", { name: "Novo prazo" });
+    await oQueFazer(dialogo).fill("Exibir documento");
+    await dialogo.getByRole("button", { name: "Sugerir com a IA" }).click();
+    await dialogo.getByRole("region", { name: "Sugestão da IA" }).getByRole("button", { name: "Usar" }).click();
+    await dialogo.getByRole("button", { name: "Criar prazo" }).click();
+    await expect.poll(() => api.mudancas("/prazos")[0]?.corpo).toMatchObject({ fundamento: "art. 396, CPC", fundamentoDaIa: true });
+  });
+
+  test("a fila confirma o artigo que a IA leu com a origem", async ({ page }) => {
+    const pub = amostras.publicacaoMarina!.corpo;
+    const c = pub.sugestao.conteudo;
+    const comBase = { ...pub, prazo: null, sugestao: { ...pub.sugestao, conteudo: { ...c, fundamento: "art. 477, § 1º, CPC", conferencia: { confianca: "alta", motivos: ["ok"] } } } };
+    const api = new ApiFalsa().responder(`/publicacoes/${ids.publicacao}`, comBase).responder(`POST /publicacoes/${ids.publicacao}/confirmar`, { prazoId: ids.prazo, fim: prazo.fim });
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`, api);
+    await page.locator(".dc-caixa__decisao").getByRole("button", { name: "Confirmar prazo" }).click();
+    await expect.poll(() => api.mudancas(`/publicacoes/${ids.publicacao}/confirmar`)[0]?.corpo).toMatchObject({ fundamento: "art. 477, § 1º, CPC", fundamentoDaIa: true });
+  });
+
+  test("Ajustar e confirmar na fila: o que a IA leu vai com a origem, e o que a pessoa escreveu vai sem", async ({ page }) => {
+    const pub = amostras.publicacaoMarina!.corpo;
+    const c = pub.sugestao.conteudo;
+    const comBase = { ...pub, prazo: null, sugestao: { ...pub.sugestao, conteudo: { ...c, fundamento: "art. 477, § 1º, CPC", conferencia: { confianca: "alta", motivos: ["ok"] } } } };
+    const api = new ApiFalsa().responder("/eu", euComIa).responder(`/publicacoes/${ids.publicacao}`, comBase).responder("POST /prazos/calcular", previa).responder(`POST /publicacoes/${ids.publicacao}/confirmar`, { prazoId: ids.prazo, fim: prazo.fim });
+    await abrir(page, `/publicacoes?id=${ids.publicacao}`, api);
+    await page.getByRole("button", { name: "Ajustar" }).click();
+    const dialogo = page.getByRole("dialog", { name: "Ajustar e confirmar" });
+    await campoDaBase(dialogo).fill("art. 400, CPC");
+    await dialogo.getByRole("button", { name: "Confirmar prazo" }).click();
+    await expect.poll(() => api.mudancas(`/publicacoes/${ids.publicacao}/confirmar`)[0]?.corpo).toMatchObject({ fundamento: "art. 400, CPC", fundamentoDaIa: false });
+  });
+
+  test("na lista do processo, o artigo da IA aparece com a marca", async ({ page }) => {
+    const lista = amostras.prazos!.corpo;
+    const [primeiro, ...resto] = lista.itens;
+    const api = new ApiFalsa().responder("/prazos", { ...lista, itens: [{ ...primeiro, fundamento: "art. 396, CPC", fundamentoDaIa: true, fundamentoAchado: false }, ...resto] });
+    await abrir(page, `/processos/${ids.processo}?aba=prazos`, api);
+    const linha = page.locator("tr").filter({ hasText: "art. 396, CPC" }).first();
+    await expect(linha.getByText("Sugerida pela IA")).toBeVisible();
+  });
+});
+
 test.describe("no celular", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
