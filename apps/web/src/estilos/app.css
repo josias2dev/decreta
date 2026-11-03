@@ -341,7 +341,10 @@ a.dc-linhas__item:hover { background: color-mix(in srgb, var(--superficie-2) 55%
 .dc-catalogo button:hover { background: var(--superficie-2); }
 .dc-catalogo button span:last-child { font-size: var(--texto-meta); color: var(--tinta-3); font-variant-numeric: tabular-nums; }
 .dc-catalogo button.is-grupo-on { font-weight: 600; }
-.dc-catalogo .dc-catalogo__tipo { padding-left: var(--space-4); color: var(--tinta-2); }
+.dc-catalogo__nome { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.dc-catalogo__nome svg { flex: none; width: var(--icone-botao); height: var(--icone-botao); color: var(--tinta-3); }
+.dc-catalogo button:hover .dc-catalogo__nome svg, .dc-catalogo button.is-grupo-on .dc-catalogo__nome svg { color: var(--tinta); }
+.dc-catalogo .dc-catalogo__tipo { padding-left: calc(var(--space-2-half) + var(--icone-botao) + var(--space-2)); color: var(--tinta-2); }
 .dc-catalogo .dc-catalogo__tipo.is-on { background: var(--superficie-2); color: var(--tinta); font-weight: 500; }
 .dc-catalogo .dc-catalogo__tipo.is-on svg { width: var(--icone-botao); height: var(--icone-botao); color: var(--tinta); }
 .dc-celular .dc-catalogo button { min-height: 44px; }

@@ -5,7 +5,7 @@
 import { blocosComPosicao, lacunas, trechos, type BlocoNoTexto, type EstrategiaDaPeca, type FatoDaPeca } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { BookMarked, Check, CircleAlert, Download, FileText, ListTree, Pencil, RefreshCw } from "lucide-react";
+import { BookMarked, Check, CircleAlert, Download, FilePlus, FileText, Handshake, Landmark, ListTree, MessageSquareText, Pencil, RefreshCw, Shield, type LucideIcon } from "lucide-react";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from "react";
 import { AjusteDaPecaPainel } from "@/componentes/ajuste-da-peca";
 import { AntesDeProtocolar, AvisoAoBaixar, pontosAntesDeProtocolar, type PontoNaLista } from "@/componentes/antes-de-protocolar";
@@ -744,6 +744,16 @@ function GuardarComoModelo({ pecaId, titulo, aberto, aoFechar }: { pecaId: strin
   );
 }
 
+/** O ícone de cada grupo do catálogo (GRUPOS_DE_PECA, em packages/ia/src/pecas.ts). */
+const ICONE_DO_GRUPO: Record<string, LucideIcon> = {
+  "Petições iniciais": FilePlus,
+  Defesas: Shield,
+  Recursos: Landmark,
+  Manifestações: MessageSquareText,
+  "Extrajudicial e consultivo": Handshake,
+  Outro: FileText,
+};
+
 function EscolherTipo({ catalogo, tipo, aoEscolher }: { catalogo: Catalogo | undefined; tipo: string; aoEscolher: (t: string) => void }) {
   const doTipo = catalogo?.grupos.find((g) => g.tipos.some((t) => t.id === tipo))?.nome ?? null;
   const [aberto, setAberto] = useState<string | null>(null);
@@ -751,21 +761,27 @@ function EscolherTipo({ catalogo, tipo, aoEscolher }: { catalogo: Catalogo | und
   if (!catalogo) return <Carregando linhas={3} />;
   return (
     <div className="dc-catalogo" role="listbox" aria-label="Tipo de peça">
-      {catalogo.grupos.map((g) => (
-        <Fragment key={g.nome}>
-          <button type="button" className={cn(grupoAberto === g.nome && "is-grupo-on")} aria-expanded={grupoAberto === g.nome} onClick={() => setAberto(grupoAberto === g.nome ? "" : g.nome)}>
-            <span>{g.nome}</span>
-            <span>{g.tipos.length}</span>
-          </button>
-          {grupoAberto === g.nome &&
-            g.tipos.map((t) => (
-              <button key={t.id} type="button" role="option" aria-selected={t.id === tipo} className={cn("dc-catalogo__tipo", t.id === tipo && "is-on")} onClick={() => aoEscolher(t.id)}>
-                <span>{t.nome}</span>
-                {t.id === tipo ? <Check /> : <span />}
-              </button>
-            ))}
-        </Fragment>
-      ))}
+      {catalogo.grupos.map((g) => {
+        const Icone = ICONE_DO_GRUPO[g.nome] ?? FileText;
+        return (
+          <Fragment key={g.nome}>
+            <button type="button" className={cn(grupoAberto === g.nome && "is-grupo-on")} aria-expanded={grupoAberto === g.nome} onClick={() => setAberto(grupoAberto === g.nome ? "" : g.nome)}>
+              <span className="dc-catalogo__nome">
+                <Icone aria-hidden="true" />
+                {g.nome}
+              </span>
+              <span>{g.tipos.length}</span>
+            </button>
+            {grupoAberto === g.nome &&
+              g.tipos.map((t) => (
+                <button key={t.id} type="button" role="option" aria-selected={t.id === tipo} className={cn("dc-catalogo__tipo", t.id === tipo && "is-on")} onClick={() => aoEscolher(t.id)}>
+                  <span>{t.nome}</span>
+                  {t.id === tipo ? <Check /> : <span />}
+                </button>
+              ))}
+          </Fragment>
+        );
+      })}
     </div>
   );
 }
