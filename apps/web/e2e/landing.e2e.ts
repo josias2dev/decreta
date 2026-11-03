@@ -1,6 +1,5 @@
 /**
- * A landing estática (landing.html), a conta aberta do hero, a demonstração
- * pública e a cobertura. Tudo sem login.
+ * A landing estática (landing.html), a demonstração pública e a cobertura. Tudo sem login.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -18,106 +17,25 @@ async function abrirLanding(page: Page, agora = "2026-10-29T09:30:00-03:00") {
   await page.goto("/");
 }
 
-const conta = (page: Page) => page.locator("#conta");
-/** Espera a contagem animada terminar. */
-const contagemPronta = (page: Page) => expect(page.locator("#conta:not(.is-contando) .lp-res__final")).toBeVisible();
-
-test.describe("a conta aberta", () => {
-  test.use({ reducedMotion: "reduce" });
-
-  test("abre com o exemplo: publicada em 30/10 no TJSC, 15 dias úteis, vence em 24/11, pulando Finados e a Consciência Negra", async ({ page }) => {
-    await abrirLanding(page);
-    await expect(conta(page).locator(".lp-res__final strong")).toHaveText("24/11/2026");
-    await expect(conta(page).locator(".lp-res__final small")).toHaveText("terça-feira");
-    const razao = conta(page).locator(".lp-razao");
-    await expect(razao).toContainText("02/11 Finados");
-    await expect(razao).toContainText("20/11 Consciência Negra");
-    await expect(razao).toContainText("TJSC");
-    await expect(razao).toContainText("próprio");
-    await expect(conta(page).locator(".lp-dia--contado")).toHaveCount(15);
-    await expect(conta(page).locator(".lp-dia--feriado")).toHaveCount(2);
-    await expect(conta(page).getByText("É um apoio: confira sempre no tribunal.")).toBeVisible();
-  });
-
-  test("tribunal sem calendário próprio: a conta avisa como o app", async ({ page }) => {
-    await abrirLanding(page);
-    await conta(page).locator("select").selectOption("TJBA");
-    await expect(conta(page).getByText("Este tribunal ainda não tem calendário próprio no Decreta: a conta usou os feriados nacionais e o recesso. Confira as suspensões do tribunal.")).toBeVisible();
-    await expect(conta(page).locator(".lp-razao")).toContainText("só nacional e recesso");
-    await conta(page).locator("select").selectOption("TRF4");
-    await expect(conta(page).getByText("Este tribunal ainda não tem calendário próprio")).toHaveCount(0);
-  });
-
-  test("dias corridos: o vencimento no sábado vai para a segunda, e a conta explica", async ({ page }) => {
-    await abrirLanding(page);
-    await conta(page).locator('input[name="dias"]').fill("5");
-    await conta(page).getByRole("radio", { name: "Corridos" }).check();
-    await expect(conta(page).locator(".lp-res__final strong")).toHaveText("09/11/2026");
-    await expect(conta(page).getByText("O último dia caía em 07/11, sem expediente completo, e passou para 09/11.")).toBeVisible();
-  });
-
-  test("data ou dias fora da faixa não viram conta, e a tela diz o que conferir", async ({ page }) => {
-    await abrirLanding(page);
-    await conta(page).locator('input[name="dias"]').fill("0");
-    await expect(conta(page).getByText("Confira a data e os dias")).toBeVisible();
-    await expect(conta(page).locator(".lp-res__final strong")).toHaveText("24/11/2026");
-    await conta(page).locator('input[name="dias"]').fill("10");
-    await expect(conta(page).getByText("Confira a data e os dias")).toBeHidden();
-  });
-
-  test("prazo longo: a janela do calendário mostra o fim, sem barra de rolagem que prenda a roda do mouse", async ({ page }) => {
-    await abrirLanding(page);
-    await conta(page).locator('input[name="dias"]').fill("60");
-    await expect(conta(page).locator(".lp-res__final strong")).not.toHaveText("24/11/2026");
-    await expect(conta(page).locator(".lp-dia--vence")).toBeInViewport();
-    const janela = conta(page).locator(".lp-cal__janela");
-    expect(await janela.evaluate((e) => getComputedStyle(e).overflowY)).toBe("hidden");
-    await janela.hover();
-    await page.mouse.wheel(0, 400);
-    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
-  });
-});
-
-test.describe("a contagem animada", () => {
-  test("conta os dias em sequência e termina no vencimento, sem pedir nada ao servidor", async ({ page }) => {
-    await page.clock.setFixedTime(new Date("2026-10-29T09:30:00-03:00"));
-    await semSessao().ligar(page);
-    const pedidos: string[] = [];
-    await page.goto("/");
-    await expect(page.locator("#conta.is-contando")).toBeVisible();
-    await contagemPronta(page);
-    page.on("request", (r) => pedidos.push(r.url()));
-    await conta(page).locator('input[name="dias"]').fill("20");
-    await expect(page.locator("#conta.is-contando")).toBeVisible();
-    await contagemPronta(page);
-    await expect(conta(page).locator(".lp-res__final strong")).toHaveText("01/12/2026");
-    expect(pedidos).toEqual([]);
-    await conta(page).getByRole("button", { name: "Rever a contagem" }).click();
-    await expect(page.locator("#conta.is-contando")).toBeVisible();
-  });
-});
-
-test.describe("o teste do feriado", () => {
-  test("a data é sempre a do próximo feriado nacional em dia de semana, calculada ao abrir", async ({ page }) => {
-    await abrirLanding(page, "2026-10-29T09:30:00-03:00");
-    await expect(page.locator(".lp-teste__data")).toHaveText("02/11/2026");
-    await expect(page.locator(".lp-folhinha__nome")).toHaveText("Finados");
-    await expect(page.locator(".lp-aviso")).toContainText("02/11/2026 é feriado (Finados). O próximo dia útil é 03/11/2026.");
-  });
-
-  test("dias depois, a página já fala do feriado seguinte e pula o que cai no domingo", async ({ page }) => {
-    await abrirLanding(page, "2026-11-02T09:30:00-03:00");
-    await expect(page.locator(".lp-teste__data")).toHaveText("20/11/2026");
-    await expect(page.locator(".lp-aviso")).toContainText("20/11/2026 é feriado (Consciência Negra). O próximo dia útil é 23/11/2026.");
-  });
-});
-
 test.describe("a página", () => {
-  test("as seções na ordem das perguntas de quem avalia", async ({ page }) => {
+  test("poucas seções, nesta ordem, com o fundo em ASCII no topo e no fim", async ({ page }) => {
     await abrirLanding(page);
-    const perguntas = await page.locator(".lp-pergunta").allTextContents();
-    expect(perguntas.map((p) => p.replace(/^§ \d+/, ""))).toEqual(["Funciona mesmo?", "Como fica meu dia?", "E se a IA inventar?", "E fora do escritório?", "E o dinheiro do cliente?", "O que falta?", "É seguro? E a OAB?", "Quanto custa?", "E para trocar de sistema?"]);
-    await expect(page.locator(".lp-ascii")).toHaveCount(1);
+    const secoes = await page.locator("main > section").evaluateAll((lista) => lista.map((s) => s.id || s.className));
+    expect(secoes).toEqual(["lp-hero", "prazos", "ia", "celular", "seguranca", "planos", "duvidas", "acesso"]);
+    await expect(page.locator("canvas.lp-ascii")).toHaveCount(2);
+  });
+
+  test("o título volta a ser o do produto, e nenhuma fonte com serifa na página", async ({ page }) => {
+    await abrirLanding(page);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("O escritório em dia.");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("A IA lê, você decide.");
+    const familias = await page.locator(".lp, .lp *").evaluateAll((lista) => [...new Set(lista.map((e) => getComputedStyle(e).fontFamily))]);
+    for (const familia of familias) expect(familia.toLowerCase()).not.toMatch(/serif(?<!sans-serif)|georgia|times|newsreader/);
+  });
+
+  test("sem componente interativo: nada de formulário, campo, seleção ou sanfona", async ({ page }) => {
+    await abrirLanding(page);
+    await expect(page.locator(".lp form, .lp input, .lp select, .lp textarea, .lp details, .lp button")).toHaveCount(0);
   });
 
   test("o texto não promete o que não pode: sem concorrente, sem preço de mentira, sem depoimento", async ({ page }) => {
@@ -129,71 +47,103 @@ test.describe("a página", () => {
     expect(texto).not.toContain("todos os tribunais");
   });
 
-  test("o que ainda não vem está escrito: contabilidade, portal do cliente e aplicativo nativo", async ({ page }) => {
+  test("o hero termina na imagem, sem a faixa que repetia as seções", async ({ page }) => {
     await abrirLanding(page);
-    const falta = page.locator(".lp-vem__falta");
-    for (const item of ["Contabilidade.", "Portal do cliente.", "Aplicativo nativo."]) await expect(falta.getByText(item)).toBeVisible();
-    await expect(falta.getByText("Financeiro.")).toHaveCount(0);
+    await expect(page.locator(".lp-vitrine")).toBeVisible();
+    await expect(page.locator(".lp-fatos")).toHaveCount(0);
   });
 
-  test("os honorários e a prestação de contas aparecem no que já vem, sem prometer serviço ainda não testado de verdade", async ({ page }) => {
+  test("prazos: a conta em destaque, com os feriados riscados e nomeados", async ({ page }) => {
     await abrirLanding(page);
-    const vem = page.locator(".lp-vem__colunas");
-    await expect(vem.getByText("Honorários por caso: a receber, recebido e em atraso")).toBeVisible();
-    await expect(vem.getByText("Prestação de contas do alvará, em Word, no timbre")).toBeVisible();
-    const texto = (await page.locator("body").innerText()).toLowerCase();
-    for (const servico of ["asaas", "zapsign", "pix automático"]) expect(texto, servico).not.toContain(servico);
+    const destaque = page.locator(".lp-bloco--conta");
+    await expect(destaque.getByRole("heading", { name: "O motor conta" })).toBeVisible();
+    await expect(destaque.getByText("Finados")).toBeVisible();
+    await expect(destaque.getByText("Consciência Negra")).toBeVisible();
+    await expect(destaque.getByText("23/11/2026")).toBeVisible();
+    await expect(destaque.locator(".lp-minical .h")).toHaveCount(2);
+    await expect(destaque.locator(".lp-minical .h").first()).toHaveCSS("text-decoration-line", "line-through");
+    const larguraDaConta = (await destaque.boundingBox())!.width;
+    const larguraDoPrimeiro = (await page.locator("#prazos .lp-bloco").first().boundingBox())!.width;
+    expect(larguraDaConta).toBeGreaterThan(larguraDoPrimeiro * 1.8);
+  });
+
+  test("IA: as citações em destaque, com os três selos", async ({ page }) => {
+    await abrirLanding(page);
+    const citacoes = page.locator(".lp-bloco--citacoes");
+    for (const selo of ["Verificada", "Com ressalva", "Não verificada"]) await expect(citacoes.locator(".lp-selo").getByText(selo, { exact: true })).toBeVisible();
+    const peca = page.locator("#ia .lp-bloco").filter({ hasText: "Peça em Word" });
+    expect((await citacoes.boundingBox())!.width).toBeGreaterThan((await peca.boundingBox())!.width * 1.8);
+  });
+
+  test("segurança: o termo de IA e o cliente que recusa, no lugar das duas etapas", async ({ page }) => {
+    await abrirLanding(page);
+    const seguranca = page.locator("#seguranca");
+    await expect(seguranca.locator(".lp-bloco")).toHaveCount(4);
+    await expect(seguranca.getByRole("heading", { name: "Termo de IA para o cliente" })).toBeVisible();
+    await expect(seguranca.getByText(/Recomendação CFOAB 001\/2024/)).toBeVisible();
+    await expect(seguranca.getByRole("heading", { name: "Cliente que recusa a IA" })).toBeVisible();
+    await expect(seguranca.getByRole("heading", { name: "Verificação em duas etapas" })).toHaveCount(0);
+  });
+
+  test("celular: o resumo no WhatsApp e a tela Hoje de verdade, sem o que repetia", async ({ page }) => {
+    await abrirLanding(page);
+    const celular = page.locator("#celular");
+    const tela = celular.getByRole("img", { name: /tela Hoje/ });
+    await tela.scrollIntoViewIfNeeded();
+    await expect.poll(() => tela.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    await expect(celular.getByText("Bom dia, Beatriz.")).toBeVisible();
+    await expect(celular.locator(".lp-tres, .lp-pergunta-cartao, .lp-aparelho")).toHaveCount(0);
+  });
+
+  test("dúvidas: uma lista simples, sem cartões", async ({ page }) => {
+    await abrirLanding(page);
+    const itens = page.locator(".lp-faq-grade > div");
+    await expect(itens).toHaveCount(6);
+    await expect(itens.first()).toHaveCSS("border-radius", "0px");
+    await expect(itens.first()).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+
+  test("plano: uma só ação", async ({ page }) => {
+    await abrirLanding(page);
+    await expect(page.locator("#planos a")).toHaveCount(1);
   });
 
   test("preço: o plano único e o convite para a equipe, enquanto o valor não existe", async ({ page }) => {
     await abrirLanding(page);
-    const preco = page.locator("#preco");
+    const preco = page.locator("#planos");
     await expect(preco.getByText("Plano Escritório")).toBeVisible();
     await expect(preco.getByRole("link", { name: "Perguntar o valor no WhatsApp" })).toHaveAttribute("href", /^https:\/\/wa\.me\/55\d+\?text=/);
-    await expect(preco.getByText("Sem taxa de adesão")).toBeVisible();
+    await expect(preco.getByText(/Sem taxa de adesão/)).toBeVisible();
   });
 
   test("dúvidas: como cancelar e o link da cobertura", async ({ page }) => {
     await abrirLanding(page);
     const duvidas = page.locator("#duvidas");
-    await duvidas.getByText("Como eu cancelo?").click();
-    await expect(duvidas.getByText("Em Configurações, na aba Dados.")).toBeVisible();
-    await duvidas.getByText("O meu tribunal está coberto?").click();
+    await expect(duvidas.getByText("Como eu cancelo?")).toBeVisible();
+    await expect(duvidas.getByText(/Em Configurações, na aba Dados\./)).toBeVisible();
+    await expect(duvidas.getByText("O meu tribunal está coberto?")).toBeVisible();
     await expect(duvidas.getByRole("link", { name: /situação de cada tribunal/ })).toHaveAttribute("href", "/cobertura");
     await expect(page.locator(".lp-rodape").getByRole("link", { name: "Cobertura por tribunal" })).toHaveAttribute("href", "/cobertura");
   });
 
-  test("os dois caminhos: demonstração antes de criar conta, com o evento certo", async ({ page }) => {
+  test("os dois caminhos: criar conta e o escritório de exemplo, com o evento certo", async ({ page }) => {
     await abrirLanding(page);
     const cta = page.locator(".lp-hero .lp-ctas a");
-    await expect(cta.nth(0)).toHaveText(/Ver um escritório de exemplo/);
-    await expect(cta.nth(0)).toHaveAttribute("href", "/demonstracao");
-    await expect(cta.nth(0)).toHaveAttribute("data-evento", "clicou_demonstracao");
-    await expect(cta.nth(1)).toHaveText("Criar conta");
-    await expect(cta.nth(1)).toHaveAttribute("data-evento", "clicou_criar_conta");
-  });
-
-  test("a tela de cada passo muda com a rolagem", async ({ page }) => {
-    await abrirLanding(page);
-    const palco = page.locator(".lp-palco");
-    await expect(palco.getByText("15 (quinze) dias").first()).toBeVisible();
-    await page.locator('.lp-passo[data-passo="3"]').evaluate((e) => window.scrollBy({ top: e.getBoundingClientRect().top - innerHeight / 2 + 10, behavior: "instant" }));
-    await expect(palco).toHaveAttribute("data-passo", "3");
-    await expect(palco.locator('[data-tela="3"]')).toBeVisible();
-    await page.locator('.lp-passo[data-passo="6"]').evaluate((e) => window.scrollBy({ top: e.getBoundingClientRect().top - innerHeight / 2 + 10, behavior: "instant" }));
-    await expect(palco).toHaveAttribute("data-passo", "6");
-    await expect(palco.getByText("[COMPLETAR: data do pagamento]")).toBeVisible();
+    await expect(cta.nth(0)).toHaveText("Criar conta");
+    await expect(cta.nth(0)).toHaveAttribute("data-evento", "clicou_criar_conta");
+    await expect(cta.nth(1)).toHaveText("Ver um escritório de exemplo");
+    await expect(cta.nth(1)).toHaveAttribute("href", "/demonstracao");
+    await expect(cta.nth(1)).toHaveAttribute("data-evento", "clicou_demonstracao");
   });
 });
 
 test.describe("estática e leve", () => {
-  test("o HTML já vem pronto: título, descrição, compartilhamento e a conta do exemplo, sem JavaScript", async ({ request }) => {
+  test("o HTML já vem pronto: título, descrição, compartilhamento e o texto, sem JavaScript", async ({ request }) => {
     const html = await (await request.get("/")).text();
-    expect(html).toContain("<title>Decreta · Todo prazo com a conta à mostra</title>");
+    expect(html).toContain("<title>Decreta · Prazos, publicações e peças com IA para escritórios de advocacia</title>");
     expect(html).toMatch(/<meta name="description" content="[^"]{80,}"/);
     expect(html).toContain('property="og:image" content="https://decreta.site/compartilhar.png"');
-    expect(html).toContain("Todo prazo com a conta à mostra.");
-    expect(html).toContain("24/11/2026");
+    expect(html).toContain("O escritório em dia.");
     expect(html).toContain("clicou_demonstracao");
     expect(html).not.toContain('id="root"');
   });
@@ -211,7 +161,7 @@ test.describe("estática e leve", () => {
       if (r.url().endsWith(".js")) baixados.push({ url: r.url(), bytes: (await r.body()).length });
     });
     await abrirLanding(page);
-    await expect(page.locator(".lp-res__final strong")).toHaveText("24/11/2026");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await page.waitForLoadState("networkidle");
     expect(baixados.length).toBeGreaterThan(0);
     // Sem comprimir: comprimido fica ainda menor.
@@ -235,21 +185,17 @@ test.describe("estática e leve", () => {
     await semSessao().ligar(page);
     await page.goto("/entrar");
     await page.getByRole("link", { name: "decreta.site" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Todo prazo com a conta à mostra." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /O escritório em dia\./ })).toBeVisible();
   });
 });
 
 test.describe("no celular", () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
 
-  test("a conta e o resultado aparecem logo, com alvos de toque e sem rolar para o lado", async ({ page }) => {
+  test("o hero cabe na largura, com os botões de largura inteira e sem rolar para o lado", async ({ page }) => {
     await abrirLanding(page);
-    await expect(conta(page).locator(".lp-cal")).toBeInViewport();
-    await expect(conta(page).locator(".lp-res__final strong")).toHaveText("24/11/2026");
-    expect((await conta(page).locator('input[name="dias"]').boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    expect(await conta(page).locator('input[name="dias"]').evaluate((e) => getComputedStyle(e).fontSize)).toBe("16px");
-    await conta(page).locator("select").selectOption("TJPR");
-    await expect(conta(page).getByText("Este tribunal ainda não tem calendário próprio")).toBeVisible();
+    await expect(page.locator(".lp-hero .lp-ctas a").first()).toBeInViewport();
+    expect((await page.locator(".lp-hero .lp-ctas a").first().boundingBox())!.height).toBeGreaterThanOrEqual(44);
     expect(await sobraNaLateral(page)).toBe(0);
   });
 });
@@ -320,9 +266,8 @@ test.describe("com a CSP do servidor", () => {
     const recusas = await comCsp(page, (u) => u.pathname === "/", politica("telas"));
     await semSessao().ligar(page);
     await page.goto("/");
-    await expect(page.locator(".lp-res__final strong")).toHaveText("24/11/2026");
-    await page.locator("#conta select").selectOption("TJBA");
-    await expect(page.getByText("Este tribunal ainda não tem calendário próprio")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await page.waitForLoadState("networkidle");
     expect(recusas).toEqual([]);
   });
 });

@@ -1,427 +1,372 @@
 <!-- A landing do Decreta, estática. O que tem <!- -X- -> entra no build (scripts/vite-landing.ts); o JavaScript está em landing/main.ts. -->
 <svg class="lp-simbolos" aria-hidden="true" width="0" height="0">
-  <!--LOGO-->
-  <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
   <symbol id="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-alerta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
   <symbol id="i-duvida" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
 </svg>
 
-<div class="lp" data-theme="claro">
+<div class="lp dc" data-theme="claro">
+
+  <!-- Topo -->
   <header class="lp-topo" data-theme="escuro">
     <div class="lp-wrap lp-topo__linha">
-      <a class="lp-marca" href="#inicio" aria-label="Decreta, início"><svg class="lp-logo" aria-hidden="true"><use href="#i-logo"></use></svg></a>
+      <a class="lp-marca" href="#inicio" aria-label="Decreta, início">
+        <svg class="dc-logo" viewBox="0 0 482.68 93.72" aria-hidden="true"><g fill="currentColor"><g transform="matrix(5.21 0 0 5.21 -20.83 -15.62)"><path d="M4 3H8V21H4Z"/><path d="M10 3H12A9 9 0 0 1 12 21H10Z"/></g><path transform="translate(127.88 82.36)" d="M4.1000000000000005 -26.700000000000003Q4.1000000000000005 -35.2 6.850000000000001 -41.5Q9.600000000000001 -47.800000000000004 14.600000000000001 -51.2Q19.6 -54.6 26.3 -54.6Q31.8 -54.6 36.050000000000004 -52.25Q40.300000000000004 -49.900000000000006 42.5 -45.800000000000004V-71.0H55.300000000000004V0.0H43.2L42.900000000000006 -7.9Q40.6 -3.6 36.2 -1.2Q31.8 1.2000000000000002 26.3 1.2000000000000002Q19.5 1.2000000000000002 14.5 -2.2Q9.5 -5.6000000000000005 6.800000000000001 -11.9Q4.1000000000000005 -18.2 4.1000000000000005 -26.700000000000003ZM42.5 -26.700000000000003Q42.5 -35.2 39.3 -39.7Q36.1 -44.2 30.1 -44.2Q24.200000000000003 -44.2 20.800000000000004 -39.5Q17.400000000000002 -34.800000000000004 17.400000000000002 -26.700000000000003Q17.400000000000002 -18.7 20.85 -13.95Q24.3 -9.200000000000001 30.1 -9.200000000000001Q36.0 -9.200000000000001 39.25 -13.75Q42.5 -18.3 42.5 -26.700000000000003ZM62.6 -26.700000000000003Q62.6 -35.0 65.8 -41.35Q69.0 -47.7 74.85 -51.150000000000006Q80.7 -54.6 88.5 -54.6Q96.1 -54.6 101.85 -51.2Q107.6 -47.800000000000004 110.75 -41.35Q113.9 -34.9 113.9 -26.0V-23.1H75.9Q76.3 -16.2 79.69999999999999 -12.6Q83.1 -9.0 88.9 -9.0Q93.1 -9.0 96.0 -10.95Q98.9 -12.9 100.0 -16.400000000000002L113.1 -15.600000000000001Q110.9 -7.800000000000001 104.45 -3.3000000000000003Q98.0 1.2000000000000002 88.8 1.2000000000000002Q80.9 1.2000000000000002 74.95 -2.25Q69.0 -5.7 65.8 -12.0Q62.6 -18.3 62.6 -26.700000000000003ZM88.5 -44.5Q83.3 -44.5 79.94999999999999 -41.2Q76.6 -37.9 75.9 -31.700000000000003H100.6Q100.2 -38.1 97.0 -41.3Q93.80000000000001 -44.5 88.5 -44.5ZM117.9 -26.700000000000003Q117.9 -35.0 121.15 -41.35Q124.4 -47.7 130.35000000000002 -51.150000000000006Q136.3 -54.6 144.20000000000002 -54.6Q154.5 -54.6 161.2 -49.25Q167.9 -43.900000000000006 169.10000000000002 -34.5L155.9 -33.800000000000004Q155.20000000000002 -38.800000000000004 152.05 -41.5Q148.9 -44.2 144.20000000000002 -44.2Q138.0 -44.2 134.60000000000002 -39.6Q131.20000000000002 -35.0 131.20000000000002 -26.700000000000003Q131.20000000000002 -18.400000000000002 134.60000000000002 -13.8Q138.0 -9.200000000000001 144.20000000000002 -9.200000000000001Q149.0 -9.200000000000001 152.10000000000002 -12.0Q155.20000000000002 -14.8 155.9 -20.3L169.10000000000002 -19.700000000000003Q168.0 -10.100000000000001 161.25 -4.450000000000001Q154.5 1.2000000000000002 144.20000000000002 1.2000000000000002Q136.3 1.2000000000000002 130.35000000000002 -2.25Q124.4 -5.7 121.15 -12.0Q117.9 -18.3 117.9 -26.700000000000003ZM175.0 -53.400000000000006H187.0L187.3 -43.1Q188.9 -48.400000000000006 192.05 -50.900000000000006Q195.2 -53.400000000000006 200.1 -53.400000000000006H205.0V-42.400000000000006H200.0Q193.8 -42.400000000000006 190.8 -39.650000000000006Q187.8 -36.9 187.8 -30.8V0.0H175.0ZM206.4 -26.700000000000003Q206.4 -35.0 209.60000000000002 -41.35Q212.8 -47.7 218.65 -51.150000000000006Q224.5 -54.6 232.3 -54.6Q239.9 -54.6 245.65 -51.2Q251.4 -47.800000000000004 254.55 -41.35Q257.70000000000005 -34.9 257.70000000000005 -26.0V-23.1H219.70000000000002Q220.10000000000002 -16.2 223.5 -12.6Q226.9 -9.0 232.70000000000002 -9.0Q236.9 -9.0 239.8 -10.95Q242.70000000000002 -12.9 243.8 -16.400000000000002L256.90000000000003 -15.600000000000001Q254.70000000000002 -7.800000000000001 248.25 -3.3000000000000003Q241.8 1.2000000000000002 232.60000000000002 1.2000000000000002Q224.70000000000002 1.2000000000000002 218.75 -2.25Q212.8 -5.7 209.60000000000002 -12.0Q206.4 -18.3 206.4 -26.700000000000003ZM232.3 -44.5Q227.10000000000002 -44.5 223.75 -41.2Q220.4 -37.9 219.70000000000002 -31.700000000000003H244.4Q244.0 -38.1 240.8 -41.3Q237.60000000000002 -44.5 232.3 -44.5ZM268.5 -15.3V-43.5H260.1V-53.400000000000006H268.5V-65.9H281.3V-53.400000000000006H295.40000000000003V-43.5H281.3V-16.5Q281.3 -12.8 282.85 -11.350000000000001Q284.40000000000003 -9.9 287.90000000000003 -9.9H295.40000000000003V0.0H284.0Q276.0 0.0 272.25 -3.7Q268.5 -7.4 268.5 -15.3ZM299.1 -13.4Q299.1 -20.200000000000003 303.35 -24.150000000000002Q307.6 -28.1 316.5 -29.8L334.2 -33.300000000000004Q334.2 -38.900000000000006 331.6 -41.800000000000004Q329.0 -44.7 324.0 -44.7Q314.9 -44.7 313.1 -36.4L300.0 -37.0Q301.6 -45.400000000000006 307.8 -50.0Q314.0 -54.6 324.0 -54.6Q335.3 -54.6 341.15 -48.85Q347.0 -43.1 347.0 -32.4V-13.0Q347.0 -10.9 347.7 -10.100000000000001Q348.4 -9.3 350.0 -9.3H351.7V0.0Q350.1 0.4 347.1 0.4Q342.4 0.4 339.54999999999995 -1.6Q336.7 -3.6 335.9 -8.3Q333.9 -4.0 329.04999999999995 -1.4Q324.2 1.2000000000000002 317.7 1.2000000000000002Q309.2 1.2000000000000002 304.15 -2.65Q299.1 -6.5 299.1 -13.4ZM334.2 -21.6V-24.6L320.4 -21.8Q316.2 -21.0 314.29999999999995 -19.200000000000003Q312.4 -17.400000000000002 312.4 -14.600000000000001Q312.4 -11.5 314.45 -9.8Q316.5 -8.1 320.3 -8.1Q326.6 -8.1 330.4 -11.8Q334.2 -15.5 334.2 -21.6Z"/></g></svg>
+      </a>
       <nav class="lp-nav" aria-label="Principal">
-        <a href="#fluxo">O caminho</a>
-        <a href="#citacoes">Citações</a>
-        <a href="#vem">O que vem</a>
-        <a href="#preco">Preço</a>
+        <a href="#prazos">Prazos</a>
+        <a href="#ia">IA</a>
+        <a href="#seguranca">Segurança</a>
+        <a href="#planos">Planos</a>
         <a href="#duvidas">Dúvidas</a>
       </nav>
       <div class="lp-topo__acoes">
-        <a class="lp-topo__entrar" href="/entrar">Entrar</a>
-        <a class="lp-btn lp-btn--sm lp-btn--contorno" href="/cadastro" data-evento="clicou_criar_conta">Criar conta</a>
+        <a class="dc-btn dc-btn--fantasma lp-btn--sm lp-topo__entrar" href="/entrar">Entrar</a>
+        <a class="dc-btn dc-btn--primaria lp-btn lp-btn--sm lp-topo__cta" href="/cadastro" data-evento="clicou_criar_conta">Criar conta</a>
       </div>
     </div>
   </header>
 
   <main id="inicio">
-    <!-- 1. O que é: em vez de afirmar, a pessoa já toca no produto. -->
+    <!-- Hero -->
     <section class="lp-hero" data-theme="escuro">
       <canvas class="lp-ascii" aria-hidden="true"></canvas>
-      <div class="lp-wrap lp-hero__grade">
+      <div class="lp-wrap">
         <div class="lp-hero__texto">
-          <h1 class="lp-h1">Todo prazo com a conta à mostra.</h1>
-          <p class="lp-lead">O Decreta lê o DJEN, conta os dias e mostra de onde saiu cada data: os feriados que pulou e o calendário que usou. Uma pessoa confere e confirma.</p>
-          <div class="lp-ctas">
-            <a class="lp-btn lp-btn--principal" href="/demonstracao" data-evento="clicou_demonstracao">Ver um escritório de exemplo<svg class="lp-seta" aria-hidden="true"><use href="#i-seta"></use></svg></a>
-            <a class="lp-btn lp-btn--contorno" href="/cadastro" data-evento="clicou_criar_conta">Criar conta</a>
+          <a class="lp-novo lp-e" href="#ia"><span class="dc-ia__marca">IA</span><strong>Briefing de cada intimação</strong><span class="lp-novo__div" aria-hidden="true"></span><span class="lp-novo__mais">Ver como funciona</span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+          <h1 class="lp-h1 lp-e lp-e--2">O escritório em dia.<br><span class="lp-h1__2">A IA lê, você decide.</span></h1>
+          <p class="lp-lead lp-e lp-e--3">O Decreta busca as publicações no DJEN, conta o prazo em dias úteis, explica o que o juízo decidiu e já começa a peça no timbre do escritório. A equipe confere e confirma.</p>
+          <div class="lp-ctas lp-e lp-e--4">
+            <a class="dc-btn dc-btn--primaria lp-btn" href="/cadastro" data-evento="clicou_criar_conta">Criar conta<svg class="lp-seta" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+            <a class="dc-btn dc-btn--secundaria lp-btn" href="/demonstracao" data-evento="clicou_demonstracao">Ver um escritório de exemplo</a>
           </div>
-          <p class="lp-hero__nota">O exemplo abre sem cadastro, com dados fictícios.</p>
-        </div>
-
-        <div class="lp-conta" id="conta" data-theme="claro">
-          <div class="lp-conta__cab">
-            <strong>A conta, aberta</strong>
-            <span>Troque a data, os dias ou o tribunal. Roda aqui, sem login.</span>
-          </div>
-          <form class="lp-conta__campos" aria-label="Dados do prazo">
-            <label class="lp-campo lp-campo--data"><span>Publicada em</span><input type="date" name="publicacao" value="2026-10-30" min="2000-01-01" max="2099-12-31" required /></label>
-            <label class="lp-campo lp-campo--dias"><span>Prazo</span><input type="number" name="dias" value="15" min="1" max="365" inputmode="numeric" required /></label>
-            <fieldset class="lp-campo lp-campo--contagem">
-              <legend>Contagem</legend>
-              <div class="lp-chave">
-                <label><input type="radio" name="contagem" value="uteis" checked /><span>Dias úteis</span></label>
-                <label><input type="radio" name="contagem" value="corridos" /><span>Corridos</span></label>
-              </div>
-            </fieldset>
-            <label class="lp-campo lp-campo--tribunal"><span>Tribunal</span><select name="tribunal"><!--TRIBUNAIS--></select></label>
-          </form>
-          <p class="lp-conta__invalida">Confira a data e os dias: o prazo vai de 1 a 365 dias.</p>
-          <div class="lp-conta__corpo" data-conta><!--CONTA--></div>
-          <p class="lp-conta__apoio">É um apoio: confira sempre no tribunal. Esta conta não conhece feriado municipal nem suspensão de um ano só; no Decreta, o escritório cadastra esses dias.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. Funciona mesmo? Só convida a repetir o teste; a data é sempre a do próximo feriado em dia de semana. -->
-    <section class="lp-secao lp-teste" id="teste">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 1</span>Funciona mesmo?</p>
-        <div class="lp-teste__corpo">
-          <div class="lp-teste__texto">
-            <h2 class="lp-h2">Faça o teste do feriado.</h2>
-            <p class="lp-texto">Abra o sistema que você usa hoje, crie um prazo e digite <strong class="lp-teste__data" data-feriado="data">__FERIADO_DATA__</strong> como data final. É o próximo feriado nacional em dia de semana.</p>
-            <p class="lp-texto">Depois olhe o que aparece na tela.</p>
-          </div>
-          <div class="lp-folhinha" aria-label="O próximo feriado nacional em dia de semana">
-            <span class="lp-folhinha__mes" data-feriado="mes">__FERIADO_MES__</span>
-            <span class="lp-folhinha__dia" data-feriado="dia">__FERIADO_DIA__</span>
-            <span class="lp-folhinha__semana" data-feriado="semana">__FERIADO_SEMANA__</span>
-            <span class="lp-folhinha__nome" data-feriado="nome">__FERIADO_NOME__</span>
-          </div>
-          <div class="lp-teste__decreta">
-            <p class="lp-rotulo">O mesmo teste, no Decreta</p>
-            <div class="lp-falso-campo"><span>Data final</span><b data-feriado="data">__FERIADO_DATA__</b></div>
-            <p class="lp-aviso"><svg aria-hidden="true"><use href="#i-alerta"></use></svg><span data-feriado="aviso">__FERIADO_AVISO__</span></p>
-            <p class="lp-nota">É só um aviso: a data digitada continua valendo, porque quem decide é você.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Como fica meu dia? Uma tela fixa que se transforma ao rolar. -->
-    <section class="lp-secao lp-fluxo" id="fluxo">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 2</span>Como fica meu dia?</p>
-        <div>
-          <h2 class="lp-h2">Da publicação à peça, em seis passos.</h2>
-          <p class="lp-texto lp-fluxo__sub">Role a página e acompanhe uma intimação. O caso é fictício; o caminho é o de todo dia.</p>
-        </div>
-        <div class="lp-fluxo__corpo">
-          <div class="lp-palco" data-passo="1" aria-hidden="true">
-            <div class="lp-janela">
-              <div class="lp-janela__topo">
-                <span class="lp-janela__titulo">Marina Duarte × Seguradora Alfa S.A.</span>
-                <span class="lp-janela__sub">2ª Vara Cível de Joinville · 5004321-25.2026.8.24.0038</span>
-              </div>
-              <ol class="lp-trilha"><li>DJEN</li><li>Sugestão</li><li>Conta</li><li>Confirmação</li><li>Briefing</li><li>Peça</li></ol>
-              <div class="lp-telas">
-                <!-- 1 -->
-                <div class="lp-tela" data-tela="1">
-                  <div class="lp-pub">
-                    <p class="lp-pub__meta"><b>DJEN · TJSC</b><span>Disponibilizada em 29/10/2026</span></p>
-                    <p class="lp-teor">Juntado o laudo, ficam as partes intimadas para, no prazo comum de <mark>15 (quinze) dias</mark>, manifestarem-se sobre ele.</p>
-                    <p class="lp-etiquetas"><span>OAB/SC 48.213</span><span>Evento 88</span><span>Certidão do DJEN guardada</span></p>
-                  </div>
-                  <p class="lp-tela__rodape">Caderno do TJSC lido às 04:31. Caiu na caixa de Publicações.</p>
-                </div>
-                <!-- 2 -->
-                <div class="lp-tela" data-tela="2">
-                  <p class="lp-teor lp-teor--curto">…no prazo comum de <mark>15 (quinze) dias</mark>, manifestarem-se sobre ele.</p>
-                  <div class="lp-ia">
-                    <p class="lp-ia__topo"><span class="lp-ia__marca">IA</span>Prazo sugerido<em>Confiança alta</em></p>
-                    <dl class="lp-dados">
-                      <div><dt>Ato</dt><dd>Manifestação sobre laudo pericial</dd></div>
-                      <div><dt>Prazo</dt><dd>15 dias úteis, comum</dd></div>
-                      <div><dt>Base</dt><dd>CPC, art. 477, § 1º</dd></div>
-                      <div><dt>Quem cuida</dt><dd>Beatriz Souza</dd></div>
-                    </dl>
-                  </div>
-                </div>
-                <!-- 3 -->
-                <div class="lp-tela lp-tela--conta" data-tela="3">
-                  <div class="lp-mini">
-                    <p class="lp-mini__mes">Novembro de 2026</p>
-                    <div class="lp-mini__grade"><i>D</i><i>S</i><i>T</i><i>Q</i><i>Q</i><i>S</i><i>S</i><s>1</s><u>2</u><b>3</b><b>4</b><b>5</b><b>6</b><s>7</s><s>8</s><b>9</b><b>10</b><b>11</b><b>12</b><b>13</b><s>14</s><s>15</s><b>16</b><b>17</b><b>18</b><b>19</b><u>20</u><s>21</s><s>22</s><b>23</b><em>24</em><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span></div>
-                  </div>
-                  <dl class="lp-dados lp-dados--conta">
-                    <div><dt>Publicada</dt><dd>30/10</dd></div>
-                    <div><dt>Começa</dt><dd>03/11</dd></div>
-                    <div><dt>Fora da conta</dt><dd>02/11 Finados<br>20/11 Consciência Negra<br>e os fins de semana</dd></div>
-                    <div><dt>Calendário</dt><dd>TJSC, próprio</dd></div>
-                    <div class="lp-dados__fim"><dt>Vence</dt><dd>24/11/2026</dd></div>
-                  </dl>
-                </div>
-                <!-- 4 -->
-                <div class="lp-tela lp-tela--confirma" data-tela="4">
-                  <p class="lp-decisao"><span>Vence em</span><strong>24/11/2026</strong><small>terça-feira · 15 dias úteis</small></p>
-                  <p class="lp-botoes"><span class="lp-falso-botao">Ajustar</span><span class="lp-falso-botao lp-falso-botao--escuro"><svg aria-hidden="true"><use href="#i-ok"></use></svg>Confirmado por Beatriz</span></p>
-                  <ol class="lp-historia">
-                    <li class="is-ia"><time>06:41</time>A IA sugeriu 24/11</li>
-                    <li class="is-ok"><time>09:12</time>Beatriz confirmou</li>
-                    <li><time>09:12</time>Entrou na agenda e no resumo da manhã</li>
-                  </ol>
-                </div>
-                <!-- 5 -->
-                <div class="lp-tela" data-tela="5">
-                  <div class="lp-ia lp-ia--briefing">
-                    <p class="lp-ia__topo"><span class="lp-ia__marca">IA</span>Briefing do prazo<em>Confira nos autos</em></p>
-                    <h4>O que o juízo decidiu</h4>
-                    <p>Juntou o laudo e abriu prazo comum de 15 dias úteis para as partes se manifestarem <a>(evento 88)</a>.</p>
-                    <h4>O que fazer</h4>
-                    <p>Protocolar a manifestação até 24/11, concordando com o laudo e pedindo o julgamento.</p>
-                    <div class="lp-ia__dois">
-                      <div><h4>A nosso favor</h4><p>O perito confirmou o nexo e a incapacidade parcial de 40% <a>(evento 87, fl. 3)</a>.</p></div>
-                      <div><h4>Contra nós</h4><p>O laudo não fez vistoria no veículo <a>(evento 87, fl. 7)</a>.</p></div>
-                    </div>
-                  </div>
-                </div>
-                <!-- 6 -->
-                <div class="lp-tela lp-tela--peca" data-tela="6">
-                  <div class="lp-folha">
-                    <p class="lp-folha__timbre">Souza &amp; Freitas Advocacia</p>
-                    <p>Excelentíssimo(a) Senhor(a) Doutor(a) Juiz(a) de Direito da 2ª Vara Cível da Comarca de Joinville/SC</p>
-                    <p><b>MARINA DUARTE</b>, já qualificada nos autos, vem manifestar-se sobre o laudo pericial do evento 87, nos termos do art. 477, § 1º, do CPC.</p>
-                    <p>O valor pago em <span class="lp-completar">[COMPLETAR: data do pagamento]</span> não cobre a incapacidade fixada.</p>
-                  </div>
-                  <div class="lp-arquivo"><span class="lp-arquivo__tipo">DOCX</span><span><b>Manifestação sobre laudo.docx</b><small>Rascunho no timbre do escritório. Revise antes de assinar.</small></span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <ol class="lp-passos">
-            <li class="lp-passo" data-passo="1"><span class="lp-passo__n">1</span><h3>Chega sozinha</h3><p>De madrugada, o Decreta lê o caderno do tribunal no DJEN e guarda o que é do escritório. Às 12:40 e às 18:40, busca de novo pela OAB da equipe.</p></li>
-            <li class="lp-passo" data-passo="2"><span class="lp-passo__n">2</span><h3>A IA sugere</h3><p>Lê o teor e propõe o ato, os dias e quem cuida. Uma segunda conferência compara os dias com a lei e diz a confiança.</p></li>
-            <li class="lp-passo" data-passo="3"><span class="lp-passo__n">3</span><h3>O motor conta</h3><p>A data não vem da IA: sai de um motor de calendário, com a conta à mostra, inclusive qual calendário usou.</p></li>
-            <li class="lp-passo" data-passo="4"><span class="lp-passo__n">4</span><h3>Uma pessoa confirma</h3><p>Nenhum prazo vale antes de alguém conferir. Fica guardado quem confirmou e quando.</p></li>
-            <li class="lp-passo" data-passo="5"><span class="lp-passo__n">5</span><h3>O briefing explica</h3><p>O que o juízo decidiu, o que fazer e o que pesa a favor e contra, com o evento e a folha de onde saiu cada coisa.</p></li>
-            <li class="lp-passo" data-passo="6"><span class="lp-passo__n">6</span><h3>A peça começa</h3><p>Um rascunho em Word, no timbre do escritório, com o que falta marcado para completar. Quem assina revisa.</p></li>
-          </ol>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. E se a IA inventar? A pergunta seguinte à peça. -->
-    <section class="lp-secao lp-citacoes" id="citacoes">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 3</span>E se a IA inventar?</p>
-        <div class="lp-citacoes__texto">
-          <h2 class="lp-h2">Cada citação ganha selo. Cada fato, a folha.</h2>
-          <p class="lp-texto">Tribunais já multaram parte e advogado por jurisprudência inventada. Antes de baixar a peça, um clique confere súmulas, temas, artigos de lei e precedentes nas fontes oficiais. O que não está lá vem como “confira antes de usar”, nunca como certo.</p>
-          <p class="lp-nota">O selo diz onde a citação foi encontrada e quando. Se a tese cabe no caso, quem responde é quem assina.</p>
-        </div>
-        <div class="lp-margem" aria-label="Exemplo de citações conferidas numa peça">
-          <div class="lp-margem__folha">
-            <p>O laudo deve ser apreciado na forma do <span class="lp-cit lp-cit--ok">art. 477, § 1º, do CPC</span>, e a contagem do prazo observa o <span class="lp-cit lp-cit--ressalva">Tema 1.180 do STJ</span>.</p>
-            <p>Nesse sentido, o <span class="lp-cit lp-cit--nao">REsp 1.234.567/SC</span>.</p>
-            <p>O perito confirmou o nexo causal e a incapacidade parcial de 40% <span class="lp-cit lp-cit--fonte">(evento 87, fl. 3)</span>.</p>
-          </div>
-          <ul class="lp-margem__notas">
-            <li class="lp-nota-selo lp-nota-selo--ok"><svg aria-hidden="true"><use href="#i-ok"></use></svg><div><b>Verificada</b><span>Encontrada em normas.leg.br. Conferida hoje às 09:40.</span></div></li>
-            <li class="lp-nota-selo lp-nota-selo--ressalva"><svg aria-hidden="true"><use href="#i-alerta"></use></svg><div><b>Com ressalva</b><span>Tema afetado no STJ, ainda sem tese firmada.</span></div></li>
-            <li class="lp-nota-selo lp-nota-selo--nao"><svg aria-hidden="true"><use href="#i-duvida"></use></svg><div><b>Não verificada</b><span>Não está no acervo oficial. Confira antes de usar.</span></div></li>
-            <li class="lp-nota-selo lp-nota-selo--fonte"><svg aria-hidden="true"><use href="#i-seta"></use></svg><div><b>Fato com fonte</b><span>Um toque abre o documento do evento 87 na folha 3.</span></div></li>
+          <ul class="lp-checks lp-e lp-e--5">
+            <li><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>A IA sugere, a pessoa confirma</li>
+            <li><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Feito para o celular</li>
+            <li><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>A IA não treina com seus dados</li>
           </ul>
         </div>
+
+        <!-- Vitrine: a tela de prazo com o briefing da IA, em imagem. Montada em HTML, a roda do mouse
+             parava em cima dela e a página não rolava. No celular, a mesma tela como ela é no celular. -->
+        <picture class="lp-vitrine lp-e lp-e--6">
+          <source media="(max-width: 1023px)" srcset="/src/landing/vitrine-celular.webp" width="300" height="630">
+          <img class="lp-vitrine__img" src="/src/landing/vitrine-computador.webp" width="1216" height="682" fetchpriority="high" alt="Tela de um prazo no Decreta: manifestação sobre laudo pericial, vencendo em 23/11, com o briefing da IA sobre o que o juízo decidiu e o que fazer, e a peça pronta para baixar.">
+        </picture>
       </div>
     </section>
 
-    <!-- 5. Quem já entendeu o fluxo pensa na própria rotina. -->
-    <section class="lp-secao lp-celular" id="celular">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 4</span>E fora do escritório?</p>
-        <div class="lp-celular__texto">
-          <h2 class="lp-h2">O dia cabe no celular.</h2>
-          <p class="lp-texto">Na hora que o escritório escolher, cada pessoa recebe no WhatsApp os próprios prazos, audiências e tarefas do dia, com o link de cada um. A tela Hoje responde o resto: o que vence, o que falta confirmar e quem cuida.</p>
-        </div>
-        <div class="lp-celular__cena">
-          <div class="lp-zap" aria-label="Exemplo do resumo da manhã no WhatsApp">
-            <p class="lp-zap__hora">Resumo da manhã</p>
-            <div class="lp-zap__balao">
-              <p>Bom dia, Beatriz. O seu dia no Decreta, quinta, 29/10:</p>
-              <p><b>Vencem hoje (2)</b><br>• Alegações finais · Roberto Kühn × Transportes Serra Azul<br>• Manifestação sobre documentos · Ana Lúcia Ferraz × Banco Horizonte</p>
-              <p><b>Audiências hoje (1)</b><br>• 14:30 · Carlos Prado × Construtora Vale</p>
-              <p>3 publicações novas para revisar: <span class="lp-zap__link">decreta.site/publicacoes</span></p>
-              <time>07:00</time>
-            </div>
-          </div>
-          <figure class="lp-aparelho">
-            <picture>
-              <img src="/src/landing/vitrine-celular.webp" width="390" height="844" loading="lazy" alt="A tela Hoje do Decreta no celular: os números do dia e a lista do que vence, com o responsável de cada prazo." />
-            </picture>
-          </figure>
-        </div>
+    <!-- Prazos -->
+    <section class="lp-secao" id="prazos">
+  <div class="lp-wrap">
+    <div class="lp-cabeca lp-a">
+      <div class="lp-cabeca__titulo">
+        <span class="lp-olho">Prazos</span>
+        <h2 class="lp-h2">A publicação chega.<br>O prazo já vem contado.</h2>
       </div>
-    </section>
-
-    <!-- 6. A segunda dor depois do prazo. -->
-    <section class="lp-secao lp-dinheiro" id="dinheiro">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 5</span>E o dinheiro do cliente?</p>
-        <div>
-          <h2 class="lp-h2">Do alvará expedido ao valor repassado.</h2>
-          <p class="lp-texto lp-dinheiro__sub">Cada alvará anda por etapas, com o valor e quanto falta receber. Dinheiro sacado é do cliente: depois de cinco dias parado, o Decreta chama a atenção. Ao sacar, ele calcula o honorário de êxito e a parte do cliente, e a prestação de contas sai em Word, no timbre.</p>
-        </div>
-        <ol class="lp-etapas" aria-label="Exemplo de alvarás por etapa">
-          <li class="is-feita"><span class="lp-etapas__nome">Expedido</span><b>R$ 18.400,00</b><small>Marina Duarte · 02/10</small></li>
-          <li class="is-feita"><span class="lp-etapas__nome">Aguardando saque</span><b>R$ 6.120,50</b><small>Roberto Kühn · há 9 dias</small></li>
-          <li class="is-parada"><span class="lp-etapas__nome">Sacado</span><b>R$ 32.750,00</b><small>Ana Lúcia Ferraz · parado há 6 dias</small></li>
-          <li><span class="lp-etapas__nome">Repassado ao cliente</span><b>R$ 11.300,00</b><small>Carlos Prado · 22/10</small></li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- 7. Tira objeções antes do preço. Dizer o limite também gera confiança. -->
-    <section class="lp-secao lp-vem" id="vem">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 6</span>O que falta?</p>
-        <h2 class="lp-h2">O que vem, e o que ainda não vem.</h2>
-        <div class="lp-vem__colunas">
-          <div>
-            <h3>Prazos e Diário</h3>
-            <ul>
-              <li>Caderno do DJEN às 04:30 e busca pela OAB às 12:40 e às 18:40, nos dias úteis</li>
-              <li>Certidão de publicação do DJEN, guardada com a publicação</li>
-              <li>Dupla intimação: conta pelos dois marcos e vale a data mais cedo</li>
-              <li>Aviso de dia sem expediente ao digitar a data</li>
-              <li>Tópico de tempestividade para a peça, montado pela conta</li>
-              <li>Agenda, audiências, tarefas e auditoria da carteira</li>
-            </ul>
-          </div>
-          <div>
-            <h3><span class="lp-ia__marca">IA</span> com fonte</h3>
-            <ul>
-              <li>Sugestão de prazo e briefing de cada intimação</li>
-              <li>Verificação de citações, com selo</li>
-              <li>Jurisprudência com a fonte de cada julgado</li>
-              <li>Radar de precedentes: avisa quando o Banco Nacional de Precedentes muda algo que pode afetar o processo</li>
-              <li>Leitura da peça contrária, em pontos a rebater</li>
-              <li>Rascunho de peça em Word, no timbre</li>
-              <li>Perguntar ao processo, com o evento e a folha</li>
-            </ul>
-          </div>
-          <div>
-            <h3>Cliente e escritório</h3>
-            <ul>
-              <li>Cálculos: atualização monetária, revisional bancária, resumo do PJe-Calc e previdenciário</li>
-              <li>Mensagem ao cliente no WhatsApp: nada sai sem aprovação</li>
-              <li>Link para o cliente enviar documentos, sem login</li>
-              <li>Novos negócios e alvarás, em quadro</li>
-              <li>Honorários por caso: a receber, recebido e em atraso</li>
-              <li>Prestação de contas do alvará, em Word, no timbre</li>
-              <li>Termo de IA para o cliente, e cliente sem IA</li>
-              <li>Conector MCP, só de leitura, para um assistente de fora</li>
-              <li>Cópia de tudo e encerramento no próprio app</li>
-            </ul>
-          </div>
-        </div>
-        <div class="lp-vem__falta">
-          <h3>Ainda não vem</h3>
-          <ul>
-            <li><b>Contabilidade.</b> Os honorários estão aqui, mas despesas, fluxo de caixa e nota fiscal ainda não.</li>
-            <li><b>Portal do cliente.</b> O cliente recebe a mensagem e o link de envio, mas não tem uma área própria.</li>
-            <li><b>Aplicativo nativo.</b> O Decreta roda no navegador do celular, e os avisos chegam pelo WhatsApp.</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- 8. A última trava antes de falar de dinheiro. -->
-    <section class="lp-secao lp-sigilo" id="sigilo" data-theme="escuro">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 7</span>É seguro? E a OAB?</p>
-        <div class="lp-sigilo__cab">
-          <h2 class="lp-h2">O sigilo vem antes da IA.</h2>
-          <a class="lp-link" href="/seguranca">Os detalhes e os fornecedores<svg class="lp-seta" aria-hidden="true"><use href="#i-seta"></use></svg></a>
-        </div>
-        <ul class="lp-sigilo__lista">
-          <li><h3>A IA não treina com os seus textos</h3><p>Nenhum fornecedor usa o conteúdo para treinar modelos. Só vai à IA o que a tarefa pede, na hora de gerar a resposta.</p></li>
-          <li><h3>Cada escritório isolado</h3><p>Os dados de um nunca aparecem para outro: o isolamento é feito no próprio banco de dados.</p></li>
-          <li><h3>Termo de IA para o cliente</h3><p>Segue a Recomendação CFOAB 001/2024: o cliente lê o propósito, os riscos e a revisão humana, e autoriza ou recusa por assinatura.</p></li>
-          <li><h3>Cliente sem IA</h3><p>Recusou? Fica marcado, e nada dos casos dele vai à IA.</p></li>
-          <li><h3>Política interna de IA</h3><p>Um modelo pronto para o escritório adotar, que diz só o que o sistema faz de verdade.</p></li>
-          <li><h3>Duas etapas e histórico</h3><p>Verificação em duas etapas, e fica guardado quem sugeriu, quem confirmou e quem revisou.</p></li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- 9. Depois do valor e da confiança. -->
-    <section class="lp-secao lp-preco" id="preco">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 8</span>Quanto custa?</p>
-        <div class="lp-preco__texto">
-          <h2 class="lp-h2">Um plano só, com tudo dentro.</h2>
-          <p class="lp-texto">Sem pacote, sem módulo para destravar e sem pagar a IA por crédito. Quando quiser sair, leva uma cópia de tudo e encerra sozinho.</p>
-        </div>
-        <div class="lp-preco__cartao">
-          <!--PRECO-->
-          <div class="lp-preco__acoes">
-            <a class="lp-btn lp-btn--escuro" href="/cadastro" data-evento="clicou_criar_conta">Criar conta</a>
-            <a class="lp-link" href="/demonstracao" data-evento="clicou_demonstracao">Ver um escritório de exemplo<svg class="lp-seta" aria-hidden="true"><use href="#i-seta"></use></svg></a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 10. Resolve o que sobrou, perto da decisão. -->
-    <section class="lp-secao lp-duvidas" id="duvidas">
-      <div class="lp-wrap lp-secao__grade">
-        <p class="lp-pergunta"><span>§ 9</span>E para trocar de sistema?</p>
-        <h2 class="lp-h2">O que perguntam antes de trocar.</h2>
-        <div class="lp-duvidas__lista">
-          <details open>
-            <summary>Como eu trago os meus processos?</summary>
-            <p>Pelo número: digite o CNJ e o Decreta busca as partes, a classe e os andamentos no DataJud e no DJEN. Com a OAB cadastrada, as publicações dos últimos dias já entram na caixa na mesma hora. Ainda não há importação por planilha.</p>
-          </details>
-          <details>
-            <summary>Como eu cancelo?</summary>
-            <p>Em Configurações, na aba Dados. Lá você prepara uma cópia de tudo (planilhas e documentos) e encerra o escritório, sem falar com ninguém. Os dados ficam guardados por 30 dias e depois são apagados de vez.</p>
-          </details>
-          <details>
-            <summary>O meu tribunal está coberto?</summary>
-            <p>O Decreta lê o que o tribunal publica no DJEN. O calendário de prazos é próprio em parte dos tribunais; nos outros, a conta usa os feriados nacionais e o recesso, e avisa. <a href="/cobertura">Veja a situação de cada tribunal, com a última leitura.</a></p>
-          </details>
-          <details>
-            <summary>E se a IA errar?</summary>
-            <p>A IA sugere, não decide. A data sai do motor de calendário, com a conta à mostra, e o prazo só vale depois que uma pessoa confirma. A citação vem com selo e o fato com a fonte, para conferir em segundos. A responsabilidade continua com quem assina.</p>
-          </details>
-          <details>
-            <summary>Tem aplicativo?</summary>
-            <p>Ainda não. O Decreta roda no navegador do iPhone e do Android, e dá para adicionar à tela inicial. O resumo da manhã chega pelo WhatsApp.</p>
-          </details>
-        </div>
-        <p class="lp-duvidas__mais">Ficou outra? <a href="__CONTATO__" target="_blank" rel="noopener">Pergunte à equipe no WhatsApp.</a></p>
-      </div>
-    </section>
-
-    <!-- 11. Fecha para quem leu tudo. -->
-    <section class="lp-fim" id="acesso" data-theme="escuro">
-      <div class="lp-wrap lp-fim__grade">
-        <div class="lp-fim__texto">
-          <h2 class="lp-h2">Olhe por dentro antes de decidir.</h2>
-          <p class="lp-texto">O escritório de exemplo abre em um clique, sem cadastro.</p>
-          <div class="lp-ctas">
-            <a class="lp-btn lp-btn--principal" href="/demonstracao" data-evento="clicou_demonstracao">Ver um escritório de exemplo<svg class="lp-seta" aria-hidden="true"><use href="#i-seta"></use></svg></a>
-            <a class="lp-btn lp-btn--contorno" href="/cadastro" data-evento="clicou_criar_conta">Criar conta</a>
-          </div>
-        </div>
-        <a class="lp-fim__tela" href="/demonstracao" data-evento="clicou_demonstracao" aria-label="Abrir o escritório de exemplo">
-          <img src="/src/landing/vitrine-computador.webp" width="1280" height="800" loading="lazy" alt="A tela Hoje do Decreta no computador, com os prazos do dia e o menu lateral." />
-        </a>
-      </div>
-    </section>
-  </main>
-
-  <footer class="lp-rodape" data-theme="escuro">
-    <div class="lp-wrap lp-rodape__grade">
-      <div class="lp-rodape__marca">
-        <svg class="lp-logo" aria-hidden="true"><use href="#i-logo"></use></svg>
-        <p>Prazos, publicações e processos do escritório, com a conta à mostra. Feito no Brasil.</p>
-      </div>
-      <div>
-        <span class="lp-rodape__titulo">Produto</span>
-        <ul><li><a href="#conta">A conta aberta</a></li><li><a href="#fluxo">Da publicação à peça</a></li><li><a href="#vem">O que vem</a></li><li><a href="#preco">Preço</a></li></ul>
-      </div>
-      <div>
-        <span class="lp-rodape__titulo">Confiança</span>
-        <ul><li><a href="/cobertura">Cobertura por tribunal</a></li><li><a href="/seguranca">Segurança e LGPD</a></li><li><a href="/termos">Termos de Uso</a></li><li><a href="/privacidade">Privacidade</a></li></ul>
-      </div>
-      <div>
-        <span class="lp-rodape__titulo">Acesso</span>
-        <ul><li><a href="/demonstracao" data-evento="clicou_demonstracao">Escritório de exemplo</a></li><li><a href="/cadastro" data-evento="clicou_criar_conta">Criar conta</a></li><li><a href="/entrar">Entrar</a></li><li><a href="__CONTATO__" target="_blank" rel="noopener">Contato</a></li></ul>
+      <div class="lp-cabeca__lado">
+        <p class="lp-texto">Três vezes por dia o Decreta busca no DJEN as publicações das OABs da equipe. A IA sugere o prazo, o motor conta os dias úteis e uma pessoa confirma.</p>
       </div>
     </div>
-    <div class="lp-wrap lp-rodape__base"><span>© __ANO__ Decreta. Todos os direitos reservados.</span><span>Brasil · Português</span></div>
+    <ol class="lp-blocos lp-blocos--prazos">
+      <li class="lp-bloco lp-a">
+        <div class="lp-bloco__vis" aria-hidden="true">
+          <div class="lp-m">
+            <div class="lp-m__cab"><b>DJEN · TJSC</b><span>29/10 · 04:30</span></div>
+            <div class="lp-m__corpo">
+              <p class="lp-m__teor">Juntado o laudo, ficam as partes intimadas para, no prazo comum de <mark>15 (quinze) dias</mark>, manifestarem-se sobre ele.</p>
+              <div class="lp-m__chips"><span class="lp-m__chip">OAB/SC 48.213</span><span class="lp-m__chip">Evento 88</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><span class="lp-bloco__n">01</span><h3>Chega do DJEN</h3><p>De madrugada, do caderno de cada tribunal, pela OAB da equipe e pelo número dos processos. Ninguém precisa abrir o Diário.</p></div>
+      </li>
+      <li class="lp-bloco lp-a lp-a--2">
+        <div class="lp-bloco__vis" aria-hidden="true">
+          <div class="lp-m">
+            <div class="lp-m__cab"><span class="lp-m__ia"><span class="dc-ia__marca">IA</span><b>Prazo sugerido</b></span></div>
+            <dl class="lp-m__dados">
+              <div><dt>Tipo</dt><dd>Manifestação</dd></div>
+              <div><dt>Prazo</dt><dd>15 dias úteis, comum</dd></div>
+              <div><dt>Base</dt><dd>art. 477, § 1º, CPC</dd></div>
+              <div><dt>Quem</dt><dd><span class="dc-avatar">BS</span>Beatriz</dd></div>
+            </dl>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><span class="lp-bloco__n">02</span><h3>A IA sugere</h3><p>Lê o teor e propõe o tipo de prazo, os dias e quem cuida dele.</p></div>
+      </li>
+      <li class="lp-bloco lp-bloco--conta lp-a lp-a--3">
+        <div class="lp-bloco__vis">
+          <div class="lp-m lp-contagem">
+            <div class="lp-m__cab"><b>Novembro de 2026</b><span>15 dias úteis</span></div>
+            <div class="lp-contagem__corpo">
+              <div class="lp-minical lp-minical--grande" aria-hidden="true"><span class="s">D</span><span class="s">S</span><span class="s">T</span><span class="s">Q</span><span class="s">Q</span><span class="s">S</span><span class="s">S</span><span class="f">1</span><span class="h">2</span><span class="c">3</span><span class="c">4</span><span class="c">5</span><span class="c">6</span><span class="f">7</span><span class="f">8</span><span class="c">9</span><span class="c">10</span><span class="c">11</span><span class="c">12</span><span class="c">13</span><span class="f">14</span><span class="f">15</span><span class="c">16</span><span class="c">17</span><span class="c">18</span><span class="c">19</span><span class="h">20</span><span class="f">21</span><span class="f">22</span><span class="v">23</span><span class="d">24</span><span class="d">25</span><span class="d">26</span><span class="d">27</span><span class="d">28</span><span class="d">29</span><span class="d">30</span></div>
+              <dl class="lp-contagem__razao">
+                <div><dt>Começa</dt><dd>30/10/2026</dd></div>
+                <div><dt>Fora da conta</dt><dd><b>02/11</b> Finados</dd><dd><b>20/11</b> Consciência Negra</dd><dd class="lp-contagem__fds">e os fins de semana</dd></div>
+                <div><dt>Vence</dt><dd class="lp-contagem__vence">23/11/2026</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><span class="lp-bloco__n">03</span><h3>O motor conta</h3><p>A data não vem da IA. Sai de um motor de calendário, com os feriados forenses do tribunal e as suspensões do escritório, e a conta fica à mostra.</p></div>
+      </li>
+      <li class="lp-bloco lp-bloco--deitado lp-a lp-a--4">
+        <div class="lp-bloco__vis" aria-hidden="true">
+          <div class="lp-m">
+            <div class="lp-m__linha"><span class="dc-selo dc-selo--prazo">Vence 23 nov</span><span class="dc-selo dc-selo--cumprido"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Confirmado</span></div>
+            <ol class="lp-m__hist">
+              <li class="is-ia"><time>06:41</time><span>IA sugeriu 23/11</span></li>
+              <li class="is-ok"><time>09:12</time><span>Beatriz confirmou</span></li>
+              <li><time>23/11</time><span>Aviso no WhatsApp</span></li>
+            </ol>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><span class="lp-bloco__n">04</span><h3>Uma pessoa confirma</h3><p>Só então o prazo entra na agenda, com o histórico de quem fez o quê.</p></div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+    <!-- IA -->
+    <section class="lp-secao lp-secao--faixa" id="ia">
+  <div class="lp-wrap">
+    <div class="lp-cabeca lp-a">
+      <div class="lp-cabeca__titulo">
+        <span class="lp-olho"><span class="dc-ia__marca">IA</span>IA no centro do trabalho</span>
+        <h2 class="lp-h2">Cada intimação já chega explicada</h2>
+      </div>
+      <div class="lp-cabeca__lado">
+        <p class="lp-texto">A IA lê o teor e os autos e responde sempre nos mesmos blocos, citando de onde tirou cada coisa. Quando falta informação, ela diz o que falta em vez de adivinhar.</p>
+      </div>
+    </div>
+    <div class="lp-blocos lp-blocos--3">
+      <article class="lp-bloco lp-bloco--largo lp-a">
+        <div class="lp-bloco__vis lp-bloco__vis--alto lp-bloco__vis--corte" aria-hidden="true">
+          <div class="lp-briefing">
+            <div class="lp-briefing__topo"><span class="dc-ia__marca">IA</span>Briefing do prazo<small>DJEN · 28/10/2026 · evento 88</small></div>
+            <div><h4>O que o juízo decidiu</h4><p>Juntou o laudo e abriu prazo comum de 15 dias úteis para as partes se manifestarem. Depois, sentença.</p></div>
+            <div><h4>O que fazer</h4><p>Protocolar a manifestação até 23/11, concordando com o laudo e pedindo o julgamento.</p></div>
+            <div class="lp-briefing__dois">
+              <div><h4>A nosso favor</h4><p>O perito confirmou o nexo e a incapacidade parcial de 40%.</p></div>
+              <div><h4>Contra nós</h4><p>A ré pediu esclarecimentos sobre a vistoria (evento 89).</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><h3>Briefing do prazo</h3><p>O que o juízo decidiu, o que fazer e o que pesa a favor e contra, em cada intimação.</p></div>
+      </article>
+      <article class="lp-bloco lp-a lp-a--2">
+        <div class="lp-bloco__vis lp-bloco__vis--alto" aria-hidden="true">
+          <span class="lp-m__balao">A seguradora já pagou alguma coisa?</span>
+          <div class="lp-m__resposta">Sim. R$ 13.500,00 em 12/03/2026, pelo comprovante juntado com a contestação.<br><span class="lp-m__chip is-on">Evento 34 · p. 2</span></div>
+          <span class="lp-m__balao">E a contestação veio no prazo?</span>
+        </div>
+        <div class="lp-bloco__txt"><h3>Pergunte ao processo</h3><p>Respostas com o evento e a página de onde vieram.</p></div>
+      </article>
+      <article class="lp-bloco lp-bloco--largo lp-bloco--citacoes lp-a">
+        <div class="lp-bloco__vis lp-bloco__vis--alto" aria-hidden="true">
+          <div class="lp-selos">
+            <div class="lp-m lp-selos__folha">
+              <p>O laudo deve ser apreciado na forma do <span class="lp-cit lp-cit--ok">art. 477, § 1º, do CPC</span>, e a contagem observa o <span class="lp-cit lp-cit--ressalva">tema afetado no STJ</span>.</p>
+              <p>Nesse sentido, o <span class="lp-cit lp-cit--nao">REsp 1.234.567/SC</span>.</p>
+            </div>
+            <ul class="lp-selos__lista">
+              <li class="lp-selo lp-selo--ok"><svg aria-hidden="true"><use href="#i-ok"></use></svg><div><b>Verificada</b><span>Encontrada em normas.leg.br.</span></div></li>
+              <li class="lp-selo lp-selo--ressalva"><svg aria-hidden="true"><use href="#i-alerta"></use></svg><div><b>Com ressalva</b><span>Tema afetado, ainda sem tese firmada.</span></div></li>
+              <li class="lp-selo lp-selo--nao"><svg aria-hidden="true"><use href="#i-duvida"></use></svg><div><b>Não verificada</b><span>Não está no acervo oficial. Confira antes de usar.</span></div></li>
+            </ul>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><h3>Citações com selo</h3><p>Antes de baixar a peça, um clique confere súmulas, temas e artigos nas fontes oficiais. O que não está lá vem como “confira antes de usar”, nunca como certo.</p></div>
+      </article>
+      <article class="lp-bloco lp-a lp-a--2">
+        <div class="lp-bloco__vis lp-bloco__vis--alto" aria-hidden="true">
+          <div class="lp-peca lp-peca--so-folha">
+            <div class="lp-m__folha">
+              <div class="lp-m__timbre"><span>TIMBRE DO ESCRITÓRIO</span><span>1/4</span></div>
+              <p>Excelentíssimo(a) Senhor(a) Doutor(a) Juiz(a) de Direito da 2ª Vara Cível da Comarca de Joinville/SC</p>
+              <p><b>MARINA DUARTE</b>, já qualificada nos autos, vem manifestar-se sobre o laudo pericial juntado no evento 87, nos termos do art. 477, § 1º, do CPC.</p>
+              <p>O valor pago em <span class="lp-m__falta">[COMPLETAR: data do pagamento]</span> não cobre a incapacidade fixada.</p>
+            </div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><h3>Peça em Word</h3><p>Mais de 20 tipos de peça, no timbre do escritório, com o que falta marcado para a revisão.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+    <!-- Celular e WhatsApp -->
+    <section class="lp-secao" id="celular">
+  <div class="lp-wrap">
+    <div class="lp-cabeca lp-cabeca--centro lp-a">
+      <div class="lp-cabeca__titulo">
+        <span class="lp-olho">Celular primeiro</span>
+        <h2 class="lp-h2">Feito para quem advoga na rua</h2>
+      </div>
+      <div class="lp-cabeca__lado">
+        <p class="lp-texto">O dia começa com uma pergunta: o que vence hoje e o que eu faço com isso? O Decreta responde na primeira tela do celular, e o resumo da manhã chega no WhatsApp.</p>
+      </div>
+    </div>
+    <div class="lp-palco lp-a">
+      <div class="lp-palco__lado" aria-hidden="true">
+        <span class="lp-palco__nota"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5 13.6c-.2.6-1.2 1.1-1.7 1.2-.4 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4l.9 2.1c0 .2.1.4 0 .6l-.4.6-.4.5c-.1.1-.3.3-.1.6.1.3.7 1.2 1.5 1.9 1 .9 1.9 1.2 2.2 1.3.3.1.4.1.6-.1l.7-.9c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.2 1z"></path></svg>Às 7h, no WhatsApp de cada um</span>
+        <div class="lp-zap">
+            <div class="lp-zap__topo">
+              <span class="lp-zap__avatar"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path d="M4 3H8V21H4Z"></path><path d="M10 3H12A9 9 0 0 1 12 21H10Z"></path></g></svg></span>
+              <span><span class="lp-zap__nome">Decreta</span><span class="lp-zap__app"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5 13.6c-.2.6-1.2 1.1-1.7 1.2-.4 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4l.9 2.1c0 .2.1.4 0 .6l-.4.6-.4.5c-.1.1-.3.3-.1.6.1.3.7 1.2 1.5 1.9 1 .9 1.9 1.2 2.2 1.3.3.1.4.1.6-.1l.7-.9c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.2 1z"></path></svg>WhatsApp</span></span>
+            </div>
+            <div class="lp-zap__msg">
+              <p>Bom dia, Beatriz. Seus prazos de hoje:</p>
+              <ul>
+                <li>Alegações finais · Roberto Kühn × Transportes Serra Azul</li>
+                <li>Manifestação sobre documentos · Ana Lúcia Ferraz × Banco Horizonte</li>
+              </ul>
+              <p>Abrir no Decreta: <a href="#prazos">decreta.site/hoje</a></p>
+              <span class="lp-zap__hora">07:00</span>
+            </div>
+          </div>
+      </div>
+      <img class="lp-palco__tela" src="/src/landing/celular-hoje.webp" width="300" height="630" loading="lazy" alt="A tela Hoje do Decreta no celular: os números do dia e a lista do que vence, com o responsável de cada prazo.">
+    </div>
+  </div>
+</section>
+
+    <!-- Segurança -->
+    <section class="lp-secao lp-escuro" id="seguranca" data-theme="escuro">
+  <div class="lp-wrap">
+    <div class="lp-cabeca lp-a">
+      <div class="lp-cabeca__titulo">
+        <span class="lp-olho">Segurança e LGPD</span>
+        <h2 class="lp-h2">O sigilo do escritório vem antes de tudo</h2>
+      </div>
+      <div class="lp-cabeca__lado">
+        <p class="lp-texto">Dado de cliente é sigiloso. O Decreta foi construído em cima dessa regra desde a primeira linha, e não com ela remendada depois. <a class="lp-link" href="/seguranca">Os detalhes e os fornecedores</a></p>
+      </div>
+    </div>
+    <div class="lp-blocos lp-blocos--4">
+      <article class="lp-bloco lp-a">
+        <div class="lp-bloco__vis lp-bloco__vis--baixo" aria-hidden="true">
+          <div class="lp-m">
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg class="lp-seta" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></span><span class="lp-m__col"><span class="lp-m__t">Teor da intimação</span><span class="lp-m__s">enviado para a IA · 09:12</span></span></div>
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path><path d="m2 2 20 20"></path></svg></span><span class="lp-m__col"><span class="lp-m__t">Usado para treinar modelos</span><span class="lp-m__s">nunca · por nenhum provedor</span></span></div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><h3>A IA não treina com seus dados</h3><p>Os textos vão para a IA só na hora de gerar a resposta. Nenhum provedor usa o conteúdo para treinar modelos, e nenhum guarda o pedido por mais de 30 dias.</p></div>
+      </article>
+      <article class="lp-bloco lp-a lp-a--2">
+        <div class="lp-bloco__vis lp-bloco__vis--baixo" aria-hidden="true">
+          <div class="lp-iso">
+            <div class="lp-m"><b>Seu escritório</b><i></i><i></i><i></i></div>
+            <div class="lp-iso__meio"><span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span></div>
+            <div class="lp-m lp-m--outro"><b>Outro escritório</b><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><h3>Cada escritório isolado</h3><p>Os dados de um escritório nunca aparecem para outro. O isolamento é feito no próprio banco de dados.</p></div>
+      </article>
+      <article class="lp-bloco lp-a lp-a--3">
+        <div class="lp-bloco__vis lp-bloco__vis--baixo" aria-hidden="true">
+          <div class="lp-m">
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Termo de IA</span><span class="lp-m__s">propósito, riscos e revisão</span></span></div>
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Assinado pelo cliente</span><span class="lp-m__s">autoriza ou recusa</span></span></div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><h3>Termo de IA para o cliente</h3><p>Segue a Recomendação CFOAB 001/2024: o cliente lê o propósito, os riscos e a revisão humana, e autoriza ou recusa por assinatura.</p></div>
+      </article>
+      <article class="lp-bloco lp-a lp-a--4">
+        <div class="lp-bloco__vis lp-bloco__vis--baixo" aria-hidden="true">
+          <div class="lp-m">
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5"/><path d="m22 8-5 5"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Cliente recusou a IA</span><span class="lp-m__s">fica marcado no cadastro</span></span></div>
+            <div class="lp-m__linha"><span class="lp-m__icone"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg></span><span class="lp-m__col"><span class="lp-m__t">Casos deste cliente</span><span class="lp-m__s">nada vai para a IA</span></span></div>
+          </div>
+        </div>
+        <div class="lp-bloco__txt"><h3>Cliente que recusa a IA</h3><p>Recusou? Fica marcado, e nada dos casos dele vai à IA.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+    <!-- Planos -->
+    <section class="lp-secao" id="planos">
+  <div class="lp-wrap">
+    <div class="lp-cabeca lp-cabeca--centro lp-a">
+      <div class="lp-cabeca__titulo">
+        <span class="lp-olho">Planos</span>
+        <h2 class="lp-h2">Um plano, com tudo incluído</h2>
+      </div>
+      <div class="lp-cabeca__lado">
+        <p class="lp-texto">Todos os recursos e a IA no mesmo plano, sem módulo extra para destravar.</p>
+      </div>
+    </div>
+    <div class="lp-plano-largo lp-a"><!--PRECO--></div>
+  </div>
+</section>
+
+    <!-- Dúvidas -->
+    <section class="lp-secao lp-secao--linha" id="duvidas">
+  <div class="lp-wrap">
+    <div class="lp-cabeca lp-a">
+      <div class="lp-cabeca__titulo">
+        <span class="lp-olho">Dúvidas</span>
+        <h2 class="lp-h2">Perguntas que todo escritório faz</h2>
+      </div>
+      <div class="lp-cabeca__lado">
+        <p class="lp-texto">Não achou a sua? <a href="__CONTATO__" target="_blank" rel="noopener" style="font-weight: 500; text-decoration: none;">Mande sua pergunta</a> que a gente responde.</p>
+      </div>
+    </div>
+    <dl class="lp-faq-grade">
+      <div class="lp-a"><dt>A IA define o prazo sozinha?</dt><dd>Não. A IA lê a intimação e sugere o tipo de prazo, e o motor de calendário conta os dias, mostrando os feriados e as suspensões que considerou. O prazo só vale depois que alguém da equipe confirma.</dd></div>
+      <div class="lp-a lp-a--2"><dt>De onde vêm as publicações?</dt><dd>Do DJEN, o Diário de Justiça Eletrônico Nacional. Nos dias úteis, às 04:30, o Decreta lê o caderno do tribunal e guarda o que é do escritório; às 12:40 e às 18:40, busca de novo pela OAB da equipe.</dd></div>
+      <div class="lp-a"><dt>Os dados dos meus clientes vão para a IA?</dt><dd>Só o necessário para cada tarefa, como o teor da intimação para o briefing. Nenhum provedor de IA usa o texto para treinar modelos, e o cliente que recusar fica de fora da IA.</dd></div>
+      <div class="lp-a lp-a--2"><dt>O meu tribunal está coberto?</dt><dd>O Decreta lê o que o tribunal publica no DJEN. O calendário de prazos é próprio em parte dos tribunais; nos outros, a conta usa os feriados nacionais e o recesso, e avisa. <a href="/cobertura">Veja a situação de cada tribunal.</a></dd></div>
+      <div class="lp-a"><dt>Como eu trago os meus processos?</dt><dd>Pelo número: digite o CNJ e o Decreta busca as partes, a classe e os andamentos no DataJud e no DJEN. Com a OAB cadastrada, as publicações dos últimos dias já entram na caixa. Ainda não há importação por planilha.</dd></div>
+      <div class="lp-a lp-a--2"><dt>Como eu cancelo?</dt><dd>Em Configurações, na aba Dados. Lá você prepara uma cópia de tudo e encerra o escritório, sem falar com ninguém. Os dados ficam guardados por 30 dias e depois são apagados de vez.</dd></div>
+    </dl>
+  </div>
+</section>
+
+    <!-- Chamada final -->
+    <section class="lp-fim" id="acesso" data-theme="escuro">
+  <canvas class="lp-ascii" aria-hidden="true"></canvas>
+  <div class="lp-wrap lp-fim__centro">
+    <h2 class="lp-h2 lp-a">Pronto para deixar o escritório em dia?</h2>
+    <p class="lp-texto lp-a">Crie a conta, cadastre as OABs da equipe e o Decreta começa a buscar as publicações.</p>
+    <div class="lp-fim__acoes lp-a">
+      <a class="dc-btn dc-btn--primaria lp-btn" href="/cadastro" data-evento="clicou_criar_conta">Criar conta<svg class="lp-seta" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+      <a class="lp-link" href="/demonstracao" data-evento="clicou_demonstracao">Ver um escritório de exemplo<svg class="lp-seta" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+    </div>
+    <ul class="lp-fim__motivos lp-a">
+      <li><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8"></path><path d="M10 19v-3.96 3.15"></path><path d="M7 19h5"></path><rect width="6" height="10" x="16" y="12" rx="2"></rect></svg>Nada para instalar</li>
+      <li><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"></path><path d="M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77Z"></path><path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-3-3c-1.69 0-3 1-3 3s1 2 1 3.5V13"></path></svg>As peças no seu timbre</li>
+      <li><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg>Feito para o DJEN, o DataJud e o CPC</li>
+    </ul>
+  </div>
+</section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="lp-rodape">
+    <div class="lp-wrap">
+      <div class="lp-rodape__grade">
+        <div class="lp-rodape__marca">
+          <a class="lp-marca" href="#inicio" aria-label="Decreta, início"><svg class="dc-logo" viewBox="0 0 482.68 93.72" aria-hidden="true" style="height: 20px;"><g fill="currentColor"><g transform="matrix(5.21 0 0 5.21 -20.83 -15.62)"><path d="M4 3H8V21H4Z"/><path d="M10 3H12A9 9 0 0 1 12 21H10Z"/></g><path transform="translate(127.88 82.36)" d="M4.1000000000000005 -26.700000000000003Q4.1000000000000005 -35.2 6.850000000000001 -41.5Q9.600000000000001 -47.800000000000004 14.600000000000001 -51.2Q19.6 -54.6 26.3 -54.6Q31.8 -54.6 36.050000000000004 -52.25Q40.300000000000004 -49.900000000000006 42.5 -45.800000000000004V-71.0H55.300000000000004V0.0H43.2L42.900000000000006 -7.9Q40.6 -3.6 36.2 -1.2Q31.8 1.2000000000000002 26.3 1.2000000000000002Q19.5 1.2000000000000002 14.5 -2.2Q9.5 -5.6000000000000005 6.800000000000001 -11.9Q4.1000000000000005 -18.2 4.1000000000000005 -26.700000000000003ZM42.5 -26.700000000000003Q42.5 -35.2 39.3 -39.7Q36.1 -44.2 30.1 -44.2Q24.200000000000003 -44.2 20.800000000000004 -39.5Q17.400000000000002 -34.800000000000004 17.400000000000002 -26.700000000000003Q17.400000000000002 -18.7 20.85 -13.95Q24.3 -9.200000000000001 30.1 -9.200000000000001Q36.0 -9.200000000000001 39.25 -13.75Q42.5 -18.3 42.5 -26.700000000000003ZM62.6 -26.700000000000003Q62.6 -35.0 65.8 -41.35Q69.0 -47.7 74.85 -51.150000000000006Q80.7 -54.6 88.5 -54.6Q96.1 -54.6 101.85 -51.2Q107.6 -47.800000000000004 110.75 -41.35Q113.9 -34.9 113.9 -26.0V-23.1H75.9Q76.3 -16.2 79.69999999999999 -12.6Q83.1 -9.0 88.9 -9.0Q93.1 -9.0 96.0 -10.95Q98.9 -12.9 100.0 -16.400000000000002L113.1 -15.600000000000001Q110.9 -7.800000000000001 104.45 -3.3000000000000003Q98.0 1.2000000000000002 88.8 1.2000000000000002Q80.9 1.2000000000000002 74.95 -2.25Q69.0 -5.7 65.8 -12.0Q62.6 -18.3 62.6 -26.700000000000003ZM88.5 -44.5Q83.3 -44.5 79.94999999999999 -41.2Q76.6 -37.9 75.9 -31.700000000000003H100.6Q100.2 -38.1 97.0 -41.3Q93.80000000000001 -44.5 88.5 -44.5ZM117.9 -26.700000000000003Q117.9 -35.0 121.15 -41.35Q124.4 -47.7 130.35000000000002 -51.150000000000006Q136.3 -54.6 144.20000000000002 -54.6Q154.5 -54.6 161.2 -49.25Q167.9 -43.900000000000006 169.10000000000002 -34.5L155.9 -33.800000000000004Q155.20000000000002 -38.800000000000004 152.05 -41.5Q148.9 -44.2 144.20000000000002 -44.2Q138.0 -44.2 134.60000000000002 -39.6Q131.20000000000002 -35.0 131.20000000000002 -26.700000000000003Q131.20000000000002 -18.400000000000002 134.60000000000002 -13.8Q138.0 -9.200000000000001 144.20000000000002 -9.200000000000001Q149.0 -9.200000000000001 152.10000000000002 -12.0Q155.20000000000002 -14.8 155.9 -20.3L169.10000000000002 -19.700000000000003Q168.0 -10.100000000000001 161.25 -4.450000000000001Q154.5 1.2000000000000002 144.20000000000002 1.2000000000000002Q136.3 1.2000000000000002 130.35000000000002 -2.25Q124.4 -5.7 121.15 -12.0Q117.9 -18.3 117.9 -26.700000000000003ZM175.0 -53.400000000000006H187.0L187.3 -43.1Q188.9 -48.400000000000006 192.05 -50.900000000000006Q195.2 -53.400000000000006 200.1 -53.400000000000006H205.0V-42.400000000000006H200.0Q193.8 -42.400000000000006 190.8 -39.650000000000006Q187.8 -36.9 187.8 -30.8V0.0H175.0ZM206.4 -26.700000000000003Q206.4 -35.0 209.60000000000002 -41.35Q212.8 -47.7 218.65 -51.150000000000006Q224.5 -54.6 232.3 -54.6Q239.9 -54.6 245.65 -51.2Q251.4 -47.800000000000004 254.55 -41.35Q257.70000000000005 -34.9 257.70000000000005 -26.0V-23.1H219.70000000000002Q220.10000000000002 -16.2 223.5 -12.6Q226.9 -9.0 232.70000000000002 -9.0Q236.9 -9.0 239.8 -10.95Q242.70000000000002 -12.9 243.8 -16.400000000000002L256.90000000000003 -15.600000000000001Q254.70000000000002 -7.800000000000001 248.25 -3.3000000000000003Q241.8 1.2000000000000002 232.60000000000002 1.2000000000000002Q224.70000000000002 1.2000000000000002 218.75 -2.25Q212.8 -5.7 209.60000000000002 -12.0Q206.4 -18.3 206.4 -26.700000000000003ZM232.3 -44.5Q227.10000000000002 -44.5 223.75 -41.2Q220.4 -37.9 219.70000000000002 -31.700000000000003H244.4Q244.0 -38.1 240.8 -41.3Q237.60000000000002 -44.5 232.3 -44.5ZM268.5 -15.3V-43.5H260.1V-53.400000000000006H268.5V-65.9H281.3V-53.400000000000006H295.40000000000003V-43.5H281.3V-16.5Q281.3 -12.8 282.85 -11.350000000000001Q284.40000000000003 -9.9 287.90000000000003 -9.9H295.40000000000003V0.0H284.0Q276.0 0.0 272.25 -3.7Q268.5 -7.4 268.5 -15.3ZM299.1 -13.4Q299.1 -20.200000000000003 303.35 -24.150000000000002Q307.6 -28.1 316.5 -29.8L334.2 -33.300000000000004Q334.2 -38.900000000000006 331.6 -41.800000000000004Q329.0 -44.7 324.0 -44.7Q314.9 -44.7 313.1 -36.4L300.0 -37.0Q301.6 -45.400000000000006 307.8 -50.0Q314.0 -54.6 324.0 -54.6Q335.3 -54.6 341.15 -48.85Q347.0 -43.1 347.0 -32.4V-13.0Q347.0 -10.9 347.7 -10.100000000000001Q348.4 -9.3 350.0 -9.3H351.7V0.0Q350.1 0.4 347.1 0.4Q342.4 0.4 339.54999999999995 -1.6Q336.7 -3.6 335.9 -8.3Q333.9 -4.0 329.04999999999995 -1.4Q324.2 1.2000000000000002 317.7 1.2000000000000002Q309.2 1.2000000000000002 304.15 -2.65Q299.1 -6.5 299.1 -13.4ZM334.2 -21.6V-24.6L320.4 -21.8Q316.2 -21.0 314.29999999999995 -19.200000000000003Q312.4 -17.400000000000002 312.4 -14.600000000000001Q312.4 -11.5 314.45 -9.8Q316.5 -8.1 320.3 -8.1Q326.6 -8.1 330.4 -11.8Q334.2 -15.5 334.2 -21.6Z"/></g></svg></a>
+          <p class="lp-rodape__sobre">Prazos, publicações e processos do escritório, com a IA lendo os autos. Feito no Brasil.</p>
+        </div>
+        <div>
+          <span class="lp-rodape__titulo">Produto</span>
+          <ul><li><a href="#prazos">Prazos</a></li><li><a href="#ia">IA</a></li><li><a href="#celular">Celular</a></li><li><a href="/demonstracao" data-evento="clicou_demonstracao">Escritório de exemplo</a></li></ul>
+        </div>
+        <div>
+          <span class="lp-rodape__titulo">Escritório</span>
+          <ul><li><a href="/cobertura">Cobertura por tribunal</a></li><li><a href="/seguranca">Segurança e LGPD</a></li><li><a href="/termos">Termos de Uso</a></li><li><a href="/privacidade">Privacidade</a></li><li><a href="#planos">Planos</a></li><li><a href="__CONTATO__" target="_blank" rel="noopener">Contato</a></li></ul>
+        </div>
+        <div>
+          <span class="lp-rodape__titulo">Acesso</span>
+          <ul><li><a href="/entrar">Entrar</a></li><li><a href="/cadastro" data-evento="clicou_criar_conta">Criar conta</a></li></ul>
+        </div>
+      </div>
+      <div class="lp-rodape__base"><span>© __ANO__ Decreta. Todos os direitos reservados.</span><span>Brasil · Português</span></div>
+    </div>
   </footer>
 </div>

@@ -1,222 +1,183 @@
-/* A landing do Decreta (landing.html), fora do app: os tokens de cor do produto, a Geist para os dados e a
-   Newsreader para os títulos, como numa publicação. A cara própria vem de três coisas: a conta aberta no topo,
-   a régua da esquerda com a pergunta de cada seção e as linhas finas de livro de registro. Prefixo lp-. */
+/* A landing do Decreta (landing.html), fora do app: os tokens e os componentes dc- do produto, em escala de página
+   de venda, e a Geist em tudo. Prefixo lp-. O app zera os estilos do navegador com o Tailwind; aqui é esta base, sem peso nenhum. */
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/newsreader/opsz.css";
-@import "@fontsource-variable/newsreader/wght-italic.css";
 
 .lp-corpo { margin: 0; background: #0b0b0f; }
 .lp-simbolos { position: absolute; }
-.lp {
-  --serifa: "Newsreader Variable", "Newsreader", Georgia, "Times New Roman", serif;
-  --alt-dia: 38px;
-  --vao-dia: 3px;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 26px;
-  color: var(--tinta);
-  background: var(--papel);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: clip;
-}
-.lp *, .lp *::before, .lp *::after { box-sizing: border-box; }
-.lp svg { flex: none; }
-.lp a { color: inherit; }
-.lp-wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+html:has(.lp-corpo) { scroll-behavior: smooth; scroll-padding-top: 80px; }
+:where(.lp, .lp *), :where(.lp *)::before, :where(.lp *)::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid; }
+:where(.lp) :where(h1, h2, h3, h4) { font-size: inherit; font-weight: inherit; }
+:where(.lp) :where(ol, ul) { list-style: none; }
+:where(.lp) :where(a) { color: inherit; text-decoration: inherit; }
+:where(.lp) :where(img, svg, canvas, picture) { display: block; }
+:where(.lp) :where(img) { max-width: 100%; height: auto; }
+:where(.lp) :where(button, input, select) { font: inherit; color: inherit; background: transparent; }
+:where(.lp) :where(b, strong) { font-weight: 600; }
+:where(.lp) :where(small) { font-size: inherit; }
 .lp :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; border-radius: 4px; }
 
+.lp { font-family: var(--font-sans); font-size: 15px; line-height: 24px; color: var(--tinta); background: var(--papel); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+.lp *, .lp *::before, .lp *::after { box-sizing: border-box; }
+.lp svg { flex: none; }
+.lp-wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
 /* ---------- Topo ---------- */
-.lp-topo { position: sticky; top: 0; z-index: 50; background: rgba(11, 11, 15, 0.94); -webkit-backdrop-filter: saturate(1.3) blur(12px); backdrop-filter: saturate(1.3) blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.07); color: var(--tinta); }
-.lp-topo__linha { display: flex; align-items: center; gap: 40px; height: 56px; }
-.lp-marca { display: inline-flex; color: var(--tinta); }
-.lp-logo { display: block; width: 104px; height: 20px; color: inherit; }
+.lp-topo { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--menu) 86%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid color-mix(in srgb, var(--borda) 80%, transparent); }
+.lp-topo[data-theme="escuro"] { background: rgba(11, 11, 15, 0.92); border-bottom-color: rgba(255, 255, 255, 0.07); }
+.lp-topo__linha { display: flex; align-items: center; gap: 40px; height: 64px; }
+.lp-marca { display: inline-flex; align-items: center; color: var(--tinta); text-decoration: none; }
+.lp-marca .dc-logo { height: 22px; color: var(--tinta); }
 .lp-nav { display: flex; align-items: center; gap: 28px; }
-.lp .lp-nav a { font-size: 14px; line-height: 20px; color: var(--tinta-2); text-decoration: none; transition: color .15s; }
+.lp .lp-nav a { font: 500 14px/20px var(--font-sans); color: var(--tinta-2); text-decoration: none; transition: color .15s; }
 .lp .lp-nav a:hover { color: var(--tinta); }
-.lp-topo__acoes { display: flex; align-items: center; gap: 16px; margin-left: auto; }
-.lp .lp-topo__entrar { font-size: 14px; line-height: 20px; color: var(--tinta-2); text-decoration: none; }
-.lp .lp-topo__entrar:hover { color: var(--tinta); }
+.lp-topo__acoes { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.lp .lp-topo__entrar { color: var(--tinta); }
 
-/* ---------- Botões ---------- */
-.lp .lp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 46px; padding: 0 20px; border: 1px solid transparent; border-radius: 8px; font: 500 15px/20px var(--font-sans); text-decoration: none; white-space: nowrap; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; }
-.lp .lp-btn--sm { height: 34px; padding: 0 12px; border-radius: 6px; font-size: 14px; }
-.lp .lp-btn--principal { background: var(--primaria); color: var(--on-primaria); }
-.lp .lp-btn--principal:hover { background: var(--primaria-hover); }
-.lp .lp-btn--contorno { border-color: var(--borda-forte); color: var(--tinta); }
-.lp .lp-btn--contorno:hover { border-color: var(--tinta-3); background: var(--superficie-2); }
-.lp .lp-btn--escuro { background: var(--primaria); color: var(--on-primaria); }
-.lp .lp-btn--escuro:hover { background: var(--primaria-hover); }
-.lp-seta { width: 16px; height: 16px; transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
-.lp a:hover > .lp-seta { transform: translateX(3px); }
-.lp .lp-link { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: var(--tinta); text-decoration: underline; text-decoration-color: var(--borda-forte); text-underline-offset: 4px; transition: text-decoration-color .15s; }
-.lp .lp-link:hover { text-decoration-color: currentColor; }
-
-/* ---------- Tipo ---------- */
-.lp-h1 { margin: 0; font: 400 clamp(46px, 5.5vw, 84px)/0.98 var(--serifa); font-optical-sizing: auto; letter-spacing: -0.022em; color: var(--tinta); text-wrap: balance; }
-.lp-lead { margin: 24px 0 0; max-width: 34em; font-size: 18px; line-height: 28px; color: var(--tinta-2); text-wrap: pretty; }
-.lp-h2 { margin: 0; font: 400 clamp(32px, 3.4vw, 48px)/1.06 var(--serifa); font-optical-sizing: auto; letter-spacing: -0.018em; color: var(--tinta); text-wrap: balance; }
-.lp-texto { margin: 0; font-size: 17px; line-height: 27px; color: var(--tinta-2); text-wrap: pretty; }
-.lp-nota { margin: 0; font-size: 14px; line-height: 21px; color: var(--tinta-3); text-wrap: pretty; }
-.lp-rotulo { margin: 0; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.02em; color: var(--tinta-3); }
+/* Botões grandes da landing, por cima de dc-btn */
+.lp .lp-btn { height: 44px; padding: 0 20px; gap: 8px; border-radius: 8px; font-size: 15px; }
+.lp .lp-btn svg { width: 16px; height: 16px; transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
+.lp .lp-btn:hover svg.lp-seta { transform: translateX(3px); }
+.lp .lp-btn--sm { height: 36px; padding: 0 14px; font-size: 14px; border-radius: var(--radius-md); }
 
 /* ---------- Hero ---------- */
-.lp-hero { position: relative; isolation: isolate; overflow: clip; margin-top: -57px; padding: 104px 0 64px; background: #0b0b0f; color: var(--tinta); }
+/* O hero é escuro (tokens do tema escuro), com o fundo em ASCII de termos e artigos de lei
+   (componentes/fundo-ascii.tsx). A tela do produto fica no tema claro por cima. */
+.lp-hero { position: relative; isolation: isolate; margin-top: -65px; padding: 153px 0 96px; background: #0b0b0f; }
 .lp-ascii { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; pointer-events: none; }
-.lp-hero__grade { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
-/* Atrás do título, o fundo em ASCII quase some: o título é o que se lê primeiro. */
-.lp-hero__texto { position: relative; }
-.lp-hero__texto::before { content: ""; position: absolute; inset: -48px -64px; z-index: -1; background: radial-gradient(62% 62% at 42% 50%, rgba(11, 11, 15, 0.92) 45%, rgba(11, 11, 15, 0) 100%); pointer-events: none; }
-.lp-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-.lp-hero__nota { margin: 14px 0 0; font-size: 14px; line-height: 20px; color: var(--tinta-3); }
+.lp-hero__texto { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.lp .lp-novo { white-space: nowrap; display: inline-flex; align-items: center; gap: 10px; height: 32px; padding: 0 12px 0 6px; border: 1px solid var(--borda); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--superficie) 85%, transparent); box-shadow: var(--sombra-leve); font: 500 13px/18px var(--font-sans); color: var(--tinta-2); text-decoration: none; transition: border-color .15s; }
+.lp .lp-novo:hover { border-color: var(--borda-forte); }
+.lp-novo strong { font-weight: 500; color: var(--tinta); }
+.lp-novo__div { width: 1px; height: 14px; background: var(--borda); }
+.lp-novo svg { width: 14px; height: 14px; color: var(--tinta-3); }
+.lp-h1 { margin: 24px 0 0; font: 600 68px/1.02 var(--font-sans); letter-spacing: -0.045em; color: var(--tinta); text-wrap: balance; }
+.lp-h1__2 { color: var(--tinta-3); }
+.lp-lead { margin: 24px 0 0; max-width: 660px; font: 400 18px/29px var(--font-sans); color: var(--tinta-2); text-wrap: pretty; }
+.lp-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 32px; }
+.lp-checks { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; margin: 20px 0 0; padding: 0; list-style: none; font: 400 14px/20px var(--font-sans); color: var(--tinta-2); }
+.lp-checks li { display: inline-flex; align-items: center; gap: 6px; }
+.lp-checks svg { width: 15px; height: 15px; color: var(--tinta); stroke-width: 2.5; }
 
-/* ---------- A conta aberta: uma folha de papel sobre o fundo escuro ---------- */
-.lp-conta { position: relative; padding: 18px 20px 16px; border-radius: 12px; background: var(--superficie); color: var(--tinta); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 48px 120px -48px rgba(0, 0, 0, 0.95); }
-.lp-conta__cab { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; padding-bottom: 12px; border-bottom: 1px solid var(--borda); }
-.lp-conta__cab strong { font: italic 400 21px/26px var(--serifa); }
-.lp-conta__cab span { font-size: 13px; line-height: 18px; color: var(--tinta-3); }
-.lp-conta__campos { display: grid; grid-template-columns: 150px 72px auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px 0; margin: 0; border-bottom: 1px solid var(--borda); }
-.lp-campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin: 0; padding: 0; border: 0; }
-.lp-campo legend { float: left; width: 100%; }
-.lp-campo legend + * { clear: both; }
-.lp-campo > span, .lp-campo legend { padding: 0; font-size: 12px; line-height: 16px; font-weight: 500; color: var(--tinta-3); }
-.lp-campo input, .lp-campo select { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--borda-forte); border-radius: 6px; background: var(--superficie); color: var(--tinta); font: 500 14px/20px var(--font-sans); font-variant-numeric: tabular-nums; transition: border-color .15s, box-shadow .15s; }
-.lp-campo select { padding-right: 4px; text-overflow: ellipsis; }
-.lp-campo input:hover, .lp-campo select:hover { border-color: var(--tinta-3); }
-.lp-campo input:focus-visible, .lp-campo select:focus-visible { outline: none; border-color: var(--foco); box-shadow: 0 0 0 3px var(--anel); border-radius: 6px; }
-.lp-chave { display: flex; height: 36px; padding: 2px; border-radius: 6px; background: var(--superficie-2); }
-.lp-chave label { position: relative; display: block; cursor: pointer; }
-.lp-chave input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.lp-chave span { display: block; padding: 0 10px; border-radius: 4px; font-size: 13px; line-height: 32px; font-weight: 500; color: var(--tinta-3); white-space: nowrap; transition: background-color .15s, color .15s; }
-.lp-chave input:checked + span { background: var(--superficie); color: var(--tinta); box-shadow: 0 1px 2px rgba(29, 29, 32, 0.12); }
-.lp-chave input:focus-visible + span { outline: 2px solid var(--foco); outline-offset: 1px; }
-.lp-conta__invalida { display: none; margin: 8px 0 0; font-size: 13px; line-height: 18px; color: var(--vencido); }
-.lp-conta.is-invalida .lp-conta__invalida { display: block; }
-.lp-conta__meio { display: grid; grid-template-columns: minmax(0, 1fr) 176px; gap: 20px; padding: 14px 0 12px; }
-.lp-conta__apoio { margin: 10px 0 0; font-size: 12px; line-height: 17px; color: var(--tinta-3); text-wrap: pretty; }
-.lp-conta__aviso { margin: 10px 0 0; padding: 8px 10px; border-radius: 6px; background: var(--hoje-suave); font-size: 13px; line-height: 18px; color: var(--hoje); text-wrap: pretty; }
+/* Vitrine do hero: imagem da tela de prazo e briefing (computador) ou do celular (telas menores).
+   A do computador tem 32px de cada lado para os cartões que saem da janela. */
+.lp-vitrine { display: block; position: relative; margin: 64px auto 0; perspective: 1800px; }
+.lp-vitrine__img { display: block; width: calc(100% + 64px); max-width: none; height: auto; margin: 0 -32px; transform-origin: 50% 0; }
 
-/* O calendário: semanas seguidas, da semana da publicação à do vencimento */
-.lp-cal { min-width: 0; }
-.lp-cal__cab { display: grid; grid-template-columns: 26px repeat(7, minmax(0, 1fr)); gap: var(--vao-dia); margin-bottom: 4px; font-size: 11px; line-height: 14px; font-weight: 500; color: var(--tinta-3); text-align: center; }
-.lp-cal__janela { height: calc(var(--semanas) * (var(--alt-dia) + var(--vao-dia)) - var(--vao-dia)); overflow: hidden; }
-.lp-cal__grade { display: grid; grid-template-columns: 26px repeat(7, minmax(0, 1fr)); gap: var(--vao-dia); transform: translateY(calc(var(--topo, 0) * -1 * (var(--alt-dia) + var(--vao-dia)))); transition: transform .22s ease; }
-.lp-cal__mes { align-self: start; padding-top: 2px; font-size: 11px; line-height: 14px; font-weight: 500; color: var(--tinta-3); }
-.lp-dia { position: relative; display: block; height: var(--alt-dia); border-radius: 6px; font-variant-numeric: tabular-nums; color: var(--tinta-3); transition: background-color .16s ease, color .16s ease, box-shadow .16s ease; }
-.lp-dia b { position: absolute; left: 7px; top: 5px; font-size: 13px; line-height: 16px; font-weight: 500; }
-.lp-dia i { position: absolute; right: 6px; bottom: 3px; font-size: 10px; line-height: 12px; font-style: normal; font-weight: 600; color: var(--tinta-3); opacity: 0; transition: opacity .16s ease; }
-.lp-dia--fora { color: var(--borda-forte); }
-.lp-dia--contado.is-on { background: var(--superficie-2); color: var(--tinta); }
-.lp-dia--contado.is-on i { opacity: 1; }
-.lp-dia--fds.is-on { background: repeating-linear-gradient(135deg, transparent 0 3px, var(--superficie-2) 3px 5px); }
-.lp-dia--feriado.is-on { background: var(--hoje-suave); color: var(--hoje); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hoje) 30%, transparent); }
-.lp-dia--feriado.is-on b { text-decoration: line-through; }
-.lp-dia--suspenso.is-on { background: var(--breve-suave); color: var(--breve); }
-.lp-dia--suspenso.is-on b { text-decoration: line-through; }
-.lp-dia--publicada.is-on { color: var(--tinta); box-shadow: inset 0 0 0 1.5px var(--tinta); }
-.lp-dia--vence.is-on { background: var(--primaria); color: var(--on-primaria); }
-.lp-dia--vence.is-on i { color: var(--on-primaria); }
-.lp-cal__legenda { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 8px 0 0; font-size: 11px; line-height: 14px; color: var(--tinta-3); }
-.lp-marca { display: inline-flex; align-items: center; }
-.lp-marca::before { content: ""; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; }
-.lp-marca--contado::before { background: var(--superficie-2); box-shadow: inset 0 0 0 1px var(--borda); }
-.lp-marca--fds::before { background: repeating-linear-gradient(135deg, transparent 0 2px, var(--borda-forte) 2px 3px); }
-.lp-marca--feriado::before { background: var(--hoje-suave); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hoje) 40%, transparent); }
-.lp-marca--vence::before { background: var(--primaria); }
+/* Régua de fatos logo abaixo do hero */
 
-/* A razão: o que a conta usou, à direita do calendário */
-.lp-razao { display: flex; flex-direction: column; gap: 10px; margin: 0; min-width: 0; }
-.lp-razao dt { font-size: 11px; line-height: 14px; font-weight: 500; color: var(--tinta-3); }
-.lp-razao dd { margin: 2px 0 0; font-size: 13px; line-height: 18px; font-variant-numeric: tabular-nums; }
-.lp-razao dd strong { font-weight: 600; }
-.lp-razao small { display: block; font-size: 12px; line-height: 16px; color: var(--tinta-3); }
-.lp-razao ul { display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 0; list-style: none; }
-.lp-razao li { transition: opacity .2s ease, transform .2s ease; }
-.lp-razao li b { font-weight: 600; color: var(--hoje); }
-.lp-razao li[data-passo]:not(.is-on) { opacity: 0; transform: translateX(-6px); }
-.lp-razao__fds { color: var(--tinta-3); }
+/* Ícone em caixa, o mesmo em toda a página */
 
-/* O resultado: enquanto conta, o contador; no fim, a data */
-.lp-res { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--borda); }
-.lp-res__contando, .lp-res__final { grid-area: 1 / 1; margin: 0; }
-.lp-res__contando { display: none; font: 400 30px/36px var(--serifa); color: var(--tinta-2); font-variant-numeric: tabular-nums; }
-.lp-res__contando b { font-weight: 500; color: var(--tinta); }
-.lp-res__final { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; transition: opacity .2s ease; }
-.lp-res__final span { font-size: 14px; line-height: 20px; color: var(--tinta-2); }
-.lp-res__final strong { font: 500 30px/36px var(--serifa); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -0.01em; }
-.lp-res__final small { font-size: 14px; line-height: 20px; color: var(--tinta-2); }
-.lp-conta.is-contando .lp-res__contando { display: block; }
-.lp-conta.is-contando .lp-res__final { visibility: hidden; }
-.lp-res__rever { padding: 6px 10px; border: 1px solid var(--borda); border-radius: 6px; background: none; font: 500 13px/18px var(--font-sans); color: var(--tinta-2); cursor: pointer; transition: border-color .15s, color .15s; }
-.lp-res__rever:hover { border-color: var(--tinta-3); color: var(--tinta); }
-.lp-res__nota { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: var(--tinta-2); }
+/* ---------- Seções ---------- */
+.lp-secao { padding: 120px 0; scroll-margin-top: 64px; }
+.lp-secao--linha { border-top: 1px solid var(--borda); }
+.lp-secao--faixa { background: var(--superficie); border-block: 1px solid var(--borda); }
+.lp-olho { display: inline-flex; align-items: center; gap: 8px; font: 500 14px/20px var(--font-sans); color: var(--acento); }
+.lp-h2 { margin: 0; font: 600 44px/1.08 var(--font-sans); letter-spacing: -0.038em; color: var(--tinta); text-wrap: balance; }
+.lp-texto { margin: 0; font: 400 17px/28px var(--font-sans); color: var(--tinta-2); text-wrap: pretty; }
+.lp .lp-link { display: inline-flex; align-items: center; gap: 6px; font: 500 15px/22px var(--font-sans); color: var(--acento); text-decoration: none; }
+.lp .lp-link:hover { color: var(--tinta); }
+.lp-link svg { width: 16px; height: 16px; transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
+.lp-link:hover svg { transform: translateX(3px); }
 
-/* ---------- Movimento ---------- */
-@keyframes lp-pulso { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primaria) 45%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
-@keyframes lp-entra { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: no-preference) {
-  .lp-h1, .lp-lead, .lp-hero__texto .lp-ctas, .lp-hero__nota, .lp-conta { animation: lp-entra .7s cubic-bezier(.22, 1, .36, 1) both; }
-  .lp-lead { animation-delay: .06s; }
-  .lp-hero__texto .lp-ctas { animation-delay: .12s; }
-  .lp-hero__nota { animation-delay: .18s; }
-  .lp-conta { animation-delay: .1s; }
-  .lp-dia--vence.is-on { animation: lp-pulso .7s ease-out; }
+/* Celular: aparelho com a tela Hoje e o resumo da manhã no WhatsApp */
+.lp-zap { position: absolute; right: 0; bottom: 56px; z-index: 3; width: 290px; padding: 12px; border: 1px solid var(--borda); border-radius: 16px; background: var(--superficie); box-shadow: 0 2px 6px rgba(27, 25, 45, 0.05), 0 30px 60px -30px rgba(27, 25, 45, 0.45); }
+.lp-zap__topo { display: flex; align-items: center; gap: 10px; padding: 0 2px 10px; }
+.lp-zap__avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--primaria); color: var(--on-primaria); }
+.lp-zap__avatar svg { width: 16px; height: 16px; }
+.lp-zap__nome { display: block; font: 600 14px/18px var(--font-sans); color: var(--tinta); }
+.lp-zap__app { display: flex; align-items: center; gap: 4px; font: 400 12px/16px var(--font-sans); color: var(--tinta-3); }
+.lp-zap__app svg { width: 12px; height: 12px; }
+.lp-zap__msg { padding: 10px 12px 8px; border-radius: 4px 14px 14px 14px; background: var(--superficie-2); font: 400 13.5px/20px var(--font-sans); color: var(--tinta); }
+.lp-zap__msg p { margin: 0 0 6px; }
+.lp-zap__msg ul { margin: 0 0 6px; padding-left: 16px; }
+.lp-zap__msg li { margin-bottom: 4px; }
+.lp-zap__msg a { font-weight: 500; text-decoration: none; }
+.lp-zap__hora { display: block; text-align: right; font: 400 11px/14px var(--font-sans); color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+
+/* Segurança: faixa escura (tokens do tema escuro) */
+.lp-escuro { background: var(--papel); color: var(--tinta); }
+
+/* Planos */
+.lp-plano__topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lp-plano__nome { margin: 0; font: 600 18px/24px var(--font-sans); color: var(--tinta); }
+.lp-preco { display: flex; align-items: baseline; gap: 6px; margin-top: 20px; color: var(--tinta-2); font: 500 16px/20px var(--font-sans); }
+.lp-preco strong { font: 600 44px/1 var(--font-sans); letter-spacing: -0.03em; color: var(--tinta); font-variant-numeric: tabular-nums; }
+
+/* Rodapé */
+.lp-rodape { padding: 56px 0 32px; border-top: 1px solid var(--borda); }
+.lp-rodape__grade { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); gap: 40px; }
+.lp-rodape__sobre { max-width: 300px; margin: 14px 0 0; font: 400 14px/22px var(--font-sans); color: var(--tinta-2); }
+.lp-rodape__titulo { display: block; font: 600 14px/20px var(--font-sans); color: var(--tinta); }
+.lp-rodape ul { display: grid; gap: 10px; margin: 14px 0 0; padding: 0; list-style: none; }
+.lp .lp-rodape ul a { font: 400 14px/20px var(--font-sans); color: var(--tinta-2); text-decoration: none; }
+.lp .lp-rodape ul a:hover { color: var(--tinta); }
+.lp-rodape__base { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--borda); font: 400 13px/18px var(--font-sans); color: var(--tinta-3); }
+
+/* ---------- Entrar: o mesmo fundo em ASCII do hero, com a marca no centro ---------- */
+/* Um campo só, invisível por cima das seis casas: colar, apagar e o código do SMS/app funcionam como num campo comum */
+/* ---------- Segurança e LGPD: a página aberta, em leitura corrida ---------- */
+@media (max-width: 760px) {
 }
-@media (prefers-reduced-motion: reduce) {
-  .lp *, .lp *::before, .lp *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+@media (max-width: 760px) {
 }
-.lp-corpo { scroll-behavior: smooth; }
-html:has(.lp-corpo) { scroll-behavior: smooth; scroll-padding-top: 72px; }
 
 /* ---------- Telas menores ---------- */
-@media (max-width: 1120px) {
-  .lp-hero__grade { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-  .lp-hero { padding-top: 96px; }
-  .lp-h1 { font-size: clamp(46px, 8vw, 72px); }
-  .lp-lead { max-width: 38em; }
+@media (max-width: 1279px) {
+  .lp-vitrine__img { width: 100%; margin: 0; }
+}
+@media (max-width: 1023px) {
+  .lp-vitrine__img { width: 300px; max-width: 100%; margin: 0 auto; }
+  .lp-rodape__grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lp-rodape__marca { grid-column: 1 / -1; }
 }
 @media (max-width: 900px) {
   .lp-nav { display: none; }
 }
-@media (max-width: 640px) {
-  .lp { --alt-dia: 42px; }
-  .lp-wrap { padding: 0 16px; }
-  .lp-topo { position: static; background: #0b0b0f; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .lp-hero { margin-top: 0; padding: 24px 0 32px; }
-  .lp-hero__grade { gap: 20px; }
-  .lp-h1 { font-size: 46px; line-height: 1; }
-  .lp-lead { margin-top: 14px; font-size: 17px; line-height: 25px; }
-  .lp-ctas { flex-direction: column; margin-top: 18px; }
-  .lp .lp-ctas .lp-btn { width: 100%; }
-  .lp-hero .lp-ctas .lp-btn--contorno { display: none; }
-  .lp-hero__nota { margin-top: 8px; text-align: center; }
-
-  /* No celular, a conta primeiro: o calendário e o resultado à vista, os campos logo abaixo. */
-  .lp-conta { display: flex; flex-direction: column; padding: 12px 12px 14px; }
-  .lp-conta__corpo, .lp-conta__meio { display: contents; }
-  .lp-conta__cab { order: 1; padding-bottom: 8px; }
-  .lp-cal { order: 2; padding-top: 10px; }
-  .lp-res { order: 3; margin-top: 10px; padding-top: 8px; }
-  .lp-res__nota { order: 4; }
-  .lp-conta__aviso { order: 4; }
-  .lp-conta__campos { order: 5; margin-top: 10px; padding: 10px 0; border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); }
-  .lp-conta__invalida { order: 6; }
-  .lp-razao { order: 7; margin-top: 12px; }
-  .lp-conta__apoio { order: 8; }
-  .lp-conta__campos { grid-template-columns: minmax(0, 1fr) 84px; }
-  .lp-campo--contagem, .lp-campo--tribunal { grid-column: 1 / -1; }
-  .lp-chave span { text-align: center; }
-  .lp-chave label { flex: 1; }
-  .lp-campo input, .lp-campo select { height: 44px; font-size: 16px; }
-  .lp-chave { height: 44px; }
-  .lp-chave span { line-height: 40px; font-size: 14px; }
-  .lp-conta__meio { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  .lp-razao { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; }
-  .lp-res__rever { min-height: 44px; }
-  .lp-res__final strong { font-size: 28px; }
-  .lp-res__contando { font-size: 24px; white-space: nowrap; }
+@media (max-width: 760px) {
+  .lp-wrap { padding: 0 20px; }
+  .lp-hero { padding-top: 113px; }
+  .lp-novo__div, .lp-novo__mais { display: none; }
+  .lp-h1 { margin-top: 20px; font-size: 38px; line-height: 1.06; letter-spacing: -0.04em; }
+  .lp-lead { font-size: 16.5px; line-height: 26px; }
+  .lp-ctas { flex-direction: column; align-self: stretch; }
+  .lp-ctas .dc-btn { width: 100%; }
+  .lp-checks { flex-direction: column; align-items: center; }
+  .lp-vitrine { margin-top: 48px; }
+  .lp-secao { padding: 80px 0; }
+  .lp-h2 { font-size: 32px; line-height: 1.12; letter-spacing: -0.032em; }
+  .lp-texto { font-size: 16px; line-height: 26px; }
+  .lp-zap { right: 0; bottom: 24px; width: 248px; }
+  .lp-rodape__grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
+  .lp-rodape ul a { display: inline-block; padding: 2px 0; }
 }
 
-/* Celular e tablet: sem vidro, que em parte dos Android deixa a página em branco. */
-@media (pointer: coarse) {
-  .lp-topo { -webkit-backdrop-filter: none; backdrop-filter: none; background: #0b0b0f; }
+/* ---------- Movimento ---------- */
+@keyframes lp-entra { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes lp-surge { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
+@keyframes lp-assenta { from { transform: rotateX(16deg) scale(0.94); } to { transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .lp-e { animation: lp-entra 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .lp-e--2 { animation-delay: 0.06s; }
+  .lp-e--3 { animation-delay: 0.12s; }
+  .lp-e--4 { animation-delay: 0.18s; }
+  .lp-e--5 { animation-delay: 0.24s; }
+  .lp-e--6 { animation-delay: 0.32s; }
+  /* Rolagem: cada bloco sobe e aparece ao entrar na tela; a tela do produto se assenta. */
+  @supports (animation-timeline: view()) {
+    .lp-a { animation: lp-surge linear both; animation-timeline: view(); animation-range: entry 0% entry 75%; }
+    .lp-a--2 { animation-range: entry 8% entry 83%; }
+    .lp-a--3 { animation-range: entry 16% entry 91%; }
+    .lp-a--4 { animation-range: entry 24% entry 99%; }
+    @media (min-width: 1024px) {
+      .lp-vitrine__img { animation: lp-assenta linear both; animation-timeline: view(); animation-range: entry 0% cover 42%; }
+    }
+  }
+}
+
+/* Celular e tablet: sem vidro no topo e sem animação na rolagem. Em parte dos Android o Chrome
+   não dá conta de desenhar o topo desfocado por cima da página, e ela fica em branco. */
+@media (pointer: coarse), (max-width: 760px) {
+  .lp-topo { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--menu); }
+  .lp-topo[data-theme="escuro"] { background: #0b0b0f; }
+  .lp-a, .lp-vitrine__img { animation: none; }
 }
