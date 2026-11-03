@@ -434,6 +434,25 @@ export async function cancelarAssinatura(deps: DepsDoPlano, organizationId: stri
   return { acessoAte };
 }
 
+/**
+ * O escritório encerrou: a assinatura do Decreta e o link de pagamento saem do Asaas, seja qual for a situação dele, para ninguém
+ * ser cobrado por um escritório fechado. Falhou: lança, e o id continua guardado para tentar de novo. Sem o Asaas neste servidor também lança,
+ * porque apagar o escritório depois disso perderia o único jeito de achar a assinatura.
+ */
+export async function cancelarAssinaturaDoEncerrado(deps: { db: Database; asaas: ClienteAsaas | null }, organizationId: string, agora = new Date()): Promise<void> {
+  const [o] = await deps.db.select({ assinatura: organization.asaasAssinaturaId, link: organization.asaasLinkId }).from(organization).where(eq(organization.id, organizationId));
+  if (!o?.assinatura && !o?.link) return;
+  if (!deps.asaas) throw new Error("o Asaas não está configurado neste servidor");
+  if (o.assinatura) {
+    await deps.asaas.cancelarAssinatura(o.assinatura);
+    await withTenant(deps.db, organizationId, (tx) => registrarCancelamento(tx, organizationId, agora));
+  }
+  if (o.link) {
+    await deps.asaas.removerLink(o.link);
+    await deps.db.update(organization).set({ asaasLinkId: null, asaasLinkUrl: null, asaasLinkValorCentavos: null }).where(eq(organization.id, organizationId));
+  }
+}
+
 /* ---------------- A tela do Plano ---------------- */
 
 export interface FaturaDaTela {
@@ -487,14 +506,14 @@ export async function planoDoEscritorio(deps: Pick<DepsDoPlano, "db" | "asaas" |
 /* ---------------- Avisos por e-mail ---------------- */
 
 const ASSUNTO: Record<TipoDeAvisoDaAssinatura, (escritorio: string, e: EstadoDaAssinatura) => string> = {
-  teste_3: (o, e) => `O teste do ${o} no Decreta termina em ${e.diasRestantesDoTeste} dias`,
-  teste_1: (o, e) => `O teste do ${o} no Decreta termina ${e.diasRestantesDoTeste === 0 ? "hoje" : "amanhã"}`,
-  teste_acabou: (o) => `O teste do ${o} acabou: o escritório está só para leitura`,
+  teste_3: (o, e) => `${o}: o teste no Decreta termina em ${e.diasRestantesDoTeste} dias`,
+  teste_1: (o, e) => `${o}: o teste no Decreta termina ${e.diasRestantesDoTeste === 0 ? "hoje" : "amanhã"}`,
+  teste_acabou: (o) => `${o}: o teste acabou, e o escritório está só para leitura`,
   atraso_1: (o) => `Fatura em atraso no Decreta (${o})`,
-  atraso_5: (o) => `O ${o} fica só para leitura em 2 dias`,
-  atraso_7: (o) => `O ${o} está só para leitura por falta de pagamento`,
-  atraso_13: (o) => `O acesso do ${o} será bloqueado em 2 dias`,
-  atraso_15: (o) => `O acesso do ${o} foi bloqueado por falta de pagamento`,
+  atraso_5: (o) => `${o}: o escritório fica só para leitura em 2 dias`,
+  atraso_7: (o) => `${o}: o escritório está só para leitura por falta de pagamento`,
+  atraso_13: (o) => `${o}: o acesso será bloqueado em 2 dias`,
+  atraso_15: (o) => `${o}: o acesso foi bloqueado por falta de pagamento`,
 };
 
 /**

@@ -92,7 +92,7 @@ const app = createApp({
   plataforma: rotasDaPlataforma({ db, auth, emails: plataformaEmails, log }),
   plataformaEmails,
   cobranca: { ...cobranca, token: env.ASAAS_WEBHOOK_TOKEN, nfse },
-  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao, mailer, cobrancaAtiva: env.COBRANCA_ATIVA }) }),
+  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao, mailer, cobrancaAtiva: env.COBRANCA_ATIVA, asaas }) }),
   log,
   reporter,
 });

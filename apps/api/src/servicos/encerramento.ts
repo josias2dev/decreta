@@ -5,6 +5,9 @@
  * hora: as sessões caem, ninguém entra, a captura e o WhatsApp param (cada lugar
  * confere `encerradoEm`). Trinta dias depois, uma rotina apaga o escritório, as
  * pessoas que só eram dele e todos os arquivos. Nada de outro escritório é tocado.
+ *
+ * A assinatura do Decreta no Asaas sai junto. Se o Asaas falhar, o escritório fecha assim mesmo, e a
+ * rotina que apaga tenta de novo: sem conseguir, não apaga, porque a linha do escritório é o único lugar com o id da assinatura.
  */
 import { invitation, member, organization, session, user, verification, type Database } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
@@ -12,6 +15,8 @@ import { and, eq, inArray, isNotNull, isNull, lte, ne } from "drizzle-orm";
 import { registrar } from "../auditoria.ts";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { registrarEvento, registrarEventoSemEscritorio } from "../eventos.ts";
+import type { ClienteAsaas } from "./asaas.ts";
+import { cancelarAssinaturaDoEncerrado } from "./cobranca.ts";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
@@ -65,6 +70,17 @@ export async function encerrarEscritorio(db: Database, q: PedidoDeEncerramento):
   return { apagarEm };
 }
 
+/** Cancela a assinatura ao encerrar. O Asaas fora do ar não trava quem encerra: a falha fica no log e no registro, e a rotina de apagar tenta de novo. */
+export async function cancelarAssinaturaAoEncerrar(deps: { db: Database; asaas: ClienteAsaas | null; log?: Log }, q: Pick<PedidoDeEncerramento, "organizationId" | "userId" | "nome" | "ip">): Promise<void> {
+  try {
+    await cancelarAssinaturaDoEncerrado(deps, q.organizationId);
+  } catch (err) {
+    const erro = err instanceof Error ? err.message : String(err);
+    deps.log?.("a assinatura do escritório encerrado não saiu do Asaas: a rotina de apagar tenta de novo", { organizationId: q.organizationId, error: erro });
+    await registrar(deps.db, { organizationId: q.organizationId, userId: q.userId, nome: q.nome, acao: "plano.cancelamento_pendente", detalhes: { erro }, ip: q.ip }, deps.log);
+  }
+}
+
 export interface EscritorioApagado {
   organizationId: string;
   arquivos: number;
@@ -84,7 +100,7 @@ export interface ResultadoDaLimpeza {
  * fica inteiro no banco e a próxima rodada tenta de novo; um escritório que falha
  * não impede os outros.
  */
-export async function apagarEscritoriosEncerrados(deps: { db: Database; arquivos: Armazenamento; log?: Log }, agora = new Date()): Promise<ResultadoDaLimpeza> {
+export async function apagarEscritoriosEncerrados(deps: { db: Database; arquivos: Armazenamento; log?: Log; asaas?: ClienteAsaas | null }, agora = new Date()): Promise<ResultadoDaLimpeza> {
   const limite = new Date(agora.getTime() - DIAS_ATE_APAGAR * DIA_MS);
   const devidos = await deps.db
     .select({ id: organization.id })
@@ -103,8 +119,10 @@ export async function apagarEscritoriosEncerrados(deps: { db: Database; arquivos
   return resultado;
 }
 
-async function apagarEscritorio(deps: { db: Database; arquivos: Armazenamento; log?: Log }, organizationId: string): Promise<EscritorioApagado> {
+async function apagarEscritorio(deps: { db: Database; arquivos: Armazenamento; log?: Log; asaas?: ClienteAsaas | null }, organizationId: string): Promise<EscritorioApagado> {
   const { db } = deps;
+  // A assinatura antes de tudo: apagada a linha, ninguém mais acha o id dela, e o Asaas continuaria cobrando.
+  await cancelarAssinaturaDoEncerrado({ db, asaas: deps.asaas ?? null }, organizationId);
   // Os arquivos primeiro: se falhar, nada do banco foi apagado, e a próxima rodada tenta de novo.
   const arquivos = await deps.arquivos.apagarPrefixo(`${organizationId}/`);
   const membros = (await db.select({ userId: member.userId }).from(member).where(eq(member.organizationId, organizationId))).map((m) => m.userId);

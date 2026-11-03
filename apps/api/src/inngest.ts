@@ -39,6 +39,7 @@ import { colunasDaAssinatura, estadoDoEscritorio, temAcessoTotal } from "./servi
 import { enviarAvisosDaAssinatura, reconciliarAssinaturas } from "./servicos/cobranca.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { WHATSAPP_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
+import type { ClienteAsaas } from "./servicos/asaas.ts";
 import { apagarEscritoriosEncerrados } from "./servicos/encerramento.ts";
 import { apagarExportacoesVencidas, marcarExportacaoFalhou, prepararExportacao } from "./servicos/exportacao.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
@@ -106,6 +107,8 @@ export interface DepsDasRotinas {
   mailer?: Mailer;
   /** Com a cobrança ligada, o escritório sem acesso total para de receber a captura, o WhatsApp e a IA, e os sócios recebem os avisos do plano. */
   cobrancaAtiva?: boolean;
+  /** O Asaas do Decreta: a rotina que apaga o escritório encerrado cancela a assinatura antes. */
+  asaas?: ClienteAsaas | null;
 }
 
 /**
@@ -486,7 +489,7 @@ export function createFunctions(deps: DepsDasRotinas) {
   const apagarEncerradosFn = inngest.createFunction(
     { id: "apagar-escritorios-encerrados", triggers: [{ cron: "TZ=America/Sao_Paulo 45 3 * * *" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "apagar-escritorios-encerrados" }) },
     async ({ step }) => {
-      const r = await step.run("apagar", () => apagarEscritoriosEncerrados({ db, arquivos: deps.arquivos, log }));
+      const r = await step.run("apagar", () => apagarEscritoriosEncerrados({ db, arquivos: deps.arquivos, log, asaas: deps.asaas ?? null }));
       if (r.falhas.length) throw new Error(`${r.falhas.length} escritório(s) encerrado(s) não foram apagados: ${r.falhas.map((f) => `${f.organizationId} (${f.erro})`).join("; ")}`);
       return { apagados: r.apagados.length };
     },

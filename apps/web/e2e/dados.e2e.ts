@@ -24,6 +24,20 @@ const abrirDados = async (page: import("@playwright/test").Page, api: ApiFalsa) 
   await page.getByRole("tab", { name: "Dados" }).click();
 };
 
+test("com a cobrança ligada, encerrar diz que a assinatura é cancelada junto", async ({ page }) => {
+  const eu = amostras.eu!.corpo;
+  await abrirDados(page, new ApiFalsa().responder("/eu", { ...eu, assinatura: { situacao: "ativo", acesso: "total", aviso: null } }).responder("/escritorio", escritorio).responder("/escritorio/exportacoes", { itens: [] }));
+  await page.getByRole("button", { name: "Encerrar o escritório…" }).click();
+  await expect(page.getByRole("dialog", { name: "Encerrar o escritório?" }).getByText("A assinatura do Decreta é cancelada junto: nada mais é cobrado.")).toBeVisible();
+});
+
+test("com a cobrança desligada, encerrar não fala de assinatura", async ({ page }) => {
+  await abrirDados(page, new ApiFalsa().responder("/escritorio", escritorio).responder("/escritorio/exportacoes", { itens: [] }));
+  await page.getByRole("button", { name: "Encerrar o escritório…" }).click();
+  await expect(page.getByRole("dialog", { name: "Encerrar o escritório?" })).toBeVisible();
+  await expect(page.getByText("A assinatura do Decreta")).toHaveCount(0);
+});
+
 test("levar os dados: o pedido vai em segundo plano, a tela espera e avisa quando a cópia fica pronta, com um botão por ZIP", async ({ page }) => {
   const api = new ApiFalsa().responder("/escritorio", escritorio).responder("/escritorio/exportacoes", { itens: [] });
   await abrirDados(page, api);

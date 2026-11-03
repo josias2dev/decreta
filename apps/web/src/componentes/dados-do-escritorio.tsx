@@ -11,6 +11,7 @@ import { Dialogo } from "@/componentes/dialogo";
 import { LINK_DO_CONTATO } from "@/componentes/pagina-legal";
 import { Botao, Campo, Carregando, Faixa, Painel } from "@/componentes/ui";
 import { API_URL, api, mensagemDoErro } from "@/lib/api";
+import { euQuery } from "@/lib/consultas";
 import { diaCompleto, diaCurto, diaDoInstante, hora, tamanho } from "@/lib/formato";
 import type { Exportacao } from "@/lib/tipos";
 
@@ -108,6 +109,7 @@ function Encerrar({ nome, demonstracao }: { nome: string; demonstracao: boolean 
   const [digitado, setDigitado] = useState("");
   const [apagarEm, setApagarEm] = useState<string | null>(null);
   const qc = useQueryClient();
+  const eu = useQuery(euQuery);
   const encerrar = useMutation({
     mutationFn: () => api<{ apagarEm: string }>("/escritorio/encerrar", { json: { confirmacao: digitado } }),
     onSuccess: (r) => setApagarEm(r.apagarEm),
@@ -155,6 +157,7 @@ function Encerrar({ nome, demonstracao }: { nome: string; demonstracao: boolean 
           <li>
             Em {DIAS_ATE_APAGAR} dias os dados são apagados de vez: clientes, processos, prazos, publicações, documentos e peças. Depois disso não há como recuperar.
           </li>
+          {eu.data?.assinatura && <li>A assinatura do Decreta é cancelada junto: nada mais é cobrado.</li>}
           <li>Quer levar os dados? Cancele e baixe a cópia antes, no painel Levar os dados do escritório. Depois de encerrar, não dá mais para entrar para baixar.</li>
           <li>
             Mudou de ideia dentro dos {DIAS_ATE_APAGAR} dias? Fale com o Decreta pelo WhatsApp{" "}

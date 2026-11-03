@@ -17,10 +17,93 @@ import { escritoriosAtivos } from "../src/inngest.ts";
 import { rotasDoMcp } from "../src/rotas/mcp.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { capturarCadernos, capturarDjen } from "../src/servicos/captura.ts";
+import { criarClienteAsaas } from "../src/servicos/asaas.ts";
 import { apagarEscritoriosEncerrados, DIAS_ATE_APAGAR, encerrarEscritorio } from "../src/servicos/encerramento.ts";
+import { CHAVE_DO_ASAAS } from "./asaas-falso.ts";
+import { montarApi, organizacao, porNaAssinatura } from "./cobranca-apoio.ts";
 
 const DIA_MS = 24 * 60 * 60 * 1000;
 const SENHA = "senha-bem-longa-123";
+
+describe.skipIf(!hasTestDatabase)("encerrar o escritório que assina o Decreta", () => {
+  let t: TestDatabase;
+  let m: ReturnType<typeof montarApi>;
+  const logs: { msg: string; extra?: Record<string, unknown> }[] = [];
+  const arquivos = armazenamentoEmMemoria();
+  const cliente = () => criarClienteAsaas({ apiKey: CHAVE_DO_ASAAS, ambiente: "sandbox", fetch: m.asaas.fetch });
+  const assinante = async (slug: string, campos: Record<string, string> = { asaas_assinatura_id: `sub_${slug}` }) => {
+    const { organizationId } = await m.novo({ nome: `Escritório ${slug}`, slug, email: `${slug}@exemplo.adv.br`, pessoa: slug });
+    await porNaAssinatura(t, organizationId, campos);
+    const cookie = await m.entrar(`${slug}@exemplo.adv.br`);
+    return { org: organizationId, nome: `Escritório ${slug}`, cookie };
+  };
+  const encerrar = (x: { nome: string; cookie: string }) => m.com(x.cookie, "/escritorio/encerrar", { json: { confirmacao: x.nome } });
+  const depoisDe30Dias = () => new Date(Date.now() + (DIAS_ATE_APAGAR + 1) * DIA_MS);
+
+  beforeAll(async () => {
+    t = await createTestDatabase();
+    m = montarApi(t, { ativa: true, log: (msg, extra) => void logs.push({ msg, extra }) });
+  });
+  afterAll(async () => {
+    await t?.drop();
+  });
+
+  test("encerrar cancela a assinatura e tira o link do ar", async () => {
+    const x = await assinante("cancela", { asaas_assinatura_id: "sub_cancela", asaas_link_id: "link_cancela" });
+    expect((await encerrar(x)).status).toBe(200);
+    expect(m.asaas.de("DELETE", "/subscriptions/sub_cancela")).toHaveLength(1);
+    expect(m.asaas.de("DELETE", "/paymentLinks/link_cancela")).toHaveLength(1);
+    const o = await organizacao(t, x.org);
+    expect(o.encerrado_em).not.toBeNull();
+    expect(o.asaas_assinatura_id).toBeNull();
+    expect(o.asaas_link_id).toBeNull();
+    expect(o.asaas_assinaturas_encerradas).toContain("sub_cancela");
+  });
+
+  test("quem não assina não chama o Asaas", async () => {
+    const x = await assinante("nao-assina", {});
+    const antes = m.asaas.chamadas.length;
+    expect((await encerrar(x)).status).toBe(200);
+    expect(m.asaas.chamadas.length).toBe(antes);
+  });
+
+  test("o Asaas fora do ar não trava o encerramento: a falha fica registrada, e a rotina tenta de novo antes de apagar", async () => {
+    const x = await assinante("asaas-fora");
+    m.asaas.falharNoCancelamento = true;
+    logs.length = 0;
+    const r = await encerrar(x);
+    expect(r.status).toBe(200);
+    const o = await organizacao(t, x.org);
+    expect(o.encerrado_em).not.toBeNull();
+    expect(o.asaas_assinatura_id).toBe("sub_asaas-fora");
+    expect(logs.find((l) => l.msg.includes("não saiu do Asaas"))?.extra).toMatchObject({ organizationId: x.org });
+    expect((await t.owner`select 1 from auditoria where organization_id = ${x.org} and acao = 'plano.cancelamento_pendente'`).length).toBe(1);
+
+    // A rotina chega ao dia de apagar com o Asaas ainda fora: não apaga, porque perderia o id da assinatura.
+    const presa = await apagarEscritoriosEncerrados({ db: t.db, arquivos, log: () => {}, asaas: cliente() }, depoisDe30Dias());
+    expect(presa.falhas.map((f) => f.organizationId)).toContain(x.org);
+    expect(await t.owner`select 1 from organization where id = ${x.org}`).toHaveLength(1);
+
+    // O Asaas voltou: a assinatura sai, e o escritório é apagado.
+    m.asaas.falharNoCancelamento = false;
+    const antes = m.asaas.de("DELETE", "/subscriptions/sub_asaas-fora").length;
+    const r2 = await apagarEscritoriosEncerrados({ db: t.db, arquivos, log: () => {}, asaas: cliente() }, depoisDe30Dias());
+    expect(r2.apagados.map((a) => a.organizationId)).toContain(x.org);
+    expect(m.asaas.de("DELETE", "/subscriptions/sub_asaas-fora").length).toBe(antes + 1);
+    expect(await t.owner`select 1 from organization where id = ${x.org}`).toHaveLength(0);
+  });
+
+  test("sem o Asaas no servidor, o escritório com assinatura não é apagado: o log e a rodada dizem por quê", async () => {
+    const x = await assinante("sem-asaas");
+    m.asaas.falharNoCancelamento = true;
+    await encerrar(x);
+    m.asaas.falharNoCancelamento = false;
+    const r = await apagarEscritoriosEncerrados({ db: t.db, arquivos, log: () => {} }, depoisDe30Dias());
+    expect(r.falhas.find((f) => f.organizationId === x.org)?.erro).toContain("não está configurado");
+    expect(await t.owner`select 1 from organization where id = ${x.org}`).toHaveLength(1);
+    await t.owner`update organization set asaas_assinatura_id = null where id = ${x.org}`;
+  });
+});
 
 describe.skipIf(!hasTestDatabase)("encerrar o escritório", () => {
   let t: TestDatabase;

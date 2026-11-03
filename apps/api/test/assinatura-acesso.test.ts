@@ -328,6 +328,8 @@ describe.skipIf(!hasTestDatabase)("acesso por situação", () => {
       expect(paraSocio("aviso-teste")).toHaveLength(1);
       const tres = paraSocio("aviso-teste")[0]!;
       expect(tres.subject).toContain("termina em 3 dias");
+      // O nome do escritório vai sem artigo: "O Casa da Nota" não concorda.
+      expect(tres.subject).toMatch(/^.+: o teste no Decreta termina em 3 dias$/);
       expect(tres.paragraphs.join(" ")).toContain(somarDias(HOJE, 3).split("-").reverse().join("/"));
       expect(tres.paragraphs.join(" ")).toContain("publicações do DJEN");
       expect(tres.action?.url).toBe("https://decreta.local/configuracoes?aba=plano");

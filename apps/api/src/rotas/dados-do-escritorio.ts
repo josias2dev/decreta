@@ -8,7 +8,7 @@ import { and, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
-import { encerrarEscritorio } from "../servicos/encerramento.ts";
+import { cancelarAssinaturaAoEncerrar, encerrarEscritorio } from "../servicos/encerramento.ts";
 import { marcarExportacaoFalhou } from "../servicos/exportacao.ts";
 import { corpo, ehSocio, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
@@ -98,7 +98,9 @@ export function rotasDosDadosDoEscritorio(app: Hono<Ambiente>, deps: DepsDasRota
     semDemonstracao(c, "encerrar o escritório");
     const b = await corpo(c, z.object({ confirmacao: z.string().max(200) }));
     if (comoSeEscreve(b.confirmacao) !== comoSeEscreve(c.get("orgNome"))) falha(422, "confirmacao_errada", "Digite o nome do escritório, como está na tela, para encerrar.");
-    const { apagarEm } = await encerrarEscritorio(deps.db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), ip: ip(c), log: deps.log });
+    const quem = { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), ip: ip(c) };
+    const { apagarEm } = await encerrarEscritorio(deps.db, { ...quem, log: deps.log });
+    await cancelarAssinaturaAoEncerrar({ db: deps.db, asaas: deps.cobranca?.asaas ?? null, log: deps.log }, quem);
     return c.json({ ok: true, apagarEm: apagarEm.toISOString() });
   });
 }
