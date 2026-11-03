@@ -2,6 +2,8 @@
 
 Plano de 02/11/2026, feito depois de ler os documentos 01 a 16 desta pasta, o [plano de execução de 31/10](../pesquisa/2026-10-31-plano-de-execucao.md), o código e o site no ar. Nenhum código foi alterado.
 
+**Situação em 03/11/2026:** as ondas 0 a 6 estão em produção, com a cobrança do plano desligada. A landing não segue as tabelas da onda 2: veja a revisão na seção dela. Ainda não foram testados contra os serviços reais: o modelo de IA nos textos que ele escreve, o Asaas, a ZapSign e o envio de e-mail, que está desligado em produção (`RESEND_API_KEY` vazia). Os itens "Depois" continuam dependendo de pilotos, e "Decisões que dependem de você" segue em aberto.
+
 **Como ler**
 
 - **Origem:** cada item separa o que vem dos documentos do que é proposta minha. Os números entre colchetes são os documentos desta pasta, como [06] para o Astrea. "Plano" é o plano de execução de 31/10.
