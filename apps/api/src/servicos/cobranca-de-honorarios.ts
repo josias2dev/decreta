@@ -250,9 +250,10 @@ export async function cancelarCobranca(deps: DepsDaCobranca, organizationId: str
       // O Asaas já não tem a cobrança: segue. Qualquer outro erro, a cobrança continua e a pessoa tenta de novo.
       if (!(err instanceof AsaasErro && err.status === 404)) falha(err instanceof AsaasErro && err.status !== 0 ? 422 : 504, "asaas_recusou", err instanceof AsaasErro ? err.message : "O Asaas não respondeu.");
     }
+  } else {
+    // Sem chave que abra não há como apagar lá: a parcela solta, e a cobrança segue valendo no Asaas. Que fique no log.
+    deps.log("a cobrança continua no Asaas: sem chave que abra para apagar", { organizationId, parcelaId, cobrancaId: parcela.cobrancaId });
   }
-  // Sem chave que abra não há como apagar lá: a parcela solta, e a cobrança segue valendo no Asaas. Que fique no log.
-  else deps.log("a cobrança continua no Asaas: sem chave que abra para apagar", { organizationId, parcelaId, cobrancaId: parcela.cobrancaId });
   await soltarCobranca(deps.db, organizationId, parcelaId);
 }
 
