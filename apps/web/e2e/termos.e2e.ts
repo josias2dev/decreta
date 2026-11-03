@@ -74,7 +74,7 @@ test("convite: a conta só se cria com o aceite, e a versão vai junto no pedido
   await page.getByLabel("Seu nome").fill("Rafael Lima");
   await page.getByLabel("Crie uma senha").fill("senha-bem-longa-123");
   await page.getByLabel("Repita a senha").fill("senha-bem-longa-123");
-  const criar = page.getByRole("button", { name: "Criar conta e entrar" });
+  const criar = page.getByRole("button", { name: "Criar conta" });
   await expect(criar).toBeDisabled();
   await page.getByLabel(/Li e aceito os Termos de Uso e a Política de Privacidade/).check();
   await expect(criar).toBeEnabled();

@@ -69,6 +69,7 @@ export function createRotas(deps: DepsDasRotas) {
     c.set("timezone", org?.timezone ?? "America/Sao_Paulo");
     c.set("userId", sessao.user.id);
     c.set("userEmail", sessao.user.email);
+    c.set("emailConfirmado", sessao.user.emailVerified);
     c.set("userNome", sessao.user.name || sessao.user.email);
     c.set("papel", papel);
     await next();
@@ -97,7 +98,7 @@ export function createRotas(deps: DepsDasRotas) {
       const financeiro = ehSocio(c.get("papel")) || !!perfil?.financeiro;
       const emAtraso = financeiro ? await contarParcelasEmAtraso(tx, hoje) : 0;
       return c.json({
-        usuario: { id: c.get("userId"), nome: c.get("userNome"), apelido: eu?.apelido ?? c.get("userNome"), iniciais: eu?.iniciais ?? "?", foto: eu?.foto ?? null, cargo: eu?.cargo ?? null, papel: c.get("papel"), financeiro },
+        usuario: { id: c.get("userId"), nome: c.get("userNome"), apelido: eu?.apelido ?? c.get("userNome"), iniciais: eu?.iniciais ?? "?", foto: eu?.foto ?? null, cargo: eu?.cargo ?? null, papel: c.get("papel"), financeiro, email: c.get("userEmail"), emailConfirmado: c.get("emailConfirmado") },
         // O logo do timbre aparece no menu; ele sai de GET /escritorio/logo.
         // `onboarding`: a configuração inicial ainda está pendente, e esta pessoa (sócia) pode fazê-la.
         escritorio: { id: c.get("orgId"), nome: c.get("orgNome"), pessoas: pessoas.size, timezone: c.get("timezone"), logo: !!esc?.timbre?.logoDocumentoId, demonstracao: c.get("demonstracao"), onboarding: !!esc && !esc.onboardingConcluidoEm && ehSocio(c.get("papel")) },

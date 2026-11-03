@@ -10,7 +10,7 @@ import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta
 import { armazenamentoEmMemoria } from "@decreta/documentos";
 import { createApp } from "../src/app.ts";
 import { createAuth } from "../src/auth.ts";
-import { createLogMailer } from "../src/email.ts";
+import { createLogMailer, type Email } from "../src/email.ts";
 import { readEnv } from "../src/env.ts";
 import { slugDoNome } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
@@ -49,6 +49,7 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
   let app: ReturnType<typeof createApp>;
   const enviados: string[] = [];
   const convites: string[] = [];
+  const emails: Email[] = [];
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });
   const beatriz = { nome: "Beatriz Souza", email: "Beatriz@Souza.adv.br", senha: "senha-bem-longa-123", escritorio: "Souza & Mendes Advocacia" };
 
@@ -62,7 +63,14 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
 
   beforeAll(async () => {
     t = await createTestDatabase();
-    const auth = createAuth(t.db, env, { mailer: { enabled: true, send: async (e) => void convites.push(e.to) } });
+    const auth = createAuth(t.db, env, { mailer: {
+        enabled: true,
+        send: async (e) => {
+          emails.push(e);
+          if (e.subject.startsWith("Convite")) convites.push(e.to);
+        },
+      },
+    });
     const wameow = {
       url: "http://wameow.local",
       token: "token-de-teste",
@@ -92,7 +100,9 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
     expect(eu.escritorio).toMatchObject({ nome: "Souza & Mendes Advocacia", pessoas: 1, onboarding: true });
 
     const [u] = await t.owner<{ email: string; email_verified: boolean }[]>`select email, email_verified from "user" where email = 'beatriz@souza.adv.br'`;
-    expect(u).toMatchObject({ email: "beatriz@souza.adv.br", email_verified: true });
+    // Quem se cadastra ainda não provou que o e-mail é dele: a conta funciona, e o e-mail fica por confirmar.
+    expect(u).toMatchObject({ email: "beatriz@souza.adv.br", email_verified: false });
+    expect(eu.usuario).toMatchObject({ email: "beatriz@souza.adv.br", emailConfirmado: false });
     const [esc] = await t.owner<{ tribunal: string; onboarding_concluido_em: Date | null }[]>`select tribunal, onboarding_concluido_em from escritorios where organization_id = ${corpo.escritorio.id}`;
     expect(esc).toMatchObject({ tribunal: "TJSC", onboarding_concluido_em: null });
     const registro = await t.owner<{ acao: string; detalhes: Record<string, unknown> }[]>`select acao, detalhes from auditoria where organization_id = ${corpo.escritorio.id} order by created_at`;
@@ -100,11 +110,153 @@ describe.skipIf(!hasTestDatabase)("cadastro aberto", () => {
     expect(registro[0]!.detalhes).toMatchObject({ escritorio: "Souza & Mendes Advocacia", slug: "souza-mendes-advocacia" });
   });
 
+  describe("confirmar o e-mail", () => {
+    const pessoa = (nome: string) => ({ nome: nome[0]!.toUpperCase() + nome.slice(1), email: `${nome}@exemplo.adv.br`, senha: "senha-bem-longa-123", escritorio: `Escritório de ${nome}` });
+    const linkPara = (email: string) => emails.findLast((e) => e.to === email && e.subject.startsWith("Confirme"))?.action?.url ?? "";
+    /** O link do e-mail aponta para a API; o caminho é o que importa aqui. */
+    const abrirLink = (url: string, cookie?: string) => {
+      const u = new URL(url);
+      return app.request(u.pathname + u.search, { headers: cookie ? { cookie } : {} });
+    };
+    const verificado = async (email: string) => (await t.owner<{ email_verified: boolean }[]>`select email_verified from "user" where email = ${email}`)[0]!.email_verified;
+    const pedir = (cookie: string, path: string, json?: unknown) => app.request(`/api/auth${path}`, { method: json === undefined ? "GET" : "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, cookie }, body: json === undefined ? undefined : JSON.stringify(json) });
+    /** Uma sócia de verdade, confirmada, que convida. */
+    const convidar = async (email: string) => {
+      const socia = await cadastrar(pessoa(`socia${convites.length}`), "203.0.113.40");
+      const dados = await json(socia);
+      await t.owner`update "user" set email_verified = true where email = ${`socia${convites.length}@exemplo.adv.br`}`;
+      const r = await pedir(cookieDe(socia), "/organization/invite-member", { email, role: "member" });
+      expect(r.status).toBe(200);
+      return { conviteId: (await json(r)).id as string, escritorio: dados.escritorio.id as string };
+    };
+    const membros = async (organizationId: string) => (await t.owner<{ n: number }[]>`select count(*)::int as n from member where organization_id = ${organizationId}`)[0]!.n;
+
+    test("o cadastro manda o e-mail de confirmação, e o link confirma e volta para as telas", async () => {
+      const r = await cadastrar(pessoa("carla"), "203.0.113.41");
+      expect(r.status).toBe(201);
+      const email = emails.findLast((e) => e.to === "carla@exemplo.adv.br")!;
+      expect(email.subject).toBe("Confirme o seu e-mail no Decreta");
+      expect(email.paragraphs.join(" ")).toContain("Se não foi você");
+      expect(email.action?.url).toContain("/api/auth/verify-email?token=");
+      const volta = await abrirLink(email.action!.url);
+      expect(volta.status).toBe(302);
+      expect(volta.headers.get("location")).toBe(`${env.WEB_ORIGIN}/hoje`);
+      expect(await verificado("carla@exemplo.adv.br")).toBe(true);
+      expect((await json(comSessao(cookieDe(r), "/eu"))).usuario.emailConfirmado).toBe(true);
+    });
+
+    test("sem confirmar, o uso normal segue: entra, configura e trabalha", async () => {
+      const r = await cadastrar(pessoa("ivo"), "203.0.113.42");
+      const cookie = cookieDe(r);
+      expect((await comSessao(cookie, "/clientes", { method: "POST", body: JSON.stringify({ nome: "Marina Duarte" }) })).status).toBe(201);
+      expect((await comSessao(cookie, "/escritorio/onboarding", { method: "POST" })).status).toBe(200);
+      const login = await app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email: "ivo@exemplo.adv.br", password: "senha-bem-longa-123" }) });
+      expect(login.status).toBe(200);
+    });
+
+    test("quem cadastrou o e-mail de outra pessoa não vê os convites dela nem entra na equipe", async () => {
+      const vitima = "vitima@exemplo.adv.br";
+      const intruso = await cadastrar({ ...pessoa("intruso"), email: vitima }, "203.0.113.43");
+      const cookie = cookieDe(intruso);
+      const { conviteId, escritorio } = await convidar(vitima);
+      const antes = await membros(escritorio);
+
+      expect((await pedir(cookie, "/organization/list-user-invitations")).status).toBe(403);
+      expect((await pedir(cookie, `/organization/get-invitation?id=${conviteId}`)).status).toBe(403);
+      const aceite = await pedir(cookie, "/organization/accept-invitation", { invitationId: conviteId });
+      expect(aceite.status).toBe(403);
+      expect((await json(aceite)).code).toBe("EMAIL_VERIFICATION_REQUIRED_BEFORE_ACCEPTING_OR_REJECTING_INVITATION");
+      expect(await membros(escritorio)).toBe(antes);
+    });
+
+    test("confirmado, o mesmo convite vale", async () => {
+      const r = await cadastrar(pessoa("lia"), "203.0.113.44");
+      const cookie = cookieDe(r);
+      const { conviteId, escritorio } = await convidar("lia@exemplo.adv.br");
+      await abrirLink(linkPara("lia@exemplo.adv.br"));
+      expect((await pedir(cookie, "/organization/list-user-invitations")).status).toBe(200);
+      expect((await pedir(cookie, "/organization/accept-invitation", { invitationId: conviteId })).status).toBe(200);
+      expect((await t.owner`select 1 from member m join "user" u on u.id = m.user_id where m.organization_id = ${escritorio} and u.email = 'lia@exemplo.adv.br'`).length).toBe(1);
+    });
+
+    test("quem chega pelo convite cria a conta, recebe o e-mail e só entra na equipe depois de confirmar", async () => {
+      const email = "novo@exemplo.adv.br";
+      const { conviteId, escritorio } = await convidar(email);
+      const antes = emails.length;
+      const r = await app.request("/api/auth/sign-up/email", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: env.WEB_ORIGIN },
+        body: JSON.stringify({ email, password: "senha-bem-longa-123", name: "Novo Lima", termosVersao: VERSAO_DOS_TERMOS, callbackURL: `${env.WEB_ORIGIN}/convite/${conviteId}` }),
+      });
+      expect(r.status).toBe(200);
+      const cookie = cookieDe(r);
+      expect(emails.length).toBe(antes + 1);
+      expect((await pedir(cookie, "/organization/accept-invitation", { invitationId: conviteId })).status).toBe(403);
+      const volta = await abrirLink(linkPara(email));
+      expect(volta.headers.get("location")).toBe(`${env.WEB_ORIGIN}/convite/${conviteId}`);
+      expect((await pedir(cookie, "/organization/accept-invitation", { invitationId: conviteId })).status).toBe(200);
+      expect((await t.owner`select 1 from member m join "user" u on u.id = m.user_id where m.organization_id = ${escritorio} and u.email = ${email}`).length).toBe(1);
+    });
+
+    test("dá para pedir o e-mail de novo; confirmado, não dá", async () => {
+      const r = await cadastrar(pessoa("rui"), "203.0.113.45");
+      const cookie = cookieDe(r);
+      const antes = emails.filter((e) => e.to === "rui@exemplo.adv.br").length;
+      expect((await pedir(cookie, "/send-verification-email", { email: "rui@exemplo.adv.br", callbackURL: `${env.WEB_ORIGIN}/hoje` })).status).toBe(200);
+      expect(emails.filter((e) => e.to === "rui@exemplo.adv.br").length).toBe(antes + 1);
+      await abrirLink(linkPara("rui@exemplo.adv.br"));
+      expect((await pedir(cookie, "/send-verification-email", { email: "rui@exemplo.adv.br" })).status).toBe(400);
+    });
+
+    test("o e-mail que não saiu não atrapalha o cadastro", async () => {
+      const falhando = createAuth(t.db, env, {
+        mailer: {
+          enabled: true,
+          send: async () => {
+            throw new Error("Resend fora do ar");
+          },
+        },
+      });
+      const outro = createApp({ db: t.db, env, auth: falhando, log: () => {} });
+      const r = await outro.request("/api/cadastro", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN, "x-forwarded-for": "203.0.113.46" }, body: JSON.stringify({ termos: VERSAO_DOS_TERMOS, ...pessoa("ana") }) });
+      expect(r.status).toBe(201);
+    });
+
+    test("o que a equipe cria pelo script continua confirmado, e a senha de quem já tinha conta é trocada", async () => {
+      const [dono] = await t.owner<{ email_verified: boolean }[]>`select email_verified from "user" where email = 'beatriz@souza.adv.br'`;
+      expect(dono!.email_verified).toBe(false);
+      const script = async (slug: string, email: string, senha: string) => {
+        const p = Bun.spawn([process.execPath, "apps/api/src/scripts/criar-escritorio.ts", "--nome", `Escritório ${slug}`, "--slug", slug, "--email", email, "--pessoa", "Pessoa da Equipe", "--senha", senha], {
+          env: { ...process.env, DATABASE_URL: t.appUrl, BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET, BETTER_AUTH_URL: env.BETTER_AUTH_URL, WEB_ORIGIN: env.WEB_ORIGIN },
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        const [saida, erro] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text()]);
+        expect(`${await p.exited} ${erro}`).toBe("0 ");
+        return saida;
+      };
+      const entrar = (email: string, password: string) => app.request("/api/auth/sign-in/email", { method: "POST", headers: { "content-type": "application/json", origin: env.WEB_ORIGIN }, body: JSON.stringify({ email, password }) });
+
+      expect(await script("feito-pela-equipe", "equipe@exemplo.adv.br", "senha-da-equipe-123")).not.toContain("já tinha conta");
+      expect(await verificado("equipe@exemplo.adv.br")).toBe(true);
+
+      // Alguém se cadastrou antes com o e-mail da pessoa: a senha dele não pode continuar valendo.
+      const intruso = await cadastrar({ ...pessoa("antes"), email: "dona@exemplo.adv.br", senha: "senha-do-intruso-123" }, "203.0.113.47");
+      const cookieDoIntruso = cookieDe(intruso);
+      const saida = await script("da-dona", "dona@exemplo.adv.br", "senha-entregue-pela-equipe");
+      expect(saida).toContain("já tinha conta");
+      expect((await entrar("dona@exemplo.adv.br", "senha-do-intruso-123")).status).toBe(401);
+      expect((await entrar("dona@exemplo.adv.br", "senha-entregue-pela-equipe")).status).toBe(200);
+      expect((await comSessao(cookieDoIntruso, "/eu")).status).toBe(401);
+      expect(await verificado("dona@exemplo.adv.br")).toBe(true);
+    }, 60_000);
+  });
+
   test("e-mail já cadastrado: 409 sem criar outro escritório", async () => {
     const r = await cadastrar({ ...beatriz, email: "BEATRIZ@souza.adv.br", escritorio: "Outro Escritório" });
     expect(r.status).toBe(409);
     expect(await r.json()).toEqual({ erro: "email_em_uso", detalhe: "Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova." });
-    expect((await t.owner<{ n: number }[]>`select count(*)::int as n from organization`)[0]!.n).toBe(1);
+    expect((await t.owner<{ n: number }[]>`select count(*)::int as n from organization where slug like 'outro%'`)[0]!.n).toBe(0);
   });
 
   test("mesmo nome de escritório: o endereço ganha um sufixo", async () => {

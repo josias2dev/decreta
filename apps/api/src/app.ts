@@ -208,7 +208,7 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
   if (!r.success) return c.json({ erro: "dados_invalidos", detalhe: r.error.issues.map((i) => i.message).join(" ") }, 400);
   const b = r.data;
   const [jaTem] = await db.select({ id: user.id }).from(user).where(eq(user.email, b.email));
-  // O e-mail de um operador da plataforma não abre conta pelo cadastro aberto (que não confirma o e-mail): a conta dele é criada pela equipe.
+  // O e-mail de um operador da plataforma não abre conta pelo cadastro aberto (a conta nasce antes de o e-mail ser confirmado): a conta dele é criada pela equipe.
   if (jaTem || cobranca.operadores.has(b.email)) return c.json({ erro: "email_em_uso", detalhe: "Já existe uma conta com este e-mail. Entre com ela ou peça uma senha nova." }, 409);
 
   const slug = await slugUnico(db, b.escritorio);
@@ -217,6 +217,8 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
   const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, assinatura, dono: { email: b.email, nome: b.nome, senha: b.senha, termosVersao: b.termos } });
   await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug, termos: b.termos }, ip: ipDoPedido(c) }, log);
   await registrarEvento(db, "cadastro_concluido", organizationId, log);
+  // A conta já funciona; falta provar que o e-mail é da pessoa. Se o envio falhar, o cadastro segue e ela pede de novo pelo aviso do Hoje.
+  await auth.api.sendVerificationEmail({ body: { email: b.email, callbackURL: `${env.WEB_ORIGIN.replace(/\/$/, "")}/hoje` }, headers: new Headers() }).catch((err: unknown) => log("cadastro: o e-mail de confirmação não saiu", { organizationId, error: err instanceof Error ? err.message : String(err) }));
 
   // A sessão abre pelo mesmo caminho do login (com o registro de "entrou"): o cookie vai na resposta.
   const headers = new Headers({ "content-type": "application/json" });

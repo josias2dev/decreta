@@ -15,7 +15,7 @@ export type Contagem = "uteis" | "corridos";
 
 export interface Eu {
   /** `financeiro`: a pessoa vê o Financeiro (os sócios, e quem eles liberaram na Equipe). */
-  usuario: Pessoa & { cargo: string | null; papel: string; financeiro?: boolean };
+  usuario: Pessoa & { cargo: string | null; papel: string; financeiro?: boolean; email?: string; emailConfirmado?: boolean };
   /** `onboarding`: a configuração inicial (/comecar) ainda está pendente e esta pessoa, sócia, pode fazê-la. */
   escritorio: { id: string; nome: string; pessoas: number; timezone: string; logo?: boolean; demonstracao?: boolean; onboarding?: boolean };
   hoje: string;

@@ -6,6 +6,76 @@ import { abrir, amostras, ApiFalsa, sobraNaLateral } from "./apoio";
 const euPendente = { ...amostras.eu!.corpo, escritorio: { ...amostras.eu!.corpo.escritorio, nome: "Souza & Mendes Advocacia", pessoas: 1, onboarding: true } };
 const escritorioNovo = { ...amostras.escritorio!.corpo, nome: "Souza & Mendes Advocacia", timbre: null, whatsappOficial: null, tribunal: "TJSC", capturaDjen: true, avisos: { manha: true, hora: "07:30" } };
 
+test.describe("confirmar o e-mail", () => {
+  const eu = amostras.eu!.corpo;
+
+  test("no Hoje, um aviso discreto com o pedido de reenviar; não trava nada", async ({ page }) => {
+    const api = new ApiFalsa().responder("/eu", { ...eu, usuario: { ...eu.usuario, email: "beatriz@souza.adv.br", emailConfirmado: false } });
+    await abrir(page, "/hoje", api);
+    const aviso = page.locator(".dc-faixa", { hasText: "Confirme o seu e-mail" });
+    await expect(aviso).toContainText("beatriz@souza.adv.br");
+    await expect(page.getByRole("heading").first()).toBeVisible();
+    await aviso.getByRole("button", { name: "Reenviar o e-mail" }).click();
+    await expect.poll(() => api.pedidos.find((p) => p.caminho === "/send-verification-email")?.corpo).toMatchObject({ email: "beatriz@souza.adv.br", callbackURL: expect.stringMatching(/\/hoje$/) });
+    await expect(page.getByText("Enviamos o e-mail de novo.")).toBeVisible();
+  });
+
+  test("confirmado, nem aviso", async ({ page }) => {
+    await abrir(page, "/hoje", new ApiFalsa().responder("/eu", { ...eu, usuario: { ...eu.usuario, email: "beatriz@souza.adv.br", emailConfirmado: true } }));
+    await expect(page.getByRole("heading").first()).toBeVisible();
+    await expect(page.getByText("Confirme o seu e-mail")).toHaveCount(0);
+  });
+
+  test("em /comecar não aparece nada: o primeiro minuto segue igual", async ({ page }) => {
+    await abrir(page, "/comecar", new ApiFalsa().responder("/eu", { ...eu, usuario: { ...eu.usuario, email: "beatriz@souza.adv.br", emailConfirmado: false }, escritorio: { ...eu.escritorio, onboarding: true } }));
+    await expect(page.getByRole("heading").first()).toBeVisible();
+    await expect(page.getByText("Confirme o seu e-mail")).toHaveCount(0);
+  });
+
+  const CONVITE = "c0a80123-0000-4000-8000-000000000001";
+  const noConvite = async (page: import("@playwright/test").Page, verificado: boolean) => {
+    const api = new ApiFalsa();
+    await api.ligar(page);
+    await page.route("**/api/convites/*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ email: "rafael@souza.adv.br", papel: "member", status: "pending", escritorio: "Souza & Mendes Advocacia" }) }));
+    await page.route("**/api/auth/get-session", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ session: { id: "s", userId: "u" }, user: { id: "u", name: "Rafael", email: "rafael@souza.adv.br", emailVerified: verificado } }) }));
+    await page.goto(`/convite/${CONVITE}`);
+    return api;
+  };
+
+  test("convite com o e-mail por confirmar: diz o que falta, reenvia, e não oferece entrar na equipe", async ({ page }) => {
+    const api = await noConvite(page, false);
+    await expect(page.getByText("Falta confirmar que este e-mail é seu.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Entrar na equipe" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Reenviar o e-mail" }).click();
+    await expect.poll(() => api.pedidos.find((p) => p.caminho === "/send-verification-email")?.corpo).toMatchObject({ email: "rafael@souza.adv.br", callbackURL: expect.stringContaining(`/convite/${CONVITE}`) });
+    await expect(page.getByText("Enviamos o e-mail de novo.")).toBeVisible();
+    expect(api.pedidos.filter((p) => p.caminho === "/organization/accept-invitation")).toHaveLength(0);
+  });
+
+  test("convite com o e-mail confirmado: entra na equipe como antes", async ({ page }) => {
+    const api = await noConvite(page, true);
+    await page.getByRole("button", { name: "Entrar na equipe" }).click();
+    await expect.poll(() => api.pedidos.filter((p) => p.caminho === "/organization/accept-invitation").length).toBe(1);
+  });
+
+  test("criar a conta pelo convite manda voltar para o convite depois de confirmar", async ({ page }) => {
+    const api = new ApiFalsa();
+    api.logado = false;
+    await api.ligar(page);
+    await page.route("**/api/convites/*", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ email: "rafael@souza.adv.br", papel: "member", status: "pending", escritorio: "Souza & Mendes Advocacia" }) }));
+    await page.goto(`/convite/${CONVITE}`);
+    await page.getByLabel("Seu nome").fill("Rafael Lima");
+    await page.getByLabel("Crie uma senha").fill("senha-bem-longa-123");
+    await page.getByLabel("Repita a senha").fill("senha-bem-longa-123");
+    await page.getByLabel(/Li e aceito os Termos de Uso/).check();
+    await page.route("**/api/auth/get-session", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ session: { id: "s", userId: "u" }, user: { id: "u", name: "Rafael", email: "rafael@souza.adv.br", emailVerified: false } }) }));
+    await page.getByRole("button", { name: "Criar conta" }).click();
+    await expect(page.getByText("Falta confirmar que este e-mail é seu.")).toBeVisible();
+    expect(api.pedidos.find((p) => p.caminho === "/sign-up/email")!.corpo).toMatchObject({ callbackURL: expect.stringContaining(`/convite/${CONVITE}`) });
+    expect(api.pedidos.filter((p) => p.caminho === "/organization/accept-invitation")).toHaveLength(0);
+  });
+});
+
 test("criar conta: os quatro campos, o pedido ao /api/cadastro e a chegada ao /comecar", async ({ page }) => {
   const api = new ApiFalsa();
   api.logado = false;

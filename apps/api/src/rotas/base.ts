@@ -32,6 +32,8 @@ export type Vars = {
   userNome: string;
   /** Para saber se a pessoa é operador da plataforma. */
   userEmail: string;
+  /** A pessoa confirmou que o e-mail é dela. Só o aceite de convite depende disso; a tela mostra um aviso discreto. */
+  emailConfirmado: boolean;
   papel: string;
   /** A IA da rota, medida em nome da pessoa. Só existe nas rotas com `comLimiteDaIa`. */
   ia?: Ia;

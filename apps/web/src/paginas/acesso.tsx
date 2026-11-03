@@ -1,4 +1,4 @@
-/** Aceitar convite (criando a conta, se for o caso) e redefinir a senha pelo link do e-mail. */
+/** Aceitar convite (criando a conta e confirmando o e-mail, se for o caso) e redefinir a senha pelo link do e-mail. */
 import { VERSAO_DOS_TERMOS } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
@@ -27,6 +27,7 @@ export function ConvitePage() {
   const sessao = useQuery({ queryKey: ["sessao"], queryFn: () => authCall(authClient.getSession()), retry: false });
   const [f, setF] = useState({ nome: "", senha: "", repetir: "" });
   const [aceito, setAceito] = useState(false);
+  const voltaParaOConvite = `${window.location.origin}/convite/${id}`;
 
   const aceitar = async () => {
     const r = await authCall(authClient.organization.acceptInvitation({ invitationId: id }));
@@ -39,10 +40,14 @@ export function ConvitePage() {
   const criarConta = useMutation({
     mutationFn: async () => {
       // `termosVersao`: o aceite dos Termos de Uso e da Política de Privacidade, que a API confere e grava com a data.
-      const pessoa = { email: convite.data!.email, password: f.senha, name: f.nome.trim(), termosVersao: VERSAO_DOS_TERMOS };
+      // `callbackURL`: o link do e-mail de confirmação volta para este convite.
+      const pessoa = { email: convite.data!.email, password: f.senha, name: f.nome.trim(), termosVersao: VERSAO_DOS_TERMOS, callbackURL: voltaParaOConvite };
       await authCall(authClient.signUp.email(pessoa));
-      await aceitar();
+      await sessao.refetch();
     },
+  });
+  const reenviar = useMutation({
+    mutationFn: () => authCall(authClient.sendVerificationEmail({ email: convite.data!.email, callbackURL: voltaParaOConvite })),
   });
   const sair = useMutation({
     mutationFn: () => authCall(authClient.signOut()),
@@ -85,6 +90,21 @@ export function ConvitePage() {
     </>
   );
 
+  if (logado && logado.email.toLowerCase() === c.email.toLowerCase() && !logado.emailVerified) {
+    return (
+      <CaixaDeEntrada titulo={titulo} sub={sub}>
+        <Faixa tipo="nota">Falta confirmar que este e-mail é seu. Enviamos um link para {c.email}: abra o link, e o convite volta aqui.</Faixa>
+        {reenviar.isSuccess && <Faixa tipo="ok">Enviamos o e-mail de novo. Veja também a caixa de spam.</Faixa>}
+        {reenviar.error && <Faixa tipo="erro">{reenviar.error.message}</Faixa>}
+        <Botao variante="primaria" bloco onClick={() => void sessao.refetch()} ocupado={sessao.isFetching}>
+          Já confirmei
+        </Botao>
+        <Botao bloco onClick={() => reenviar.mutate()} ocupado={reenviar.isPending}>
+          Reenviar o e-mail
+        </Botao>
+      </CaixaDeEntrada>
+    );
+  }
   if (logado && logado.email.toLowerCase() === c.email.toLowerCase()) {
     return (
       <CaixaDeEntrada titulo={titulo} sub={sub}>
@@ -140,7 +160,7 @@ export function ConvitePage() {
         <AceiteDosTermos marcado={aceito} aoMudar={setAceito} />
         {criarConta.error && <Faixa tipo="erro">{criarConta.error.message}</Faixa>}
         <Botao type="submit" variante="primaria" bloco ocupado={criarConta.isPending} disabled={f.nome.trim().length < 2 || f.senha.length < 10 || f.senha !== f.repetir || !aceito}>
-          Criar conta e entrar
+          Criar conta
         </Botao>
       </form>
     </CaixaDeEntrada>

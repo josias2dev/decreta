@@ -7,13 +7,16 @@
  *
  * Sem --senha, sai uma senha provisória na tela: a pessoa entra com ela, troca
  * em Minha conta e liga a verificação em duas etapas.
+ *
+ * Se o e-mail já tem conta, a senha dela vira a desta execução e as sessões abertas caem:
+ * sem isso, quem tivesse cadastrado antes o e-mail da pessoa ficaria com o escritório novo.
  */
 import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
 import { createDatabase } from "@decreta/db";
 import { createAuth } from "../auth.ts";
 import { readEnv } from "../env.ts";
-import { criarEscritorio } from "../escritorio-novo.ts";
+import { criarEscritorio, redefinirSeJaTemConta } from "../escritorio-novo.ts";
 
 const { values: a } = parseArgs({
   options: {
@@ -42,13 +45,16 @@ const env = readEnv();
 const { db, close } = createDatabase(env.DATABASE_URL, { max: 1 });
 try {
   const senha = a.senha ?? randomBytes(12).toString("base64url");
-  const r = await criarEscritorio(db, createAuth(db, env), {
+  const auth = createAuth(db, env);
+  const jaTinhaConta = await redefinirSeJaTemConta(db, auth, exigir(a.email, "email"), senha);
+  const r = await criarEscritorio(db, auth, {
     nome: exigir(a.nome, "nome"),
     slug,
     tribunal: a.tribunal,
     dono: { email: exigir(a.email, "email"), nome: exigir(a.pessoa, "pessoa"), senha, cargo: a.cargo, oabNumero: oab?.[1], oabUf: oab?.[2]?.toUpperCase() },
   });
   console.log(`Escritório criado (${r.organizationId}).`);
+  if (jaTinhaConta) console.log("Este e-mail já tinha conta: a senha foi trocada e as sessões abertas caíram. Avise a pessoa.");
   console.log(`Entre em ${env.WEB_ORIGIN.replace(/\/$/, "")}/entrar com ${a.email}${a.senha ? "" : ` e a senha provisória ${senha}`}.`);
   if (!a.senha) console.log("Troque a senha no primeiro acesso e ligue a verificação em duas etapas.");
 } finally {

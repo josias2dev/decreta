@@ -131,6 +131,8 @@ describe.skipIf(!hasTestDatabase)("fluxo principal pela API", () => {
     const r = await cadastro("Rafael@Souza.adv.br");
     expect(r.status).toBe(200);
     const c = r.headers.get("set-cookie")?.split(";")[0] ?? "";
+    // O caminho do e-mail de confirmação é o de cadastro.test.ts: aqui ele já confirmou.
+    await t.owner`update "user" set email_verified = true where email = 'rafael@souza.adv.br'`;
     const aceite = await app.request("/api/auth/organization/accept-invitation", {
       method: "POST",
       headers: { "content-type": "application/json", cookie: c, origin: env.WEB_ORIGIN },

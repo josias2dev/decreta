@@ -49,6 +49,24 @@ export async function slugUnico(db: Database, nome: string): Promise<string> {
   }
 }
 
+/**
+ * A equipe vai criar um escritório para quem já tem conta. A senha passa a ser a que a equipe entrega, as sessões abertas
+ * caem e o e-mail fica confirmado: se alguém tinha cadastrado o e-mail dessa pessoa, perde a conta aqui. Diz se a conta já existia.
+ */
+export async function redefinirSeJaTemConta(db: Database, auth: Auth, emailDoDono: string, senha: string): Promise<boolean> {
+  const email = emailDoDono.trim().toLowerCase();
+  const [pessoa] = await db.select({ id: user.id }).from(user).where(eq(user.email, email));
+  if (!pessoa) return false;
+  const ctx = await auth.$context;
+  const hash = await ctx.password.hash(senha);
+  const contas = await ctx.internalAdapter.findAccounts(pessoa.id);
+  if (contas.some((c) => c.providerId === "credential")) await ctx.internalAdapter.updatePassword(pessoa.id, hash);
+  else await ctx.internalAdapter.linkAccount({ userId: pessoa.id, providerId: "credential", accountId: pessoa.id, password: hash });
+  await ctx.internalAdapter.deleteUserSessions(pessoa.id);
+  await db.update(user).set({ emailVerified: true }).where(eq(user.id, pessoa.id));
+  return true;
+}
+
 export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNovo): Promise<{ organizationId: string; userId: string }> {
   const email = e.dono.email.trim().toLowerCase();
   if (e.dono.senha.length < 10) throw new Error("a senha precisa de pelo menos 10 caracteres");
@@ -58,7 +76,8 @@ export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNov
   const ctx = await auth.$context;
   let [pessoa] = await db.select({ id: user.id }).from(user).where(eq(user.email, email));
   if (!pessoa) {
-    const criado = await ctx.internalAdapter.createUser({ email, name: e.dono.nome, emailVerified: true, ...(e.dono.termosVersao ? { termosVersao: e.dono.termosVersao, termosAceitosEm: new Date() } : {}) }, { method: "email-password" });
+    // O cadastro aberto não provou que o e-mail é da pessoa; o que a equipe cria, ela conferiu.
+    const criado = await ctx.internalAdapter.createUser({ email, name: e.dono.nome, emailVerified: !e.cadastroAberto, ...(e.dono.termosVersao ? { termosVersao: e.dono.termosVersao, termosAceitosEm: new Date() } : {}) }, { method: "email-password" });
     await ctx.internalAdapter.linkAccount({ userId: criado.id, providerId: "credential", accountId: criado.id, password: await ctx.password.hash(e.dono.senha) });
     pessoa = { id: criado.id };
   }

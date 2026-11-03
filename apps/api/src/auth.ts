@@ -21,6 +21,9 @@ const FIXOS_NA_DEMONSTRACAO = new Set(["/change-password", "/change-email", "/tw
 /** Convite vale uma semana; depois, quem é sócio reenvia pela tela da Equipe. */
 export const DIAS_DO_CONVITE = 7;
 
+/** Quanto tempo vale o link de confirmar o e-mail: a pessoa nem sempre abre a caixa na hora. */
+const HORAS_DO_LINK_DE_CONFIRMAR = 24;
+
 /** O que o cadastro e o convite respondem quando a pessoa não aceitou os termos (ou aceitou uma versão que não é a atual). */
 export const AVISO_DO_ACEITE = "Aceite os Termos de Uso e a Política de Privacidade para criar a conta.";
 
@@ -168,6 +171,20 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
         },
       },
     },
+    // O e-mail confirmado só é exigido para aceitar convite e ver convites: entrar e trabalhar não dependem dele.
+    emailVerification: {
+      sendOnSignUp: true,
+      expiresIn: HORAS_DO_LINK_DE_CONFIRMAR * 60 * 60,
+      sendVerificationEmail: async ({ user, url }) =>
+        enviar({
+          to: user.email,
+          subject: "Confirme o seu e-mail no Decreta",
+          paragraphs: [`Olá, ${user.name || user.email}.`, `Confirme que este e-mail é seu. O link vale por ${HORAS_DO_LINK_DE_CONFIRMAR} horas.`, "Se não foi você que criou esta conta, não abra o link: quem criou não entra na equipe de ninguém sem esta confirmação."],
+          action: { label: "Confirmar e-mail", url },
+        }),
+    },
+    // Pedir o e-mail de confirmação não exige sessão: poucos pedidos por endereço, para ninguém encher a caixa de outra pessoa.
+    rateLimit: { customRules: { "/send-verification-email": { window: 60, max: 3 } } },
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 10,
@@ -192,6 +209,8 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
         allowUserToCreateOrganization: false,
         invitationExpiresIn: DIAS_DO_CONVITE * 24 * 60 * 60,
         cancelPendingInvitationsOnReInvite: true,
+        // Sem isto, quem cadastrasse antes o e-mail de outra pessoa entraria na equipe para a qual ela foi convidada.
+        requireEmailVerificationOnInvitation: true,
         sendInvitationEmail: async ({ id, email, role, organization: org, inviter }) =>
           enviar({
             to: email,

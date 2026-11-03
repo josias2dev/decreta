@@ -5,6 +5,7 @@ import { useState } from "react";
 import { AuditoriaDaCarteira } from "@/componentes/auditoria";
 import { AvisoDaCaptura, AvisoDaFalta, useFaltaParaBuscar } from "@/componentes/captura-do-djen";
 import { DataViva } from "@/componentes/data-viva";
+import { AvisoDoEmail } from "@/componentes/aviso-do-email";
 import { AvisoDoTeste } from "@/componentes/faixa-do-plano";
 import { BotaoBuscar, Pagina, TelaCelular } from "@/componentes/moldura";
 import { NovoAtendimento, NovoCliente, NovoProcesso } from "@/componentes/novos";
@@ -147,6 +148,7 @@ export function HojePage() {
         ) : (
           <>
             <AvisoDoTeste aviso={eu.data?.assinatura?.aviso} />
+            <AvisoDoEmail eu={eu.data} />
             <TerminarDeConfigurar eu={eu.data} />
             <Numeros painel={p} celular />
             <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
@@ -198,6 +200,7 @@ export function HojePage() {
       ) : (
         <>
           <AvisoDoTeste aviso={eu.data?.assinatura?.aviso} />
+          <AvisoDoEmail eu={eu.data} />
           <TerminarDeConfigurar eu={eu.data} />
           <Numeros painel={p} />
           <AvisoDaCaptura alertas={p.alertasDaCaptura} acao={<Link to="/publicacoes" className="dc-link">Ver</Link>} />
