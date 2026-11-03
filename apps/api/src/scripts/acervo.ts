@@ -8,7 +8,7 @@
  */
 import { createDatabase } from "@decreta/db";
 import { readEnv } from "../env.ts";
-import { sincronizarTemasDoStj } from "../servicos/acervo.ts";
+import { guardarLeisDaTabela, sincronizarTemasDoStj } from "../servicos/acervo.ts";
 import { cruzarRadar, sincronizarPrecedentesDoBnp } from "../servicos/radar.ts";
 
 const env = readEnv();
@@ -17,6 +17,8 @@ const log = (msg: string, extra?: Record<string, unknown>) => console.error(msg,
 try {
   const { temas } = await sincronizarTemasDoStj({ db });
   console.log(`✓ ${temas} temas do STJ no acervo`);
+  const { leis } = await guardarLeisDaTabela({ db, log });
+  console.log(`✓ ${leis} leis da tabela de base legal no acervo`);
   const desde = new Date();
   const bnp = await sincronizarPrecedentesDoBnp({ db, log });
   console.log(`✓ ${bnp.precedentes} precedentes do BNP no acervo, ${bnp.novidades} novidades`);

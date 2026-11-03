@@ -4,7 +4,7 @@
  * registrada com quem e quando. A demonstração nunca manda WhatsApp.
  */
 import { randomBytes } from "node:crypto";
-import { comLinkDeEnvio, corpoDaCobranca, documentosQueFaltam, formatarTelefone, hojeEm, instanteLocal, mensagemParaWhatsapp, somarDias, telefoneWhatsapp } from "@decreta/core";
+import { comLinkDeEnvio, contarACompletar, corpoDaCobranca, documentosQueFaltam, formatarTelefone, hojeEm, instanteLocal, mensagemParaWhatsapp, somarDias, telefoneWhatsapp } from "@decreta/core";
 import { clientes, escritorios, mensagensCliente, prazos, processos, type Tx } from "@decreta/db";
 import { colherChamadas, IaRecusou, mensagemAoCliente, type Briefing, type ChamadaDaIa } from "@decreta/ia";
 import { and, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
@@ -245,6 +245,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
       if (!para) falha(422, "sem_telefone", "O cliente não tem um celular válido no cadastro.");
       const texto = (b.texto ?? l.m.texto).trim();
       if (texto.length < 2) falha(422, "texto_vazio", "A mensagem está vazia. Escreva o que o cliente precisa saber.");
+      if (contarACompletar(texto)) falha(422, "falta_completar", "A mensagem ainda tem [a completar]. Troque pelo dado certo antes de enviar.");
       if (c.get("emAvaliacao") && !WHATSAPP_EM_AVALIACAO.permitir(c.get("orgId"))) falha(429, "teto_em_avaliacao", AVISO_DO_WHATSAPP);
       const agora = new Date();
       // Cobrança: o link de envio nasce agora, na aprovação, e vale até o fim do 7º dia no fuso do

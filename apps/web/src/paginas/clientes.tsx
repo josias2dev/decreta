@@ -9,6 +9,7 @@ import { ConferenciaDaPasta } from "@/componentes/conferencia";
 import { FinanceiroDoCasoPainel } from "@/componentes/honorarios";
 import { MensagensAoCliente } from "@/componentes/mensagem-ao-cliente";
 import { Dialogo } from "@/componentes/dialogo";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
@@ -340,7 +341,7 @@ export function ClientePage() {
 
   // Cobrar o que falta: a lista sai da conferência pronta; o advogado aprova antes de sair no WhatsApp.
   const cobranca = c.conferencia?.situacao === "pronto" && (
-    <MensagensAoCliente filtro={{ cliente: c.id }} gerar={{ rotulo: "Cobrar do cliente os documentos que faltam", caminho: `/clientes/${c.id}/cobrar-documentos` }} titulo="Documentos que faltam" />
+    <MensagensAoCliente filtro={{ cliente: c.id }} gerar={{ rotulo: "Cobrar do cliente os documentos que faltam", caminho: `/clientes/${c.id}/cobrar-documentos` }} titulo="Documentos que faltam" semIa={c.semIa} />
   );
 
   const tempo = c.linhaDoTempo.length > 0 && (
@@ -510,7 +511,9 @@ function EditarCliente({ c, aberto, aoFechar }: { c: Cliente; aberto: boolean; a
         </div>
         <CamposDoCliente f={f} setF={setF} ignorar={c.id} prefixo="ec" />
         <Campo rotulo="Observações" htmlFor="ec-obs">
-          <textarea id="ec-obs" rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+          <IaNoCampo campo="observacoes" alvo={{ clienteId: c.id }} semIa={c.semIa} valor={observacoes} aoUsar={setObservacoes}>
+            <textarea id="ec-obs" rows={3} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+          </IaNoCampo>
         </Campo>
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
       </div>

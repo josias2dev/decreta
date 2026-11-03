@@ -78,6 +78,7 @@ export function rotasDosClientes(app: Hono<Ambiente>, deps: DepsDasRotas) {
           email: cl.email,
           processos: n,
           ultimoAtendimento: ultimoAtendimento ? new Date(ultimoAtendimento).toISOString() : null,
+          semIa: cl.semIa,
         })),
       });
     });

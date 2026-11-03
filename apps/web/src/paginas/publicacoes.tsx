@@ -8,10 +8,12 @@ import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/rea
 import { Activity, Check, CircleAlert, ClipboardPaste, LoaderCircle, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAviso } from "@/componentes/avisos";
+import { BaseLegalLida, CampoBaseLegal } from "@/componentes/base-legal";
 import { AvisoDaCaptura, Cancelada, CapturaDoDjen, saudeDaCapturaQuery, useFaltaParaBuscar, VazioPorFalta } from "@/componentes/captura-do-djen";
 import { CampoIntimacaoNoSistema, diaDigitadoCompleto, MotivosDaConferencia, MotivosParaConferir, PreviaNoDialogo, SeloDeConfianca } from "@/componentes/conta-do-prazo";
 import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { FalhaAoCarregar } from "@/componentes/nao-encontrada";
 import { EscolherProcesso } from "@/componentes/novo-prazo";
@@ -650,7 +652,7 @@ function VerPublicacao({ pub, celular, aoTerminar, aoDevolver, titulo, sobre }: 
       rodape={s ? "Gerado por IA. Confira nos autos." : !iaAqui ? undefined : pub.leituraParada ? "Sem leitura da IA." : "A IA está lendo o teor."}
     >
       {c ? (
-        <FatosDaSugestao c={c} responsavel={s!.responsavel} publicacaoId={pub.id} />
+        <FatosDaSugestao c={c} responsavel={s!.responsavel} publicacaoId={pub.id} processoId={pub.processo?.id} />
       ) : !iaAqui ? (
         <p className="m-0 dc-t-corpo">{semIa ? "O cliente não autorizou o uso de IA." : "A IA não está ligada."} Confira o teor e crie o prazo à mão.</p>
       ) : pub.leituraParada ? (
@@ -901,6 +903,8 @@ function LeituraDaDecisao({ pub }: { pub: Publicacao }) {
       <CorrigirResultado
         aberto={corrigir}
         aoFechar={() => setCorrigir(false)}
+        publicacaoId={pub.id}
+        semIa={semIa}
         inicial={{ tipo, resultado: r?.resultado ?? l?.resultado ?? "procedente", resumo: r?.resumo ?? l?.resumo ?? "" }}
         salvando={confirmar.isPending}
         aoSalvar={(b) => confirmar.mutate(b)}
@@ -966,12 +970,16 @@ function ConteudoDaSentenca({ l }: { l: LeituraDaSentenca }) {
 function CorrigirResultado({
   aberto,
   aoFechar,
+  publicacaoId,
+  semIa,
   inicial,
   salvando,
   aoSalvar,
 }: {
   aberto: boolean;
   aoFechar: () => void;
+  publicacaoId: string;
+  semIa: boolean;
   inicial: { tipo: TipoDecisao; resultado: ResultadoDecisao; resumo: string };
   salvando: boolean;
   aoSalvar: (b: { tipo: TipoDecisao; resultado: ResultadoDecisao; resumo: string | null }) => void;
@@ -1021,7 +1029,9 @@ function CorrigirResultado({
           </Campo>
         </div>
         <Campo rotulo="Em poucas palavras" htmlFor="rs-resumo" ajuda="O que ganhamos e o que perdemos.">
-          <textarea id="rs-resumo" rows={3} value={f.resumo} onChange={(e) => setF({ ...f, resumo: e.target.value })} />
+          <IaNoCampo campo="resultado-decisao" alvo={{ publicacaoId }} semIa={semIa} valor={f.resumo} aoUsar={(resumo) => setF({ ...f, resumo })}>
+            <textarea id="rs-resumo" rows={3} value={f.resumo} onChange={(e) => setF({ ...f, resumo: e.target.value })} />
+          </IaNoCampo>
         </Campo>
       </div>
     </Dialogo>
@@ -1061,7 +1071,7 @@ function ProvaDaSugestao({ c }: { c: Sugestao }) {
 }
 
 /** Os fatos que se decidem: a data em destaque e, abaixo, rótulo e valor num padrão só. */
-function FatosDaSugestao({ c, responsavel, publicacaoId }: { c: Sugestao; responsavel: Pessoa | null; publicacaoId: string }) {
+function FatosDaSugestao({ c, responsavel, publicacaoId, processoId }: { c: Sugestao; responsavel: Pessoa | null; publicacaoId: string; processoId?: string | null }) {
   const confianca: [ReactNode, ReactNode][] = c.conferencia ? [["Confiança", <SeloDeConfianca key="confianca" confianca={c.conferencia.confianca} />]] : [];
   const motivos = c.conferencia && <MotivosDaConferencia conferencia={c.conferencia} />;
   if (c.audiencia) {
@@ -1106,7 +1116,7 @@ function FatosDaSugestao({ c, responsavel, publicacaoId }: { c: Sugestao; respon
       <Dados
         linhas={[
           ["Prazo", prazoEmDias(c.dias, c.contagem)],
-          ["Base legal", c.fundamento ?? "—"],
+          ["Base legal", c.fundamento ? <BaseLegalLida key="base" fundamento={c.fundamento} processoId={processoId} /> : "—"],
           ["Responsável", <Responsavel key="responsavel" pessoa={responsavel ?? null} />],
           ...confianca,
         ]}
@@ -1163,6 +1173,7 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
       aoFechar={aoFechar}
       titulo={sugestao?.geraPrazo ? "Ajustar e confirmar" : "Criar prazo desta publicação"}
       descricao={`Publicada em ${diaCompleto(pub.publicadaEm)}. O Decreta conta a partir do primeiro dia útil seguinte.`}
+      className="dc-dialogo--largo"
       acoes={
         <>
           <Botao variante="fantasma" onClick={aoFechar}>
@@ -1189,20 +1200,18 @@ function ConfirmarComAjuste({ pub, sugestao, aberto, aoFechar, aoConfirmar }: { 
               <option value="corridos">Dias corridos</option>
             </select>
           </Campo>
-          <Campo rotulo="Base legal" htmlFor="cf-fund">
-            <input id="cf-fund" value={f.fundamento} onChange={(e) => setF({ ...f, fundamento: e.target.value })} placeholder="art. 477, § 1º, CPC" />
-          </Campo>
-          <Campo rotulo="Responsável" htmlFor="cf-resp">
-            <select id="cf-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
-              <option value="">Sem responsável</option>
-              {eu.data?.equipe.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome}
-                </option>
-              ))}
-            </select>
-          </Campo>
         </div>
+        <Campo rotulo="Responsável" htmlFor="cf-resp">
+          <select id="cf-resp" value={f.responsavelId} onChange={(e) => setF({ ...f, responsavelId: e.target.value })}>
+            <option value="">Sem responsável</option>
+            {eu.data?.equipe.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nome}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <CampoBaseLegal id="cf-fund" valor={f.fundamento} aoMudar={(fundamento) => setF((atual) => ({ ...atual, fundamento }))} tipo={f.tipo} processoId={pub.processo?.id} publicacaoId={pub.id} semIa={!!pub.processo?.semIa} sugeridaPelaIa={sugestao?.fundamento} placeholder="art. 477, § 1º, CPC" />
         <CampoIntimacaoNoSistema id="cf-sistema" valor={f.intimadoNoSistemaEm} aoMudar={(v) => setF({ ...f, intimadoNoSistemaEm: v })} />
         <label className="dc-opcao">
           <input type="checkbox" className="dc-checa" checked={f.sabeData} onChange={(e) => setF({ ...f, sabeData: e.target.checked })} />

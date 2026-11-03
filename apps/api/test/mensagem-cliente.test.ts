@@ -152,6 +152,14 @@ describe.skipIf(!hasTestDatabase)("mensagem ao cliente no WhatsApp", () => {
     expect((await json(call("/escritorio"))).whatsappOficial).toBe("(47) 3433-1000");
   });
 
+  test("mensagem com [a completar] não sai: falta dado que a IA deixou para a pessoa", async () => {
+    const r = await call(`/mensagens-cliente/${mensagemId}/enviar`, { method: "POST", json: { texto: `${RASCUNHO} A audiência é em [a completar].` } });
+    expect(r.status).toBe(422);
+    expect((await json(r)).erro).toBe("falta_completar");
+    expect(zap.enviados).toHaveLength(0);
+    expect(await naLista(mensagemId)).toMatchObject({ situacao: "rascunho" });
+  });
+
   test("quem não tem OAB cadastrada não aprova", async () => {
     await t.owner`update equipe set oab_numero = null where user_id = ${escritorio.userId}`;
     const r = await call(`/mensagens-cliente/${mensagemId}/enviar`, { method: "POST", json: {} });

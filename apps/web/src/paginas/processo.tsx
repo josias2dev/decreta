@@ -12,6 +12,7 @@ import { DataViva } from "@/componentes/data-viva";
 import { Dialogo } from "@/componentes/dialogo";
 import { FontesDoProcesso, TextoComFontes } from "@/componentes/fontes";
 import { AvisoSemHonorario, FinanceiroDoCasoPainel, useFinanceiroLiberado } from "@/componentes/honorarios";
+import { IaNoCampo } from "@/componentes/ia-no-campo";
 import { SeloDoAlerta } from "@/componentes/alerta-do-documento";
 import { SEM_IA, SeloSemIa } from "@/componentes/uso-de-ia";
 import { IconeDoArquivo } from "@/componentes/icone-arquivo";
@@ -1092,7 +1093,9 @@ function EditarProcesso({ p, aberto, aoFechar }: { p: Processo; aberto: boolean;
           </select>
         </Campo>
         <Campo rotulo="Observações" htmlFor="ep-obs">
-          <textarea id="ep-obs" rows={3} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
+          <IaNoCampo campo="observacoes" alvo={{ processoId: p.id }} semIa={p.cliente?.semIa} valor={f.observacoes} aoUsar={(observacoes) => setF({ ...f, observacoes })}>
+            <textarea id="ep-obs" rows={3} value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
+          </IaNoCampo>
         </Campo>
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
       </div>

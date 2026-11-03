@@ -32,6 +32,10 @@ interface Ato {
   nome: string;
   padrao: RegExp;
   dias: Partial<Record<Rito, Fundamento>>;
+  /** O que é este ato, em palavras de quem não é da área. */
+  explicacao: string;
+  /** Texto que parece este ato, mas não é: a tabela não aponta artigo para ele. */
+  naoE?: RegExp;
   /** Recurso: não cabe contra despacho (CPC, art. 1.001). */
   recurso?: boolean;
   /** Ato do começo do processo: não vem depois de sentença ou acórdão. */
@@ -42,22 +46,22 @@ const RECURSO_15: Fundamento = [15, "CPC, art. 1.003, § 5º"];
 
 /** Da mais específica para a mais geral: "contrarrazões de apelação" antes de "apelação". Os padrões leem o texto já sem acento. */
 const ATOS: readonly Ato[] = [
-  { nome: "embargos de declaração", padrao: /embargos de declara/, dias: { cpc: [5, "CPC, art. 1.023"], clt: [5, "CLT, art. 897-A"], jec: [5, "Lei 9.099/1995, art. 49"] } },
-  { nome: "contrarrazões", padrao: /contra-?r?raz/, dias: { cpc: RECURSO_15, clt: [8, "CLT, art. 900"], jec: [10, "Lei 9.099/1995, art. 42, § 2º"] } },
-  { nome: "impugnação ao cumprimento de sentença", padrao: /impugnacao (ao )?cumprimento/, dias: { cpc: [15, "CPC, art. 525"] } },
-  { nome: "embargos à execução", padrao: /embargos (a|do) (execucao|devedor)/, dias: { cpc: [15, "CPC, art. 915"], clt: [5, "CLT, art. 884"] } },
-  { nome: "réplica", padrao: /replica|impugnacao (a )?contestacao/, dias: { cpc: [15, "CPC, arts. 350 e 351"] }, inicial: true },
-  { nome: "contestação", padrao: /contestacao|contestar/, dias: { cpc: [15, "CPC, art. 335"] }, inicial: true },
-  { nome: "apelação", padrao: /apelacao|apelar/, dias: { cpc: RECURSO_15 }, recurso: true },
-  { nome: "agravo de instrumento", padrao: /agravo de instrumento/, dias: { cpc: RECURSO_15, clt: [8, "CLT, art. 897"] }, recurso: true },
-  { nome: "agravo de petição", padrao: /agravo de peticao/, dias: { clt: [8, "CLT, art. 897"] }, recurso: true },
-  { nome: "agravo interno", padrao: /agravo interno/, dias: { cpc: [15, "CPC, art. 1.070"] }, recurso: true },
-  { nome: "recurso especial", padrao: /recurso especial|recurso extraordinario/, dias: { cpc: RECURSO_15 }, recurso: true },
-  { nome: "recurso ordinário", padrao: /recurso ordinario/, dias: { cpc: RECURSO_15, clt: [8, "CLT, art. 895"] }, recurso: true },
-  { nome: "recurso de revista", padrao: /recurso de revista/, dias: { clt: [8, "CLT, art. 896"] }, recurso: true },
-  { nome: "recurso inominado", padrao: /recurso inominado/, dias: { jec: [10, "Lei 9.099/1995, art. 42"] }, recurso: true },
-  { nome: "manifestação sobre o laudo", padrao: /laudo/, dias: { cpc: [15, "CPC, art. 477, § 1º"] } },
-  { nome: "pagamento", padrao: /pagamento|pagar/, dias: { cpc: [15, "CPC, art. 523"] } },
+  { nome: "embargos de declaração", padrao: /embargos de declara/, dias: { cpc: [5, "CPC, art. 1.023"], clt: [5, "CLT, art. 897-A"], jec: [5, "Lei 9.099/1995, art. 49"] }, explicacao: "Pedido para o próprio juiz esclarecer uma decisão confusa, contraditória ou que deixou algo de fora." },
+  { nome: "contrarrazões", padrao: /contra-?r?raz/, dias: { cpc: RECURSO_15, clt: [8, "CLT, art. 900"], jec: [10, "Lei 9.099/1995, art. 42, § 2º"] }, explicacao: "A resposta ao recurso que a outra parte apresentou." },
+  { nome: "impugnação ao cumprimento de sentença", padrao: /impugnacao (ao )?cumprimento/, dias: { cpc: [15, "CPC, art. 525"] }, explicacao: "A defesa de quem está sendo cobrado depois da sentença, dentro do mesmo processo." },
+  { nome: "embargos à execução", padrao: /embargos (a|do) (execucao|devedor)/, dias: { cpc: [15, "CPC, art. 915"], clt: [5, "CLT, art. 884"] }, explicacao: "A defesa de quem está sendo cobrado numa execução." },
+  { nome: "réplica", padrao: /replica|impugnacao (a )?contestacao|manifesta\S* (sobre|acerca d|a) ?\S* ?contestacao/, dias: { cpc: [15, "CPC, arts. 350 e 351"] }, explicacao: "A resposta de quem entrou com a ação ao que a outra parte disse na contestação.", inicial: true },
+  { nome: "contestação", padrao: /contestacao|contestar/, dias: { cpc: [15, "CPC, art. 335"] }, explicacao: "A resposta de quem está sendo processado.", inicial: true },
+  { nome: "apelação", padrao: /apelacao|apelar/, dias: { cpc: RECURSO_15 }, explicacao: "O recurso ao tribunal contra a sentença do juiz.", recurso: true },
+  { nome: "agravo de instrumento", padrao: /agravo de instrumento/, dias: { cpc: RECURSO_15, clt: [8, "CLT, art. 897"] }, explicacao: "O recurso ao tribunal contra uma decisão dada no meio do processo.", recurso: true },
+  { nome: "agravo de petição", padrao: /agravo de peticao/, dias: { clt: [8, "CLT, art. 897"] }, explicacao: "Na Justiça do Trabalho, o recurso contra decisão da fase de cobrança.", recurso: true },
+  { nome: "agravo interno", padrao: /agravo interno/, dias: { cpc: [15, "CPC, art. 1.070"] }, explicacao: "O pedido para os julgadores do tribunal reverem a decisão de um deles sozinho.", recurso: true },
+  { nome: "recurso especial", padrao: /recurso especial|recurso extraordinario/, dias: { cpc: RECURSO_15 }, explicacao: "O recurso aos tribunais de Brasília (STJ ou STF) sobre como a lei ou a Constituição foi aplicada.", recurso: true },
+  { nome: "recurso ordinário", padrao: /recurso ordinario/, dias: { cpc: RECURSO_15, clt: [8, "CLT, art. 895"] }, explicacao: "Na Justiça do Trabalho, o recurso contra a sentença.", recurso: true },
+  { nome: "recurso de revista", padrao: /recurso de revista/, dias: { clt: [8, "CLT, art. 896"] }, explicacao: "O recurso ao Tribunal Superior do Trabalho contra decisão de um tribunal regional.", recurso: true },
+  { nome: "recurso inominado", padrao: /recurso inominado/, dias: { jec: [10, "Lei 9.099/1995, art. 42"] }, explicacao: "No Juizado Especial, o recurso contra a sentença.", recurso: true },
+  { nome: "manifestação sobre o laudo", padrao: /laudo/, dias: { cpc: [15, "CPC, art. 477, § 1º"] }, explicacao: "Dizer ao juiz o que o escritório acha do laudo do perito." },
+  { nome: "pagamento", padrao: /pagamento|pagar/, naoE: /custas|preparo|guia|honorarios/, dias: { cpc: [15, "CPC, art. 523"] }, explicacao: "Pagar o valor da condenação depois de intimado, para evitar a multa." },
 ];
 
 const semAcento = (t: string) =>
@@ -76,6 +80,21 @@ const atoDe = (tipo: string) => {
 /** Junta grafias do mesmo ato ("Apelação", "Interpor apelação"), para contar o que a equipe descarta. */
 export function chaveDoAto(tipo: string): string {
   return atoDe(tipo)?.nome ?? semAcento(tipo);
+}
+
+export interface BaseLegalDaTabela {
+  ato: string;
+  dias: number;
+  fundamento: string;
+  explicacao: string;
+}
+
+/** O artigo que a tabela liga ao ato, no rito do processo; `null` quando a tabela não sabe. */
+export function baseLegalDaTabela(tipo: string, rito: Rito): BaseLegalDaTabela | null {
+  const ato = atoDe(tipo);
+  const lei = ato?.dias[rito];
+  if (!ato || !lei || ato.naoE?.test(semAcento(tipo))) return null;
+  return { ato: ato.nome, dias: lei[0], fundamento: lei[1], explicacao: ato.explicacao };
 }
 
 export type Confianca = "alta" | "media" | "baixa";

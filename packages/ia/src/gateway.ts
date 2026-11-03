@@ -53,6 +53,8 @@ export const METODOS = [
   "ligar-fatos",
   "ajustar-peca",
   "papel-do-julgado",
+  "campo-texto",
+  "base-legal",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -80,6 +82,8 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "ligar-fatos": "autos",
   "ajustar-peca": "documentos",
   "papel-do-julgado": "juridico",
+  "campo-texto": "juridico",
+  "base-legal": "juridico",
 };
 
 /**
@@ -89,7 +93,8 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
  * a conferência de uma citação (o trecho sustenta a afirmação?), como a jurisprudência;
  * a leitura em observação de um candidato, como a sugestão de prazo. Na peça: a
  * estratégia e a ligação dos fatos leem os autos como o resumo, o ajuste é redação
- * de peça, e o papel de um julgado na tese é jurisprudência.
+ * de peça, e o papel de um julgado na tese é jurisprudência. O texto de um campo
+ * lê como o briefing do prazo, e a base legal é jurisprudência.
  */
 const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = {
   "titulo-conversa": "perguntar",
@@ -101,6 +106,8 @@ const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = {
   "ligar-fatos": "resumo-autos",
   "ajustar-peca": "gerar-documento",
   "papel-do-julgado": "jurisprudencia",
+  "campo-texto": "briefing-prazo",
+  "base-legal": "jurisprudencia",
 };
 
 /** O teto do dia não passa em segundos: a AI SDK não deve pedir de novo (a pessoa esperava o aviso uns 2 s a mais). */
@@ -174,6 +181,8 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
   "ligar-fatos": "medium",
   "ajustar-peca": "high",
   "papel-do-julgado": "medium",
+  "campo-texto": "medium",
+  "base-legal": "medium",
 };
 
 /**

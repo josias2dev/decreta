@@ -139,6 +139,8 @@ export class ApiFalsa {
       const linhas = (amostras.perguntarEventos!.corpo as unknown[]).map((e) => JSON.stringify(e)).join("\n");
       return route.fulfill({ status: 200, contentType: "application/x-ndjson", body: `${linhas}\n` });
     }
+    // A consulta da base legal: sem nada na tabela nem texto da lei, a não ser que o teste diga.
+    if (metodo === "POST" && caminho === "/base-legal") return json(200, { tabela: null, semIa: false, reconhecida: false, lei: [] });
     if (metodo !== "GET") return json(200, { ok: true, id: "00000000-0000-4000-8000-000000000001" });
 
     const lista = Object.values(amostras);

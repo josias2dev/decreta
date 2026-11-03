@@ -225,6 +225,13 @@
       "when": 1793656919352,
       "tag": "0031_prazo_interno",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793662933768,
+      "tag": "0032_textos_da_ia",
+      "breakpoints": true
     }
   ]
 }

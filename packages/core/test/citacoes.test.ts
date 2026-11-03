@@ -1,7 +1,42 @@
 import { describe, expect, test } from "bun:test";
-import { extrairCitacoes } from "../src/citacoes.ts";
+import { citacaoDaBaseLegal, extrairCitacoes } from "../src/citacoes.ts";
 
 const chaves = (texto: string) => extrairCitacoes(texto).map((c) => c.chave);
+
+describe("a base legal como a citação espera", () => {
+  const daBase = (texto: string) => chaves(citacaoDaBaseLegal(texto));
+
+  test("a norma antes ou depois do artigo, como a tabela e a IA escrevem", () => {
+    expect(daBase("CPC, art. 335")).toEqual(["dispositivo:CPC:art335"]);
+    expect(daBase("CPC, art. 1.003, § 5º")).toEqual(["dispositivo:CPC:art1003_par5"]);
+    expect(daBase("art. 477, § 1º, CPC")).toEqual(["dispositivo:CPC:art477_par1"]);
+    expect(daBase("art. 1.023, CPC")).toEqual(["dispositivo:CPC:art1023"]);
+    expect(daBase("CLT, art. 897-A")).toEqual(["dispositivo:CLT:art897-A"]);
+    expect(daBase("Lei 9.099/1995, art. 42, § 2º")).toEqual(["dispositivo:LEI-9099-1995:art42_par2"]);
+    expect(daBase("Código de Processo Civil, art. 219")).toEqual(["dispositivo:CPC:art219"]);
+    expect(daBase("art 335 cpc")).toEqual(["dispositivo:CPC:art335"]);
+  });
+
+  test("mais de um artigo vira uma citação para cada", () => {
+    expect(daBase("CPC, arts. 350 e 351")).toEqual(["dispositivo:CPC:art350", "dispositivo:CPC:art351"]);
+  });
+
+  test("a citação concorda com a lei, porque aparece na tela", () => {
+    expect(citacaoDaBaseLegal("CPC, art. 335")).toBe("art. 335 do CPC");
+    expect(citacaoDaBaseLegal("CLT, art. 897")).toBe("art. 897 da CLT");
+    expect(citacaoDaBaseLegal("Lei 9.099/1995, art. 42")).toBe("art. 42 da Lei 9.099/1995");
+    expect(citacaoDaBaseLegal("Constituição Federal, art. 5º")).toBe("art. 5º da Constituição Federal");
+  });
+
+  test("o que já está no jeito da citação fica como está", () => {
+    expect(citacaoDaBaseLegal("art. 5º, LV, da CF")).toBe("art. 5º, LV, da CF");
+    expect(daBase("Súmula 297 do STJ")).toEqual(["sumula:STJ:297"]);
+  });
+
+  test("texto sem artigo de lei não vira citação nenhuma", () => {
+    for (const t of ["", "  ", "15 dias", "CPC", "contrato", "art. 12"]) expect(citacaoDaBaseLegal(t)).toBe("");
+  });
+});
 
 describe("citações na peça", () => {
   test("súmulas, com ou sem nº, com 'do' ou barra, e a vinculante do STF", () => {
