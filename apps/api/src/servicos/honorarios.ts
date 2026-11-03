@@ -5,7 +5,7 @@
  * do Asaas), e só os não estornados contam. Sem pagamento marcado, nada aparece como recebido.
  */
 import { diasEmAtraso, planejarParcelas, situacaoDaParcela, vencimentoDaCobranca, type Dia, type PlanoDoContrato, type SituacaoDaParcela, type TipoDeContrato, type VencimentoDaCobranca } from "@decreta/core";
-import { auditoria, clientes, contratosHonorarios, pagamentosHonorarios, parcelasHonorarios, processos, type Tx } from "@decreta/db";
+import { auditoria, clientes, contratosHonorarios, documentos, pagamentosHonorarios, parcelasHonorarios, processos, type Tx } from "@decreta/db";
 import { and, asc, desc, eq, gte, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { ACAO_DO_PAGAMENTO_SEM_PARCELA } from "../auditoria.ts";
 import { falha } from "../rotas/base.ts";
@@ -169,6 +169,12 @@ export interface PedidoDeContrato extends PlanoDoContrato {
  * Cria o contrato e as parcelas que ele gera. O contrato é de um cliente, de um processo ou dos dois;
  * se vier só o processo, o cliente é o dele.
  */
+/** A chave estrangeira não passa pela RLS: quem confere que o documento é do escritório é esta leitura, sob a RLS. */
+export async function exigirDocumentoDoEscritorio(tx: Tx, documentoId: string): Promise<void> {
+  const [d] = await tx.select({ id: documentos.id }).from(documentos).where(eq(documentos.id, documentoId));
+  if (!d) falha(404, "documento_nao_encontrado", "Documento não encontrado.");
+}
+
 export async function criarContrato(tx: Tx, organizationId: string, userId: string, p: PedidoDeContrato): Promise<Contrato> {
   if (!p.clienteId && !p.processoId) falha(422, "sem_caso", "Escolha o cliente ou o processo do contrato.");
   let clienteId = p.clienteId ?? null;
@@ -186,6 +192,7 @@ export async function criarContrato(tx: Tx, organizationId: string, userId: stri
     if (!cl) falha(404, "cliente_nao_encontrado", "Cliente não encontrado.");
     clienteNome = cl.nome;
   }
+  if (p.documentoId) await exigirDocumentoDoEscritorio(tx, p.documentoId);
   titulo ||= `Honorários · ${processoTitulo ?? clienteNome ?? "caso"}`;
   let planejadas: ReturnType<typeof planejarParcelas>;
   try {

@@ -16,6 +16,7 @@ import {
   contratosDe,
   criarContrato,
   estornarPagamento,
+  exigirDocumentoDoEscritorio,
   pagamentosSemParcela,
   parcelaNaTela,
   parcelasNaTela,
@@ -189,6 +190,7 @@ export function rotasDoFinanceiro(app: Hono<Ambiente>, deps: DepsDasRotas) {
     await tenant(c, deps, async (tx) => {
       const atual = await contratoDoEscritorio(tx, contratoId);
       if (b.exitoBp !== undefined && !atual.exitoBp) falha(422, "sem_exito", "Este contrato não tem honorário de êxito.");
+      if (b.documentoId) await exigirDocumentoDoEscritorio(tx, b.documentoId);
       await tx.update(contratosHonorarios).set(Object.fromEntries(Object.entries(b).filter(([, v]) => v !== undefined))).where(eq(contratosHonorarios.id, contratoId));
       // O êxito que ainda não tem valor mostra o percentual novo; o que já virou valor guarda o percentual de quando foi calculado.
       if (b.exitoBp !== undefined && b.exitoBp !== atual.exitoBp) {

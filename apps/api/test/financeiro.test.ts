@@ -12,6 +12,50 @@ import { HOJE, montarCenario, type Cenario } from "./apoio-financeiro.ts";
 // Banco de verdade e muitos pedidos por teste: com o computador ocupado, 5 s é pouco.
 setDefaultTimeout(60_000);
 
+describe.skipIf(!hasTestDatabase)("o documento do contrato", () => {
+  let s: Cenario;
+  beforeAll(async () => {
+    s = await montarCenario();
+  }, 120_000);
+  afterAll(async () => {
+    await s?.encerrar();
+  }, 60_000);
+
+  const documentoDe = async (orgId: string, nome: string) => {
+    const id = crypto.randomUUID();
+    await s.t.owner`insert into documentos (id, organization_id, nome, mime, tamanho, chave) values (${id}, ${orgId}, ${nome}, 'application/pdf', 1, ${`${orgId}/${id}`})`;
+    return id;
+  };
+  const contrato = (corpo: Record<string, unknown> = {}) => s.com("beatriz", "/financeiro/contratos", { json: { tipo: "fixo", clienteId: s.souza.clienteId, fixo: { valor: 10_000, parcelas: 1, primeiroVencimento: HOJE }, ...corpo } });
+
+  test("ao criar, o documento de outro escritório não entra, e o contrato não nasce", async () => {
+    const deFora = await documentoDe(s.mendes.orgId, "De outro escritório.pdf");
+    const antes = (await s.t.owner<{ n: number }[]>`select count(*)::int as n from contratos_honorarios where organization_id = ${s.souza.orgId}`)[0]!.n;
+    const r = await contrato({ documentoId: deFora });
+    expect(r.status).toBe(404);
+    expect((await r.json()).erro).toBe("documento_nao_encontrado");
+    expect((await s.t.owner<{ n: number }[]>`select count(*)::int as n from contratos_honorarios where organization_id = ${s.souza.orgId}`)[0]!.n).toBe(antes);
+  });
+
+  test("ao mudar, o documento de outro escritório não entra", async () => {
+    const c = await s.json(contrato());
+    const deFora = await documentoDe(s.mendes.orgId, "De outro escritório 2.pdf");
+    const r = await s.com("beatriz", `/financeiro/contratos/${c.id}`, { metodo: "PUT", json: { documentoId: deFora } });
+    expect(r.status).toBe(404);
+    expect((await r.json()).erro).toBe("documento_nao_encontrado");
+    expect((await s.t.owner<{ documento_id: string | null }[]>`select documento_id from contratos_honorarios where id = ${c.id}`)[0]!.documento_id).toBeNull();
+  });
+
+  test("o documento do próprio escritório entra, e dá para tirar", async () => {
+    const meu = await documentoDe(s.souza.orgId, "Contrato assinado.pdf");
+    const criado = await s.json(contrato({ documentoId: meu }));
+    expect(criado.documentoId).toBe(meu);
+    const c = await s.json(contrato());
+    expect((await s.json(s.com("beatriz", `/financeiro/contratos/${c.id}`, { metodo: "PUT", json: { documentoId: meu } }))).documentoId).toBe(meu);
+    expect((await s.json(s.com("beatriz", `/financeiro/contratos/${c.id}`, { metodo: "PUT", json: { documentoId: null } }))).documentoId).toBeNull();
+  });
+});
+
 describe.skipIf(!hasTestDatabase)("financeiro: honorários por caso", () => {
   let s: Cenario;
   beforeAll(async () => {
