@@ -235,6 +235,8 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
   const navigate = useNavigate();
   const eu = useQuery(euQuery);
   const [obs, setObs] = useState(n.observacoes ?? "");
+  const obsSalva = n.observacoes ?? "";
+  const [daIaSemSalvar, setDaIaSemSalvar] = useState(false);
   const atualizar = () => {
     void qc.invalidateQueries({ queryKey: ["negocios"] });
     void qc.invalidateQueries({ queryKey: ["eu"] });
@@ -334,7 +336,7 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
         </div>
         {n.etapa !== "concluido" && <ArquivosDaPasta negocioId={n.id} />}
         <Campo rotulo="Observações" htmlFor="vn-obs">
-          {/* Aqui não há botão de salvar: o clique em Usar também grava. */}
+          {/* O que a pessoa digita grava ao sair do campo. O texto da IA, não: só com o botão, para o de antes não se perder ao fechar. */}
           <IaNoCampo
             campo="observacoes"
             alvo={{ negocioId: n.id }}
@@ -342,12 +344,26 @@ function VerNegocio({ n, aoFechar }: { n: Negocio; aoFechar: () => void }) {
             valor={obs}
             aoUsar={(texto) => {
               setObs(texto);
-              mudar.mutate({ observacoes: texto || null });
+              setDaIaSemSalvar(texto !== obsSalva);
             }}
           >
-            <textarea id="vn-obs" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={() => obs !== (n.observacoes ?? "") && mudar.mutate({ observacoes: obs || null })} />
+            <textarea id="vn-obs" rows={3} value={obs} onChange={(e) => setObs(e.target.value)} onBlur={() => !daIaSemSalvar && obs !== obsSalva && mudar.mutate({ observacoes: obs || null })} />
           </IaNoCampo>
         </Campo>
+        {daIaSemSalvar && obs !== obsSalva && (
+          <div className="dc-linha-acoes">
+            <span className="dc-nota">O texto da IA ainda não foi salvo. O que estava aqui continua guardado até você salvar.</span>
+            <Botao
+              pequeno
+              onClick={() => {
+                setDaIaSemSalvar(false);
+                mudar.mutate({ observacoes: obs || null });
+              }}
+            >
+              Salvar observações
+            </Botao>
+          </div>
+        )}
       </div>
     </Dialogo>
   );

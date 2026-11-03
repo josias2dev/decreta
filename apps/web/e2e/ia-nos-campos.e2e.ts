@@ -246,6 +246,62 @@ test("observações do prazo, do processo e do cliente têm o botão, cada uma c
   expect(api.mudancas("/ia/campo").every((p) => (p.corpo as { campo: string }).campo === "observacoes")).toBe(true);
 });
 
+test.describe("observações do negócio", () => {
+  const negocio = amostras.negocios!.corpo.itens.find((n: { id: string }) => n.id === ids.negocio);
+  const ORIGINAL = "O cliente prefere contato à tarde.";
+  const comObservacoes = { ...amostras.negocios!.corpo, itens: amostras.negocios!.corpo.itens.map((n: { id: string }) => (n.id === ids.negocio ? { ...n, observacoes: ORIGINAL } : n)) };
+  async function abrirNegocio(page: Page) {
+    const api = new ApiFalsa().responder("/eu", euComIa).responder("GET /negocios", comObservacoes).responder("POST /ia/campo", previaPronta({ texto: "Anotação da IA.", aCompletar: 0 }));
+    await abrir(page, "/negocios", api);
+    await page.getByText(negocio.nome).first().click();
+    const dialogo = page.getByRole("dialog");
+    const gravacoes = () => api.mudancas(`/negocios/${ids.negocio}`).map((p) => p.corpo);
+    return { api, dialogo, campo: dialogo.getByLabel("Observações"), gravacoes };
+  }
+  const usarDaIa = async (dialogo: ReturnType<Page["getByRole"]>) => {
+    await botaoDaIa(dialogo).click();
+    await dialogo.getByRole("button", { name: /^Escrever/ }).click();
+    await dialogo.getByRole("region", { name: "Prévia da IA" }).getByRole("button", { name: "Usar" }).click();
+  };
+
+  test("Usar só preenche o campo, e fechar sem salvar não troca o que estava guardado", async ({ page }) => {
+    const { dialogo, campo, gravacoes } = await abrirNegocio(page);
+    await usarDaIa(dialogo);
+    await expect(campo).toHaveValue("Anotação da IA.");
+    await expect(dialogo.getByText("O texto da IA ainda não foi salvo.")).toBeVisible();
+    // Sair do campo também não grava: quem decide é o botão.
+    await campo.focus();
+    await campo.blur();
+    await page.keyboard.press("Escape");
+    await expect(dialogo).toHaveCount(0);
+    expect(gravacoes()).toEqual([]);
+  });
+
+  test("Salvar observações grava o texto da IA", async ({ page }) => {
+    const { dialogo, gravacoes } = await abrirNegocio(page);
+    await usarDaIa(dialogo);
+    await dialogo.getByRole("button", { name: "Salvar observações" }).click();
+    await expect.poll(gravacoes).toEqual([{ observacoes: "Anotação da IA." }]);
+    await expect(dialogo.getByRole("button", { name: "Salvar observações" })).toHaveCount(0);
+  });
+
+  test("Voltar ao texto de antes não grava nada e o botão de salvar some", async ({ page }) => {
+    const { dialogo, campo, gravacoes } = await abrirNegocio(page);
+    await usarDaIa(dialogo);
+    await dialogo.getByRole("button", { name: "Voltar ao texto de antes" }).click();
+    await expect(campo).toHaveValue(ORIGINAL);
+    await expect(dialogo.getByRole("button", { name: "Salvar observações" })).toHaveCount(0);
+    expect(gravacoes()).toEqual([]);
+  });
+
+  test("o que a pessoa digita continua sendo gravado ao sair do campo", async ({ page }) => {
+    const { campo, gravacoes } = await abrirNegocio(page);
+    await campo.fill("Ligar na sexta.");
+    await campo.blur();
+    await expect.poll(gravacoes).toEqual([{ observacoes: "Ligar na sexta." }]);
+  });
+});
+
 test.describe("no celular", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
