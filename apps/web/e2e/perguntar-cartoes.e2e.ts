@@ -233,6 +233,23 @@ test.describe("cartões", () => {
     await expect(linhas.nth(2).locator(".dc-cartao-ia__sub")).not.toContainText("Movimentou");
   });
 
+  test("o próximo prazo na lista de processos abre a conta sem abrir o processo, e o resto da linha leva ao processo", async ({ page }) => {
+    const lista = R.processos(3);
+    const comPrazo = lista.itens.find((p: { proximoPrazo: unknown }) => p.proximoPrazo)!;
+    await abrirResposta(page, [R.ferramenta("b1", "buscarProcessos", lista, { ordem: "parados" })]);
+    const folha = await abrirCartao(page, "Processos");
+    const linha = folha.locator(".dc-cartao-ia__linha").filter({ hasText: comPrazo.titulo });
+    await linha.locator(".dc-data-viva").click();
+    await expect(page.getByRole("dialog", { name: "A conta" })).toBeVisible();
+    await expect(page).not.toHaveURL(/\/processos\//);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "A conta" })).toHaveCount(0);
+    // O selo fica à direita; o clique no meio da linha cai no link esticado do título.
+    const caixa = (await linha.boundingBox())!;
+    await page.mouse.click(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2);
+    await expect(page).toHaveURL(new RegExp(`/processos/${comPrazo.id}`));
+  });
+
   test("a data do prazo no cartão abre a conta por cima da folha, e Esc volta para a folha", async ({ page }) => {
     await abrirResposta(page, [R.ferramenta("p1", "buscarPrazos", R.prazos(2), { situacao: "aberto" })]);
     const folha = await abrirCartao(page, "Prazos");

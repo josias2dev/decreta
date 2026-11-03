@@ -578,26 +578,31 @@ function UltimaMovimentacao({ p }: { p: Pick<ProcessoNaIa, "ultimaMovimentacao">
 
 function LinhaDoProcesso({ p }: { p: ProcessoNaIa }) {
   return (
-    <Link to="/processos/$id" params={{ id: p.id }} className="dc-cartao-ia__linha dc-cartao-ia__linha--link">
+    // O cartão inteiro leva ao processo pelo link esticado do título: a data viva fica acima dele, porque botão não vai dentro de link.
+    <div className="dc-cartao-ia__linha dc-cartao-ia__linha--link dc-com-esticado">
       <span className="dc-celula min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="dc-cartao-ia__titulo">{p.titulo}</span>
+          <Link to="/processos/$id" params={{ id: p.id }} className="dc-cartao-ia__titulo dc-esticado" title={p.ultimaMovimentacao?.dia ? `${diaComAno(p.ultimaMovimentacao.dia)}: ${p.ultimaMovimentacao.titulo}` : undefined}>
+            {p.titulo}
+          </Link>
           {p.situacao && p.situacao !== "ativo" && <span className="dc-cartao-ia__marca">{p.situacao}</span>}
         </span>
         <span className="dc-cartao-ia__sub dc-cartao-ia__sub--duas">
           {/* O que é curto e importante primeiro: há quanto tempo andou (o que andou fica no title). */}
-          {p.ultimaMovimentacao?.dia && <span title={`${diaComAno(p.ultimaMovimentacao.dia)}: ${p.ultimaMovimentacao.titulo}`}>Movimentou {haQuanto(p.ultimaMovimentacao.dia)} · </span>}
+          {p.ultimaMovimentacao?.dia && <span>Movimentou {haQuanto(p.ultimaMovimentacao.dia)} · </span>}
           <span className="dc-num">{p.cnj ?? "Extrajudicial"}</span>
           {ondeTramita(p) && ` · ${ondeTramita(p)}`}
         </span>
       </span>
       {p.proximoPrazo && (
         <span className="dc-cartao-ia__lado" title={p.proximoPrazo.tipo}>
-          <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+          <DataViva alvo={{ prazo: p.proximoPrazo.id }}>
+            <Selo urgencia={p.proximoPrazo.urgencia}>{p.proximoPrazo.quando}</Selo>
+          </DataViva>
         </span>
       )}
       <ChevronRight className="dc-cartao-ia__seta" aria-hidden />
-    </Link>
+    </div>
   );
 }
 
