@@ -6,6 +6,7 @@ import { fimDoPeriodoPago, hojeEm, PLANO, somarDias } from "@decreta/core";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { readEnv } from "../src/env.ts";
+import { criarClienteAsaas } from "../src/servicos/asaas.ts";
 import { acessoLiberado, comoNasce } from "../src/servicos/assinatura.ts";
 import { linkDoAsaas, reconciliarAssinaturas } from "../src/servicos/cobranca.ts";
 import { asaasFalso, avisoDeAssinatura, avisoDePagamento, pagamento } from "./asaas-falso.ts";
@@ -33,6 +34,20 @@ describe("o que se aceita do ambiente e do que vem do Asaas", () => {
   test("sem acesso total só passam os métodos de leitura conhecidos", () => {
     for (const metodo of ["PATCH", "patch", "TRACE", "PROPFIND", "post"]) expect(acessoLiberado("leitura", metodo, "/clientes")).toBe(false);
     for (const metodo of ["GET", "HEAD", "OPTIONS"]) expect(acessoLiberado("leitura", metodo, "/clientes")).toBe(true);
+  });
+});
+
+describe("o Asaas responde 404", () => {
+  const cliente = (status: number) => criarClienteAsaas({ apiKey: "chave", ambiente: "sandbox", fetch: (async () => new Response(JSON.stringify({ errors: [{ description: "Não encontrado." }] }), { status })) as unknown as typeof fetch });
+
+  test("apagar o que o Asaas já não tem é o mesmo que feito", async () => {
+    await cliente(404).cancelarAssinatura("sub_x");
+    await cliente(404).removerLink("link_x");
+  });
+
+  test("em qualquer outro pedido, 404 é erro: o que se pediu não aconteceu", async () => {
+    await expect(cliente(404).configurarNotasFiscais("sub_x", { servicoMunicipalId: "1", servicoCodigo: "1", servicoNome: "x", issPercentual: 2, issRetido: false })).rejects.toThrow("Não encontrado.");
+    await expect(cliente(404).criarLinkDeAssinatura({ nome: "x", descricao: "x", valorCentavos: 100, referencia: "x", voltarPara: "https://x" })).rejects.toThrow("Não encontrado.");
   });
 });
 
@@ -228,6 +243,11 @@ describe.skipIf(!hasTestDatabase)("avisos do Asaas que chegam como não deviam",
       expect(falso.de("POST", "invoiceSettings")).toHaveLength(1);
       expect((await organizacao(t, x.id)).nfse_configurada_em).toBeNull();
       falso.falharNaNfse = false;
+      // O endereço da nota some (404): também não foi configurada, e a próxima fatura tenta de novo.
+      falso.nfseSumiu = true;
+      await api.aviso(avisoDePagamento("PAYMENT_UPDATED", pagamento({ id: "pay_nfse_404", vencimento: HOJE, assinatura: "sub_nfse", status: "PENDING" })));
+      expect((await organizacao(t, x.id)).nfse_configurada_em).toBeNull();
+      falso.nfseSumiu = false;
       await api.aviso(aviso("PAYMENT_RECEIVED", "RECEIVED"));
       expect(falso.de("POST", "invoiceSettings")).toHaveLength(2);
       expect((await organizacao(t, x.id)).nfse_configurada_em).not.toBeNull();

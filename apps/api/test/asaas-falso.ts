@@ -25,6 +25,8 @@ export function asaasFalso(opcoes: { falharNoCancelamento?: boolean; recusarLink
     falharNoCancelamento: opcoes.falharNoCancelamento ?? false,
     recusarLink: opcoes.recusarLink ?? false,
     falharNaNfse: opcoes.falharNaNfse ?? false,
+    /** O endereço da nota não existe mais (404): a nota não foi configurada. */
+    nfseSumiu: false,
     /** As chamadas de um método e caminho (ou parte dele). */
     de: (metodo: string, caminho: string) => chamadas.filter((c) => c.metodo === metodo && c.caminho.includes(caminho)),
     fetch: (async (entrada: string | URL | Request, init?: RequestInit) => {
@@ -55,6 +57,7 @@ export function asaasFalso(opcoes: { falharNoCancelamento?: boolean; recusarLink
         return json(200, { deleted: true, id: assinatura[1] });
       }
       if (metodo === "POST" && /^\/v3\/subscriptions\/[^/]+\/invoiceSettings$/.test(caminho)) {
+        if (falso.nfseSumiu) return json(404, { errors: [{ code: "not_found", description: "Assinatura não encontrada." }] });
         if (falso.falharNaNfse) return json(400, { errors: [{ code: "invalid_municipal_service", description: "O serviço municipal não foi encontrado." }] });
         return json(200, { ...corpo });
       }

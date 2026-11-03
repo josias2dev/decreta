@@ -69,7 +69,8 @@ export function criarClienteAsaas(opcoes: { apiKey: string; ambiente: "sandbox" 
       signal: AbortSignal.timeout(15_000),
     });
     const json = (await res.json().catch(() => null)) as (T & { errors?: { description?: string }[] }) | null;
-    if (!res.ok && res.status !== 404) {
+    // Apagar o que o Asaas já não tem é o mesmo que feito; em qualquer outro pedido, 404 é erro: o que se pediu não aconteceu.
+    if (!res.ok && !(metodo === "DELETE" && res.status === 404)) {
       throw new ErroDoAsaas(res.status, json?.errors?.[0]?.description ?? `O Asaas recusou o pedido (${res.status}).`);
     }
     return { status: res.status, corpo: res.ok ? json : null };
