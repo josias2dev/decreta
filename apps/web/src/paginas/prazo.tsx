@@ -98,7 +98,7 @@ export function PrazoPage() {
         </span>
       ) : confirmando ? (
         <span className="dc-selo dc-selo--prazo">
-          <LoaderCircle className="animate-spin" /> Confirmando…
+          <LoaderCircle className="animate-spin motion-reduce:animate-none" /> Confirmando…
         </span>
       ) : (
         aberto && <span className="dc-selo dc-selo--ia">Sugestão da IA · confira e confirme</span>

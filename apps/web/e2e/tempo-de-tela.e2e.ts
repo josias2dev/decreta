@@ -15,6 +15,8 @@ import { ApiFalsa } from "./apoio";
 
 const VEZES = Number(process.env.E2E_MEDIR_VEZES) || 7;
 const CAMINHO_DO_MENU = (rota: string) => `nav.dc-menu a[href="${rota}"]`;
+/** Quanto o mouse fica sobre o link antes do clique em "mouse antes": perto do gesto de quem mira e clica, sem folga para a pré-carga. */
+const MOUSE_EM_CIMA = 150;
 
 type Destino = { nome: string; de: string; link: string; h1: string; texto?: string; conteudo: string };
 const DESTINOS: Destino[] = [
@@ -82,7 +84,7 @@ async function umaVez(browser: Browser, d: Destino, como: Como, atraso: number):
   const link = page.locator(d.link).first();
   if (como === "mouse antes") {
     await link.hover();
-    await page.waitForTimeout(200 + atraso);
+    await page.waitForTimeout(MOUSE_EM_CIMA);
     await page.mouse.down();
     await page.mouse.up();
   } else {
@@ -101,6 +103,8 @@ test.describe("tempo de tela", () => {
 
   for (const atraso of [0, 100]) {
     for (const como of ["clique direto", "mouse antes", "tela já vista"] as Como[]) {
+      // E2E_MEDIR_SO="clique direto,0": só esse caso, para repetir sem esperar a tabela toda.
+      if (process.env.E2E_MEDIR_SO && process.env.E2E_MEDIR_SO !== `${como},${atraso}`) continue;
       test(`${como}, atraso de ${atraso} ms`, async ({ browser }) => {
         test.setTimeout(10 * 60_000);
         const linhas: Record<string, string | number>[] = [];
