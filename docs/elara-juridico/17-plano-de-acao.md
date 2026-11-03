@@ -210,6 +210,24 @@ A nova ordem segue as perguntas de quem avalia: o que é, funciona mesmo, como f
 | 4.8 | **IA nos campos de texto** | Não vem dos documentos: pedido feito durante o redesign | Botão no canto do campo com Escrever (do rascunho e do contexto do processo), Melhorar e Orientar. Só entra ao clicar "Usar", depois da prévia. Fato que falta vira "a completar". Some para cliente sem IA e respeita os limites. Começa por resultado da decisão, mensagem ao cliente, instruções da peça, resumo de atendimento e observações | Não inventa fato e nada entra sem prévia. Não comparei este ponto nos concorrentes | 4 a 5 d |
 | 4.9 | **Base legal que se explica** | Não vem dos documentos: pedido feito durante o redesign | Preenche a partir de "O que fazer", primeiro pela tabela fixa da conferência e só depois pela IA. O texto da lei fica ao lado, e a marca "sugerida" fica até o artigo ser achado no acervo | Ajuda quem não domina a lei sem esconder de onde veio a sugestão. Não comparei este ponto nos concorrentes | 2 a 3 d |
 
+### Tempo de tela (item 4.5)
+
+Do clique até a tela sem esqueleto e com a lista à vista, em ms. Build de produção, API de mentira do e2e e Chromium em 1366×768. Mediana de 10 aberturas, em 2 rodadas alternando os dois builds, porque a máquina estava ocupada com outros trabalhos e rodadas separadas no tempo chegaram a dobrar os números. "Rede de 100 ms" soma 100 ms a cada pedido à API e a cada arquivo. "Mouse antes" deixa o mouse 150 ms sobre o link.
+
+| Tela | Mouse antes, rede de 100 ms | Clique direto, rede de 100 ms | Clique direto, sem atraso | Tela já vista, rede de 100 ms |
+|---|---|---|---|---|
+| Hoje | 127 → **30** | 239 → **156** | 42 → 43 | 13 → 13 |
+| Prazos | 132 → **46** | 250 → **165** | 48 → 71 | 21 → 34 |
+| Publicações | 250 → **96** | 374 → 238 | 68 → 47 | 14 → 14 |
+| Processos | 136 → **51** | 257 → **178** | 53 → 72 | 27 → 36 |
+| Um processo | 128 → **25** | 263 → **155** | 64 → 51 | 11 → 11 |
+
+**O que os números dizem:** a meta de 200 ms foi cumprida com o mouse ou o foco no link, e no clique direto em quatro das cinco telas. Publicações, no clique direto, fica em 238 ms até a publicação aberta aparecer; a lista já está lá em cerca de 143 ms.
+
+**O que piorou:** sem atraso, Prazos e Processos ficaram cerca de 20 ms mais lentos, porque a lista agora sai pronta no primeiro desenho, sem esqueleto antes, e as linhas ficaram mais pesadas com a data viva do item 4.1. No clique direto, a primeira mudança na tela chega um pouco depois (Hoje, de 135 para 156 ms), mas já com o conteúdo.
+
+**O que a medição não cobre:** rede de verdade (TLS, perda, banda), o cache do navegador (o Playwright o desliga), consulta real ao banco, celular e aparelho lento. Para repetir: `E2E_MEDIR=1 E2E_PORTA=4573 bun run web:e2e -- e2e/tempo-de-tela.e2e.ts --workers=1`, numa porta só desta cópia.
+
 ## Onda 5: peça que prova o que diz
 
 **Por que aqui:** é a falha mais clara do mercado: nos testes, Astrea, Projuris e Jurídico AI afirmaram algo sem base. Se o item 0.1 mostrar que o Decreta falha também, esta onda sobe para logo depois da onda 2.
