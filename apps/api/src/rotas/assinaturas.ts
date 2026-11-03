@@ -10,11 +10,15 @@ import { assinaturasDoDocumento, atualizarAssinatura, enviarParaAssinatura, type
 import { pessoasDoEscritorio } from "../servicos/pessoas.ts";
 import { corpo, ehSocio, falha, id, ip, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
-const noTela = (a: Assinatura) => ({
+/**
+ * O link de assinar abre a assinatura sem segundo fator (`auth_mode: "assinaturaTela"`): quem tem o link assina pelo cliente.
+ * Por isso ele só vai a quem pode mandar para assinatura; o resto da equipe vê quem assinou e quem falta.
+ */
+const noTela = (a: Assinatura, comLink: boolean) => ({
   id: a.id,
   documentoId: a.documentoId,
   situacao: a.situacao,
-  signatarios: a.signatarios,
+  signatarios: comLink ? a.signatarios : a.signatarios.map(({ link: _link, ...s }) => s),
   enviadaEm: a.enviadaEm.toISOString(),
   assinadaEm: a.assinadaEm?.toISOString() ?? null,
   documentoAssinadoId: a.documentoAssinadoId,
@@ -25,11 +29,15 @@ export function rotasDasAssinaturas(app: Hono<Ambiente>, deps: DepsDasRotas) {
   const dep = () => ({ db, arquivos: deps.arquivos, cofre: deps.cofre, fetch: deps.fetchDosProvedores, log: deps.log });
   const auditar = (c: C, acao: string, detalhes: Record<string, unknown>) => registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao, detalhes, ip: ip(c) }, deps.log);
 
+  async function ehAdvogado(c: C): Promise<boolean> {
+    if (ehSocio(c.get("papel"))) return true;
+    const eu = await tenant(c, deps, async (tx) => (await pessoasDoEscritorio(db, tx, c.get("orgId"))).get(c.get("userId")));
+    return !!eu?.oab;
+  }
+
   /** Mandar um documento para assinar é falar em nome do escritório: só sócio ou advogado com OAB cadastrada. */
   async function exigirAdvogado(c: C) {
-    if (ehSocio(c.get("papel"))) return;
-    const eu = await tenant(c, deps, async (tx) => (await pessoasDoEscritorio(db, tx, c.get("orgId"))).get(c.get("userId")));
-    if (!eu?.oab) falha(403, "sem_oab", "Só sócio ou advogado com OAB cadastrada no perfil manda documento para assinatura.");
+    if (!(await ehAdvogado(c))) falha(403, "sem_oab", "Só sócio ou advogado com OAB cadastrada no perfil manda documento para assinatura.");
   }
 
   app.post("/documentos/:id/assinatura", async (c) => {
@@ -47,16 +55,19 @@ export function rotasDasAssinaturas(app: Hono<Ambiente>, deps: DepsDasRotas) {
     );
     const a = await enviarParaAssinatura(dep(), c.get("orgId"), c.get("userId"), { documentoId, signatarios: b.signatarios });
     await auditar(c, "assinatura.enviada", { documentoId, assinaturaId: a.id, signatarios: b.signatarios.length });
-    return c.json(noTela(a), 201);
+    return c.json(noTela(a, true), 201);
   });
 
-  app.get("/documentos/:id/assinaturas", async (c) => c.json({ itens: (await assinaturasDoDocumento(db, c.get("orgId"), id(c))).map(noTela) }));
+  app.get("/documentos/:id/assinaturas", async (c) => {
+    const comLink = await ehAdvogado(c);
+    return c.json({ itens: (await assinaturasDoDocumento(db, c.get("orgId"), id(c))).map((a) => noTela(a, comLink)) });
+  });
 
   /** Pergunta à ZapSign como está. Assinada por todos, o arquivo assinado entra na pasta do cliente. */
   app.post("/assinaturas/:id/atualizar", async (c) => {
     await exigirAdvogado(c);
     const { assinatura: a, concluidaAgora } = await atualizarAssinatura(dep(), c.get("orgId"), id(c));
     if (concluidaAgora) await auditar(c, "assinatura.concluida", { assinaturaId: a.id, documentoAssinadoId: a.documentoAssinadoId });
-    return c.json(noTela(a));
+    return c.json(noTela(a, true));
   });
 }

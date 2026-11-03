@@ -1,8 +1,9 @@
 /** O cliente da ZapSign, contra um servidor de mentira. NÃO fala com a ZapSign de verdade. */
 import { describe, expect, test } from "bun:test";
-import { baixarArquivoAssinado, consultarDocumento, criarDocumentoParaAssinar, ZapSignErro, type ContaZapSign } from "../src/servicos/zapsign.ts";
+import { baixarArquivoAssinado, consultarDocumento, criarDocumentoParaAssinar, TETO_DO_ARQUIVO_ASSINADO_BYTES, ZapSignErro, type ContaZapSign } from "../src/servicos/zapsign.ts";
 
 const CHAVE = "c7f35c84-7893-4087-b4fb-d1f06c23aaaa-8f3e2d1c-bbbb-4cde-9fa0-0123456789ab";
+const PDF = new Uint8Array([37, 80, 68, 70, 45, 49, 46, 55]);
 
 function servidor(respostas: { status?: number; corpo?: unknown; bytes?: Uint8Array }[]) {
   const chamadas: { url: string; metodo: string; cabecalhos: Record<string, string>; corpo: any }[] = [];
@@ -80,10 +81,100 @@ describe("pedidos à ZapSign", () => {
   });
 
   test("baixa o arquivo assinado do link temporário, sem mandar a chave para outro endereço", async () => {
-    const s = servidor([{ bytes: new Uint8Array([1, 2, 3]) }]);
+    const s = servidor([{ bytes: PDF }]);
     const bytes = await baixarArquivoAssinado("https://zapsign.s3.amazonaws.com/assinado.pdf?x=1", s.fetch);
-    expect([...bytes]).toEqual([1, 2, 3]);
+    expect([...bytes]).toEqual([...PDF]);
     expect(s.chamadas[0]!.cabecalhos["authorization"]).toBeUndefined();
+  });
+});
+
+describe("o arquivo assinado só vem de onde a ZapSign guarda", () => {
+  const recusa = async (url: string, f: typeof fetch) => {
+    await expect(baixarArquivoAssinado(url, f)).rejects.toBeInstanceOf(ZapSignErro);
+  };
+
+  test("o host precisa ser o da ZapSign: nada de outro lugar, de http ou de endereço de dentro do servidor", async () => {
+    const s = servidor([{ bytes: PDF }]);
+    for (const url of [
+      "http://zapsign.s3.amazonaws.com/a.pdf",
+      "https://outro.s3.amazonaws.com/a.pdf",
+      "https://zapsign.s3.amazonaws.com.evil.net/a.pdf",
+      "https://zapsign.s3.amazonaws.com@evil.net/a.pdf",
+      "https://evil.net/zapsign.s3.amazonaws.com/a.pdf",
+      "https://evilzapsign.com.br/a.pdf",
+      "https://169.254.169.254/latest/meta-data",
+      "https://localhost/a.pdf",
+      "https://zapsign.s3.amazonaws.com:8443/a.pdf",
+      "file:///etc/passwd",
+      "nem é endereço",
+    ]) await recusa(url, s.fetch);
+    expect(s.chamadas).toHaveLength(0);
+  });
+
+  test("aceita o S3 da documentação e o domínio da ZapSign", async () => {
+    for (const url of ["https://zapsign.s3.amazonaws.com/a.pdf?AWSAccessKeyId=x&Signature=y", "https://app.zapsign.com.br/a.pdf", "https://zapsign.com.br/a.pdf"]) {
+      const s = servidor([{ bytes: PDF }]);
+      expect([...(await baixarArquivoAssinado(url, s.fetch))]).toEqual([...PDF]);
+    }
+  });
+
+  test("não segue redirecionamento sozinho: para outro lugar, recusa; para a própria ZapSign, vai", async () => {
+    const urls: string[] = [];
+    const inits: RequestInit[] = [];
+    const redireciona = (para: string) =>
+      (async (url: string, init: RequestInit) => {
+        urls.push(url);
+        inits.push(init);
+        return url === para ? new Response(PDF, { status: 200 }) : new Response(null, { status: 302, headers: { location: para } });
+      }) as unknown as typeof fetch;
+    await recusa("https://zapsign.s3.amazonaws.com/a.pdf", redireciona("https://evil.net/a.pdf"));
+    expect(urls).toEqual(["https://zapsign.s3.amazonaws.com/a.pdf"]);
+    expect(inits[0]!.redirect).toBe("manual");
+    expect([...(await baixarArquivoAssinado("https://app.zapsign.com.br/a", redireciona("https://zapsign.s3.amazonaws.com/b.pdf")))]).toEqual([...PDF]);
+  });
+
+  test("redirecionamento sem fim para na terceira volta", async () => {
+    let voltas = 0;
+    const f = (async () => {
+      voltas++;
+      return new Response(null, { status: 302, headers: { location: `https://app.zapsign.com.br/${voltas}` } });
+    }) as unknown as typeof fetch;
+    await recusa("https://app.zapsign.com.br/0", f);
+    expect(voltas).toBeLessThanOrEqual(4);
+  });
+
+  test("o que não é PDF não entra na pasta do cliente", async () => {
+    await recusa("https://zapsign.s3.amazonaws.com/a.pdf", servidor([{ bytes: new TextEncoder().encode("<html>erro</html>") }]).fetch);
+    await recusa("https://zapsign.s3.amazonaws.com/a.pdf", servidor([{ bytes: new Uint8Array(0) }]).fetch);
+  });
+
+  test("passou do teto de tamanho, para de baixar, mesmo sem o tamanho anunciado", async () => {
+    let lidos = 0;
+    const pedaco = new Uint8Array(1024 * 1024).fill(1);
+    pedaco.set(PDF);
+    const infinito = (async () =>
+      new Response(
+        new ReadableStream({
+          pull(c) {
+            lidos += pedaco.length;
+            c.enqueue(pedaco);
+          },
+        }),
+      )) as unknown as typeof fetch;
+    await recusa("https://zapsign.s3.amazonaws.com/a.pdf", infinito);
+    expect(lidos).toBeLessThan(TETO_DO_ARQUIVO_ASSINADO_BYTES * 2);
+    const anunciado = (async () => new Response(PDF, { headers: { "content-length": String(TETO_DO_ARQUIVO_ASSINADO_BYTES + 1) } })) as unknown as typeof fetch;
+    await recusa("https://zapsign.s3.amazonaws.com/a.pdf", anunciado);
+  });
+
+  test("não baixou: a mensagem diz o host, nunca o link assinado inteiro", async () => {
+    try {
+      await baixarArquivoAssinado("https://evil.net/a.pdf?Signature=segredo", servidor([]).fetch);
+      throw new Error("devia falhar");
+    } catch (err) {
+      expect((err as Error).message).toContain("evil.net");
+      expect((err as Error).message).not.toContain("segredo");
+    }
   });
 });
 

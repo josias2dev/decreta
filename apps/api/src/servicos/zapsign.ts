@@ -116,11 +116,59 @@ export async function consultarDocumento(conta: ContaZapSign, token: string): Pr
   };
 }
 
-/** Baixa o arquivo assinado do link temporário. Sem a chave: o link já vem assinado. */
+/** O bucket dos arquivos, o único host que a documentação mostra em `signed_file` (docs.zapsign.com.br, "Detalhar documento"). */
+const HOST_DOS_ARQUIVOS = "zapsign.s3.amazonaws.com";
+/** Um contrato assinado é um PDF de páginas, com o relatório de assinaturas: isto é folga, e não o limite de um arquivo normal. */
+export const TETO_DO_ARQUIVO_ASSINADO_BYTES = 100 * 1024 * 1024;
+const VOLTAS_DE_REDIRECIONAMENTO = 3;
+
+function linkDaZapSign(url: string): URL {
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    throw new ZapSignErro(0, "O link do arquivo assinado não é um endereço, e não foi baixado.");
+  }
+  const daZapSign = u.hostname === HOST_DOS_ARQUIVOS || u.hostname === "zapsign.com.br" || u.hostname.endsWith(".zapsign.com.br");
+  // A mensagem diz o host, para achar o problema pelo log. O link inteiro, não: ele leva a assinatura que abre o arquivo.
+  if (u.protocol !== "https:" || u.port || u.username || u.password || !daZapSign) throw new ZapSignErro(0, `O link do arquivo assinado não é da ZapSign (${u.protocol}//${u.host}), e não foi baixado.`);
+  return u;
+}
+
+/** Lê a resposta até o teto, sem confiar no tamanho anunciado. */
+async function lerComTeto(res: Response): Promise<Uint8Array> {
+  const muitoGrande = () => new ZapSignErro(0, "O arquivo assinado passa do tamanho aceito, e não foi baixado.");
+  if (Number(res.headers.get("content-length") ?? 0) > TETO_DO_ARQUIVO_ASSINADO_BYTES) throw muitoGrande();
+  const leitor = res.body?.getReader();
+  const partes: Uint8Array[] = [];
+  let total = 0;
+  while (leitor) {
+    const { done, value } = await leitor.read();
+    if (done) break;
+    total += value.length;
+    if (total > TETO_DO_ARQUIVO_ASSINADO_BYTES) {
+      await leitor.cancel();
+      throw muitoGrande();
+    }
+    partes.push(value);
+  }
+  return Buffer.concat(partes);
+}
+
+/** Baixa o arquivo assinado do link temporário. Sem a chave: o link já vem assinado. O link vem de fora: só da ZapSign, sem seguir redirecionamento para outro lugar, e só PDF. */
 export async function baixarArquivoAssinado(url: string, buscar: typeof fetch = fetch): Promise<Uint8Array> {
-  // O link vem da resposta da ZapSign: só https, nunca um endereço de dentro do servidor.
-  if (!/^https:\/\//i.test(url)) throw new ZapSignErro(0, "O link do arquivo assinado não é seguro, e não foi baixado.");
-  const res = await buscar(url, { signal: AbortSignal.timeout(TEMPO_MAXIMO_MS) }).catch(() => null);
-  if (!res?.ok) throw new ZapSignErro(res?.status ?? 0, "Não deu para baixar o arquivo assinado agora. Tente de novo em alguns minutos.");
-  return new Uint8Array(await res.arrayBuffer());
+  let alvo = linkDaZapSign(url);
+  for (let volta = 0; volta <= VOLTAS_DE_REDIRECIONAMENTO; volta++) {
+    const res = await buscar(alvo.href, { redirect: "manual", signal: AbortSignal.timeout(TEMPO_MAXIMO_MS) }).catch(() => null);
+    const destino = res && res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+    if (destino) {
+      alvo = linkDaZapSign(new URL(destino, alvo).href);
+      continue;
+    }
+    if (!res?.ok) throw new ZapSignErro(res?.status ?? 0, "Não deu para baixar o arquivo assinado agora. Tente de novo em alguns minutos.");
+    const bytes = await lerComTeto(res);
+    if (Buffer.from(bytes.subarray(0, 4)).toString("latin1") !== "%PDF") throw new ZapSignErro(0, "O que a ZapSign devolveu como arquivo assinado não é um PDF, e não foi guardado.");
+    return bytes;
+  }
+  throw new ZapSignErro(0, "O link do arquivo assinado redirecionou vezes demais, e não foi baixado.");
 }

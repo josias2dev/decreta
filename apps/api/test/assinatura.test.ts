@@ -91,6 +91,14 @@ describe.skipIf(!hasTestDatabase)("assinatura eletrônica pela ZapSign do escrit
     expect(reg!.user_id).toBe(s.souza.userIds.tiago);
   });
 
+  test("o link de assinar é de quem assina: só sócio ou advogado com OAB recebe; o resto da equipe vê quem assinou, sem o link", async () => {
+    const ver = async (quem: "beatriz" | "tiago" | "bianca") => (await s.json(s.com(quem, `/documentos/${contratoDocx}/assinaturas`))).itens[0].signatarios as { nome: string; situacao: string; link?: string }[];
+    for (const quem of ["beatriz", "tiago"] as const) expect((await ver(quem))[0]!.link).toMatch(/^https:\/\/app\.zapsign\.com\.br\/verificar\//);
+    const daEquipe = await ver("bianca");
+    expect(daEquipe.map((x) => [x.nome, x.situacao])).toEqual([["Marina Duarte", "new"], ["Beatriz Souza", "new"]]);
+    expect(daEquipe.every((x) => !("link" in x))).toBe(true);
+  });
+
   test("só PDF e DOCX vão, cada signatário precisa de e-mail ou celular, e na demonstração nada sai", async () => {
     const formato = await enviar("beatriz", planilha);
     expect(formato.status).toBe(422);
