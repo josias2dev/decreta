@@ -19,7 +19,7 @@ const seta = '<svg class="lp-seta" aria-hidden="true"><use href="#i-seta"></use>
 const ok = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
 const BOTAO = 'class="dc-btn dc-btn--primaria lp-btn dc-btn--bloco"';
 
-const NO_PLANO = ["Publicações do DJEN três vezes por dia", "Prazos contados em dias úteis", "Briefing, resumo e Perguntar com IA", "Peças em Word no timbre do escritório", "Resumo da manhã no WhatsApp", "Verificação em duas etapas", "Processos, clientes e agenda", "Alvarás e novos negócios"];
+const NO_PLANO = ["Publicações do DJEN três vezes por dia", "Prazos contados em dias úteis", "Briefing, resumo e Perguntar com IA", "Peças em Word no timbre do escritório", "Resumo da manhã no WhatsApp", "Verificação em duas etapas", "Processos, clientes e agenda", "Alvarás e novos negócios", "Honorários e prestação de contas", "IA nos campos de texto, com prévia"];
 
 export function htmlDoPreco(plano: PlanoDaLanding, contato: string): string {
   const [valor, acao] =

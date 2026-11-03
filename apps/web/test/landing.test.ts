@@ -31,6 +31,12 @@ describe("a seção de preço", () => {
     expect(acoes(html)).toBe(1);
   });
 
+  test("cita os honorários, sem prometer serviço de fora que ainda não foi testado de verdade", () => {
+    const html = htmlDoPreco(PLANO, CONTATO).toLowerCase();
+    expect(html).toContain("honorários e prestação de contas");
+    for (const servico of ["asaas", "zapsign", "pix automático"]) expect(html).not.toContain(servico);
+  });
+
   test("não promete um teste com prazo que o produto ainda não aplica", () => {
     expect(htmlDoPreco(PLANO, CONTATO)).not.toContain("dias de teste");
     expect(htmlDoPreco(PLANO, CONTATO)).toContain("sem cartão");
