@@ -6,7 +6,7 @@
     "porPagina": 50,
     "itens": [
       {
-        "id": "7c335cb2-325f-4042-b866-d041ddf45e58",
+        "id": "312df343-70b7-454c-9905-04af2b4b0f6c",
         "nome": "Adriana Dutra",
         "tipo": "pf",
         "documento": "323.772.346-07",
@@ -14,10 +14,11 @@
         "whatsapp": "5547990533898",
         "email": "adriana.dutra@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-08-08T12:35:00.000Z"
+        "ultimoAtendimento": "2026-08-08T12:35:00.000Z",
+        "semIa": false
       },
       {
-        "id": "d784b66a-75bc-4ca5-9ec1-41ea5af89270",
+        "id": "d68cceb6-d963-4bab-ad26-d5917a458e2f",
         "nome": "Agropecuária Boa Safra Ltda.",
         "tipo": "pj",
         "documento": "14.610.790/0001-31",
@@ -25,10 +26,11 @@
         "whatsapp": "554834334286",
         "email": "financeiro.boasafra@exemplo.com.br",
         "processos": 4,
-        "ultimoAtendimento": "2026-04-19T19:20:00.000Z"
+        "ultimoAtendimento": "2026-04-19T19:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "c1433d23-7dc7-4ddd-8156-7b74d44776c7",
+        "id": "e06b2e44-0f9d-4a35-8614-201e871ce556",
         "nome": "Alexandre Bortolini Costa",
         "tipo": "pf",
         "documento": "818.093.420-90",
@@ -36,10 +38,11 @@
         "whatsapp": "5547993615758",
         "email": "alexandre.costa@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-09-25T15:50:00.000Z"
+        "ultimoAtendimento": "2026-09-25T15:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "3ddbb271-fd6b-45f3-b4f3-d7f947ed9053",
+        "id": "d6338549-28f1-4aa4-b2f2-8ef4c4cd40ab",
         "nome": "Amanda Nunes",
         "tipo": "pf",
         "documento": "398.163.017-33",
@@ -47,10 +50,11 @@
         "whatsapp": "5547989489911",
         "email": "amanda.nunes@exemplo.com.br",
         "processos": 2,
-        "ultimoAtendimento": "2026-07-02T14:50:00.000Z"
+        "ultimoAtendimento": "2026-07-02T14:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "e6099bdf-87dc-4800-a261-40d39c5f33a1",
+        "id": "aaf02944-5c78-44f3-8252-f9c5a7f2765c",
         "nome": "Ana Lúcia Ferraz",
         "tipo": "pf",
         "documento": "512.398.746-00",
@@ -58,10 +62,11 @@
         "whatsapp": "5548996541230",
         "email": "analucia.ferraz@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "030a4167-c5ef-4c89-9c30-314ece513adf",
+        "id": "24af303a-7e5d-4206-9199-35012839443f",
         "nome": "Antônio Reis",
         "tipo": "pf",
         "documento": "248.150.937-41",
@@ -69,10 +74,11 @@
         "whatsapp": "5547988451230",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "b136d6b7-4b9d-4bb1-ae0b-ddc90f331472",
+        "id": "dcbfd2af-56c6-4595-9001-d5e8fc748da2",
         "nome": "Auto Center Pioneiro Ltda.",
         "tipo": "pj",
         "documento": "33.451.287/0001-25",
@@ -80,10 +86,11 @@
         "whatsapp": "554734221100",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "156b1913-114b-4c2b-bcbb-0198db32619b",
+        "id": "e3c8ec33-956a-4407-96fd-30a26b4ed874",
         "nome": "Auto Peças Águas Claras Ltda.",
         "tipo": "pj",
         "documento": "65.784.627/0001-26",
@@ -91,10 +98,11 @@
         "whatsapp": "554734024054",
         "email": "financeiro.aguasclaras@exemplo.com.br",
         "processos": 5,
-        "ultimoAtendimento": "2026-09-23T20:05:00.000Z"
+        "ultimoAtendimento": "2026-09-23T20:05:00.000Z",
+        "semIa": false
       },
       {
-        "id": "50a5d12e-2528-461f-9b1f-12ca5a43fadd",
+        "id": "48e8208b-3f59-4c7f-bf65-0376a00604dd",
         "nome": "Bianca Bernardi Teixeira",
         "tipo": "pf",
         "documento": "472.176.147-32",
@@ -102,10 +110,11 @@
         "whatsapp": "5548989454559",
         "email": "bianca.teixeira@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-07-09T14:35:00.000Z"
+        "ultimoAtendimento": "2026-07-09T14:35:00.000Z",
+        "semIa": false
       },
       {
-        "id": "7dbf2d84-c13b-4063-b1c0-3a38918ddcbb",
+        "id": "069f8687-afef-44b2-9213-63b882f115ee",
         "nome": "Bianca Kretzer",
         "tipo": "pf",
         "documento": "628.804.579-98",
@@ -113,10 +122,11 @@
         "whatsapp": "5547981931515",
         "email": "bianca.kretzer@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "f7deabfa-5b9c-4ec7-94fa-cddd715d873d",
+        "id": "c5042901-8ee4-4fed-8fce-46b175f0f533",
         "nome": "Bruna Amaral",
         "tipo": "pf",
         "documento": "581.879.597-70",
@@ -124,10 +134,11 @@
         "whatsapp": "5547988972508",
         "email": null,
         "processos": 2,
-        "ultimoAtendimento": "2026-08-05T13:35:00.000Z"
+        "ultimoAtendimento": "2026-08-05T13:35:00.000Z",
+        "semIa": false
       },
       {
-        "id": "a220ec4b-c2e8-4694-a81b-050e061fc887",
+        "id": "3ebad583-dc0a-4a5f-9cab-083fffe75886",
         "nome": "Bruno Cunha Moura",
         "tipo": "pf",
         "documento": "659.531.193-30",
@@ -135,10 +146,11 @@
         "whatsapp": "5547986014683",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2025-10-19T18:35:00.000Z"
+        "ultimoAtendimento": "2025-10-19T18:35:00.000Z",
+        "semIa": false
       },
       {
-        "id": "d1587d93-c7a8-45b5-b07c-b35add5f5c11",
+        "id": "f71d4e9f-91f9-4130-85d1-32bd744ec909",
         "nome": "Bruno Medeiros",
         "tipo": "pf",
         "documento": "138.130.144-44",
@@ -146,10 +158,11 @@
         "whatsapp": "5547984834421",
         "email": "bruno.medeiros@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-02-25T15:20:00.000Z"
+        "ultimoAtendimento": "2026-02-25T15:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "07d44d1d-7ec7-4154-8f94-6ff517410624",
+        "id": "dab45f57-85f8-46f6-8dfd-5c5135ef8623",
         "nome": "Bruno Pereira",
         "tipo": "pf",
         "documento": "341.956.263-23",
@@ -157,10 +170,11 @@
         "whatsapp": "5547981347761",
         "email": "bruno.pereira@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-05-04T15:35:00.000Z"
+        "ultimoAtendimento": "2026-05-04T15:35:00.000Z",
+        "semIa": false
       },
       {
-        "id": "d1a55a0e-5c66-42d8-a568-ec72a61a97e3",
+        "id": "8b81c026-471f-49ba-9f1e-d4e8733f3387",
         "nome": "Caio Silveira",
         "tipo": "pf",
         "documento": "415.339.583-86",
@@ -168,10 +182,11 @@
         "whatsapp": "5547997212740",
         "email": "caio.silveira@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "d6e9071f-c8b2-49d3-babc-957863196e24",
+        "id": "eb47198c-4090-4692-a882-5dce37e85c00",
         "nome": "Caio Teixeira",
         "tipo": "pf",
         "documento": "623.473.210-05",
@@ -179,10 +194,11 @@
         "whatsapp": "5547990371596",
         "email": "caio.teixeira@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-07-11T17:05:00.000Z"
+        "ultimoAtendimento": "2026-07-11T17:05:00.000Z",
+        "semIa": false
       },
       {
-        "id": "54667a2c-83e8-410b-8bac-a765cd0d7101",
+        "id": "0c8c280a-13cd-4371-9160-1d5a5b60e5f8",
         "nome": "Carla Junkes",
         "tipo": "pf",
         "documento": "208.577.726-00",
@@ -190,10 +206,11 @@
         "whatsapp": "5547984080409",
         "email": "carla.junkes@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2025-11-11T19:50:00.000Z"
+        "ultimoAtendimento": "2025-11-11T19:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "493ee354-0d3f-4f73-b3f1-8f8f5c466f75",
+        "id": "0d415ed7-db1a-4a5b-96a5-1e3f8e7434d0",
         "nome": "Carla Machado",
         "tipo": "pf",
         "documento": "364.948.764-04",
@@ -201,10 +218,11 @@
         "whatsapp": "5547981993710",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "33d07c9b-b6be-40cd-919f-a112aed559db",
+        "id": "02abbc7a-9d4c-4792-9a02-d9cce13b2e47",
         "nome": "Carlos Henrique Prado",
         "tipo": "pf",
         "documento": "674.120.385-08",
@@ -212,10 +230,11 @@
         "whatsapp": "5547999812345",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2026-10-27T18:30:00.000Z"
+        "ultimoAtendimento": "2026-10-27T18:30:00.000Z",
+        "semIa": false
       },
       {
-        "id": "e05f693f-8572-48e9-916a-9c54f309ce91",
+        "id": "4df82d58-d382-4d1e-bc4c-322afb9ec18c",
         "nome": "Caroline Amaral",
         "tipo": "pf",
         "documento": "714.896.685-00",
@@ -223,10 +242,11 @@
         "whatsapp": "5547982609382",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2026-01-10T15:20:00.000Z"
+        "ultimoAtendimento": "2026-01-10T15:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "11753f6e-309f-449f-be3c-c50b02901718",
+        "id": "ccc1bac0-f022-4051-bdc8-6defe0d446a3",
         "nome": "Caroline Costa Ramos",
         "tipo": "pf",
         "documento": "118.139.969-62",
@@ -234,10 +254,11 @@
         "whatsapp": "5547985544726",
         "email": "caroline.ramos@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2025-12-20T18:05:00.000Z"
+        "ultimoAtendimento": "2025-12-20T18:05:00.000Z",
+        "semIa": false
       },
       {
-        "id": "7e4c33b6-284a-40cc-b22b-58009c5af8b3",
+        "id": "00756497-e1da-4f63-9f04-f7ec361453a0",
         "nome": "César Cunha",
         "tipo": "pf",
         "documento": "719.696.995-23",
@@ -245,10 +266,11 @@
         "whatsapp": "5547992531185",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2026-01-05T19:35:00.000Z"
+        "ultimoAtendimento": "2026-01-05T19:35:00.000Z",
+        "semIa": false
       },
       {
-        "id": "9d6668a7-78af-405f-a29a-68699ba68178",
+        "id": "bd206e69-83db-4fcb-b4b5-3bda7956e269",
         "nome": "Cláudia Cunha",
         "tipo": "pf",
         "documento": "583.253.941-96",
@@ -256,10 +278,11 @@
         "whatsapp": "5547995571239",
         "email": "claudia.cunha@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "aa6daf0e-65dc-4fd5-b90a-6c8ecf7ab9d1",
+        "id": "312efcfd-2b56-4a76-a00a-8ba989dfb1cc",
         "nome": "Cláudio Bortolini",
         "tipo": "pf",
         "documento": "355.417.991-47",
@@ -267,10 +290,11 @@
         "whatsapp": "5547996829944",
         "email": "claudio.bortolini@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "4990d54c-e661-4cc0-9608-d00f139f9f6e",
+        "id": "e1432bb7-c24b-4761-91f1-0cab0d9dd269",
         "nome": "Construtora Serra Dourada S.A.",
         "tipo": "pj",
         "documento": "75.501.948/0001-20",
@@ -278,10 +302,11 @@
         "whatsapp": "554733840427",
         "email": "financeiro.serradourada@exemplo.com.br",
         "processos": 2,
-        "ultimoAtendimento": "2026-09-18T15:05:00.000Z"
+        "ultimoAtendimento": "2026-09-18T15:05:00.000Z",
+        "semIa": false
       },
       {
-        "id": "72f81694-275f-45eb-98ed-a9164104e915",
+        "id": "eaf52f47-1739-49a0-a4cc-9d361ca1651c",
         "nome": "Cooperativa Mista Rio Novo",
         "tipo": "pj",
         "documento": "51.234.098/0001-82",
@@ -289,10 +314,11 @@
         "whatsapp": "554735212000",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "bca7e272-7e74-4aaf-a462-1bd6fdabf245",
+        "id": "45fed63f-7888-4b32-a903-3b24440a5e30",
         "nome": "Daniela Reinert",
         "tipo": "pf",
         "documento": "696.384.010-52",
@@ -300,10 +326,11 @@
         "whatsapp": "5547997477649",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "1cf0a42c-ec84-4e6e-bb2d-5900c8bf7d42",
+        "id": "61de1917-7350-4f94-aa84-9d3977bf017b",
         "nome": "Daniela Reinert Teixeira",
         "tipo": "pf",
         "documento": "299.521.776-07",
@@ -311,10 +338,11 @@
         "whatsapp": "5547991240139",
         "email": "daniela.teixeira@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-01-31T16:50:00.000Z"
+        "ultimoAtendimento": "2026-01-31T16:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "28529e57-f87a-4eb9-9f2b-f588e415c80a",
+        "id": "a6c217e3-c762-4cf9-a214-41c8ce2cb5e1",
         "nome": "Daniel Bauer Sartori",
         "tipo": "pf",
         "documento": "614.874.852-55",
@@ -322,10 +350,11 @@
         "whatsapp": "5547984356991",
         "email": "daniel.sartori@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-10-28T20:20:00.000Z"
+        "ultimoAtendimento": "2026-10-28T20:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "b9d1d182-06fd-45a4-9038-0389f291de13",
+        "id": "cbfd0bd6-9079-4743-b59d-6666600b81f9",
         "nome": "Daniel Costa",
         "tipo": "pf",
         "documento": "527.664.518-38",
@@ -333,10 +362,11 @@
         "whatsapp": "5547982956869",
         "email": "daniel.costa@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "9dd19dd9-6742-4cbc-a176-a7cef0f4c755",
+        "id": "0cfd2e31-19cf-4d1f-b0c2-d1d57bb50b07",
         "nome": "Débora Amaral",
         "tipo": "pf",
         "documento": "180.030.153-75",
@@ -344,10 +374,11 @@
         "whatsapp": "5547998707056",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "b3bbf95f-adf9-4eb1-a101-e828b484b1f7",
+        "id": "dbf375ad-6ad6-4c01-af4d-58072cbd0cca",
         "nome": "Diego Lehmann",
         "tipo": "pf",
         "documento": "286.333.571-51",
@@ -355,10 +386,11 @@
         "whatsapp": "5547988745954",
         "email": "diego.lehmann@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "6d69d733-240f-4fd0-ae3d-eb8542c04d46",
+        "id": "7ee87c47-74a0-413c-bbc2-35189f1e3dc2",
         "nome": "Diego Stein Nunes",
         "tipo": "pf",
         "documento": "543.552.490-34",
@@ -366,10 +398,11 @@
         "whatsapp": "5547987994814",
         "email": "diego.nunes@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-09-10T20:35:00.000Z"
+        "ultimoAtendimento": "2026-09-10T20:35:00.000Z",
+        "semIa": false
       },
       {
-        "id": "e5a161c6-6a56-4bfd-ba6d-0c3169cb64b8",
+        "id": "43f1488e-0e21-4f56-9840-f8829a0657e2",
         "nome": "Distribuidora de Alimentos Recanto Ltda.",
         "tipo": "pj",
         "documento": "51.364.434/0001-01",
@@ -377,10 +410,11 @@
         "whatsapp": "554734204971",
         "email": "financeiro.recanto@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-04-02T18:20:00.000Z"
+        "ultimoAtendimento": "2026-04-02T18:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "4a8405b9-f6d1-4ce8-be99-92e0b88567e7",
+        "id": "47b45e9d-b201-42de-a3df-1ab9d5e74d3b",
         "nome": "Douglas Dalmolin",
         "tipo": "pf",
         "documento": "634.519.430-18",
@@ -388,10 +422,11 @@
         "whatsapp": "5547994379139",
         "email": "douglas.dalmolin@exemplo.com.br",
         "processos": 2,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "acf740fc-6e2b-4a8a-83fd-fe68eace44a3",
+        "id": "ba4146af-7873-4310-a284-9a8207877491",
         "nome": "Douglas Pires",
         "tipo": "pf",
         "documento": "156.932.384-40",
@@ -399,10 +434,11 @@
         "whatsapp": "5547994779040",
         "email": "douglas.pires@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-10-25T20:50:00.000Z"
+        "ultimoAtendimento": "2026-10-25T20:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "1791eb86-f155-4978-a9d3-349e0995087c",
+        "id": "36b22fa7-63e0-43da-a02f-1b7fcfe4a953",
         "nome": "Douglas Werner",
         "tipo": "pf",
         "documento": "526.718.501-90",
@@ -410,10 +446,11 @@
         "whatsapp": "5547991595635",
         "email": "douglas.werner@exemplo.com.br",
         "processos": 2,
-        "ultimoAtendimento": "2026-10-15T12:05:00.000Z"
+        "ultimoAtendimento": "2026-10-15T12:05:00.000Z",
+        "semIa": false
       },
       {
-        "id": "e7e183c8-6a94-4fc9-bbb2-ada5534a3f4c",
+        "id": "476f413f-ae33-426a-ac26-19d1a045c41e",
         "nome": "Eduardo Lima",
         "tipo": "pf",
         "documento": "145.786.320-08",
@@ -421,10 +458,11 @@
         "whatsapp": "5547984456712",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "70c4f031-4c08-4248-9857-3585a9cdb805",
+        "id": "c5a4c75a-89c6-437a-8718-09045569038a",
         "nome": "Elaine Bortolini",
         "tipo": "pf",
         "documento": "792.855.520-48",
@@ -432,10 +470,11 @@
         "whatsapp": "5547991077254",
         "email": "elaine.bortolini@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-10-11T14:05:00.000Z"
+        "ultimoAtendimento": "2026-10-11T14:05:00.000Z",
+        "semIa": false
       },
       {
-        "id": "956f27c1-3c44-43a0-b949-b0ed0fdd8f65",
+        "id": "92198800-21db-4259-9b65-adc88f982d36",
         "nome": "Eliane Schneider",
         "tipo": "pf",
         "documento": "290.721.718-61",
@@ -443,10 +482,11 @@
         "whatsapp": "5547998491251",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "d1a61447-1b41-4c54-baf3-f29c72c07391",
+        "id": "20be80da-671e-4fd2-9cd0-342ce39242ed",
         "nome": "Everton Bittencourt Medeiros",
         "tipo": "pf",
         "documento": "861.187.002-65",
@@ -454,10 +494,11 @@
         "whatsapp": "5547983204089",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2026-09-21T19:20:00.000Z"
+        "ultimoAtendimento": "2026-09-21T19:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "2c2839db-32a0-4c89-95cb-769b15fbef8f",
+        "id": "6944bc8d-b2c2-4c0c-82ad-42cb9d65527a",
         "nome": "Everton Reinert Moura",
         "tipo": "pf",
         "documento": "363.692.475-37",
@@ -465,10 +506,11 @@
         "whatsapp": "5547991381490",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2026-09-14T16:50:00.000Z"
+        "ultimoAtendimento": "2026-09-14T16:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "8f2b204a-9a09-40cc-adaa-6ece4f7fcca1",
+        "id": "cc535afb-b13e-4a35-88c0-836a380a2da1",
         "nome": "Fabrício Farias",
         "tipo": "pf",
         "documento": "180.161.583-74",
@@ -476,10 +518,11 @@
         "whatsapp": "5547999492228",
         "email": "fabricio.farias@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "004a5e0c-6bdf-49e2-930c-e26deaf1070e",
+        "id": "5da388ac-0bf5-4334-8410-26069fa3222e",
         "nome": "Farmácia Boa Safra Ltda.",
         "tipo": "pj",
         "documento": "72.348.706/0001-50",
@@ -487,10 +530,11 @@
         "whatsapp": "554734998126",
         "email": "financeiro.boasafra@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "75463e1d-2527-4ebb-bce8-11e49fc9769a",
+        "id": "0e5287cf-c338-4e52-997a-6cb34da7bd04",
         "nome": "Farmácia Portal do Sul Ltda.",
         "tipo": "pj",
         "documento": "45.856.891/0001-10",
@@ -498,10 +542,11 @@
         "whatsapp": "554734858921",
         "email": "financeiro.portaldosul@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2026-10-12T17:20:00.000Z"
+        "ultimoAtendimento": "2026-10-12T17:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "875740b1-60eb-4d7b-bafd-484306accf9e",
+        "id": "71f6b616-1737-4f9a-8be3-8781d12f1800",
         "nome": "Felipe Bernardi Lehmann",
         "tipo": "pf",
         "documento": "411.712.524-98",
@@ -509,10 +554,11 @@
         "whatsapp": "5547999527570",
         "email": "felipe.lehmann@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": null
+        "ultimoAtendimento": null,
+        "semIa": false
       },
       {
-        "id": "6e544f14-5fd3-456c-8591-d5b9eb588ffc",
+        "id": "fcffedd1-94a2-4151-b513-ab0a4ce455e1",
         "nome": "Felipe Krause Cardoso",
         "tipo": "pf",
         "documento": "553.518.622-80",
@@ -520,10 +566,11 @@
         "whatsapp": "5547998686977",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2025-11-04T18:50:00.000Z"
+        "ultimoAtendimento": "2025-11-04T18:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "16d39ab4-0aed-49c6-9fc9-1630f659083b",
+        "id": "6e553706-3815-4404-8a54-aa3b4a7eb372",
         "nome": "Felipe Pires Cardoso",
         "tipo": "pf",
         "documento": "617.207.550-00",
@@ -531,10 +578,11 @@
         "whatsapp": "5547995544126",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2026-09-27T16:20:00.000Z"
+        "ultimoAtendimento": "2026-09-27T16:20:00.000Z",
+        "semIa": false
       },
       {
-        "id": "b240d1c5-11e1-4549-b4d6-9cbb42479147",
+        "id": "d15e3e67-5e0d-4b20-a9b5-c89bf400ec01",
         "nome": "Gabriela Goulart Sartori",
         "tipo": "pf",
         "documento": "245.540.350-50",
@@ -542,10 +590,11 @@
         "whatsapp": "5547996264463",
         "email": null,
         "processos": 1,
-        "ultimoAtendimento": "2026-07-25T15:50:00.000Z"
+        "ultimoAtendimento": "2026-07-25T15:50:00.000Z",
+        "semIa": false
       },
       {
-        "id": "10ca72b2-2ec6-447c-8949-6fb509a744ce",
+        "id": "0ab63fc8-8c24-448f-82c0-855592b2f0ae",
         "nome": "Gabriela Pires",
         "tipo": "pf",
         "documento": "591.032.948-03",
@@ -553,7 +602,8 @@
         "whatsapp": "5547986445135",
         "email": "gabriela.pires@exemplo.com.br",
         "processos": 1,
-        "ultimoAtendimento": "2025-12-31T13:20:00.000Z"
+        "ultimoAtendimento": "2025-12-31T13:20:00.000Z",
+        "semIa": false
       }
     ]
   }

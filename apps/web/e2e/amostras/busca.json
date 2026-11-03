@@ -3,7 +3,7 @@
   "corpo": {
     "processos": [
       {
-        "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
+        "id": "ea377fff-1865-4e58-bbc3-be07084cab85",
         "titulo": "Marina Duarte × Seguradora Alfa S.A.",
         "cnj": "5004321-25.2026.8.24.0038",
         "tipo": "judicial",
@@ -12,7 +12,7 @@
     ],
     "clientes": [
       {
-        "id": "b8f4b2f6-d855-47c5-b669-d56142de59c0",
+        "id": "b93acafa-2d3f-4402-af87-32d6ad696cd6",
         "nome": "Marina Duarte",
         "documento": "31820456790",
         "telefone": "47991234567"
@@ -20,11 +20,11 @@
     ],
     "prazos": [
       {
-        "id": "e6a478a3-e302-4a9c-9362-2b1dd342565c",
+        "id": "e978f900-3940-48fd-b079-9b14cb047cc1",
         "tipo": "Manifestação sobre laudo pericial",
         "fim": "2026-11-23",
         "processo": {
-          "id": "3bbf0bc2-5978-48fa-bacb-67c5db6c9efd",
+          "id": "ea377fff-1865-4e58-bbc3-be07084cab85",
           "titulo": "Marina Duarte × Seguradora Alfa S.A."
         }
       }

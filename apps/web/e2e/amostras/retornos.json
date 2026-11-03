@@ -35,13 +35,13 @@
     ],
     "errados": [
       {
-        "id": "00dfdcb7-c394-4080-bfc3-477c5b7fd1a4",
+        "id": "de097962-0ce6-433b-ae8e-7ebb61471ff7",
         "acao": "gerar-documento",
         "rotulo": "Peça gerada",
         "comentario": "Citou o evento errado na seção 2.",
-        "em": "2026-11-02T23:03:46.516Z",
+        "em": "2026-11-03T11:56:57.082Z",
         "pessoa": {
-          "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
+          "id": "MYzDlQvtEdBq5QIzTnnPZvYei3Ev5ql6",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -49,18 +49,18 @@
         },
         "onde": {
           "tipo": "peca",
-          "id": "acc8c87c-efa6-47bd-a7f5-9142246e213b",
-          "processoId": "1d0958c8-7354-4fe9-b5ce-b8275e6abd96"
+          "id": "39692dd4-0a96-4888-8677-1707c535ec20",
+          "processoId": "ccf82688-bb82-42de-b988-d452f1c4521c"
         }
       },
       {
-        "id": "4aeadbe5-6f95-4693-8b62-0acdf3f3fa58",
+        "id": "50fac1d3-ea55-43a4-a001-9e8f88f00da4",
         "acao": "briefing-prazo",
         "rotulo": "Briefing do prazo",
         "comentario": "Contou o prazo do laudo como se fosse corrido.",
         "em": "2026-10-29T12:30:00.000Z",
         "pessoa": {
-          "id": "nwQQDkejOVU5RsCWLnzfLndluhbrHgVM",
+          "id": "MYzDlQvtEdBq5QIzTnnPZvYei3Ev5ql6",
           "nome": "Beatriz Souza",
           "apelido": "Beatriz",
           "iniciais": "BS",
@@ -68,17 +68,17 @@
         },
         "onde": {
           "tipo": "prazo",
-          "id": "e6a478a3-e302-4a9c-9362-2b1dd342565c"
+          "id": "e978f900-3940-48fd-b079-9b14cb047cc1"
         }
       },
       {
-        "id": "2df07a8f-bcc1-4061-969a-470c859e0c33",
+        "id": "b931d449-ed11-439f-b3f6-908047aeef5f",
         "acao": "preparar-audiencia",
         "rotulo": "Preparação de audiência",
         "comentario": "Tratou o aditivo de 60 dias como se cobrisse todo o atraso; ele foi assinado depois da data de entrega.",
         "em": "2026-10-28T21:20:00.000Z",
         "pessoa": {
-          "id": "K5NGZF2tOzNhNO2ZS2NLaTbEt82kspEO",
+          "id": "OVdWOwK9oSbx6xCDlMkhyGfPxLh8k2r8",
           "nome": "Tiago Martins",
           "apelido": "Tiago",
           "iniciais": "TM",
@@ -86,7 +86,7 @@
         },
         "onde": {
           "tipo": "audiencia",
-          "id": "34c5be46-c7cb-4f6b-a12d-c7d1c3581160"
+          "id": "488b4ef5-50eb-4e24-aff0-fa25f88a20c8"
         }
       }
     ]

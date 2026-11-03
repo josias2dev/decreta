@@ -15,7 +15,7 @@
               "rotulo": "Laudo pericial.docx · evento 87",
               "trecho": "Incapacidade parcial e permanente, fixada em 40% segundo a tabela da Lei 6.194/74",
               "confere": true,
-              "documentoId": "85052b5a-d6a8-440f-bb46-c699aa81c402"
+              "documentoId": "38f17536-ce54-435b-80b4-4cddf0260003"
             }
           ],
           "fundamento": "O perito fixou o grau e o nexo pela avaliação médica."
@@ -31,7 +31,7 @@
               "rotulo": "Laudo pericial.docx · evento 87",
               "trecho": "Não foi realizada vistoria no veículo, por não ser necessária à avaliação médica",
               "confere": true,
-              "documentoId": "85052b5a-d6a8-440f-bb46-c699aa81c402"
+              "documentoId": "38f17536-ce54-435b-80b4-4cddf0260003"
             },
             {
               "folha": null,
@@ -39,7 +39,7 @@
               "rotulo": "Laudo pericial.docx · evento 87",
               "trecho": "O perito examinou o veículo e não achou dano",
               "confere": false,
-              "documentoId": "85052b5a-d6a8-440f-bb46-c699aa81c402"
+              "documentoId": "38f17536-ce54-435b-80b4-4cddf0260003"
             }
           ],
           "fundamento": "A incapacidade se mede no corpo da autora, não no veículo."
