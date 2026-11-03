@@ -3,7 +3,7 @@
  * do DataJud pelos processos ativos. Cada rodada fica em `capturas`, com o
  * que achou e o erro, para a tela de Publicações dizer quando foi a última.
  */
-import { dataDaPublicacao, diaDaSemana, ehDiaUtil, formatarDiaCurto, limparCnj, somarDias, tribunalDoCnj, type Dia } from "@decreta/core";
+import { dataDaPublicacao, diaDaSemana, ehDiaUtil, formatarDiaCurto, limparCnj, recebePublicacoes, somarDias, tribunalDoCnj, type Dia } from "@decreta/core";
 import { cadernosDjen, capturas, equipe, escritorios, movimentacoes, organization, partes, processos, publicacoes, withTenant, type Database, type Tx } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
 import { buscarNoDataJud, buscarNoDjen, certidaoDoDjen, dataJudAtualizadoAte, lerCaderno, orgaoSemComarca, partesDoDjen, ultimosEnviosAoDjen, type ComunicacaoDjen, type OpcoesDjen } from "@decreta/tribunais";
@@ -92,10 +92,17 @@ export async function ehDemonstracao(db: Database, organizationId: string): Prom
 }
 
 /**
- * O que não vai ao DJEN nem ao DataJud: a demonstração (OABs e processos inventados), o escritório encerrado e, com a
- * cobrança ligada, o que não tem acesso total (o teste acabou, a fatura passou de 7 dias, a equipe pôs só leitura).
+ * O que não vai ao DJEN: a demonstração (OABs inventadas), o escritório encerrado e, com a cobrança ligada, quem não recebe
+ * publicações (`recebePublicacoes`): quem atrasou a fatura segue recebendo até o bloqueio.
  */
 export async function foraDaCaptura(db: Database, organizationId: string, cobrancaAtiva = false): Promise<boolean> {
+  const [o] = await db.select({ slug: organization.slug, encerradoEm: organization.encerradoEm, ...colunasDaAssinatura }).from(organization).where(eq(organization.id, organizationId));
+  if (o?.slug === SLUG_DA_DEMONSTRACAO || !!o?.encerradoEm) return true;
+  return !!o && !recebePublicacoes(estadoDoEscritorio(o, cobrancaAtiva));
+}
+
+/** O que não vai ao DataJud: a demonstração, o escritório encerrado e, com a cobrança ligada, o que não tem acesso total. */
+export async function foraDoDataJud(db: Database, organizationId: string, cobrancaAtiva = false): Promise<boolean> {
   const [o] = await db.select({ slug: organization.slug, encerradoEm: organization.encerradoEm, ...colunasDaAssinatura }).from(organization).where(eq(organization.id, organizationId));
   if (o?.slug === SLUG_DA_DEMONSTRACAO || !!o?.encerradoEm) return true;
   return !!o && estadoDoEscritorio(o, cobrancaAtiva).acesso !== "total";
@@ -187,10 +194,10 @@ function tribunaisDoCaderno(carteira: string[], ufsDasOabs: string[]): Set<strin
   return t;
 }
 
-/** Os escritórios com a captura ligada, fora a demonstração (ver demonstracao/slug.ts), os encerrados e, com a cobrança ligada, os sem acesso total. */
+/** Os escritórios com a captura ligada, fora a demonstração (ver demonstracao/slug.ts), os encerrados e, com a cobrança ligada, os que não recebem publicações. */
 async function escritoriosDoCaderno(db: Database, dias: Dia[], cobrancaAtiva = false): Promise<EscritorioNoCaderno[]> {
   const todas = await db.select({ id: organization.id, ...colunasDaAssinatura }).from(organization).where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm)));
-  const orgs = todas.filter((o) => estadoDoEscritorio(o, cobrancaAtiva).acesso === "total");
+  const orgs = todas.filter((o) => recebePublicacoes(estadoDoEscritorio(o, cobrancaAtiva)));
   const saida: EscritorioNoCaderno[] = [];
   for (const { id } of orgs) {
     const e = await withTenant(db, id, async (tx) => {
@@ -469,7 +476,7 @@ export function periodoDaCaptura(hoje: Dia): { de: Dia; ate: Dia } {
 
 /** Andamentos do DataJud de um processo. Devolve quantos entraram. */
 export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: string, processoId: string): Promise<number> {
-  if (await foraDaCaptura(deps.db, organizationId, deps.cobrancaAtiva)) return 0;
+  if (await foraDoDataJud(deps.db, organizationId, deps.cobrancaAtiva)) return 0;
   const p = await withTenant(deps.db, organizationId, async (tx) => (await tx.select().from(processos).where(eq(processos.id, processoId)))[0]);
   if (!p?.cnj || limparCnj(p.cnj).length !== 20) return 0;
   const dados = await buscarNoDataJud(p.cnj, { apiKey: deps.datajudKey, fetch: deps.fetch });
@@ -516,7 +523,7 @@ export async function atualizarDoDataJud(deps: DepsDaCaptura, organizationId: st
  * respondeu fica com a conferência anterior.
  */
 export async function conferirDataJudDoEscritorio(deps: DepsDaCaptura, organizationId: string): Promise<Record<string, string>> {
-  if (await foraDaCaptura(deps.db, organizationId, deps.cobrancaAtiva)) return {};
+  if (await foraDoDataJud(deps.db, organizationId, deps.cobrancaAtiva)) return {};
   const { cnjs, antes } = await withTenant(deps.db, organizationId, async (tx) => ({
     cnjs: await tx
       .selectDistinct({ cnj: processos.cnj })

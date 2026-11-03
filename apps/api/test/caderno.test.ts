@@ -6,7 +6,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createHash, randomBytes } from "node:crypto";
-import { dvCnj } from "@decreta/core";
+import { dvCnj, hojeEm, somarDias } from "@decreta/core";
 import { processos, withTenant } from "@decreta/db";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { armazenamentoEmMemoria } from "@decreta/documentos";
@@ -352,5 +352,28 @@ describe.skipIf(!hasTestDatabase)("captura pelo caderno do DJEN", () => {
       expect(await tjsc28()).toMatchObject({ situacao: "lido", versao: 3, erro: null });
       expect((await publicacoesDe(souza)).find((p) => p.id_externo === "5")).toMatchObject({ motivo_cancelamento: "Erro material" });
     });
+  });
+
+  test("o caderno segue para quem atrasou a fatura e para quando o escritório é bloqueado", async () => {
+    const dia = "2026-10-20";
+    cadernos.set(`TJSC/${dia}`, { versao: 1, itens: [comunicacao(50, { cnj: DE_OUTRO, oab: "30111" })] });
+    const comCobranca = { ...captura, cobrancaAtiva: true };
+    const atrasoDe = async (dias: number) => t.owner`update organization set situacao = 'inadimplente', inadimplente_desde = ${somarDias(hojeEm("America/Sao_Paulo"), -dias)} where id = ${outro}`;
+    try {
+      await atrasoDe(15);
+      await capturarCadernos(comCobranca, [dia]);
+      expect((await publicacoesDe(outro)).map((p) => p.id_externo)).not.toContain("50");
+      await atrasoDe(9);
+      const r = await capturarCadernos(comCobranca, [dia]);
+      expect((await publicacoesDe(outro)).map((p) => p.id_externo)).toContain("50");
+      // A publicação nova segue para a rotina da IA, que continua parada: quem barra é ela (`semAcesso`, em inngest.ts).
+      expect(r.novas.map((n) => n.organizationId)).toContain(outro);
+    } finally {
+      await t.owner`update organization set situacao = 'cortesia', inadimplente_desde = null where id = ${outro}`;
+      await t.owner`delete from publicacoes where id_externo = '50'`;
+      await t.owner`delete from cadernos_djen where dia = ${dia}`;
+      cadernos.delete(`TJSC/${dia}`);
+      baixados.length = 0;
+    }
   });
 });

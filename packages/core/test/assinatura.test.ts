@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   avisoDaAssinatura,
+  recebePublicacoes,
   DIAS_ATE_BLOQUEIO,
   DIAS_ATE_SO_LEITURA,
   estadoDaAssinatura,
@@ -119,6 +120,32 @@ describe("inadimplência", () => {
 
   test("sem a data do atraso na ficha, nunca trava", () => {
     expect(estadoDaAssinatura(ficha({ situacao: "inadimplente" }), "2030-01-01").acesso).toBe("total");
+  });
+
+  test("as publicações continuam chegando no atraso e só param no bloqueio, porque um prazo perdido custa mais que a fatura", () => {
+    const antes = estadoDaAssinatura(f, "2026-11-11");
+    const leitura = estadoDaAssinatura(f, "2026-11-17");
+    const bloqueio = estadoDaAssinatura(f, "2026-11-25");
+    expect(recebePublicacoes(antes)).toBe(true);
+    expect(recebePublicacoes(leitura)).toBe(true);
+    expect(recebePublicacoes(bloqueio)).toBe(false);
+
+    expect(avisoDaAssinatura(antes)?.texto).toContain("As publicações do DJEN continuam chegando até o bloqueio, em 25/11/2026");
+    expect(avisoDaAssinatura(leitura)?.texto).toContain("As publicações do DJEN continuam chegando");
+    expect(avisoDaAssinatura(leitura)?.texto).toContain("o WhatsApp e a IA estão parados");
+    expect(avisoDaAssinatura(leitura)?.texto).not.toContain("não estão chegando");
+    expect(avisoDaAssinatura(bloqueio)?.texto).toContain("As publicações do DJEN não estão chegando");
+  });
+
+  test("quem só testou, quem cancelou e o que a equipe travou não recebem publicações; quem está em dia, sim", () => {
+    const hoje = "2026-12-01";
+    expect(recebePublicacoes(estadoDaAssinatura(ficha({ situacao: "teste", testeAte: "2026-11-30" }), hoje))).toBe(false);
+    expect(recebePublicacoes(estadoDaAssinatura(ficha({ situacao: "cancelado" }), hoje))).toBe(false);
+    expect(recebePublicacoes(estadoDaAssinatura(ficha({ situacao: "so_leitura" }), hoje))).toBe(false);
+    expect(recebePublicacoes(estadoDaAssinatura(ficha({ situacao: "bloqueado" }), hoje))).toBe(false);
+    expect(recebePublicacoes(estadoDaAssinatura(ficha({ situacao: "ativo" }), hoje))).toBe(true);
+    expect(recebePublicacoes(estadoDaAssinatura(ficha({ situacao: "cortesia" }), hoje))).toBe(true);
+    expect(recebePublicacoes(estadoDaAssinatura(ficha({ situacao: "teste", testeAte: "2026-12-05" }), hoje))).toBe(true);
   });
 });
 

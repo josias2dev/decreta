@@ -24,7 +24,7 @@
  * por escritório. Repetir uma rodada é inócuo: publicação e movimentação
  * repetidas não entram duas vezes, e o resumo do dia sai uma vez por pessoa.
  */
-import { diaDaSemana, hojeEm } from "@decreta/core";
+import { diaDaSemana, hojeEm, recebePublicacoes } from "@decreta/core";
 import { avisosEnviados, escritorios, organization, withTenant, type Database } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
 import type { Ia } from "@decreta/ia";
@@ -105,7 +105,7 @@ export interface DepsDasRotinas {
   observacao?: Observacao;
   /** O e-mail que avisa o sócio de que a cópia dos dados ficou pronta e do teste que acaba ou da fatura em atraso. */
   mailer?: Mailer;
-  /** Com a cobrança ligada, o escritório sem acesso total para de receber a captura, o WhatsApp e a IA, e os sócios recebem os avisos do plano. */
+  /** Com a cobrança ligada, o escritório sem acesso total para de receber o WhatsApp, a IA e o DataJud (as publicações têm regra própria), e os sócios recebem os avisos do plano. */
   cobrancaAtiva?: boolean;
   /** O Asaas do Decreta: a rotina que apaga o escritório encerrado cancela a assinatura antes. */
   asaas?: ClienteAsaas | null;
@@ -116,12 +116,23 @@ export interface DepsDasRotinas {
  * ou o WhatsApp), e o escritório encerrado também: não busca, não lê e não manda mais nada.
  */
 export async function escritoriosAtivos(db: Database, cobrancaAtiva = false) {
+  // Com a cobrança ligada, o escritório sem acesso total (o teste acabou, a fatura passou de 7 dias, só leitura ou bloqueado) não recebe WhatsApp, não usa a IA e não busca no DataJud.
+  return escritoriosDasRotinas(db, (o) => estadoDoEscritorio(o, cobrancaAtiva).acesso === "total");
+}
+
+/** Os escritórios que recebem as publicações do DJEN: inclui quem atrasou a fatura e ainda não foi bloqueado (ver `recebePublicacoes`). */
+export async function escritoriosDoDjen(db: Database, cobrancaAtiva = false) {
+  return escritoriosDasRotinas(db, (o) => recebePublicacoes(estadoDoEscritorio(o, cobrancaAtiva)));
+}
+
+type FichaDaRotina = Parameters<typeof estadoDoEscritorio>[0];
+
+async function escritoriosDasRotinas(db: Database, entra: (o: FichaDaRotina) => boolean) {
   const todos = await db
     .select({ id: organization.id, emAvaliacao: organization.emAvaliacao, ...colunasDaAssinatura })
     .from(organization)
     .where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm)));
-  // Com a cobrança ligada, o escritório sem acesso total (o teste acabou, a fatura passou de 7 dias, só leitura ou bloqueado) não é buscado, não recebe WhatsApp e não usa a IA.
-  return todos.filter((o) => estadoDoEscritorio(o, cobrancaAtiva).acesso === "total").map((o) => ({ id: o.id, timezone: o.timezone, emAvaliacao: o.emAvaliacao }));
+  return todos.filter(entra).map((o) => ({ id: o.id, timezone: o.timezone, emAvaliacao: o.emAvaliacao }));
 }
 
 /** O que a IA deve ler de novo em cada escritório (a demonstração fica de fora, como nas outras rotinas). */
@@ -157,7 +168,7 @@ export function createFunctions(deps: DepsDasRotinas) {
   const agendarCaptura = inngest.createFunction(
     { id: "agendar-captura-djen", triggers: [{ cron: "TZ=America/Sao_Paulo 40 12,18 * * 1-5" }], onFailure: async ({ error }) => reporter.error(error, { funcao: "agendar-captura-djen" }) },
     async ({ step }) => {
-      const orgs = await step.run("escritorios", () => escritoriosAtivos(db, cobrancaAtiva));
+      const orgs = await step.run("escritorios", () => escritoriosDoDjen(db, cobrancaAtiva));
       if (orgs.length) await step.sendEvent("capturar", orgs.map((o) => capturaPedida.create({ organizationId: o.id })));
       return { escritorios: orgs.length };
     },

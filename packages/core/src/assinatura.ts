@@ -118,6 +118,15 @@ export function estadoDaAssinatura(f: FichaDaAssinatura, hoje: Dia): EstadoDaAss
   }
 }
 
+/**
+ * Quem continua recebendo as publicações do DJEN: quem tem acesso total e quem já era cliente e está só para leitura por
+ * atraso, porque um prazo perdido por causa de uma fatura custa mais que ela. Param no bloqueio, para quem só testou, para
+ * quem cancelou e no que a equipe travou. A IA, o WhatsApp e o DataJud seguem só com acesso total.
+ */
+export function recebePublicacoes(e: EstadoDaAssinatura): boolean {
+  return e.acesso === "total" || (e.acesso === "leitura" && e.motivo === "atraso");
+}
+
 /* ---------------- Meses e período pago ---------------- */
 
 /** Soma meses mantendo o dia; onde o mês não tem aquele dia, cai no último. */
@@ -164,13 +173,14 @@ export function avisoDaAssinatura(e: EstadoDaAssinatura): AvisoDaAssinatura | nu
         return { nivel: "grave", texto: `O teste acabou em ${formatarDia(e.testeAte)}. O escritório está só para leitura: ${SEM_PUBLICACAO.replace("deixam de chegar", "não estão chegando")}. Nada foi apagado. Assine para voltar ao normal.`, ate: e.testeAte };
       }
       if (e.motivo === "atraso" && e.bloqueiaEm) {
-        return { nivel: "grave", texto: `A fatura em atraso deixou o escritório só para leitura: ${SEM_PUBLICACAO.replace("deixam de chegar", "não estão chegando")}. Em ${formatarDia(e.bloqueiaEm)} o acesso será bloqueado. Pague para voltar ao normal.`, ate: e.bloqueiaEm };
+        return { nivel: "grave", texto: `A fatura em atraso deixou o escritório só para leitura: nada novo pode ser salvo, e o WhatsApp e a IA estão parados. As publicações do DJEN continuam chegando. Em ${formatarDia(e.bloqueiaEm)} o acesso será bloqueado e elas deixam de chegar. Pague para voltar ao normal.`, ate: e.bloqueiaEm };
       }
       return { nivel: "grave", texto: `O escritório está só para leitura por decisão da equipe do Decreta: ${SEM_PUBLICACAO.replace("deixam de chegar", "não estão chegando")}. Fale com a equipe para voltar ao normal.`, ate: null };
     }
     case "inadimplente": {
       if (!e.viraSoLeituraEm) return null;
-      return { nivel: "atencao", texto: `Há uma fatura em atraso. Em ${formatarDia(e.viraSoLeituraEm)} o escritório passa a ser só para leitura e as publicações do DJEN deixam de chegar. Regularize o pagamento para evitar.`, ate: e.viraSoLeituraEm };
+      const ateOBloqueio = e.bloqueiaEm ? ` até o bloqueio, em ${formatarDia(e.bloqueiaEm)}` : "";
+      return { nivel: "atencao", texto: `Há uma fatura em atraso. Em ${formatarDia(e.viraSoLeituraEm)} o escritório passa a ser só para leitura: nada novo pode ser salvo, e o WhatsApp e a IA param. As publicações do DJEN continuam chegando${ateOBloqueio}. Regularize o pagamento para evitar.`, ate: e.viraSoLeituraEm };
     }
     case "bloqueado":
       return {

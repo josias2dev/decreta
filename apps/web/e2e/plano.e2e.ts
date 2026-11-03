@@ -130,7 +130,7 @@ test.describe("no computador", () => {
   });
 
   test("em atraso: as faturas com o link do Asaas e a troca da forma de pagamento pelo que o Asaas oferece", async ({ page }) => {
-    const api = comAssinatura("inadimplente", "total", { nivel: "atencao", texto: "Há uma fatura em atraso. Em 05/11/2026 o escritório passa a ser só para leitura e as publicações do DJEN deixam de chegar. Regularize o pagamento para evitar.", ate: "2026-11-05" }).responder(
+    const api = comAssinatura("inadimplente", "total", { nivel: "atencao", texto: "Há uma fatura em atraso. Em 05/11/2026 o escritório passa a ser só para leitura: nada novo pode ser salvo, e o WhatsApp e a IA param. As publicações do DJEN continuam chegando até o bloqueio. Regularize o pagamento para evitar.", ate: "2026-11-05" }).responder(
       "/plano",
       plano({
         situacao: "inadimplente",
@@ -141,7 +141,7 @@ test.describe("no computador", () => {
         podeAssinar: false,
         podeCancelar: true,
         trocarFormaEm: "https://sandbox.asaas.com/i/atrasada",
-        aviso: { nivel: "atencao", texto: "Há uma fatura em atraso. Em 05/11/2026 o escritório passa a ser só para leitura e as publicações do DJEN deixam de chegar. Regularize o pagamento para evitar.", ate: "2026-11-05" },
+        aviso: { nivel: "atencao", texto: "Há uma fatura em atraso. Em 05/11/2026 o escritório passa a ser só para leitura: nada novo pode ser salvo, e o WhatsApp e a IA param. As publicações do DJEN continuam chegando até o bloqueio. Regularize o pagamento para evitar.", ate: "2026-11-05" },
         faturas: [
           { id: "pay_2", vencimento: "2026-10-27", valorCentavos: 9900, situacao: "atrasada", forma: "indefinida", link: "https://sandbox.asaas.com/i/atrasada", pagaEm: null },
           { id: "pay_1", vencimento: "2026-09-27", valorCentavos: 9900, situacao: "paga", forma: "pix", link: "https://sandbox.asaas.com/i/paga", pagaEm: "2026-09-27" },

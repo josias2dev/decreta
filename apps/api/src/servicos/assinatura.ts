@@ -43,7 +43,7 @@ export async function carregarEstado(db: Database, organizationId: string, cobra
   return l ? estadoDoEscritorio(l, cobrancaAtiva, agora) : null;
 }
 
-/** O escritório que não tem acesso total não busca no DJEN, não manda WhatsApp e não usa a IA. Sem escritório, também não. */
+/** O escritório que não tem acesso total não manda WhatsApp, não usa a IA e não busca no DataJud. Sem escritório, também não. As publicações do DJEN têm regra própria: `recebePublicacoes`. */
 export async function temAcessoTotal(db: Database, organizationId: string, cobrancaAtiva: boolean | undefined, agora = new Date()): Promise<boolean> {
   if (!cobrancaAtiva) return true;
   const e = await carregarEstado(db, organizationId, true, agora);

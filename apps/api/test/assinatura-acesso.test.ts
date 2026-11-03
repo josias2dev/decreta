@@ -1,14 +1,14 @@
 /**
  * O que a situação na assinatura permite, na API: escritório antigo nunca é travado; o novo começa em teste de 14
  * dias; o teste que acaba e o atraso viram só leitura e bloqueio no dia certo; só leitura recusa escrita mas deixa
- * pagar, exportar e encerrar; a captura, o WhatsApp e a IA param; e, com a cobrança desligada, tudo age como antes.
+ * pagar, exportar e encerrar; o WhatsApp, a IA e o DataJud param, as publicações só param no bloqueio do atraso; e, com a cobrança desligada, tudo age como antes.
  */
 import { estadoDaAssinatura, hojeEm, somarDias, VERSAO_DOS_TERMOS } from "@decreta/core";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
-import { escritoriosAtivos, releiturasPendentes } from "../src/inngest.ts";
+import { escritoriosAtivos, escritoriosDoDjen, releiturasPendentes } from "../src/inngest.ts";
 import { acessoLiberado, comoNasce, estadoDoEscritorio, temAcessoTotal } from "../src/servicos/assinatura.ts";
-import { capturarDjen, foraDaCaptura } from "../src/servicos/captura.ts";
+import { capturarDjen, foraDaCaptura, foraDoDataJud } from "../src/servicos/captura.ts";
 import { enviarAvisosDaAssinatura } from "../src/servicos/cobranca.ts";
 import { dia, montarApi, organizacao, porNaAssinatura } from "./cobranca-apoio.ts";
 
@@ -267,7 +267,7 @@ describe.skipIf(!hasTestDatabase)("acesso por situação", () => {
     });
   });
 
-  describe("a captura, o WhatsApp e a IA param", () => {
+  describe("o WhatsApp, a IA e o DataJud param; as publicações seguem regra própria", () => {
     test("só entra nas rotinas quem tem acesso total", async () => {
       const total = await escritorio("rotina-total", { situacao: "ativo" });
       const cortesia = await escritorio("rotina-cortesia", {});
@@ -288,16 +288,45 @@ describe.skipIf(!hasTestDatabase)("acesso por situação", () => {
 
       for (const o of [testeAcabou, atrasado, bloqueado, soLeitura]) {
         expect(await temAcessoTotal(t.db, o.organizationId, true)).toBe(false);
-        expect(await foraDaCaptura(t.db, o.organizationId, true)).toBe(true);
+        expect(await foraDoDataJud(t.db, o.organizationId, true)).toBe(true);
       }
       for (const o of [total, cortesia, testeVigente]) {
         expect(await temAcessoTotal(t.db, o.organizationId, true)).toBe(true);
-        expect(await foraDaCaptura(t.db, o.organizationId, true)).toBe(false);
+        expect(await foraDoDataJud(t.db, o.organizationId, true)).toBe(false);
       }
       expect(await releiturasPendentes(t.db, true)).toEqual([]);
+
+      // As publicações têm regra própria: quem já era cliente e atrasou continua recebendo. O resto das rotinas (acima) para.
+      const doDjen = ids(await escritoriosDoDjen(t.db, true));
+      for (const o of [total, cortesia, testeVigente, atrasado]) {
+        expect(doDjen.has(o.organizationId)).toBe(true);
+        expect(await foraDaCaptura(t.db, o.organizationId, true)).toBe(false);
+      }
+      for (const o of [testeAcabou, bloqueado, soLeitura]) {
+        expect(doDjen.has(o.organizationId)).toBe(false);
+        expect(await foraDaCaptura(t.db, o.organizationId, true)).toBe(true);
+      }
+      const semCobranca = ids(await escritoriosDoDjen(t.db, false));
+      for (const o of [total, cortesia, testeVigente, testeAcabou, atrasado, bloqueado, soLeitura]) expect(semCobranca.has(o.organizationId)).toBe(true);
     });
 
-    test("o escritório só leitura não vai ao DJEN: a busca nem chega a sair", async () => {
+    test("quem atrasou há 7 dias continua indo ao DJEN; aos 15, bloqueado, a busca nem sai", async () => {
+      const emAtraso = await escritorio("djen-atraso", { situacao: "inadimplente", inadimplente_desde: somarDias(HOJE, -9) });
+      const bloqueadoPorAtraso = await escritorio("djen-atraso-15", { situacao: "inadimplente", inadimplente_desde: somarDias(HOJE, -15) });
+      for (const o of [emAtraso, bloqueadoPorAtraso]) await t.owner`update equipe set oab_numero = '12345', oab_uf = 'SC' where organization_id = ${o.organizationId}`;
+      let chamadas = 0;
+      const fetch = (async () => {
+        chamadas++;
+        return new Response(JSON.stringify({ status: "success", message: "ok", count: 0, items: [] }), { headers: { "content-type": "application/json" } });
+      }) as unknown as typeof globalThis.fetch;
+      const periodo = { de: somarDias(HOJE, -3), ate: HOJE };
+      expect(await capturarDjen({ db: t.db, datajudKey: "", fetch, cobrancaAtiva: true }, bloqueadoPorAtraso.organizationId, periodo)).toEqual({ encontradas: 0, novas: [] });
+      expect(chamadas).toBe(0);
+      await capturarDjen({ db: t.db, datajudKey: "", fetch, cobrancaAtiva: true }, emAtraso.organizationId, periodo).catch(() => {});
+      expect(chamadas).toBeGreaterThan(0);
+    });
+
+    test("o escritório só leitura por decisão da equipe não vai ao DJEN: a busca nem chega a sair", async () => {
       const parado = await escritorio("djen-parado", { situacao: "so_leitura" });
       const vivo = await escritorio("djen-vivo", { situacao: "ativo" });
       for (const o of [parado, vivo]) await t.owner`update equipe set oab_numero = '12345', oab_uf = 'SC' where organization_id = ${o.organizationId}`;
