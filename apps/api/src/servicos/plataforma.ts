@@ -15,6 +15,8 @@ import {
   PLANO,
   somarDias,
   type Dia,
+  type AcaoRegistrada,
+  type EscritorioDaPlataforma,
   type EtapaDoFunil,
   type SituacaoDoEscritorio,
 } from "@decreta/core";
@@ -41,29 +43,7 @@ export const ehOperador = (emails: ReadonlySet<string>, email: string | null | u
 
 /* ---------------- A lista ---------------- */
 
-export interface EscritorioDaPlataforma {
-  id: string;
-  nome: string;
-  slug: string;
-  demonstracao: boolean;
-  encerrado: boolean;
-  emAvaliacao: boolean;
-  /** A situação de hoje (a gravada, corrigida pelas datas). */
-  situacao: SituacaoDoEscritorio;
-  situacaoGravada: SituacaoDoEscritorio;
-  criadoEm: string;
-  /** O fim do teste: o último dia. */
-  testeAte: Dia | null;
-  diasRestantesDoTeste: number | null;
-  diasDeAtraso: number | null;
-  acessoAte: Dia | null;
-  assinouEm: string | null;
-  cancelamentoPedidoEm: string | null;
-  valorMensalCentavos: number | null;
-  pessoas: number;
-  processos: number;
-  iaMesUsd: number;
-}
+export type { EscritorioDaPlataforma };
 
 type LinhaCrua = {
   id: string;
@@ -171,15 +151,7 @@ export async function indicadoresDaPlataforma(db: Database, dias: number, agora 
 
 /* ---------------- A auditoria ---------------- */
 
-export interface AcaoDaPlataforma {
-  id: string;
-  operador: string;
-  acao: string;
-  organizationId: string | null;
-  escritorio: string | null;
-  detalhes: Record<string, unknown>;
-  em: string;
-}
+export type AcaoDaPlataforma = AcaoRegistrada;
 
 export async function auditoriaDaPlataformaRecente(db: Database, limite = 100): Promise<AcaoDaPlataforma[]> {
   const linhas = await db.execute<{ id: string; operador: string; acao: string; organization_id: string | null; escritorio: string | null; detalhes: Record<string, unknown>; em: string }>(

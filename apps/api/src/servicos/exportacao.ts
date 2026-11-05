@@ -143,6 +143,7 @@ export const NAO_EXPORTADAS: Record<string, string> = {
   observacoes_da_ia: "comparação interna de modelos de IA",
   exportacoes: "as próprias cópias",
   eventos: "contagem do funil do Decreta, sem dado do escritório",
+  acessos: "registro técnico dos dias em que cada pessoa entrou, para o painel da plataforma",
   eventos_de_cobranca: "registro técnico dos avisos do Asaas já tratados",
   auditoria_da_plataforma: "o que a equipe do Decreta fez na conta, para a segurança da plataforma; só ela lê",
   member: "a equipe sai na planilha equipe",

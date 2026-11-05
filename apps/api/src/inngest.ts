@@ -44,6 +44,7 @@ import { apagarEscritoriosEncerrados } from "./servicos/encerramento.ts";
 import { apagarExportacoesVencidas, marcarExportacaoFalhou, prepararExportacao } from "./servicos/exportacao.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
 import { executarPrimeiraBusca, LEITURAS_NA_HORA } from "./servicos/primeira-busca.ts";
+import { tirarFotoDaPlataforma } from "./servicos/painel-da-plataforma.ts";
 import { cruzarRadar, sincronizarPrecedentesDoBnp } from "./servicos/radar.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
@@ -542,5 +543,11 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn, avisosDoPlanoFn];
+  // A foto do dia do painel da plataforma: os totais de hoje (MRR, escritórios por situação), para o histórico mês a mês.
+  const fotoDaPlataformaFn = inngest.createFunction(
+    { id: "foto-da-plataforma", triggers: [{ cron: "TZ=America/Sao_Paulo 50 23 * * *" }], retries: 3, onFailure: async ({ error }) => reporter.error(error, { funcao: "foto-da-plataforma" }) },
+    async ({ step }) => step.run("foto", () => tirarFotoDaPlataforma(db)),
+  );
+
+  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn, avisosDoPlanoFn, fotoDaPlataformaFn];
 }

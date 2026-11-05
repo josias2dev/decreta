@@ -7,6 +7,7 @@ import { avisoDaAssinatura, hojeEm, somarDias } from "@decreta/core";
 import { alvaras, clientes, equipe, escritorios, negocios, organization, prazos, processos, publicacoes, type Tx } from "@decreta/db";
 import { and, asc, eq, ilike, inArray, isNull, like, lte, or, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
+import { registrarAcesso } from "../acessos.ts";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { acessoLiberado, colunasDaAssinatura, estadoDoEscritorio, recusaDeAcesso } from "../servicos/assinatura.ts";
 import { AVISO_DO_ENCERRAMENTO } from "../servicos/encerramento.ts";
@@ -73,6 +74,7 @@ export function createRotas(deps: DepsDasRotas) {
     c.set("emailConfirmado", sessao.user.emailVerified || !deps.mailer.enabled);
     c.set("userNome", sessao.user.name || sessao.user.email);
     c.set("papel", papel);
+    await registrarAcesso(db, { organizationId: orgId, userId: sessao.user.id, userAgent: c.req.header("user-agent") }, deps.log);
     await next();
   });
 

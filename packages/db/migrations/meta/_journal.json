@@ -239,6 +239,13 @@
       "when": 1793703986604,
       "tag": "0033_base_legal_da_ia",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793902586500,
+      "tag": "0034_painel_da_plataforma",
+      "breakpoints": true
     }
   ]
 }

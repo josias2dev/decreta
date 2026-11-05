@@ -20,7 +20,7 @@ import { asaasFalso, CHAVE_DO_ASAAS, TOKEN_DO_ASAAS } from "./asaas-falso.ts";
 
 export const SENHA = "senha-bem-longa-123";
 
-export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; token?: string; asaas?: ReturnType<typeof asaasFalso>; nfse?: ConfigDaNfse; log?: (msg: string, extra?: Record<string, unknown>) => void }) {
+export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; doisFatores?: boolean; emailLigado?: boolean; token?: string; asaas?: ReturnType<typeof asaasFalso>; nfse?: ConfigDaNfse; log?: (msg: string, extra?: Record<string, unknown>) => void }) {
   const env = readEnv({
     DATABASE_URL: "postgres://unused@localhost/unused",
     BETTER_AUTH_SECRET: randomBytes(32).toString("hex"),
@@ -53,7 +53,7 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
     env,
     auth,
     rotas,
-    plataforma: rotasDaPlataforma({ db: t.db, auth, emails: operadores, log: () => {} }),
+    plataforma: rotasDaPlataforma({ db: t.db, auth, emails: operadores, log: () => {}, exigirDoisFatores: opcoes.doisFatores ?? false, emailLigado: opcoes.emailLigado ?? false, telas: "https://decreta.local", config: { cotacaoUsd: 5, tetos: { siteUsd: 4, avaliacaoUsd: 0.5 } } }),
     plataformaEmails: operadores,
     cobranca: { ativa: opcoes.ativa, token: opcoes.token === undefined ? TOKEN_DO_ASAAS : opcoes.token, asaas: cliente, nfse: opcoes.nfse ?? null },
     log: opcoes.log ?? (() => {}),
