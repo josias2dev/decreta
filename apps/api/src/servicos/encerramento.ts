@@ -36,7 +36,8 @@ export async function escritorioEncerrado(db: Database, organizationId: string):
 
 export interface PedidoDeEncerramento {
   organizationId: string;
-  userId: string;
+  /** Nulo quando é a equipe do Decreta que encerra, a pedido do escritório, pelo painel da plataforma. */
+  userId: string | null;
   nome: string;
   ip: string | null;
   log?: Log;

@@ -13,6 +13,7 @@ import { z } from "zod";
 import { registrar } from "../auditoria.ts";
 import { ultimaAnalise } from "../servicos/analises.ts";
 import { enviarWhatsapp } from "../servicos/avisos.ts";
+import { AVISO_DO_LIMITE_DE_WHATSAPP, whatsappQueResta } from "../servicos/planos.ts";
 import { AVISO_DO_WHATSAPP, WHATSAPP_EM_AVALIACAO } from "../servicos/em-avaliacao.ts";
 import { ultimaConferencia } from "../servicos/conferencia.ts";
 import { semIa, ClienteSemIa } from "../servicos/contexto.ts";
@@ -248,6 +249,7 @@ export function rotasDasMensagensAoCliente(app: Hono<Ambiente>, deps: DepsDasRot
       if (contarACompletar(texto)) falha(422, "falta_completar", "A mensagem ainda tem [a completar]. Troque pelo dado certo antes de enviar.");
       if (c.get("emAvaliacao") && !WHATSAPP_EM_AVALIACAO.permitir(c.get("orgId"))) falha(429, "teto_em_avaliacao", AVISO_DO_WHATSAPP);
       const agora = new Date();
+      if ((await whatsappQueResta(db, tx, c.get("orgId"), hojeEm(l.id_.timezone, agora))) === 0) falha(429, "limite_do_plano", AVISO_DO_LIMITE_DE_WHATSAPP);
       // Cobrança: o link de envio nasce agora, na aprovação, e vale até o fim do 7º dia no fuso do
       // escritório, como a mensagem diz. O banco guarda só o hash do segredo.
       const segredo = randomBytes(24).toString("base64url");

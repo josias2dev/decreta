@@ -10,6 +10,7 @@
  */
 import { type SituacaoDoEscritorio, SITUACOES_DO_ESCRITORIO } from "./assinatura.ts";
 import { diaDaSemana, diaDoInstante, diferencaEmDias, somarDias, type Dia } from "./datas.ts";
+import type { LicencaCompleta, NotaDaEquipe } from "./plano.ts";
 
 /* ---------------- As linhas que chegam do banco ---------------- */
 
@@ -131,13 +132,15 @@ export function numerosDaFoto(escritorios: EscritorioDaPlataforma[], acessos: Ac
 
 /* ---------------- O que precisa de atenção hoje ---------------- */
 
-export const TIPOS_DE_ATENCAO = ["fatura_atrasada", "teste_sem_ativar", "teste_ativado_sem_assinar", "pagante_sumido", "sem_oab", "ia_perto_do_teto", "em_avaliacao"] as const;
+export const TIPOS_DE_ATENCAO = ["fatura_atrasada", "teste_sem_ativar", "teste_ativado_sem_assinar", "retorno_marcado", "limite_do_plano", "pagante_sumido", "sem_oab", "ia_perto_do_teto", "em_avaliacao"] as const;
 export type TipoDeAtencao = (typeof TIPOS_DE_ATENCAO)[number];
 
 export const ROTULO_DA_ATENCAO: Record<TipoDeAtencao, { titulo: string; acao: string }> = {
   fatura_atrasada: { titulo: "Fatura em atraso", acao: "Reenviar a cobrança antes do 7º dia, quando vira só leitura" },
   teste_sem_ativar: { titulo: "Teste acabando sem ativar", acao: "Ligar, oferecer ajuda ou estender o teste" },
   teste_ativado_sem_assinar: { titulo: "Ativou e ainda não assinou", acao: "Mandar o link de pagamento" },
+  retorno_marcado: { titulo: "Retorno marcado", acao: "Voltar a falar com o escritório, como ficou na nota" },
+  limite_do_plano: { titulo: "Limite do plano", acao: "Oferecer o plano de cima ou combinar um valor" },
   pagante_sumido: { titulo: "Pagante sem acesso", acao: "Perguntar se algo travou" },
   sem_oab: { titulo: "Sem OAB cadastrada", acao: "Ajudar no primeiro passo: sem OAB não há publicação" },
   ia_perto_do_teto: { titulo: "IA perto do teto do dia", acao: "Ver se é uso real ou abuso" },
@@ -169,7 +172,13 @@ export const PARTE_DO_TETO = 0.8;
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
-export function precisaDeAtencao(e: { hoje: Dia; escritorios: EscritorioDaPlataforma[]; ultimosAcessos: UltimoAcesso[]; marcos: MarcoCru[]; ia: IaCru[]; tetos: TetosDoPainel }): ItemDeAtencao[] {
+/** O que vem de fora das contas de hoje: os retornos marcados nas notas da equipe e os limites do plano de cada escritório. */
+export interface ExtrasDaAtencao {
+  retornos?: { organizationId: string; retornoEm: Dia; proximoPasso: string | null }[];
+  limites?: { organizationId: string; estado: "perto" | "passou"; rotulos: string[] }[];
+}
+
+export function precisaDeAtencao(e: { hoje: Dia; escritorios: EscritorioDaPlataforma[]; ultimosAcessos: UltimoAcesso[]; marcos: MarcoCru[]; ia: IaCru[]; tetos: TetosDoPainel } & ExtrasDaAtencao): ItemDeAtencao[] {
   const itens: ItemDeAtencao[] = [];
   const marcosDe = new Map<string, Set<string>>();
   for (const m of e.marcos) marcosDe.set(m.organizationId, (marcosDe.get(m.organizationId) ?? new Set()).add(m.nome));
@@ -208,6 +217,22 @@ export function precisaDeAtencao(e: { hoje: Dia; escritorios: EscritorioDaPlataf
       itens.push({ ...base, tipo: "ia_perto_do_teto", gravidade: "media", detalhe: `Gastou ${Math.round((gasto / e.tetos.avaliacaoUsd) * 100)}% do teto de hoje para contas novas` });
     }
     if (o.emAvaliacao && desdeOCadastro >= DIAS_EM_AVALIACAO) itens.push({ ...base, tipo: "em_avaliacao", gravidade: "media", detalhe: `Em avaliação há ${desdeOCadastro} dias, com tetos menores` });
+  }
+  const porId = new Map(e.escritorios.filter(real).map((o) => [o.id, o]));
+  // Um retorno por escritório: o mais antigo que ainda não foi feito.
+  const vistos = new Set<string>();
+  for (const r of [...(e.retornos ?? [])].sort((a, b) => a.retornoEm.localeCompare(b.retornoEm))) {
+    const o = porId.get(r.organizationId);
+    if (!o || vistos.has(o.id)) continue;
+    vistos.add(o.id);
+    const atraso = diferencaEmDias(r.retornoEm, e.hoje);
+    const quando = atraso === 0 ? "Marcado para hoje" : atraso === 1 ? "Era para ontem" : `Era para ser feito há ${plural(atraso, "dia", "dias")}`;
+    itens.push({ organizationId: o.id, escritorio: o.nome, tipo: "retorno_marcado", gravidade: atraso > 0 ? "alta" : "media", detalhe: r.proximoPasso ? `${quando}: ${r.proximoPasso}` : quando });
+  }
+  for (const l of e.limites ?? []) {
+    const o = porId.get(l.organizationId);
+    if (!o) continue;
+    itens.push({ organizationId: o.id, escritorio: o.nome, tipo: "limite_do_plano", gravidade: "media", detalhe: `${l.estado === "passou" ? "Passou do limite" : "Passou de 80%"}: ${l.rotulos.join(", ")}` });
   }
   if (e.tetos.siteUsd > 0 && iaDoSite >= PARTE_DO_TETO * e.tetos.siteUsd) {
     itens.push({ tipo: "ia_perto_do_teto", organizationId: null, escritorio: "Decreta inteiro", gravidade: "alta", detalhe: `O site gastou ${Math.round((iaDoSite / e.tetos.siteUsd) * 100)}% do teto de hoje; acima dele, a IA para nas telas` });
@@ -270,6 +295,8 @@ export interface EntradaDaVisaoGeral {
   fotos: FotoCrua[];
   cotacaoUsd: number;
   tetos: TetosDoPainel;
+  /** Os retornos das notas e os limites do plano, que entram em "Precisa de atenção hoje". */
+  extras?: ExtrasDaAtencao;
 }
 
 export const SEMANAS_DE_CADASTRO = 12;
@@ -364,7 +391,7 @@ export function montarVisaoGeral(e: EntradaDaVisaoGeral): VisaoGeralDaPlataforma
     cadastrosPorSemana,
     iaPorDia,
     porSituacao,
-    atencao: precisaDeAtencao(e),
+    atencao: precisaDeAtencao({ ...e, ...e.extras }),
   };
 }
 
@@ -380,6 +407,8 @@ export interface PessoaCrua {
   criadaEm: string;
   sessoesAbertas: number;
   escritorios: { id: string; nome: string; papel: string; demonstracao: boolean }[];
+  /** Suspensa pela equipe (abuso): não entra até ser reativada. */
+  suspensa?: boolean;
 }
 
 export interface PessoaDaPlataforma {
@@ -398,6 +427,7 @@ export interface PessoaDaPlataforma {
   aparelho: "celular" | "computador" | null;
   /** Só tem escritório de demonstração: fica fora dos números. */
   demonstracao: boolean;
+  suspensa: boolean;
 }
 
 export interface PessoasDaPlataforma {
@@ -436,6 +466,7 @@ export function montarPessoas(e: { hoje: Dia; pessoas: PessoaCrua[]; acessos: Ac
         ultimoAcesso: ultimo.get(p.id) ?? null,
         aparelho: ap === "celular" || ap === "computador" ? ap : null,
         demonstracao: p.escritorios.length > 0 && p.escritorios.every((o) => o.demonstracao),
+        suspensa: !!p.suspensa,
       };
     })
     .sort((a, b) => (b.ultimoAcesso ?? "").localeCompare(a.ultimoAcesso ?? "") || a.nome.localeCompare(b.nome, "pt-BR"));
@@ -795,4 +826,157 @@ export function montarFicha(e: {
     captura: e.captura,
     acoes: e.acoes.filter((a) => a.organizationId === id),
   };
+}
+
+/* ---------------- A lista de escritórios com a licença ---------------- */
+
+/** O escritório na aba Escritórios: a conta, os totais e o resumo da licença. */
+export interface EscritorioNaLista extends EscritorioDaPlataforma {
+  plano: { id: string; nome: string; versao: number; antigo: boolean };
+  marca: "piloto" | "parceiro" | "indicacao" | null;
+  /** O que a mensalidade cobra hoje (com o desconto que vale), ou nulo sem preço. */
+  mensalidadeCentavos: number | null;
+  comDesconto: boolean;
+  /** O pior estado entre os limites do plano e quantos passaram de 80%. */
+  limites: { estado: "ok" | "perto" | "passou"; alertas: number; rotulos: string[] };
+}
+
+/* ---------------- As recusas da IA ---------------- */
+
+/** Por que a IA recusou, em uma palavra (o que fica em `recusas_da_ia`). */
+export const CODIGOS_DA_RECUSA = ["minuto", "mensagens_do_dia", "demonstracao", "em_avaliacao", "escritorio_dia", "escritorio_mes", "pessoa", "site", "simultaneos", "gateway"] as const;
+export type CodigoDaRecusa = (typeof CODIGOS_DA_RECUSA)[number];
+
+export const ROTULO_DA_RECUSA: Record<CodigoDaRecusa, string> = {
+  minuto: "Mensagens seguidas no mesmo minuto",
+  mensagens_do_dia: "Mensagens do dia no chat",
+  demonstracao: "Teto da demonstração",
+  em_avaliacao: "Teto da conta em avaliação",
+  escritorio_dia: "Teto do dia do escritório",
+  escritorio_mes: "Teto do mês do escritório",
+  pessoa: "Teto do dia da pessoa",
+  site: "Teto do dia do site",
+  simultaneos: "Pedidos ao mesmo tempo",
+  gateway: "Teto do gateway",
+};
+
+export interface RecusaCrua {
+  organizationId: string;
+  dia: Dia;
+  motivo: string;
+  total: number;
+}
+
+export interface RecusasDaIa {
+  total: number;
+  porMotivo: { codigo: string; rotulo: string; total: number }[];
+  porEscritorio: { organizationId: string; nome: string; demonstracao: boolean; total: number; motivos: string[] }[];
+  /** As recusas de cada dia do período, para ver se um teto ficou baixo de repente. */
+  dias: { dia: Dia; total: number }[];
+}
+
+export function montarRecusasDaIa(e: { hoje: Dia; dias: number; escritorios: EscritorioDaPlataforma[]; recusas: RecusaCrua[] }): RecusasDaIa {
+  const nomes = new Map(e.escritorios.map((o) => [o.id, o]));
+  const porMotivo = new Map<string, number>();
+  const porEscritorio = new Map<string, { total: number; motivos: Set<string> }>();
+  const porDia = new Map<Dia, number>();
+  for (const r of e.recusas) {
+    porMotivo.set(r.motivo, (porMotivo.get(r.motivo) ?? 0) + r.total);
+    const o = porEscritorio.get(r.organizationId) ?? { total: 0, motivos: new Set<string>() };
+    o.total += r.total;
+    o.motivos.add(r.motivo);
+    porEscritorio.set(r.organizationId, o);
+    porDia.set(r.dia, (porDia.get(r.dia) ?? 0) + r.total);
+  }
+  const rotulo = (c: string) => ROTULO_DA_RECUSA[c as CodigoDaRecusa] ?? c;
+  const de = somarDias(e.hoje, 1 - e.dias);
+  return {
+    total: soma(e.recusas, (r) => r.total),
+    porMotivo: [...porMotivo].map(([codigo, total]) => ({ codigo, rotulo: rotulo(codigo), total })).sort((a, b) => b.total - a.total),
+    porEscritorio: [...porEscritorio]
+      .map(([id, o]) => ({ organizationId: id, nome: nomes.get(id)?.nome ?? "Escritório que saiu", demonstracao: !!nomes.get(id)?.demonstracao, total: o.total, motivos: [...o.motivos].map(rotulo) }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, ESCRITORIOS_NO_CUSTO),
+    dias: Array.from({ length: e.dias }, (_, i) => somarDias(de, i)).map((dia) => ({ dia, total: porDia.get(dia) ?? 0 })),
+  };
+}
+
+/* ---------------- As faturas do Decreta ---------------- */
+
+export interface FaturaDaLista {
+  id: string;
+  organizationId: string;
+  vencimento: Dia;
+  valorCentavos: number;
+  situacao: string;
+  forma: string | null;
+  link: string | null;
+  pagaEm: Dia | null;
+}
+
+export type SituacaoNaLista = "paga" | "aberta" | "atrasada" | "estornada";
+
+export interface FaturasDaPlataforma {
+  mes: string;
+  /** Os meses que o seletor oferece, do mais novo para o mais velho. */
+  meses: string[];
+  numeros: {
+    /** Pago dentro do mês (pela data do pagamento). */
+    recebidaCentavos: number;
+    /** O que vence no mês, pago ou não (sem as estornadas). */
+    previstaCentavos: number;
+    emAbertoCentavos: number;
+    emAtrasoCentavos: number;
+    porSituacao: Record<SituacaoNaLista, number>;
+  };
+  faturas: { id: string; organizationId: string; escritorio: string; vencimento: Dia; valorCentavos: number; situacao: SituacaoNaLista; forma: string | null; link: string | null; pagaEm: Dia | null }[];
+}
+
+export const MESES_DE_FATURA = 13;
+
+/** A fatura em aberto que já venceu conta como atrasada, mesmo sem o aviso do Asaas (como na régua). */
+export function situacaoNaLista(f: Pick<FaturaDaLista, "situacao" | "vencimento">, hoje: Dia): SituacaoNaLista {
+  if (f.situacao === "paga") return "paga";
+  if (f.situacao === "estornada") return "estornada";
+  return f.situacao === "atrasada" || f.vencimento < hoje ? "atrasada" : "aberta";
+}
+
+export function montarFaturas(e: { hoje: Dia; mes: string; escritorios: EscritorioDaPlataforma[]; faturas: FaturaDaLista[] }): FaturasDaPlataforma {
+  const nomes = new Map(e.escritorios.map((o) => [o.id, o.nome]));
+  const noMes = (d: Dia | null) => !!d && mesDe(d) === e.mes;
+  const lista = e.faturas
+    .filter((f) => f.situacao !== "removida" && (noMes(f.vencimento) || noMes(f.pagaEm)))
+    .map((f) => ({ id: f.id, organizationId: f.organizationId, escritorio: nomes.get(f.organizationId) ?? "Escritório que saiu", vencimento: f.vencimento, valorCentavos: f.valorCentavos, situacao: situacaoNaLista(f, e.hoje), forma: f.forma, link: f.link, pagaEm: f.pagaEm }))
+    .sort((a, b) => b.vencimento.localeCompare(a.vencimento) || a.escritorio.localeCompare(b.escritorio, "pt-BR"));
+  const vencemNoMes = lista.filter((f) => noMes(f.vencimento) && f.situacao !== "estornada");
+  const porSituacao: Record<SituacaoNaLista, number> = { paga: 0, aberta: 0, atrasada: 0, estornada: 0 };
+  for (const f of lista) porSituacao[f.situacao]++;
+  const [ano, m] = e.hoje.slice(0, 7).split("-").map(Number) as [number, number];
+  const meses = Array.from({ length: MESES_DE_FATURA }, (_, i) => {
+    const total = ano * 12 + (m - 1) - i;
+    return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`;
+  });
+  return {
+    mes: e.mes,
+    meses,
+    numeros: {
+      recebidaCentavos: soma(lista.filter((f) => f.situacao === "paga" && noMes(f.pagaEm)), (f) => f.valorCentavos),
+      previstaCentavos: soma(vencemNoMes, (f) => f.valorCentavos),
+      emAbertoCentavos: soma(vencemNoMes.filter((f) => f.situacao === "aberta"), (f) => f.valorCentavos),
+      emAtrasoCentavos: soma(vencemNoMes.filter((f) => f.situacao === "atrasada"), (f) => f.valorCentavos),
+      porSituacao,
+    },
+    faturas: lista,
+  };
+}
+
+/* ---------------- A ficha com a licença e as notas ---------------- */
+
+export interface FichaCompleta extends FichaDoEscritorio {
+  licenca: LicencaCompleta;
+  notas: NotaDaEquipe[];
+  /** Os planos para onde a equipe pode mudar o escritório: as versões vivas, e a dele, se for antiga. */
+  planos: { id: string; nome: string; versao: number; mensalCentavos: number | null; vivo: boolean }[];
+  /** O que a cobrança tem do escritório, para as ações dela (link de pagamento guardado, assinatura viva). */
+  cobranca: { linkGuardado: boolean; assinaturaViva: boolean };
 }

@@ -6,8 +6,8 @@
  * `escritorio:criar`, pela demonstração e pelos testes.
  */
 import type { Dia, SituacaoDoEscritorio } from "@decreta/core";
-import { equipe, escritorios, member, organization, user, withTenant, type Database } from "@decreta/db";
-import { eq } from "drizzle-orm";
+import { equipe, escritorios, member, organization, planos, user, withTenant, type Database } from "@decreta/db";
+import { and, eq, isNull } from "drizzle-orm";
 import type { Auth } from "./auth.ts";
 import { SLUG_DA_DEMONSTRACAO } from "./demonstracao/slug.ts";
 
@@ -84,7 +84,10 @@ export async function criarEscritorio(db: Database, auth: Auth, e: EscritorioNov
 
   const organizationId = crypto.randomUUID();
   await db.transaction(async (tx) => {
+    // O escritório novo começa no plano padrão da vez: mudar o padrão depois não o muda.
+    const [padrao] = await tx.select({ id: planos.id }).from(planos).where(and(eq(planos.padrao, true), isNull(planos.substituidoEm))).limit(1);
     await tx.insert(organization).values({
+      planoId: padrao?.id ?? null,
       id: organizationId,
       name: e.nome,
       slug: e.slug,

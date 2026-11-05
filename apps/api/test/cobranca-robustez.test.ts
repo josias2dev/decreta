@@ -2,7 +2,7 @@
  * A cobrança quando o Asaas faz o que o Asaas faz: avisa fora de ordem, avisa duas vezes, avisa 30 dias depois (o
  * cartão), esquece um aviso de atraso e entrega dois avisos do mesmo escritório ao mesmo tempo.
  */
-import { fimDoPeriodoPago, hojeEm, PLANO, somarDias } from "@decreta/core";
+import { fimDoPeriodoPago, hojeEm, somarDias } from "@decreta/core";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { readEnv } from "../src/env.ts";
@@ -59,11 +59,10 @@ describe.skipIf(!hasTestDatabase)("avisos do Asaas que chegam como não deviam",
   beforeAll(async () => {
     t = await createTestDatabase();
     m = montarApi(t, { ativa: true, log: (msg, extra) => void logs.push({ msg, extra }) });
-    PLANO.valorMensalCentavos = 9900;
+    await t.owner`update planos set mensal_centavos = 9900 where padrao`;
   });
 
   afterAll(async () => {
-    PLANO.valorMensalCentavos = null;
     await t?.drop();
   });
 

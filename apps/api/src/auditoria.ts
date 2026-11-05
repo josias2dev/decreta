@@ -50,6 +50,7 @@ export const ROTULO: Record<string, string> = {
   "escritorio.encerrado": "Encerrou o escritório no Decreta",
   "plano.assinatura_iniciada": "Abriu a página de assinatura do plano",
   "plano.assinatura_cancelada": "Cancelou a assinatura do plano",
+  "plano.cupom": "Usou um cupom de desconto no plano",
   "exportacao.pedida": "Pediu a cópia de todos os dados do escritório",
   "exportacao.baixada": "Baixou a cópia dos dados do escritório",
   "mensagem_cliente.enviada": "Aprovou e enviou uma mensagem ao cliente no WhatsApp",

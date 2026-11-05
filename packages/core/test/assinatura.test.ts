@@ -10,15 +10,15 @@ import {
   somarMeses,
   type FichaDaAssinatura,
 } from "../src/assinatura.ts";
-import { PLANO } from "../src/plano.ts";
+import { PLANO_INICIAL, TESTE_DIAS_PADRAO } from "../src/plano.ts";
 
 const ficha = (f: Partial<FichaDaAssinatura> & Pick<FichaDaAssinatura, "situacao">): FichaDaAssinatura => ({ testeAte: null, inadimplenteDesde: null, acessoAte: null, ...f });
 
 describe("o plano", () => {
-  test("o valor ainda não foi decidido: com null a cobrança não abre", () => {
-    expect(PLANO.valorMensalCentavos).toBeNull();
-    expect(PLANO.testeDias).toBe(14);
-    expect(PLANO.nome).toBe("Escritório");
+  test("o plano inicial não tem preço (o dono põe no painel) e o teste padrão é de 14 dias", () => {
+    expect(PLANO_INICIAL.mensalCentavos).toBeNull();
+    expect(TESTE_DIAS_PADRAO).toBe(14);
+    expect(PLANO_INICIAL.nome).toBe("Escritório");
   });
 });
 

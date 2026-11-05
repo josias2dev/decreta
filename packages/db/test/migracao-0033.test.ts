@@ -25,12 +25,16 @@ describe.skipIf(!hasTestDatabase)("migração 0033", () => {
       // As do painel da plataforma (0034): só ids, datas e totais.
       "plataforma_acessos",
       "plataforma_auditoria",
+      // 0035: o consumo contra os limites do plano, as recusas da IA e a lista das faturas.
+      "plataforma_consumo",
       "plataforma_escritorios",
       "plataforma_faturas",
       "plataforma_fotos",
       "plataforma_gravar_foto",
       "plataforma_ia",
+      "plataforma_lista_de_faturas",
       "plataforma_marcos",
+      "plataforma_recusas_ia",
       "plataforma_ultimos_acessos",
       "plataforma_uso",
     ]);

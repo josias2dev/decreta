@@ -15,6 +15,9 @@ import { AVISO_DOS_CONVITES, CONVITES_EM_AVALIACAO } from "./servicos/em-avaliac
 import { AVISO_DO_ENCERRAMENTO } from "./servicos/encerramento.ts";
 import { emailsDaPlataforma } from "./servicos/plataforma.ts";
 
+/** Quem a equipe do Decreta suspendeu tenta entrar. */
+export const AVISO_DA_SUSPENSAO = "Esta conta está suspensa pela equipe do Decreta. Para entender o motivo ou voltar a entrar, fale com a equipe.";
+
 /** O que a conta da demonstração não muda, para ninguém trancar os outros do lado de fora. */
 const FIXOS_NA_DEMONSTRACAO = new Set(["/change-password", "/change-email", "/two-factor/enable", "/delete-user"]);
 
@@ -156,6 +159,9 @@ export function createAuth(db: Database, env: Env, opts: { mailer?: Mailer; onEm
           // Quem entra já cai no próprio escritório: a sessão nasce com o primeiro que não foi encerrado.
           // Quem só tem escritório encerrado não entra.
           before: async (sessao) => {
+            // Quem a equipe do Decreta suspendeu (painel da plataforma) não entra: as sessões já caíram na suspensão.
+            const [pessoa] = await db.select({ suspensaEm: schema.user.suspensaEm }).from(schema.user).where(eq(schema.user.id, sessao.userId));
+            if (pessoa?.suspensaEm) throw new APIError("FORBIDDEN", { code: "PESSOA_SUSPENSA", message: AVISO_DA_SUSPENSAO });
             if ((sessao as { activeOrganizationId?: string | null }).activeOrganizationId) return;
             const meus = await db
               .select({ organizationId: schema.member.organizationId, encerradoEm: schema.organization.encerradoEm })

@@ -16,6 +16,7 @@ export * from "./estrategia-da-peca.ts";
 export * from "./pjecalc.ts";
 export * from "./plano.ts";
 export * from "./plataforma.ts";
+export * from "./preco-da-landing.ts";
 export * from "./prazo-interno.ts";
 export * from "./prazos.ts";
 export * from "./processo-incompleto.ts";

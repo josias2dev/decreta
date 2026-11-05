@@ -1,5 +1,5 @@
 /** O que toda rota das telas tem: a sessão, o escritório ativo e os serviços. */
-import type { EstadoDaAssinatura, NomeDeEvento } from "@decreta/core";
+import type { EstadoDaAssinatura, FuncionalidadesDoPlano, NomeDeEvento } from "@decreta/core";
 import type { Database, Tx } from "@decreta/db";
 import { equipe, withTenant } from "@decreta/db";
 import type { Armazenamento } from "@decreta/documentos";
@@ -16,7 +16,8 @@ import { ipDoPedido } from "../limitador.ts";
 import type { ClienteAsaas } from "../servicos/asaas.ts";
 import type { DepsDaCaptura } from "../servicos/captura.ts";
 import type { Wameow } from "../servicos/avisos.ts";
-import { AVISOS, iaMedida, LimiteDaIa, motivoParaBarrar, registrarMensagem, reservarVez, SEM_LIMITES, usoDoDia, type LimitesDaIa } from "../servicos/uso-ia.ts";
+import type { Ajustes } from "../servicos/ajustes.ts";
+import { AVISOS, iaMedida, LimiteDaIa, recusaDaIa, registrarMensagem, registrarRecusa, reservarVez, SEM_LIMITES, tetosDoEscritorio, usoDoDia, type LimitesDaIa } from "../servicos/uso-ia.ts";
 
 export type Vars = {
   orgId: string;
@@ -35,6 +36,8 @@ export type Vars = {
   /** A pessoa confirmou que o e-mail é dela. Só o aceite de convite depende disso; a tela mostra um aviso discreto. */
   emailConfirmado: boolean;
   papel: string;
+  /** O que o plano do escritório deixa de fora (ausente: incluída). Na demonstração, nada fica de fora. */
+  funcionalidades: FuncionalidadesDoPlano;
   /** A IA da rota, medida em nome da pessoa. Só existe nas rotas com `comLimiteDaIa`. */
   ia?: Ia;
 };
@@ -72,6 +75,8 @@ export interface DepsDasRotas {
   log: (msg: string, extra?: Record<string, unknown>) => void;
   /** Limites da IA nas telas. Sem eles (testes), só mede. */
   limites?: LimitesDaIa;
+  /** Os ajustes do painel da plataforma (a duração do teste, para a tela do Plano). Sem eles, o padrão. */
+  ajustes?: Ajustes;
   /** A cobrança da assinatura do Decreta (o plano). Sem isto, ou com `ativa: false`, ninguém é cobrado nem travado. */
   cobranca?: { ativa: boolean; asaas: ClienteAsaas | null };
   /** Os operadores da plataforma (`PLATAFORMA_EMAILS`). */
@@ -108,10 +113,14 @@ export function falha(status: 400 | 403 | 404 | 409 | 410 | 422 | 429 | 503 | 50
   throw new HTTPException(status, { res: Response.json({ erro, detalhe }, { status }) });
 }
 
-/** Por que a IA não pode atender esta pessoa agora (ver `motivoParaBarrar`), ou `null`. */
+/** Por que a IA não pode atender esta pessoa agora (ver `recusaDaIa`), ou `null`. */
+export async function recusaDaIaNaRota(c: C, deps: DepsDasRotas, mensagem = false) {
+  const [uso, tetos] = await Promise.all([usoDoDia(deps.db, { organizationId: c.get("orgId"), userId: c.get("userId") }), tetosDoEscritorio(deps.db, c.get("orgId"))]);
+  return recusaDaIa(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), emAvaliacao: c.get("emAvaliacao"), mensagem, tetos });
+}
+
 export async function motivoDaIa(c: C, deps: DepsDasRotas, mensagem = false): Promise<string | null> {
-  const uso = await usoDoDia(deps.db, { organizationId: c.get("orgId"), userId: c.get("userId") });
-  return motivoParaBarrar(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), emAvaliacao: c.get("emAvaliacao"), mensagem });
+  return (await recusaDaIaNaRota(c, deps, mensagem))?.texto ?? null;
 }
 
 /**
@@ -126,12 +135,16 @@ export function comLimiteDaIa(deps: DepsDasRotas, opcoes: { mensagem?: MetodoIa 
     const limites = deps.limites ?? SEM_LIMITES;
     const quem = { organizationId: c.get("orgId"), userId: c.get("userId") };
     const devolver = reservarVez(quem.userId, limites.simultaneos);
-    if (!devolver) throw new LimiteDaIa(AVISOS.simultaneos);
+    if (!devolver) {
+      await registrarRecusa(deps, quem, "simultaneos");
+      throw new LimiteDaIa(AVISOS.simultaneos);
+    }
     try {
-      const motivo = await motivoDaIa(c, deps, !!opcoes.mensagem);
-      if (motivo) {
-        deps.log("limite da IA", { userId: quem.userId, organizationId: quem.organizationId, motivo });
-        throw new LimiteDaIa(motivo);
+      const recusa = await recusaDaIaNaRota(c, deps, !!opcoes.mensagem);
+      if (recusa) {
+        deps.log("limite da IA", { userId: quem.userId, organizationId: quem.organizationId, motivo: recusa.texto });
+        await registrarRecusa(deps, quem, recusa.codigo);
+        throw new LimiteDaIa(recusa.texto);
       }
       if (opcoes.mensagem) await registrarMensagem(deps.db, quem, opcoes.mensagem);
       c.set("ia", iaMedida(deps, deps.ia, { ...quem, origem: "tela" }, limites.preco));

@@ -146,6 +146,8 @@ export const NAO_EXPORTADAS: Record<string, string> = {
   acessos: "registro técnico dos dias em que cada pessoa entrou, para o painel da plataforma",
   eventos_de_cobranca: "registro técnico dos avisos do Asaas já tratados",
   auditoria_da_plataforma: "o que a equipe do Decreta fez na conta, para a segurança da plataforma; só ela lê",
+  notas_da_plataforma: "anotações comerciais da equipe do Decreta sobre a conta; só ela lê",
+  recusas_da_ia: "registro técnico das vezes em que um teto da IA barrou um pedido, sem o texto do pedido",
   member: "a equipe sai na planilha equipe",
   invitation: "convites pendentes, que o escritório pode refazer",
 };
