@@ -6,6 +6,7 @@
  */
 import { baseLegalDaTabela, citacaoDaBaseLegal, extrairCitacoes } from "@decreta/core";
 import { atenderPerguntar } from "./ia-falsa";
+import { atenderPlataforma } from "./plataforma-falsa";
 import { PECA_LONGA } from "./peca-longa";
 
 type Amostra = { path: string; corpo: unknown };
@@ -58,7 +59,11 @@ function achar(caminho: string, busca: URLSearchParams): unknown {
 
 const json = (status: number, dados: unknown) => new Response(JSON.stringify(dados), { status, headers: { "content-type": "application/json" } });
 
-const eu = amostras.find((a) => a.path === "/eu")!.corpo as { usuario: { id: string; nome: string }; escritorio: { id: string } };
+const eu = amostras.find((a) => a.path === "/eu")!.corpo as { usuario: { id: string; nome: string }; escritorio: { id: string }; plataforma?: true };
+// Na prévia que a equipe abre, quem entra também opera a plataforma: o menu da conta leva ao painel, com dados
+// inventados. Na demonstração pública do site (/demonstracao), não: lá o painel não existe, como para todo escritório.
+const OPERADOR = !location.pathname.startsWith("/demonstracao/");
+if (OPERADOR) eu.plataforma = true;
 const sessao = {
   session: { id: "sessao", userId: eu.usuario.id, activeOrganizationId: eu.escritorio.id, expiresAt: "2026-11-28T12:00:00.000Z" },
   user: { id: eu.usuario.id, name: eu.usuario.nome, email: "teste@decreta.site", emailVerified: true, twoFactorEnabled: false },
@@ -78,6 +83,7 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
     return json(200, { id: eu.escritorio.id, members: pessoas.map((p) => ({ id: `membro-${p.id}`, userId: p.id, role: p.papel, user: { email: p.email } })), invitations: [] });
   }
   if (url.pathname.startsWith("/api/auth/")) return json(200, url.pathname === "/api/auth/get-session" ? sessao : { ok: true });
+  if (OPERADOR && url.pathname.startsWith("/api/plataforma/")) return atenderPlataforma(pedido.method, url.pathname.slice("/api/plataforma".length), url.searchParams, pedido);
   if (!url.pathname.startsWith("/api/app/")) return json(404, { erro: "nao_encontrado" });
   const caminho = url.pathname.slice("/api/app".length);
   const metodo = pedido.method;

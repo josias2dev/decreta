@@ -5,7 +5,7 @@ import { FOLHA, VOLTAM_AO_TOPO } from "./componentes/rolagem";
 import { ErroNaTela, NaoEncontrada } from "./componentes/nao-encontrada";
 import { CONSULTA_DO_CELULAR } from "./lib/celular";
 import { caixaQuery, clienteQuery, clientesQuery, euQuery, hojeQuery, prazoQuery, prazosQuery, processoQuery, processosQuery, publicacaoQuery } from "./lib/consultas";
-import { ABAS_DO_ENDERECO, ABAS_DO_PROCESSO, SITUACOES_DO_FINANCEIRO, VISTAS_DA_AGENDA, type AbaDaConfiguracao, type AbaDoProcesso, type SituacaoDoFinanceiro, type VistaDaAgenda } from "./lib/rotas";
+import { ABAS_DA_PLATAFORMA, ABAS_DO_ENDERECO, ABAS_DO_PROCESSO, SITUACOES_DO_FINANCEIRO, VISTAS_DA_AGENDA, type AbaDaConfiguracao, type AbaDaPlataforma, type AbaDoProcesso, type SituacaoDoFinanceiro, type VistaDaAgenda } from "./lib/rotas";
 import type { Quando, SituacaoPublicacao } from "./lib/tipos";
 
 const NA_PREVIA = import.meta.env.MODE === "previa";
@@ -39,6 +39,7 @@ const NegociosPage = lazyRouteComponent(() => import("./paginas/negocios"), "Neg
 const PecaPage = lazyRouteComponent(() => import("./paginas/peca"), "PecaPage");
 const PerguntarPage = lazyRouteComponent(() => import("./paginas/perguntar"), "PerguntarPage");
 const PlataformaPage = lazyRouteComponent(() => import("./paginas/plataforma"), "PlataformaPage");
+const FichaDoEscritorioPage = lazyRouteComponent(() => import("./paginas/plataforma-ficha"), "FichaDoEscritorioPage");
 const PrazoPage = lazyRouteComponent(() => import("./paginas/prazo"), "PrazoPage");
 const PrazosPage = lazyRouteComponent(() => import("./paginas/prazos"), "PrazosPage");
 const ProcessoPage = lazyRouteComponent(() => import("./paginas/processo"), "ProcessoPage");
@@ -106,7 +107,14 @@ const privacidadeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/
 const coberturaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/cobertura", component: CoberturaPage });
 
 // O painel da plataforma: só os operadores (PLATAFORMA_EMAILS), fora do menu do escritório. Os outros recebem 404.
-const plataformaRoute = createRoute({ getParentRoute: () => rootRoute, path: "/plataforma", component: PlataformaPage });
+const plataformaRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/plataforma",
+  validateSearch: (s: Record<string, unknown>): { aba?: AbaDaPlataforma } => (ABAS_DA_PLATAFORMA.includes(s.aba as AbaDaPlataforma) ? { aba: s.aba as AbaDaPlataforma } : {}),
+  component: PlataformaPage,
+});
+// A ficha de um escritório: a conta, os totais, as pessoas, o uso e a IA. Nada do conteúdo dele.
+const fichaDoEscritorioRoute = createRoute({ getParentRoute: () => rootRoute, path: "/plataforma/escritorios/$id", component: FichaDoEscritorioPage });
 
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: "app", component: AppLayout });
 
@@ -252,6 +260,7 @@ const routeTree = rootRoute.addChildren([
   enviarRoute,
   redefinirRoute,
   plataformaRoute,
+  fichaDoEscritorioRoute,
   appRoute.addChildren([
     hojeRoute,
     comecarRoute,

@@ -18,7 +18,22 @@ describe.skipIf(!hasTestDatabase)("migração 0033", () => {
     const funcoes = await t.owner<{ nome: string; config: string[] | null }[]>`
       select p.proname as nome, p.proconfig as config from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.prosecdef order by p.proname`;
-    expect(funcoes.map((f) => f.nome)).toEqual(["cobertura_do_djen", "contagem_de_eventos", "gasto_da_ia_no_site", "plataforma_auditoria", "plataforma_escritorios"]);
+    expect(funcoes.map((f) => f.nome)).toEqual([
+      "cobertura_do_djen",
+      "contagem_de_eventos",
+      "gasto_da_ia_no_site",
+      // As do painel da plataforma (0034): só ids, datas e totais.
+      "plataforma_acessos",
+      "plataforma_auditoria",
+      "plataforma_escritorios",
+      "plataforma_faturas",
+      "plataforma_fotos",
+      "plataforma_gravar_foto",
+      "plataforma_ia",
+      "plataforma_marcos",
+      "plataforma_ultimos_acessos",
+      "plataforma_uso",
+    ]);
     for (const f of funcoes) expect(f.config).toEqual(["search_path=public, pg_temp"]);
   });
 

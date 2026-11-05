@@ -99,16 +99,21 @@ describe("o uso e a IA", () => {
   test("adoção sobre os escritórios ativos e a variação contra o período anterior", () => {
     const u = montarUso({
       periodo: { de: "2026-10-07", ate: HOJE, dias: 30 },
-      reais: new Set(["a", "b"]),
+      reais: new Set(["a", "b", "c"]),
       ativos: new Set(["a", "b", "demo"]),
       atual: [
         { organizationId: "a", funcionalidade: "pecas", total: 6 },
         { organizationId: "demo", funcionalidade: "pecas", total: 50 },
+        // A captura roda sozinha: "c" não entrou no período, conta no total mas não na adoção.
+        { organizationId: "a", funcionalidade: "publicacoes", total: 9 },
+        { organizationId: "b", funcionalidade: "publicacoes", total: 3 },
+        { organizationId: "c", funcionalidade: "publicacoes", total: 5 },
       ],
       anterior: [{ organizationId: "a", funcionalidade: "pecas", total: 4 }],
     });
     expect(u.escritoriosAtivos).toBe(2);
     expect(u.funcionalidades.find((f) => f.chave === "pecas")).toMatchObject({ total: 6, escritorios: 1, adocao: 0.5, porEscritorio: 6, totalAnterior: 4, variacao: 0.5 });
+    expect(u.funcionalidades.find((f) => f.chave === "publicacoes")).toMatchObject({ total: 17, escritorios: 3, adocao: 1 });
   });
 
   test("o custo de cada escritório sobre a mensalidade, em 30 dias", () => {

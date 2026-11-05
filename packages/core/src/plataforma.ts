@@ -500,7 +500,7 @@ export interface UsoDaFuncionalidade {
   grupo: GrupoDeFuncionalidade;
   /** Quantos escritórios usaram no período. */
   escritorios: number;
-  /** Esses escritórios sobre os ativos no período (0 a 1). */
+  /** Dos escritórios com alguém entrando no período, quantos usaram (0 a 1). */
   adocao: number | null;
   total: number;
   /** Quanto cada escritório que usou usou, em média. */
@@ -529,12 +529,14 @@ export interface UsoDaPlataforma {
 }
 
 export function montarUso(e: { periodo: { de: Dia; ate: Dia; dias: number }; reais: ReadonlySet<string>; ativos: ReadonlySet<string>; atual: UsoCru[]; anterior: UsoCru[] }): UsoDaPlataforma {
+  // A adoção conta só quem também entrou no período: a captura e a sugestão de prazo rodam sozinhas, e um escritório
+  // que ninguém abre não "adotou" nada (nem passa dos 100%).
   const porChave = (linhas: UsoCru[]) => {
-    const m = new Map<string, { total: number; escritorios: number }>();
+    const m = new Map<string, { total: number; escritorios: number; ativos: number }>();
     for (const l of linhas) {
       if (!e.reais.has(l.organizationId) || l.total <= 0) continue;
-      const v = m.get(l.funcionalidade) ?? { total: 0, escritorios: 0 };
-      m.set(l.funcionalidade, { total: v.total + l.total, escritorios: v.escritorios + 1 });
+      const v = m.get(l.funcionalidade) ?? { total: 0, escritorios: 0, ativos: 0 };
+      m.set(l.funcionalidade, { total: v.total + l.total, escritorios: v.escritorios + 1, ativos: v.ativos + (e.ativos.has(l.organizationId) ? 1 : 0) });
     }
     return m;
   };
@@ -544,12 +546,12 @@ export function montarUso(e: { periodo: { de: Dia; ate: Dia; dias: number }; rea
   const ativos = [...e.ativos].filter((id) => e.reais.has(id)).length;
 
   const funcionalidades = FUNCIONALIDADES.map((f): UsoDaFuncionalidade => {
-    const a = atual.get(f.chave) ?? { total: 0, escritorios: 0 };
+    const a = atual.get(f.chave) ?? { total: 0, escritorios: 0, ativos: 0 };
     const antes = total(anterior, f.chave);
     return {
       ...f,
       escritorios: a.escritorios,
-      adocao: fracao(a.escritorios, ativos),
+      adocao: fracao(a.ativos, ativos),
       total: a.total,
       porEscritorio: a.escritorios ? a.total / a.escritorios : null,
       totalAnterior: antes,

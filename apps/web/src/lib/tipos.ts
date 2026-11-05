@@ -76,28 +76,8 @@ export interface Plano {
   aviso: AvisoDoPlano | null;
 }
 
-/** Um escritório na lista da plataforma: a conta e os totais, nunca o que é dele. */
-export interface EscritorioDaPlataforma {
-  id: string;
-  nome: string;
-  slug: string;
-  demonstracao: boolean;
-  encerrado: boolean;
-  emAvaliacao: boolean;
-  situacao: SituacaoDoEscritorio;
-  situacaoGravada: SituacaoDoEscritorio;
-  criadoEm: string;
-  testeAte: string | null;
-  diasRestantesDoTeste: number | null;
-  diasDeAtraso: number | null;
-  acessoAte: string | null;
-  assinouEm: string | null;
-  cancelamentoPedidoEm: string | null;
-  valorMensalCentavos: number | null;
-  pessoas: number;
-  processos: number;
-  iaMesUsd: number;
-}
+/** Um escritório na lista da plataforma e o que a equipe fez nele: as contas são as de @decreta/core. */
+export type { AcaoRegistrada as AcaoDaPlataforma, EscritorioDaPlataforma } from "@decreta/core";
 
 export interface IndicadoresDaPlataforma {
   periodo: { de: string; ate: string; dias: number };
@@ -109,18 +89,6 @@ export interface IndicadoresDaPlataforma {
   inadimplencia: { escritorios: number; mrrCentavos: number };
   funil: { nome: string; rotulo: string; total: number; doAnterior: number | null }[];
 }
-
-export interface AcaoDaPlataforma {
-  id: string;
-  operador: string;
-  acao: string;
-  organizationId: string | null;
-  escritorio: string | null;
-  detalhes: Record<string, unknown>;
-  em: string;
-}
-
-export type NomeDaAcaoDaPlataforma = "liberar" | "estender_teste" | "so_leitura" | "bloquear" | "cortesia" | "reativar";
 
 export interface Analise<C = Record<string, unknown>> {
   id: string;

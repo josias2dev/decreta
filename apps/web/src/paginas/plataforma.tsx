@@ -1,95 +1,107 @@
 /**
- * O painel da plataforma (/plataforma): só para quem opera o Decreta (PLATAFORMA_EMAILS; os outros recebem 404).
- * A lista de escritórios mostra a conta e os totais (situação, cadastro, fim do teste, pessoas, processos e gasto
- * de IA do mês) e nunca o que é do escritório. As ações (liberar, estender o teste, só leitura, bloquear,
- * cortesia, reativar) ficam todas na auditoria da plataforma.
+ * O painel da plataforma (/plataforma): só para quem opera o Decreta (PLATAFORMA_EMAILS, com a verificação em duas
+ * etapas; os outros recebem 404). A visão geral junta o dinheiro, as pessoas ativas, os gráficos e o que precisa de
+ * atenção hoje; as outras abas abrem os escritórios, as pessoas, o uso de cada funcionalidade, o custo da IA, a
+ * conversão e as ações registradas. Tudo é a conta e os totais, nunca o que é de cada escritório.
  */
-import { ROTULO_DA_SITUACAO } from "@decreta/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { ROTULO_DA_SITUACAO, type EscritorioDaPlataforma, type SituacaoDoEscritorio } from "@decreta/core";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { useAviso, Avisos } from "@/componentes/avisos";
-import { Dialogo } from "@/componentes/dialogo";
-import { IrParaEntrar, Pagina } from "@/componentes/moldura";
-import { NaoEncontrada } from "@/componentes/nao-encontrada";
-import { Abas, Botao, Campo, CampoDeBusca, Carregando, Chip, Cabecalho, Faixa, Painel, Segmentos, Selo, Vazio } from "@/componentes/ui";
-import { ApiError, apiPlataforma, mensagemDoErro } from "@/lib/api";
-import { euQuery } from "@/lib/consultas";
-import { diaCompleto, diaCurto, diaDoInstante, hora, numero } from "@/lib/formato";
-import type { AcaoDaPlataforma, EscritorioDaPlataforma, IndicadoresDaPlataforma, NomeDaAcaoDaPlataforma, SituacaoDoEscritorio } from "@/lib/tipos";
-import { cn } from "@/lib/util";
-
-type Aba = "escritorios" | "indicadores" | "acoes";
-
-const reais = (centavos: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
-const usd = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(v);
-const percentual = (f: number) => `${(f * 100).toFixed(1).replace(".", ",")}%`;
-const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
-
-const escritoriosQuery = { queryKey: ["plataforma", "escritorios"], queryFn: () => apiPlataforma<{ escritorios: EscritorioDaPlataforma[] }>("/escritorios"), retry: false } as const;
-
-/** A cor só diz uma coisa: vermelho e âmbar para o que pede atenção, verde para quem paga em dia. */
-const SELO: Record<SituacaoDoEscritorio, "vencido" | "hoje" | "cumprido" | "prazo"> = {
-  teste: "prazo",
-  ativo: "cumprido",
-  inadimplente: "hoje",
-  so_leitura: "vencido",
-  bloqueado: "vencido",
-  cancelado: "prazo",
-  cortesia: "prazo",
-};
-
-const ACOES: { id: NomeDaAcaoDaPlataforma; rotulo: string; ajuda: string; vale: (e: EscritorioDaPlataforma) => boolean }[] = [
-  { id: "liberar", rotulo: "Liberar da avaliação", ajuda: "Tira os tetos menores de WhatsApp, convites e IA dos escritórios novos.", vale: (e) => e.emAvaliacao },
-  { id: "estender_teste", rotulo: "Estender o teste", ajuda: "Soma dias ao fim do teste, ou a partir de hoje se ele já acabou.", vale: (e) => e.situacaoGravada === "teste" },
-  { id: "so_leitura", rotulo: "Pôr em só leitura", ajuda: "O escritório vê tudo, mas não salva nada novo, e a captura, o WhatsApp e a IA param, até alguém reativar.", vale: (e) => e.situacaoGravada !== "so_leitura" },
-  { id: "bloquear", rotulo: "Bloquear", ajuda: "Ninguém usa o escritório; só paga, leva os dados e encerra. Nada é apagado.", vale: (e) => e.situacaoGravada !== "bloqueado" },
-  { id: "cortesia", rotulo: "Dar cortesia", ajuda: "Acesso total e sem cobrança, até alguém reativar.", vale: (e) => e.situacaoGravada !== "cortesia" },
-  { id: "reativar", rotulo: "Reativar", ajuda: "Desfaz a restrição ou a cortesia. Quem assina volta a ser ativo; quem não assina abre um teste novo.", vale: (e) => ["so_leitura", "bloqueado", "cortesia"].includes(e.situacaoGravada) },
-];
+import { AgirNoEscritorio, andamento, escritoriosQuery, ItensDaAuditoria, Kpi, Kpis, Linha, MolduraDaPlataforma, percentual, reais, SELO, usd } from "@/componentes/plataforma";
+import { Abas, Botao, CampoDeBusca, Carregando, Chip, Cabecalho, Faixa, Painel, Segmentos, Selo, Vazio } from "@/componentes/ui";
+import { apiPlataforma } from "@/lib/api";
+import { diaCompleto, diaDoInstante, numero } from "@/lib/formato";
+import type { AbaDaPlataforma } from "@/lib/rotas";
+import type { AcaoDaPlataforma, IndicadoresDaPlataforma } from "@/lib/tipos";
+import { CustoDaIa, Pessoas, Uso, VisaoGeral } from "./plataforma-paineis";
 
 export function PlataformaPage() {
-  const eu = useQuery(euQuery);
+  const { aba = "visao" } = useSearch({ from: "/plataforma" });
+  const navigate = useNavigate();
   const lista = useQuery(escritoriosQuery);
-  const [aba, setAba] = useState<Aba>("escritorios");
-  if (eu.error instanceof ApiError && eu.error.status === 401) return <IrParaEntrar />;
-  // Quem não é operador recebe 404 da API: a tela também some, como se o endereço não existisse.
-  if (lista.error instanceof ApiError && lista.error.status === 404) return <NaoEncontrada />;
+  const irPara = (a: AbaDaPlataforma) => void navigate({ to: "/plataforma", search: a === "visao" ? {} : { aba: a }, replace: true });
   return (
-    <Avisos>
-      <div className="dc dc-app dc-app--sozinho" data-menu="recolhido">
-        <div className="dc-conteudo">
-          <Pagina larga>
-            <div className="dc-topo-pagina">
-              <Cabecalho
-                titulo="Plataforma"
-                sub="Escritórios, planos e indicadores do Decreta. Só a conta e os totais: nada do que é de cada escritório."
-                acoes={
-                  <Link to="/hoje" className="dc-btn dc-btn--secundaria dc-btn--md">
-                    Voltar ao app
-                  </Link>
-                }
-              />
-              <Abas
-                pagina
-                ativa={aba}
-                aoMudar={setAba}
-                abas={[
-                  { id: "escritorios", rotulo: "Escritórios", n: lista.data?.escritorios.filter((e) => !e.demonstracao && !e.encerrado).length },
-                  { id: "indicadores", rotulo: "Indicadores" },
-                  { id: "acoes", rotulo: "Ações registradas" },
-                ]}
-              />
-            </div>
-            {lista.isError ? <Faixa tipo="erro">Não deu para carregar a plataforma agora. Tente de novo em instantes.</Faixa> : aba === "escritorios" ? <Escritorios lista={lista.data?.escritorios} /> : aba === "indicadores" ? <Indicadores /> : <Acoes />}
-          </Pagina>
-        </div>
+    <MolduraDaPlataforma>
+      <div className="dc-topo-pagina">
+        <Cabecalho
+          titulo="Plataforma"
+          sub="O negócio do Decreta: dinheiro, escritórios, pessoas, uso e IA. Só a conta e os totais, nada do que é de cada escritório."
+          acoes={
+            <Link to="/hoje" className="dc-btn dc-btn--secundaria dc-btn--md">
+              Voltar ao app
+            </Link>
+          }
+        />
+        <Abas
+          pagina
+          ativa={aba}
+          aoMudar={irPara}
+          abas={[
+            { id: "visao", rotulo: "Visão geral" },
+            { id: "escritorios", rotulo: "Escritórios", n: lista.data?.escritorios.filter((e) => !e.demonstracao && !e.encerrado).length },
+            { id: "pessoas", rotulo: "Pessoas" },
+            { id: "uso", rotulo: "Uso" },
+            { id: "ia", rotulo: "IA" },
+            { id: "conversao", rotulo: "Conversão" },
+            { id: "acoes", rotulo: "Ações registradas" },
+          ]}
+        />
       </div>
-    </Avisos>
+      {lista.isError ? (
+        <Faixa tipo="erro">Não deu para carregar a plataforma agora. Tente de novo em instantes.</Faixa>
+      ) : aba === "visao" ? (
+        <VisaoGeral irPara={irPara} />
+      ) : aba === "escritorios" ? (
+        <Escritorios lista={lista.data?.escritorios} />
+      ) : aba === "pessoas" ? (
+        <Pessoas />
+      ) : aba === "uso" ? (
+        <Uso />
+      ) : aba === "ia" ? (
+        <CustoDaIa />
+      ) : aba === "conversao" ? (
+        <Conversao />
+      ) : (
+        <Acoes />
+      )}
+    </MolduraDaPlataforma>
   );
 }
 
 /* ---------------- Escritórios ---------------- */
+
+/** A lista inteira numa planilha (separada por ponto e vírgula, como o Excel em português abre). */
+function exportarCsv(lista: EscritorioDaPlataforma[]) {
+  const celula = (v: string | number | null) => {
+    const t = v === null ? "" : String(v);
+    return /[";\n]/.test(t) ? `"${t.replaceAll('"', '""')}"` : t;
+  };
+  const linhas = [
+    ["Escritório", "Endereço", "Situação", "Cadastro", "Fim do teste", "Dias de atraso", "Mensalidade (R$)", "Assinou em", "Pessoas", "Processos", "IA no mês (US$)", "Em avaliação"],
+    ...lista.map((e) => [
+      e.nome,
+      e.slug,
+      ROTULO_DA_SITUACAO[e.situacao],
+      diaCompleto(diaDoInstante(e.criadoEm)),
+      e.testeAte ? diaCompleto(e.testeAte) : null,
+      e.diasDeAtraso,
+      e.valorMensalCentavos === null ? null : (e.valorMensalCentavos / 100).toFixed(2).replace(".", ","),
+      e.assinouEm ? diaCompleto(diaDoInstante(e.assinouEm)) : null,
+      e.pessoas,
+      e.processos,
+      e.iaMesUsd.toFixed(2).replace(".", ","),
+      e.emAvaliacao ? "sim" : "não",
+    ]),
+  ];
+  const texto = `﻿${linhas.map((l) => l.map(celula).join(";")).join("\r\n")}`;
+  const url = URL.createObjectURL(new Blob([texto], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `escritorios-decreta-${diaDoInstante(new Date().toISOString())}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined }) {
   const [filtro, setFiltro] = useState<SituacaoDoEscritorio | "todos">("todos");
@@ -113,7 +125,12 @@ function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined })
             </Chip>
           ))}
         </div>
-        <CampoDeBusca valor={busca} aoMudar={setBusca} rotulo="Buscar escritório" placeholder="Buscar escritório" />
+        <div className="flex items-center gap-2">
+          <CampoDeBusca valor={busca} aoMudar={setBusca} rotulo="Buscar escritório" placeholder="Buscar escritório" />
+          <Botao onClick={() => exportarCsv(itens)} disabled={!itens.length}>
+            Exportar planilha
+          </Botao>
+        </div>
       </div>
       <Painel corpo={false}>
         {itens.length ? (
@@ -135,10 +152,13 @@ function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined })
                 {itens.map((e) => (
                   <tr key={e.id}>
                     <td>
-                      <span className="dc-celula">
+                      <Link to="/plataforma/escritorios/$id" params={{ id: e.id }} className="dc-celula no-underline">
                         <span className="dc-celula__1">{e.nome}</span>
-                        <span className="dc-celula__2">{e.slug}{e.emAvaliacao ? " · em avaliação" : ""}</span>
-                      </span>
+                        <span className="dc-celula__2">
+                          {e.slug}
+                          {e.emAvaliacao ? " · em avaliação" : ""}
+                        </span>
+                      </Link>
                     </td>
                     <td>
                       <Selo urgencia={SELO[e.situacao]}>{ROTULO_DA_SITUACAO[e.situacao]}</Selo>
@@ -184,89 +204,7 @@ function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined })
   );
 }
 
-/** O que importa de cada escritório numa frase: o teste, o atraso, o cancelamento ou o que paga. */
-function andamento(e: EscritorioDaPlataforma): string {
-  if (e.situacao === "teste" && e.testeAte) return `Até ${diaCurto(e.testeAte)} · ${plural(e.diasRestantesDoTeste ?? 0, "dia", "dias")}`;
-  if (e.situacao === "so_leitura" && e.situacaoGravada === "teste" && e.testeAte) return `Acabou em ${diaCurto(e.testeAte)}`;
-  if (e.diasDeAtraso !== null) return `${plural(e.diasDeAtraso, "dia", "dias")} de atraso`;
-  if (e.cancelamentoPedidoEm && e.acessoAte) return `Cancelou · até ${diaCurto(e.acessoAte)}`;
-  if (e.valorMensalCentavos && (e.situacao === "ativo" || e.situacao === "inadimplente")) return `${reais(e.valorMensalCentavos)} por mês`;
-  return "—";
-}
-
-function AgirNoEscritorio({ escritorio, aoFechar }: { escritorio: EscritorioDaPlataforma | null; aoFechar: () => void }) {
-  const qc = useQueryClient();
-  const avisar = useAviso();
-  const [acao, setAcao] = useState<NomeDaAcaoDaPlataforma | "">("");
-  const [dias, setDias] = useState("7");
-  const [motivo, setMotivo] = useState("");
-  const possiveis = escritorio ? ACOES.filter((a) => a.vale(escritorio)) : [];
-  const escolhida = possiveis.find((a) => a.id === (acao || possiveis[0]?.id));
-  const fechar = () => {
-    setAcao("");
-    setDias("7");
-    setMotivo("");
-    aoFechar();
-  };
-  const agir = useMutation({
-    mutationFn: () => apiPlataforma<{ antes: SituacaoDoEscritorio; depois: SituacaoDoEscritorio }>(`/escritorios/${escritorio!.id}/acao`, { json: { acao: escolhida!.id, ...(escolhida!.id === "estender_teste" ? { dias: Number(dias) } : {}), motivo: motivo.trim() || undefined } }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["plataforma"] });
-      avisar(`${escolhida!.rotulo}: feito. Fica registrado em Ações registradas.`);
-      fechar();
-    },
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
-  });
-  return (
-    <Dialogo
-      aberto={!!escritorio}
-      aoFechar={fechar}
-      titulo={escritorio ? `Agir em ${escritorio.nome}` : "Agir"}
-      descricao={escritorio ? `Hoje: ${ROTULO_DA_SITUACAO[escritorio.situacao].toLocaleLowerCase("pt-BR")}. Toda ação fica registrada, com o seu e-mail.` : undefined}
-      acoes={
-        <>
-          <Botao variante="fantasma" onClick={fechar}>
-            Cancelar
-          </Botao>
-          <Botao variante="primaria" onClick={() => agir.mutate()} ocupado={agir.isPending} disabled={!escolhida || (escolhida.id === "estender_teste" && !(Number(dias) >= 1 && Number(dias) <= 60))}>
-            Confirmar
-          </Botao>
-        </>
-      }
-    >
-      <div className="dc-form">
-        {possiveis.length ? (
-          <>
-            <Campo rotulo="Ação" htmlFor="pl-acao" ajuda={escolhida?.ajuda}>
-              <select id="pl-acao" value={escolhida?.id ?? ""} onChange={(ev) => setAcao(ev.target.value as NomeDaAcaoDaPlataforma)}>
-                {possiveis.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.rotulo}
-                  </option>
-                ))}
-              </select>
-            </Campo>
-            {escolhida?.id === "reativar" && escritorio?.situacaoGravada === "cortesia" && (
-              <Faixa tipo="aviso">Este escritório é de cortesia e nunca é travado. Reativar abre um teste de 14 dias: se ele não assinar, passa a ser só leitura no fim.</Faixa>
-            )}
-            {escolhida?.id === "estender_teste" && (
-              <Campo rotulo="Quantos dias a mais" htmlFor="pl-dias" ajuda="De 1 a 60.">
-                <input id="pl-dias" type="number" min={1} max={60} value={dias} onChange={(ev) => setDias(ev.target.value)} />
-              </Campo>
-            )}
-            <Campo rotulo="Motivo (opcional)" htmlFor="pl-motivo" ajuda="Fica na auditoria.">
-              <input id="pl-motivo" value={motivo} maxLength={300} onChange={(ev) => setMotivo(ev.target.value)} placeholder="Ex.: pediu mais uma semana para testar" />
-            </Campo>
-          </>
-        ) : (
-          <p className="dc-nota m-0">Nenhuma ação vale para este escritório agora.</p>
-        )}
-      </div>
-    </Dialogo>
-  );
-}
-
-/* ---------------- Indicadores ---------------- */
+/* ---------------- Conversão ---------------- */
 
 const DIAS_DO_PERIODO = [
   { id: "7", rotulo: "7 dias" },
@@ -274,7 +212,7 @@ const DIAS_DO_PERIODO = [
   { id: "90", rotulo: "90 dias" },
 ] as const;
 
-function Indicadores() {
+function Conversao() {
   const [dias, setDias] = useState<"7" | "30" | "90">("30");
   const q = useQuery({ queryKey: ["plataforma", "indicadores", dias], queryFn: () => apiPlataforma<IndicadoresDaPlataforma>(`/indicadores?dias=${dias}`), retry: false });
   const i = q.data;
@@ -288,19 +226,20 @@ function Indicadores() {
         <Carregando />
       ) : (
         <>
-          <div className="dc-numeros" aria-label="Indicadores">
-            <Contador n={reais(i.mrrCentavos)} rotulo="MRR" />
-            <Contador n={i.conversao.taxa === null ? "—" : percentual(i.conversao.taxa)} rotulo="Conversão do teste" />
-            <Contador n={String(i.cancelamentos.total)} rotulo={i.cancelamentos.total === 1 ? "Cancelamento" : "Cancelamentos"} />
-            <Contador n={String(i.inadimplencia.escritorios)} rotulo={i.inadimplencia.escritorios === 1 ? "Escritório em atraso" : "Escritórios em atraso"} alerta={i.inadimplencia.escritorios > 0} />
-          </div>
+          <Kpis rotulo="Indicadores">
+            <Kpi rotulo="MRR" n={reais(i.mrrCentavos)} />
+            <Kpi rotulo="Conversão do teste" n={i.conversao.taxa === null ? "—" : percentual(i.conversao.taxa)} sub={`${i.conversao.assinaram} de ${i.conversao.terminaram} que terminaram`} />
+            <Kpi rotulo={i.cancelamentos.total === 1 ? "Cancelamento" : "Cancelamentos"} n={String(i.cancelamentos.total)} sub={`${reais(i.cancelamentos.mrrPerdidoCentavos)} de MRR`} />
+            <Kpi rotulo={i.inadimplencia.escritorios === 1 ? "Escritório em atraso" : "Escritórios em atraso"} n={String(i.inadimplencia.escritorios)} alerta={i.inadimplencia.escritorios > 0 && "hoje"} sub={`${reais(i.mrrEmAtrasoCentavos)} de MRR`} />
+          </Kpis>
           <div className="dc-colunas dc-colunas--meio">
-            <Painel titulo="Escritórios por situação" corpo={false}>
+            <Painel titulo="Funil" acao={<span className="dc-nota">Do site ao primeiro prazo confirmado</span>} corpo={false}>
               <div className="dc-linhas">
-                {(Object.keys(ROTULO_DA_SITUACAO) as SituacaoDoEscritorio[]).map((s) => (
-                  <div key={s} className="dc-linhas__item items-center">
-                    <span className="min-w-0 flex-1 dc-t-corpo font-medium">{ROTULO_DA_SITUACAO[s]}</span>
-                    <span className="dc-num flex-none dc-t-corpo">{i.porSituacao[s]}</span>
+                {i.funil.map((e) => (
+                  <div key={e.nome} className="dc-linhas__item items-center">
+                    <span className="min-w-0 flex-1 dc-t-corpo font-medium">{e.rotulo}</span>
+                    {e.doAnterior !== null && <span className="dc-nota flex-none">{percentual(e.doAnterior)} do passo anterior</span>}
+                    <span className="dc-num w-14 flex-none text-right dc-t-corpo">{numero(e.total)}</span>
                   </div>
                 ))}
               </div>
@@ -315,14 +254,10 @@ function Indicadores() {
                   <Linha rotulo="MRR em atraso" valor={reais(i.mrrEmAtrasoCentavos)} />
                 </div>
               </Painel>
-              <Painel titulo="Funil" acao={<span className="dc-nota">O mesmo do bun run funil</span>} corpo={false}>
+              <Painel titulo="Escritórios por situação" corpo={false}>
                 <div className="dc-linhas">
-                  {i.funil.map((e) => (
-                    <div key={e.nome} className="dc-linhas__item items-center">
-                      <span className="min-w-0 flex-1 dc-t-corpo font-medium">{e.rotulo}</span>
-                      {e.doAnterior !== null && <span className="dc-nota flex-none">{percentual(e.doAnterior)} do passo anterior</span>}
-                      <span className="dc-num w-14 flex-none text-right dc-t-corpo">{numero(e.total)}</span>
-                    </div>
+                  {(Object.keys(ROTULO_DA_SITUACAO) as SituacaoDoEscritorio[]).map((s) => (
+                    <Linha key={s} rotulo={ROTULO_DA_SITUACAO[s]} valor={i.porSituacao[s]} />
                   ))}
                 </div>
               </Painel>
@@ -334,62 +269,17 @@ function Indicadores() {
   );
 }
 
-function Contador({ n, rotulo, alerta }: { n: string; rotulo: string; alerta?: boolean }) {
-  return (
-    <div className={cn("dc-contador", alerta && "dc-contador--hoje")}>
-      <span className="dc-contador__n">{n}</span>
-      <span className="dc-contador__rotulo">{rotulo}</span>
-    </div>
-  );
-}
-
-function Linha({ rotulo, valor }: { rotulo: string; valor: string }) {
-  return (
-    <div className="dc-linhas__item items-center">
-      <span className="min-w-0 flex-1 dc-t-corpo">{rotulo}</span>
-      <span className="dc-num flex-none dc-t-corpo font-medium">{valor}</span>
-    </div>
-  );
-}
-
 /* ---------------- Ações registradas ---------------- */
-
-const ROTULO_DA_ACAO: Record<string, string> = {
-  "plataforma.liberar": "Liberou da avaliação",
-  "plataforma.estender_teste": "Estendeu o teste",
-  "plataforma.so_leitura": "Pôs em só leitura",
-  "plataforma.bloquear": "Bloqueou",
-  "plataforma.cortesia": "Deu cortesia",
-  "plataforma.reativar": "Reativou",
-};
 
 function Acoes() {
   const q = useQuery({ queryKey: ["plataforma", "auditoria"], queryFn: () => apiPlataforma<{ itens: AcaoDaPlataforma[] }>("/auditoria"), retry: false });
   if (!q.data) return <Carregando />;
   return (
-    <Painel titulo="Ações registradas" acao={<span className="dc-nota">Quem fez o quê nos escritórios, só a equipe do Decreta vê</span>} corpo={false}>
+    <Painel titulo="Ações registradas" acao={<span className="dc-nota">Quem fez o quê nos escritórios e nas pessoas; só a equipe do Decreta vê</span>} corpo={false}>
       {q.data.itens.length ? (
-        <div className="dc-linhas">
-          {q.data.itens.map((a) => {
-            const motivo = typeof a.detalhes.motivo === "string" ? a.detalhes.motivo : null;
-            const dias = typeof a.detalhes.dias === "number" ? `+${plural(a.detalhes.dias, "dia", "dias")}` : null;
-            return (
-              <div key={a.id} className="dc-linhas__item">
-                <span className="dc-num w-[132px] flex-none dc-t-meta text-[var(--tinta-2)]">
-                  {diaCurto(diaDoInstante(a.em))} {hora(a.em)}
-                </span>
-                <span className="dc-celula min-w-0 flex-1">
-                  <span className="dc-celula__1">
-                    {ROTULO_DA_ACAO[a.acao] ?? a.acao} · {a.escritorio ?? "escritório apagado"}
-                  </span>
-                  <span className="dc-celula__2">{[a.operador, dias, motivo].filter(Boolean).join(" · ")}</span>
-                </span>
-              </div>
-            );
-          })}
-        </div>
+        <ItensDaAuditoria itens={q.data.itens} />
       ) : (
-        <Vazio titulo="Nenhuma ação ainda">O que os operadores fazem nos escritórios fica registrado aqui, com quem fez e o motivo.</Vazio>
+        <Vazio titulo="Nenhuma ação ainda">O que os operadores fazem nos escritórios e nas pessoas fica registrado aqui, com quem fez e o motivo.</Vazio>
       )}
     </Painel>
   );
