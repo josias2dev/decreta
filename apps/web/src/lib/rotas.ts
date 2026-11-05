@@ -6,7 +6,7 @@ export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos"
 export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "honorarios", "calculos", "chat"];
 
 /** As abas do painel da plataforma; a Visão geral é a de quando o endereço não diz. */
-export const ABAS_DA_PLATAFORMA = ["visao", "escritorios", "pessoas", "uso", "ia", "conversao", "acoes"] as const;
+export const ABAS_DA_PLATAFORMA = ["visao", "escritorios", "planos", "faturas", "pessoas", "uso", "ia", "conversao", "acoes"] as const;
 export type AbaDaPlataforma = (typeof ABAS_DA_PLATAFORMA)[number];
 
 export type AbaDaConfiguracao = "escritorio" | "pecas" | "avisos" | "calendario" | "financeiro" | "ia" | "plano" | "registro" | "dados";

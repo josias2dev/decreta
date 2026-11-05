@@ -1,22 +1,38 @@
 /**
  * O painel da plataforma na prévia: escritórios, pessoas, acessos, uso, IA e faturas todos inventados, e as mesmas
  * contas do servidor (`montar*` de @decreta/core) por cima. O que a prévia mostra é o que o painel mostraria com esses
- * números. Nenhum nome, e-mail ou escritório aqui é de verdade. A mensalidade de R$ 149 é só um exemplo: o preço do
- * plano ainda não foi decidido.
+ * números. Nenhum nome, e-mail ou escritório aqui é de verdade. A mensalidade de R$ 149 e os planos, cupons e
+ * limites são só exemplos: o preço do plano ainda não foi decidido.
  */
 import {
+  AJUSTES_DA_PLATAFORMA,
   diaDoInstante,
   diferencaEmDias,
+  fimDoDesconto,
   FUNCIONALIDADES,
   hojeEm,
   montarCustoDaIa,
+  montarFaturas,
   montarFicha,
+  montarLicenca,
+  montarLicencaCompleta,
   montarPessoas,
+  montarRecusasDaIa,
   montarUso,
   montarVisaoGeral,
+  normalizarCodigoDoCupom,
+  precoDoEscritorio,
   somarDias,
   VERSAO_DOS_TERMOS,
   type AcaoRegistrada,
+  type AjusteDaPlataforma,
+  type Cupom,
+  type EscritorioNaLista,
+  type FichaCompleta,
+  type LinhaDaLicenca,
+  type NotaDaEquipe,
+  type Plano,
+  type RecusaCrua,
   type AcessoCru,
   type Dia,
   type EscritorioDaPlataforma,
@@ -165,6 +181,9 @@ for (const o of escritorios) {
   }
 }
 
+// Uma pessoa suspensa pela equipe (saiu do escritório Galvão & Sampaio e ainda não foi tirada da equipe).
+const suspensa = pessoasCruas.filter((p) => p.escritorios[0]!.nome === "Galvão & Sampaio Advocacia").at(-1);
+if (suspensa) suspensa.suspensa = true;
 const acessos: AcessoCru[] = [];
 for (const p of pessoasCruas) {
   const oid = p.escritorios[0]!.id;
@@ -340,12 +359,133 @@ const acoes: AcaoRegistrada[] = [
   { id: "d4000000-0000-4000-8000-000000000004", operador: "equipe@decreta.site", acao: "plataforma.cortesia", organizationId: escritorios.find((e) => e.slug === "vidal-nascimento")!.id, escritorio: "Vidal Nascimento Advocacia", detalhes: { motivo: "Escritório parceiro do piloto" }, em: instante(diasAtras(170), 15) },
 ];
 
+/* ---------------- Os planos, as licenças, os cupons e as notas (exemplos) ---------------- */
+
+const OPERADOR = "equipe@decreta.site";
+const planoBase = { padrao: false, criadoPor: OPERADOR, substituidoEm: null as string | null, funcionalidades: {} };
+const planos: Plano[] = [
+  { ...planoBase, id: "e5000000-0000-4000-8000-000000000001", codigo: "escritorio", versao: 1, nome: "Escritório", mensalCentavos: 12_900, anualCentavos: null, pessoasIncluidas: 3, pessoaExtraCentavos: 3_900, limites: { processos: 800 }, padrao: true, criadoEm: instante(diasAtras(170), 12), criadoPor: null, substituidoEm: instante(diasAtras(60), 12) },
+  { ...planoBase, id: "e5000000-0000-4000-8000-000000000002", codigo: "escritorio", versao: 2, nome: "Escritório", mensalCentavos: MENSALIDADE, anualCentavos: 149_000, pessoasIncluidas: 3, pessoaExtraCentavos: 3_900, limites: { processos: 1000, iaMesUsd: 40, whatsappDia: 60, arquivosGb: 20 }, padrao: true, criadoEm: instante(diasAtras(60), 12) },
+  { ...planoBase, id: "e5000000-0000-4000-8000-000000000003", codigo: "banca", versao: 1, nome: "Banca", mensalCentavos: 34_900, anualCentavos: 349_000, pessoasIncluidas: 10, pessoaExtraCentavos: 2_900, limites: { processos: 5000, iaMesUsd: 150, whatsappDia: 300, arquivosGb: 100 }, criadoEm: instante(diasAtras(20), 15) },
+  { ...planoBase, id: "e5000000-0000-4000-8000-000000000004", codigo: "solo", versao: 1, nome: "Solo", mensalCentavos: 7_900, anualCentavos: null, pessoasIncluidas: 1, pessoaExtraCentavos: null, limites: { processos: 300, iaMesUsd: 15, whatsappDia: 20 }, funcionalidades: { financeiro: false, assinatura: false }, criadoEm: instante(diasAtras(20), 15) },
+];
+const planoPorId = new Map(planos.map((p) => [p.id, p]));
+const [V1, V2, BANCA, SOLO] = planos as [Plano, Plano, Plano, Plano];
+
+/** A licença de cada escritório: quem assinou antes da versão 2 ficou na 1; os outros, na padrão. */
+const licencas = new Map<string, LinhaDaLicenca>();
+for (const o of escritorios) {
+  const m = RITMO.get(o.id)!;
+  const antigo = m.assinou !== undefined && m.assinou > 60;
+  licencas.set(o.id, { planoId: antigo ? V1.id : V2.id, pessoasExtras: m.pessoas > 3 ? m.pessoas - 3 : 0, valorCombinadoCentavos: null, desconto: null, marca: null, tetosIa: null });
+}
+const licencaDe = (slug: string) => licencas.get(escritorios.find((e) => e.slug === slug)!.id)!;
+Object.assign(licencaDe("moraes-teixeira"), { planoId: BANCA.id, pessoasExtras: 0, marca: "piloto" });
+Object.assign(licencaDe("vidal-nascimento"), { marca: "parceiro", valorCombinadoCentavos: 0 });
+Object.assign(licencaDe("albuquerque"), { marca: "indicacao", desconto: { tipo: "percentual", valor: 20, ate: fimDoDesconto(diasAtras(3), 3), cupom: "INDICA20" } });
+Object.assign(licencaDe("prates"), { desconto: { tipo: "valor", valor: 3_000, ate: fimDoDesconto(diasAtras(40), 6), cupom: null } });
+Object.assign(licencaDe("paiva-previdenciaria"), { planoId: SOLO.id });
+Object.assign(licencaDe("torres-menezes"), { tetosIa: { diaUsd: 1, mesUsd: null, mensagensPorDia: null } });
+
+/** O uso que a prévia inventa para os limites: os processos e as pessoas são os da lista; o resto, proporcional. */
+const consumoDe = (o: EscritorioDaPlataforma) => ({
+  pessoas: o.pessoas,
+  processos: o.slug === "carvalho-lima" ? 870 : o.processos,
+  oabs: Math.max(1, Math.round(o.pessoas * 0.7)),
+  iaMesUsd: o.iaMesUsd,
+  arquivosBytes: Math.round(o.processos * 3.1 * 410_000),
+  whatsappHoje: Math.round(o.pessoas * 2.5 * (RITMO.get(o.id)!.ritmo || 0)),
+});
+
+const planoDe = (oid: string) => planoPorId.get(licencas.get(oid)!.planoId!) ?? V2;
+
+// A assinatura acompanha a licença (o servidor acerta o valor no Asaas toda noite): a lista, as faturas e o MRR batem.
+for (const o of escritorios) {
+  if (o.valorMensalCentavos === null) continue;
+  const valor = precoDoEscritorio(planoDe(o.id), licencas.get(o.id)!, HOJE).mensalidadeCentavos ?? o.valorMensalCentavos;
+  o.valorMensalCentavos = valor;
+  for (const f of faturas) if (f.organizationId === o.id) f.valorCentavos = valor;
+}
+
+const lista: EscritorioNaLista[] = escritorios.map((o) => {
+  const l = licencas.get(o.id)!;
+  const plano = planoDe(o.id);
+  const uso = montarLicenca({ plano, pessoasExtras: l.pessoasExtras, tetos: l.tetosIa, consumo: consumoDe(o) });
+  const preco = precoDoEscritorio(plano, l, HOJE);
+  return {
+    ...o,
+    plano: { id: plano.id, nome: plano.nome, versao: plano.versao, antigo: !!plano.substituidoEm },
+    marca: l.marca,
+    mensalidadeCentavos: o.situacao === "cortesia" ? 0 : preco.mensalidadeCentavos,
+    comDesconto: preco.descontoCentavos > 0,
+    limites: { estado: uso.estado, alertas: uso.alertas, rotulos: uso.itens.filter((i) => i.estado !== "ok").map((i) => i.rotulo) },
+  };
+});
+
+const cupons: Cupom[] = [
+  { id: "e6000000-0000-4000-8000-000000000001", codigo: "OAB-SUBSECAO", tipo: "percentual", valor: 15, meses: 6, validoAte: somarDias(HOJE, 55), limiteDeUsos: 30, usos: 4, nota: "Parceria com uma subseção da OAB (exemplo)", criadoPor: OPERADOR, criadoEm: instante(diasAtras(30), 14), desativadoEm: null },
+  { id: "e6000000-0000-4000-8000-000000000002", codigo: "INDICA20", tipo: "percentual", valor: 20, meses: 3, validoAte: null, limiteDeUsos: null, usos: 2, nota: "Indicação entre escritórios", criadoPor: OPERADOR, criadoEm: instante(diasAtras(50), 10), desativadoEm: null },
+  { id: "e6000000-0000-4000-8000-000000000003", codigo: "FEIRA-JURIDICA", tipo: "valor", valor: 5_000, meses: 1, validoAte: diasAtras(12), limiteDeUsos: 50, usos: 7, nota: "Estande numa feira (exemplo)", criadoPor: OPERADOR, criadoEm: instante(diasAtras(80), 9), desativadoEm: null },
+];
+
+const notas = new Map<string, NotaDaEquipe[]>();
+const anotar = (slug: string, n: Omit<NotaDaEquipe, "id" | "operador" | "retornoFeitoEm"> & { retornoFeitoEm?: string | null }) => {
+  const o = escritorios.find((e) => e.slug === slug)!;
+  const lista_ = notas.get(o.id) ?? [];
+  lista_.unshift({ id: `e7000000-0000-4000-8000-${String(lista_.length + notas.size * 10 + 1).padStart(12, "0")}`, operador: OPERADOR, retornoFeitoEm: null, ...n });
+  notas.set(o.id, lista_);
+};
+anotar("bastos-rezende", { texto: "A sócia gostou do resumo da manhã e quer mostrar ao outro sócio antes de assinar.", contato: "WhatsApp da sócia", proximoPasso: "Perguntar se o sócio já viu", retornoEm: HOJE, criadaEm: instante(diasAtras(2), 17) });
+anotar("carvalho-lima", { texto: "Chegando no limite de processos do plano. Ofereço a Banca ou um valor combinado.", contato: "E-mail do sócio administrador", proximoPasso: "Mandar a proposta da Banca", retornoEm: diasAtras(1), criadaEm: instante(diasAtras(6), 11) });
+anotar("siqueira-campos", { texto: "Fatura em atraso: disseram que o boleto foi para o spam.", contato: "Telefone do escritório", proximoPasso: "Reenviar o link da fatura", retornoEm: somarDias(HOJE, 2), criadaEm: instante(diasAtras(1), 15) });
+
+const retornos = [...notas.entries()].flatMap(([organizationId, ns]) => ns.filter((x) => x.retornoEm && !x.retornoFeitoEm && x.retornoEm <= HOJE).map((x) => ({ organizationId, retornoEm: x.retornoEm!, proximoPasso: x.proximoPasso })));
+const limitesNaAtencao = lista.filter((e) => !e.demonstracao && e.limites.estado !== "ok").map((e) => ({ organizationId: e.id, estado: e.limites.estado as "perto" | "passou", rotulos: e.limites.rotulos }));
+
+const PADRAO_DOS_AJUSTES: Record<string, number> = { testeDias: 14, cotacaoUsd: COTACAO, "ia.tetoSiteUsd": TETOS.siteUsd, "ia.tetoPessoaUsd": 2, "ia.mensagensPorDia": 120, "ia.mensagensPorMinuto": 8, "ia.simultaneos": 3, "ia.demonstracaoTetoUsd": TETOS.avaliacaoUsd, "ia.demonstracaoMensagensPorDia": 30 };
+const ajustes: AjusteDaPlataforma[] = AJUSTES_DA_PLATAFORMA.map((d) => {
+  const mudado = d.chave === "ia.tetoPessoaUsd" ? { valor: 3, mudadoPor: OPERADOR, mudadoEm: instante(diasAtras(5), 16) } : null;
+  return { ...d, valor: mudado?.valor ?? PADRAO_DOS_AJUSTES[d.chave]!, padrao: PADRAO_DOS_AJUSTES[d.chave]!, mudadoPor: mudado?.mudadoPor ?? null, mudadoEm: mudado?.mudadoEm ?? null };
+});
+
+const recusas: RecusaCrua[] = [];
+for (const o of escritorios) {
+  for (let d = 0; d < 30; d++) {
+    const dia = diasAtras(d);
+    const chance = o.slug === "torres-menezes" ? 0.5 : o.slug === "moraes-teixeira" ? 0.25 : o.demonstracao ? 0.35 : 0.02;
+    if (sorte(`recusa:${o.id}:${dia}`) < chance) recusas.push({ organizationId: o.id, dia, motivo: o.demonstracao ? "demonstracao" : o.slug === "torres-menezes" ? "em_avaliacao" : o.slug === "moraes-teixeira" ? "mensagens_do_dia" : "minuto", total: 1 + Math.floor(sorte(`recusas:${o.id}:${dia}`) * 3) });
+  }
+}
+
+const linkDaFatura = (fid: string) => `https://www.asaas.com/i/${fid.slice(-8)}`;
+
+function fichaCompleta(oid: string): FichaCompleta | null {
+  const base = ficha(oid);
+  if (!base) return null;
+  const o = porId.get(oid)!;
+  const plano = planoDe(oid);
+  return {
+    ...base,
+    licenca: montarLicencaCompleta(plano, licencas.get(oid)!, consumoDe(o), HOJE),
+    notas: notas.get(oid) ?? [],
+    planos: [...planos.filter((p) => !p.substituidoEm), ...(plano.substituidoEm ? [plano] : [])].map((p) => ({ id: p.id, nome: p.nome, versao: p.versao, mensalCentavos: p.mensalCentavos, vivo: !p.substituidoEm })),
+    cobranca: { linkGuardado: o.situacao === "teste", assinaturaViva: !!o.assinouEm && o.situacao !== "cancelado" },
+  };
+}
+
+function planosNaLista() {
+  return planos.map((p) => {
+    const deles = lista.filter((e) => !e.demonstracao && e.plano.id === p.id);
+    return { ...p, escritorios: deles.length, assinantes: deles.filter((e) => e.assinouEm).length };
+  });
+}
+
 /* ---------------- As respostas ---------------- */
 
 const reais = new Set(escritorios.filter((e) => !e.demonstracao && !e.encerrado).map((e) => e.id));
 
 function visaoGeral() {
-  return montarVisaoGeral({ hoje: HOJE, escritorios, acessos: acessos.filter((a) => a.dia >= diasAtras(29)), ultimosAcessos, marcos, ia: ia.filter((i) => i.dia >= diasAtras(29)), faturas, fotos: fotos(), cotacaoUsd: COTACAO, tetos: TETOS });
+  return montarVisaoGeral({ hoje: HOJE, escritorios, acessos: acessos.filter((a) => a.dia >= diasAtras(29)), ultimosAcessos, marcos, ia: ia.filter((i) => i.dia >= diasAtras(29)), faturas, fotos: fotos(), cotacaoUsd: COTACAO, tetos: TETOS, extras: { retornos, limites: limitesNaAtencao } });
 }
 
 function indicadores(dias: number) {
@@ -428,10 +568,55 @@ function ficha(oid: string) {
 const json = (status: number, dados: unknown) => new Response(JSON.stringify(dados), { status, headers: { "content-type": "application/json" } });
 const dias = (busca: URLSearchParams, padrao: number) => Math.min(180, Math.max(1, Number(busca.get("dias") ?? padrao) || padrao));
 
-/** Atende /api/plataforma/... na prévia. As ações respondem "feito" e não mudam nada. */
+/** Atende /api/plataforma/... na prévia. As ações respondem "feito" e quase nada muda (só a lista de cupons, as notas e os ajustes, até recarregar). */
 export async function atenderPlataforma(metodo: string, caminho: string, busca: URLSearchParams, pedido: Request): Promise<Response> {
   if (metodo === "POST") {
-    const corpo = (await pedido.clone().json().catch(() => ({}))) as { acao?: string };
+    const corpo = (await pedido.clone().json().catch(() => ({}))) as Record<string, any> & { acao?: string };
+    if (caminho === "/planos") return json(201, { plano: { ...planoBase, ...corpo, id: crypto.randomUUID(), codigo: normalizarCodigoDoCupom(String(corpo.nome ?? "plano")).toLowerCase(), versao: 1, criadoEm: new Date().toISOString() } });
+    const doPlano = /^\/planos\/([^/]+)(\/padrao)?$/.exec(caminho);
+    if (doPlano) {
+      const p = planoPorId.get(doPlano[1]!);
+      if (!p) return json(404, { erro: "recusado", detalhe: "Plano não encontrado." });
+      if (doPlano[2]) return json(200, { plano: { ...p, padrao: true } });
+      if (p.substituidoEm) return json(409, { erro: "recusado", detalhe: "Esta versão já foi substituída. Mude a versão mais nova do plano." });
+      const deles = lista.filter((e) => e.plano.id === p.id);
+      return json(200, { plano: { ...p, ...corpo, versao: p.versao + 1 }, passaram: deles.filter((e) => !e.assinouEm).length, ficaram: deles.filter((e) => e.assinouEm).length });
+    }
+    if (caminho === "/cupons") {
+      const codigo = normalizarCodigoDoCupom(String(corpo.codigo ?? ""));
+      if (cupons.some((c) => c.codigo === codigo)) return json(409, { erro: "recusado", detalhe: "Já existe um cupom com este código." });
+      const cupom: Cupom = { id: crypto.randomUUID(), codigo, tipo: corpo.tipo, valor: corpo.valor, meses: corpo.meses, validoAte: corpo.validoAte ?? null, limiteDeUsos: corpo.limiteDeUsos ?? null, usos: 0, nota: corpo.nota ?? null, criadoPor: OPERADOR, criadoEm: new Date().toISOString(), desativadoEm: null };
+      cupons.unshift(cupom);
+      return json(201, { cupom });
+    }
+    const desativar = /^\/cupons\/([^/]+)\/desativar$/.exec(caminho);
+    if (desativar) {
+      const c = cupons.find((x) => x.id === desativar[1]);
+      if (!c) return json(404, { erro: "recusado", detalhe: "Cupom não encontrado." });
+      c.desativadoEm = new Date().toISOString();
+      return json(200, { cupom: c });
+    }
+    const ajuste = /^\/ajustes\/([^/]+)$/.exec(caminho);
+    if (ajuste) {
+      const a = ajustes.find((x) => x.chave === ajuste[1]);
+      if (!a) return json(404, { erro: "recusado", detalhe: "Ajuste desconhecido." });
+      const volta = corpo.valor === null || corpo.valor === a.padrao;
+      Object.assign(a, { valor: volta ? a.padrao : corpo.valor, mudadoPor: volta ? null : OPERADOR, mudadoEm: volta ? null : new Date().toISOString() });
+      return json(200, { ajuste: a });
+    }
+    const nota = /^\/escritorios\/([^/]+)\/notas$/.exec(caminho);
+    if (nota) {
+      const nova: NotaDaEquipe = { id: crypto.randomUUID(), operador: OPERADOR, texto: corpo.texto, contato: corpo.contato ?? null, proximoPasso: corpo.proximoPasso ?? null, retornoEm: corpo.retornoEm ?? null, retornoFeitoEm: null, criadaEm: new Date().toISOString() };
+      notas.set(nota[1]!, [nova, ...(notas.get(nota[1]!) ?? [])]);
+      return json(201, { nota: nova });
+    }
+    const retorno = /^\/notas\/([^/]+)\/retorno-feito$/.exec(caminho);
+    if (retorno) {
+      const n_ = [...notas.values()].flat().find((x) => x.id === retorno[1]);
+      if (!n_ || n_.retornoFeitoEm) return json(404, { erro: "recusado", detalhe: "Nota não encontrada, ou o retorno já foi feito." });
+      n_.retornoFeitoEm = new Date().toISOString();
+      return json(200, { nota: n_ });
+    }
     const naPessoa = /^\/pessoas\/([^/]+)\/acao$/.exec(caminho);
     if (naPessoa) return json(200, { ok: true, ...(corpo.acao === "encerrar_sessoes" ? { sessoesEncerradas: pessoasCruas.find((p) => p.id === naPessoa[1])?.sessoesAbertas ?? 0 } : {}) });
     const noEscritorio = /^\/escritorios\/([^/]+)\/acao$/.exec(caminho);
@@ -441,16 +626,27 @@ export async function atenderPlataforma(metodo: string, caminho: string, busca: 
     }
     return json(404, { erro: "nao_encontrado" });
   }
-  if (caminho === "/escritorios") return json(200, { escritorios });
+  if (caminho === "/escritorios") return json(200, { escritorios: lista });
+  if (caminho === "/planos") return json(200, { planos: planosNaLista(), cupons, ajustes: ajustes.filter((a) => a.grupo === "Teste"), cobranca: { ativa: true, asaas: true }, hoje: HOJE });
+  if (caminho === "/ajustes") return json(200, { ajustes });
+  if (caminho === "/faturas") {
+    const mes = busca.get("mes") ?? HOJE.slice(0, 7);
+    const comLink = faturas.map((f) => ({ ...f, link: f.situacao === "paga" ? null : linkDaFatura(f.id) }));
+    return json(200, { ...montarFaturas({ hoje: HOJE, mes, escritorios, faturas: comLink }), cobranca: { ativa: true, asaas: true, nfse: true } });
+  }
   if (caminho === "/visao-geral") return json(200, visaoGeral());
   if (caminho === "/indicadores") return json(200, indicadores(dias(busca, 30)));
   if (caminho === "/pessoas") return json(200, pessoas());
   if (caminho === "/uso") return json(200, uso(dias(busca, 30)));
-  if (caminho === "/ia") return json(200, montarCustoDaIa({ hoje: HOJE, dias: Math.min(90, dias(busca, 30)), escritorios, ia, cotacaoUsd: COTACAO, tetoSiteUsd: TETOS.siteUsd }));
+  if (caminho === "/ia") {
+    const d = Math.min(90, dias(busca, 30));
+    const desde = somarDias(HOJE, 1 - d);
+    return json(200, { ...montarCustoDaIa({ hoje: HOJE, dias: d, escritorios, ia, cotacaoUsd: COTACAO, tetoSiteUsd: TETOS.siteUsd }), recusas: montarRecusasDaIa({ hoje: HOJE, dias: d, escritorios, recusas: recusas.filter((r) => r.dia >= desde) }), ajustes: ajustes.filter((a) => a.grupo !== "Teste") });
+  }
   if (caminho === "/auditoria") return json(200, { itens: acoes });
   const daFicha = /^\/escritorios\/([^/]+)$/.exec(caminho);
   if (daFicha) {
-    const f = ficha(daFicha[1]!);
+    const f = fichaCompleta(daFicha[1]!);
     return f ? json(200, f) : json(404, { erro: "nao_encontrado" });
   }
   return json(404, { erro: "nao_encontrado" });

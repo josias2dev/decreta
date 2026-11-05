@@ -4,7 +4,7 @@
  * Endereço sem amostra própria usa a do mesmo tipo (qualquer processo abre o
  * processo de amostra). O que muda algo responde "ok" e não guarda nada.
  */
-import { baseLegalDaTabela, citacaoDaBaseLegal, extrairCitacoes } from "@decreta/core";
+import { baseLegalDaTabela, citacaoDaBaseLegal, extrairCitacoes, fimDoDesconto, montarLicenca, normalizarCodigoDoCupom, precoDoEscritorio, type DescontoDoEscritorio } from "@decreta/core";
 import { atenderPerguntar } from "./ia-falsa";
 import { atenderPlataforma } from "./plataforma-falsa";
 import { PECA_LONGA } from "./peca-longa";
@@ -59,11 +59,40 @@ function achar(caminho: string, busca: URLSearchParams): unknown {
 
 const json = (status: number, dados: unknown) => new Response(JSON.stringify(dados), { status, headers: { "content-type": "application/json" } });
 
-const eu = amostras.find((a) => a.path === "/eu")!.corpo as { usuario: { id: string; nome: string }; escritorio: { id: string }; plataforma?: true };
+const eu = amostras.find((a) => a.path === "/eu")!.corpo as { usuario: { id: string; nome: string }; escritorio: { id: string }; hoje: string; plataforma?: true; assinatura?: unknown };
 // Na prévia que a equipe abre, quem entra também opera a plataforma: o menu da conta leva ao painel, com dados
 // inventados. Na demonstração pública do site (/demonstracao), não: lá o painel não existe, como para todo escritório.
 const OPERADOR = !location.pathname.startsWith("/demonstracao/");
-if (OPERADOR) eu.plataforma = true;
+// E o escritório da prévia da equipe está no teste, com a cobrança ligada: a aba Plano aparece, com o cupom e o uso do plano.
+if (OPERADOR) Object.assign(eu, { plataforma: true, assinatura: { situacao: "teste", acesso: "total", aviso: null } });
+
+/** Os cupons que a prévia aceita (os mesmos do painel) e o desconto que o sócio já aplicou. */
+const CUPONS_DA_PREVIA: Record<string, { tipo: "percentual" | "valor"; valor: number; meses: number }> = { "OAB-SUBSECAO": { tipo: "percentual", valor: 15, meses: 6 }, INDICA20: { tipo: "percentual", valor: 20, meses: 3 } };
+let descontoDaPrevia: DescontoDoEscritorio | null = null;
+
+/** A tela do Plano na prévia da equipe: o plano Escritório (3 pessoas, mais 1), no teste, com os limites e o uso. */
+function planoDaPrevia(amostra: Record<string, unknown>) {
+  const plano = { mensalCentavos: 14_900, pessoaExtraCentavos: 3_900, pessoasIncluidas: 3, limites: { processos: 1000, iaMesUsd: 40, whatsappDia: 60, arquivosGb: 20 } };
+  const licenca = { planoId: null, pessoasExtras: 1, valorCombinadoCentavos: null, desconto: descontoDaPrevia, marca: null, tetosIa: null };
+  const preco = precoDoEscritorio(plano, licenca, eu.hoje);
+  const consumo = { pessoas: 4, processos: 136, oabs: 3, iaMesUsd: 33.4, arquivosBytes: 2.6e9, whatsappHoje: 12 };
+  const uso = montarLicenca({ plano, pessoasExtras: 1, tetos: null, consumo });
+  const testeAte = "2026-11-07";
+  return {
+    ...amostra,
+    cobrancaAtiva: true,
+    plano: { ...(amostra.plano as object), valorMensalCentavos: preco.cheioCentavos },
+    situacao: "teste",
+    rotulo: "Em teste",
+    situacaoGravada: "teste",
+    testeAte,
+    diasRestantesDoTeste: 9,
+    podeAssinar: true,
+    motivoSemAssinar: null,
+    aceitaCupom: !descontoDaPrevia,
+    licenca: { preco, desconto: descontoDaPrevia && { tipo: descontoDaPrevia.tipo, valor: descontoDaPrevia.valor, ate: descontoDaPrevia.ate }, funcionalidades: {}, uso },
+  };
+}
 const sessao = {
   session: { id: "sessao", userId: eu.usuario.id, activeOrganizationId: eu.escritorio.id, expiresAt: "2026-11-28T12:00:00.000Z" },
   user: { id: eu.usuario.id, name: eu.usuario.nome, email: "teste@decreta.site", emailVerified: true, twoFactorEnabled: false },
@@ -97,6 +126,15 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
     const citacoes = extrairCitacoes(citacaoDaBaseLegal(b.fundamento ?? ""));
     return json(200, { tabela: baseLegalDaTabela(b.tipo ?? "", "cpc"), semIa: false, reconhecida: citacoes.length > 0, lei: citacoes.map((c) => ({ trecho: c.trecho, selo: "nao_verificada", motivo: "Na prévia, o texto da lei não é buscado na fonte.", texto: null, fonte: null })) });
   }
+  if (OPERADOR && metodo === "POST" && caminho === "/plano/cupom") {
+    const codigo = normalizarCodigoDoCupom(String(((await pedido.clone().json()) as { codigo?: string }).codigo ?? ""));
+    const cupom = CUPONS_DA_PREVIA[codigo];
+    if (!cupom) return json(409, { erro: "cupom_recusado", detalhe: "Não existe cupom com este código." });
+    descontoDaPrevia = { tipo: cupom.tipo, valor: cupom.valor, ate: fimDoDesconto(eu.hoje, cupom.meses), cupom: codigo };
+    return json(200, { desconto: descontoDaPrevia });
+  }
+  // O pagamento é a página do Asaas: a prévia não sai dela.
+  if (metodo === "POST" && caminho === "/plano/assinar") return json(409, { erro: "previa", detalhe: "Na prévia, o pagamento não abre. No site, o botão leva à página do Asaas (Pix, boleto ou cartão)." });
   if (metodo !== "GET") return json(200, { ok: true, id: "00000000-0000-4000-8000-000000000001" });
   // Um documento e o arquivo dele, da amostra dos documentos.
   const doc = /^\/documentos\/([0-9a-f-]{36})(\/arquivo)?$/.exec(caminho);
@@ -148,6 +186,7 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
     const itens = lista.itens.filter((p) => p.cnj?.replace(/\D/g, "") === numeroInteiro);
     return json(200, { ...lista, itens, total: itens.length });
   }
+  if (OPERADOR && caminho === "/plano") return json(200, planoDaPrevia(achar(caminho, url.searchParams) as Record<string, unknown>));
   const corpo = achar(caminho, url.searchParams);
   return corpo === undefined ? json(404, { erro: "nao_encontrado", detalhe: "Esta tela não tem dados na prévia." }) : json(200, comFotos(corpo));
 }) as typeof fetch;

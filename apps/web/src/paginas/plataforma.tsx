@@ -4,7 +4,7 @@
  * atenção hoje; as outras abas abrem os escritórios, as pessoas, o uso de cada funcionalidade, o custo da IA, a
  * conversão e as ações registradas. Tudo é a conta e os totais, nunca o que é de cada escritório.
  */
-import { ROTULO_DA_SITUACAO, type EscritorioDaPlataforma, type SituacaoDoEscritorio } from "@decreta/core";
+import { ROTULO_DA_MARCA, ROTULO_DA_SITUACAO, type EscritorioNaLista, type SituacaoDoEscritorio } from "@decreta/core";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
@@ -15,6 +15,7 @@ import { diaCompleto, diaDoInstante, numero } from "@/lib/formato";
 import type { AbaDaPlataforma } from "@/lib/rotas";
 import type { AcaoDaPlataforma, IndicadoresDaPlataforma } from "@/lib/tipos";
 import { CustoDaIa, Pessoas, Uso, VisaoGeral } from "./plataforma-paineis";
+import { Faturas, Planos } from "./plataforma-planos";
 
 export function PlataformaPage() {
   const { aba = "visao" } = useSearch({ from: "/plataforma" });
@@ -40,6 +41,8 @@ export function PlataformaPage() {
           abas={[
             { id: "visao", rotulo: "Visão geral" },
             { id: "escritorios", rotulo: "Escritórios", n: lista.data?.escritorios.filter((e) => !e.demonstracao && !e.encerrado).length },
+            { id: "planos", rotulo: "Planos" },
+            { id: "faturas", rotulo: "Faturas" },
             { id: "pessoas", rotulo: "Pessoas" },
             { id: "uso", rotulo: "Uso" },
             { id: "ia", rotulo: "IA" },
@@ -54,6 +57,10 @@ export function PlataformaPage() {
         <VisaoGeral irPara={irPara} />
       ) : aba === "escritorios" ? (
         <Escritorios lista={lista.data?.escritorios} />
+      ) : aba === "planos" ? (
+        <Planos />
+      ) : aba === "faturas" ? (
+        <Faturas />
       ) : aba === "pessoas" ? (
         <Pessoas />
       ) : aba === "uso" ? (
@@ -72,25 +79,29 @@ export function PlataformaPage() {
 /* ---------------- Escritórios ---------------- */
 
 /** A lista inteira numa planilha (separada por ponto e vírgula, como o Excel em português abre). */
-function exportarCsv(lista: EscritorioDaPlataforma[]) {
+function exportarCsv(lista: EscritorioNaLista[]) {
   const celula = (v: string | number | null) => {
     const t = v === null ? "" : String(v);
     return /[";\n]/.test(t) ? `"${t.replaceAll('"', '""')}"` : t;
   };
   const linhas = [
-    ["Escritório", "Endereço", "Situação", "Cadastro", "Fim do teste", "Dias de atraso", "Mensalidade (R$)", "Assinou em", "Pessoas", "Processos", "IA no mês (US$)", "Em avaliação"],
+    ["Escritório", "Endereço", "Situação", "Plano", "Marca", "Cadastro", "Fim do teste", "Dias de atraso", "Mensalidade (R$)", "Com desconto", "Assinou em", "Pessoas", "Processos", "IA no mês (US$)", "Limites", "Em avaliação"],
     ...lista.map((e) => [
       e.nome,
       e.slug,
       ROTULO_DA_SITUACAO[e.situacao],
+      `${e.plano.nome} v${e.plano.versao}`,
+      e.marca ? ROTULO_DA_MARCA[e.marca] : null,
       diaCompleto(diaDoInstante(e.criadoEm)),
       e.testeAte ? diaCompleto(e.testeAte) : null,
       e.diasDeAtraso,
-      e.valorMensalCentavos === null ? null : (e.valorMensalCentavos / 100).toFixed(2).replace(".", ","),
+      e.mensalidadeCentavos === null ? null : (e.mensalidadeCentavos / 100).toFixed(2).replace(".", ","),
+      e.comDesconto ? "sim" : "não",
       e.assinouEm ? diaCompleto(diaDoInstante(e.assinouEm)) : null,
       e.pessoas,
       e.processos,
       e.iaMesUsd.toFixed(2).replace(".", ","),
+      e.limites.rotulos.join(", ") || null,
       e.emAvaliacao ? "sim" : "não",
     ]),
   ];
@@ -103,10 +114,10 @@ function exportarCsv(lista: EscritorioDaPlataforma[]) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined }) {
+function Escritorios({ lista }: { lista: EscritorioNaLista[] | undefined }) {
   const [filtro, setFiltro] = useState<SituacaoDoEscritorio | "todos">("todos");
   const [busca, setBusca] = useState("");
-  const [agindo, setAgindo] = useState<EscritorioDaPlataforma | null>(null);
+  const [agindo, setAgindo] = useState<EscritorioNaLista | null>(null);
   if (!lista) return <Carregando />;
   const reais_ = lista.filter((e) => !e.demonstracao && !e.encerrado);
   const conta = (s: SituacaoDoEscritorio) => reais_.filter((e) => e.situacao === s).length;
@@ -142,6 +153,7 @@ function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined })
                   <th className="dc-col--situacao">Situação</th>
                   <th className="dc-col--data">Cadastro</th>
                   <th className="dc-col--situacao">Teste e cobrança</th>
+                  <th className="dc-col--situacao">Plano</th>
                   <th className="dc-direita dc-col--n">Pessoas</th>
                   <th className="dc-direita dc-col--n">Processos</th>
                   <th className="dc-direita dc-col--data">IA no mês</th>
@@ -157,6 +169,7 @@ function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined })
                         <span className="dc-celula__2">
                           {e.slug}
                           {e.emAvaliacao ? " · em avaliação" : ""}
+                          {e.marca ? ` · ${ROTULO_DA_MARCA[e.marca].toLocaleLowerCase("pt-BR")}` : ""}
                         </span>
                       </Link>
                     </td>
@@ -165,6 +178,18 @@ function Escritorios({ lista }: { lista: EscritorioDaPlataforma[] | undefined })
                     </td>
                     <td className="dc-num">{diaCompleto(diaDoInstante(e.criadoEm))}</td>
                     <td className="dc-num">{andamento(e)}</td>
+                    <td>
+                      <span className="dc-celula">
+                        <span className="dc-celula__1">
+                          {e.plano.nome}
+                          {e.plano.antigo ? ` · v${e.plano.versao}` : ""}
+                        </span>
+                        <span className="dc-celula__2 dc-num">
+                          {e.mensalidadeCentavos === null ? "sem preço" : `${reais(e.mensalidadeCentavos)}${e.comDesconto ? " com desconto" : ""}`}
+                          {e.limites.estado !== "ok" ? ` · ${e.limites.estado === "passou" ? "passou do limite" : "perto do limite"}` : ""}
+                        </span>
+                      </span>
+                    </td>
                     <td className="dc-direita dc-num">{numero(e.pessoas)}</td>
                     <td className="dc-direita dc-num">{numero(e.processos)}</td>
                     <td className="dc-direita dc-num">{usd(e.iaMesUsd)}</td>

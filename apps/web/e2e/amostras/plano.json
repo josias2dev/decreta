@@ -7,6 +7,78 @@
       "testeDias": 14,
       "valorMensalCentavos": null
     },
+    "licenca": {
+      "preco": {
+        "cheioCentavos": null,
+        "combinado": false,
+        "descontoCentavos": 0,
+        "mensalidadeCentavos": null,
+        "descontoAte": null
+      },
+      "desconto": null,
+      "funcionalidades": {},
+      "uso": {
+        "itens": [
+          {
+            "chave": "pessoas",
+            "rotulo": "Pessoas",
+            "unidade": "pessoas",
+            "usado": 4,
+            "limite": null,
+            "fracao": null,
+            "estado": "ok"
+          },
+          {
+            "chave": "processos",
+            "rotulo": "Processos monitorados",
+            "unidade": "processos",
+            "usado": 136,
+            "limite": null,
+            "fracao": null,
+            "estado": "ok"
+          },
+          {
+            "chave": "oabs",
+            "rotulo": "OABs",
+            "unidade": "OABs",
+            "usado": 3,
+            "limite": null,
+            "fracao": null,
+            "estado": "ok"
+          },
+          {
+            "chave": "iaMesUsd",
+            "rotulo": "Gasto de IA por mês",
+            "unidade": "US$",
+            "usado": 0,
+            "limite": null,
+            "fracao": null,
+            "estado": "ok"
+          },
+          {
+            "chave": "arquivosGb",
+            "rotulo": "Espaço de arquivos",
+            "unidade": "GB",
+            "usado": 0.0034534139558672905,
+            "limite": null,
+            "fracao": null,
+            "estado": "ok"
+          },
+          {
+            "chave": "whatsappDia",
+            "rotulo": "Mensagens de WhatsApp por dia",
+            "unidade": "mensagens",
+            "usado": 0,
+            "limite": null,
+            "fracao": null,
+            "estado": "ok"
+          }
+        ],
+        "estado": "ok",
+        "alertas": 0
+      }
+    },
+    "aceitaCupom": false,
     "situacao": "cortesia",
     "rotulo": "Cortesia",
     "situacaoGravada": "cortesia",

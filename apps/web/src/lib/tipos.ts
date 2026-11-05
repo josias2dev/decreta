@@ -1,5 +1,5 @@
 /** O que a API das telas devolve (apps/api/src/rotas). */
-import type { AchadoDaAuditoria, AvisoDaConferencia, ContaAberta, EstrategiaDaPeca, FatoDaPeca, ParteDoCadastro, PrazoInterno } from "@decreta/core";
+import type { AchadoDaAuditoria, AvisoDaConferencia, ContaAberta, EstrategiaDaPeca, FatoDaPeca, FuncionalidadeDoPlano, FuncionalidadesDoPlano, LicencaDoEscritorio, ParteDoCadastro, PrazoInterno, PrecoDoEscritorio } from "@decreta/core";
 
 export interface Pessoa {
   id: string;
@@ -27,6 +27,8 @@ export interface Eu {
   assinatura?: { situacao: SituacaoDoEscritorio; acesso: AcessoDoEscritorio; aviso: AvisoDoPlano | null };
   /** Só para o operador da plataforma: o menu mostra o link do painel. */
   plataforma?: true;
+  /** O que o plano do escritório inclui: o menu esconde o que ficou de fora. Ausente (API antiga): tudo incluído. */
+  plano?: Record<FuncionalidadeDoPlano, boolean>;
 }
 
 export type SituacaoDoEscritorio = "teste" | "ativo" | "inadimplente" | "so_leitura" | "bloqueado" | "cancelado" | "cortesia";
@@ -74,6 +76,10 @@ export interface Plano {
   /** A página da fatura aberta no Asaas, onde se escolhe Pix, boleto ou cartão. */
   trocarFormaEm: string | null;
   aviso: AvisoDoPlano | null;
+  /** O preço de hoje (com desconto), o que o plano inclui e o uso contra os limites. */
+  licenca: { preco: PrecoDoEscritorio; desconto: { tipo: "percentual" | "valor"; valor: number; ate: string } | null; funcionalidades: FuncionalidadesDoPlano; uso: LicencaDoEscritorio } | null;
+  /** O sócio pode digitar um cupom de desconto. */
+  aceitaCupom: boolean;
 }
 
 /** Um escritório na lista da plataforma e o que a equipe fez nele: as contas são as de @decreta/core. */

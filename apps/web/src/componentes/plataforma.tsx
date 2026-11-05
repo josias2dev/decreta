@@ -2,7 +2,7 @@
  * O que as telas da plataforma têm em comum: a moldura (com o 404 para quem não é operador e o aviso da verificação
  * em duas etapas), os números do topo, o gráfico de colunas, o medidor e o diálogo de agir num escritório.
  */
-import { ROTULO_DA_SITUACAO, type EscritorioDaPlataforma, type SituacaoDoEscritorio } from "@decreta/core";
+import { ROTULO_DA_SITUACAO, type EscritorioDaPlataforma, type EscritorioNaLista, type SituacaoDoEscritorio } from "@decreta/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
@@ -39,7 +39,7 @@ export const SELO: Record<SituacaoDoEscritorio, "vencido" | "hoje" | "cumprido" 
   cortesia: "prazo",
 };
 
-export const escritoriosQuery = { queryKey: ["plataforma", "escritorios"], queryFn: () => apiPlataforma<{ escritorios: EscritorioDaPlataforma[] }>("/escritorios"), retry: false } as const;
+export const escritoriosQuery = { queryKey: ["plataforma", "escritorios"], queryFn: () => apiPlataforma<{ escritorios: EscritorioNaLista[] }>("/escritorios"), retry: false } as const;
 
 /** O que importa de cada escritório numa frase: o teste, o atraso, o cancelamento ou o que paga. */
 export function andamento(e: EscritorioDaPlataforma): string {
@@ -377,7 +377,47 @@ export const ROTULO_DA_ACAO: Record<string, string> = {
   "plataforma.encerrar_sessoes": "Encerrou as sessões",
   "plataforma.nova_senha": "Mandou link de nova senha",
   "plataforma.confirmar_email": "Reenviou a confirmação do e-mail",
+  "plataforma.desligar_2fa": "Desligou a verificação em duas etapas",
+  "plataforma.suspender": "Suspendeu a pessoa",
+  "plataforma.reativar_pessoa": "Reativou a pessoa",
+  "plataforma.licenca": "Mudou o plano e o valor",
+  "plataforma.desconto": "Deu um desconto",
+  "plataforma.tirar_desconto": "Tirou o desconto",
+  "plataforma.cupom": "Aplicou um cupom",
+  "plataforma.tetos_ia": "Mudou os tetos de IA do escritório",
+  "plataforma.estender_acesso": "Estendeu o acesso",
+  "plataforma.marcar": "Mudou a marca",
+  "plataforma.novo_link": "Tirou do ar o link de pagamento",
+  "plataforma.encerrar": "Encerrou a pedido do escritório",
+  "plataforma.nota": "Anotou na ficha",
+  "plataforma.retorno_feito": "Fez o retorno marcado",
+  "plataforma.plano_criado": "Criou um plano",
+  "plataforma.plano_mudado": "Mudou um plano (versão nova)",
+  "plataforma.plano_padrao": "Mudou o plano padrão",
+  "plataforma.cupom_criado": "Criou um cupom",
+  "plataforma.cupom_desativado": "Desativou um cupom",
+  "plataforma.ajuste": "Mudou um ajuste da plataforma",
 };
+
+/** O que as ações da plataforma inteira (planos, cupons, ajustes) mudaram, já que elas não são de um escritório. */
+function doQueFoi(a: AcaoDaPlataforma): string | null {
+  const d = a.detalhes as Record<string, unknown>;
+  const para = d.para as { nome?: string; versao?: number; mensalCentavos?: number | null } | string | null | undefined;
+  switch (a.acao) {
+    case "plataforma.ajuste":
+      return typeof d.rotulo === "string" ? `${d.rotulo}: ${String(d.de)} → ${String(d.para)}${d.padrao ? " (padrão)" : ""}` : null;
+    case "plataforma.plano_criado":
+    case "plataforma.plano_mudado":
+      return para && typeof para === "object" ? `${para.nome} v${para.versao} · ${para.mensalCentavos == null ? "sem preço" : reais(para.mensalCentavos)}` : null;
+    case "plataforma.plano_padrao":
+      return typeof para === "string" ? `agora ${para}` : null;
+    case "plataforma.cupom_criado":
+    case "plataforma.cupom_desativado":
+      return typeof d.codigo === "string" ? d.codigo : null;
+    default:
+      return null;
+  }
+}
 
 export function ItensDaAuditoria({ itens, comEscritorio = true }: { itens: AcaoDaPlataforma[]; comEscritorio?: boolean }) {
   return (
@@ -386,7 +426,8 @@ export function ItensDaAuditoria({ itens, comEscritorio = true }: { itens: AcaoD
         const motivo = typeof a.detalhes.motivo === "string" ? a.detalhes.motivo : null;
         const dias = typeof a.detalhes.dias === "number" ? `+${plural(a.detalhes.dias, "dia", "dias")}` : null;
         const pessoa = typeof a.detalhes.pessoa === "string" ? a.detalhes.pessoa : null;
-        const onde = [pessoa, comEscritorio ? (a.escritorio ?? (pessoa ? null : "escritório apagado")) : null].filter(Boolean).join(" · ");
+        const assunto = doQueFoi(a);
+        const onde = [pessoa, assunto, comEscritorio && !assunto ? (a.escritorio ?? (pessoa ? null : "escritório apagado")) : null].filter(Boolean).join(" · ");
         return (
           <div key={a.id} className="dc-linhas__item">
             <span className="dc-num w-[132px] flex-none dc-t-meta text-[var(--tinta-2)]">

@@ -1,8 +1,8 @@
 /** O que a landing desenha sem navegador: o preço, que depende de uma decisão ainda aberta. */
 import { describe, expect, test } from "bun:test";
-import { PLANO } from "@decreta/core";
-import { htmlDoPreco, valorEmReais } from "../src/landing/preco";
+import { htmlDoPreco, PLANO_INICIAL, trocarPrecoDaLanding, valorEmReais } from "@decreta/core";
 
+const PLANO = { nome: PLANO_INICIAL.nome, valorMensalCentavos: null };
 const CONTATO = "https://wa.me/exemplo";
 const acoes = (html: string) => [...html.matchAll(/<a /g)].length;
 
@@ -40,5 +40,18 @@ describe("a seção de preço", () => {
   test("não promete um teste com prazo que o produto ainda não aplica", () => {
     expect(htmlDoPreco(PLANO, CONTATO)).not.toContain("dias de teste");
     expect(htmlDoPreco(PLANO, CONTATO)).toContain("sem cartão");
+  });
+});
+
+describe("o preço trocado na hora de servir", () => {
+  test("troca só o que está entre as marcas, e sem as marcas devolve a página como veio", () => {
+    const pagina = `<main><p>antes</p><!--PRECO-->${htmlDoPreco(PLANO, CONTATO)}<!--/PRECO--><p>depois</p></main>`;
+    const trocada = trocarPrecoDaLanding(pagina, { nome: "Escritório", valorMensalCentavos: 24_900 }, CONTATO);
+    expect(trocada).toContain(valorEmReais(24_900));
+    expect(trocada).not.toContain("Fale com a equipe");
+    expect(trocada).toContain("<p>antes</p><!--PRECO-->");
+    expect(trocada).toContain("<!--/PRECO--><p>depois</p>");
+    expect(trocarPrecoDaLanding(trocada, PLANO, CONTATO)).toBe(pagina);
+    expect(trocarPrecoDaLanding("<main>sem marcas</main>", PLANO, CONTATO)).toBe("<main>sem marcas</main>");
   });
 });

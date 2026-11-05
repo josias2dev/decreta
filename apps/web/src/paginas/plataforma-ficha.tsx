@@ -3,12 +3,13 @@
  * pessoas (com o último acesso), os totais, o uso dos últimos 30 dias, a IA, as faturas, a captura e as ações
  * registradas. Só números e datas: nenhum cliente, processo, publicação, documento ou conversa aparece aqui.
  */
-import { ROTULO_DA_SITUACAO, type FichaDoEscritorio } from "@decreta/core";
+import { hojeEm, ROTULO_DA_MARCA, ROTULO_DA_SITUACAO, type FichaCompleta } from "@decreta/core";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { Check, Circle } from "lucide-react";
 import { useState } from "react";
 import { AgirNoEscritorio, andamento, Colunas, ItensDaAuditoria, Kpi, Kpis, MolduraDaPlataforma, percentual, plural, reais, SELO, usd, usdCurto } from "@/componentes/plataforma";
+import { AgirNaLicenca, NotasDaEquipe, PainelDaLicenca } from "@/componentes/plataforma-licenca";
 import { Botao, Carregando, Dados, Faixa, Painel, Selo, TopoDoDetalhe, Trilha, Vazio } from "@/componentes/ui";
 import { ApiError, apiPlataforma } from "@/lib/api";
 import { papelLabel } from "@/lib/auth";
@@ -26,8 +27,9 @@ const FORMA: Record<string, string> = { pix: "Pix", boleto: "Boleto", cartao: "C
 
 export function FichaDoEscritorioPage() {
   const { id } = useParams({ from: "/plataforma/escritorios/$id" });
-  const q = useQuery({ queryKey: ["plataforma", "ficha", id], queryFn: () => apiPlataforma<FichaDoEscritorio>(`/escritorios/${id}`), retry: false });
+  const q = useQuery({ queryKey: ["plataforma", "ficha", id], queryFn: () => apiPlataforma<FichaCompleta>(`/escritorios/${id}`), retry: false });
   const [agindo, setAgindo] = useState(false);
+  const [naLicenca, setNaLicenca] = useState(false);
   return (
     <MolduraDaPlataforma>
       <Trilha>
@@ -52,14 +54,15 @@ export function FichaDoEscritorioPage() {
       ) : !q.data ? (
         <Carregando />
       ) : (
-        <Ficha f={q.data} aoAgir={() => setAgindo(true)} />
+        <Ficha f={q.data} aoAgir={() => setAgindo(true)} aoMudarALicenca={() => setNaLicenca(true)} />
       )}
       <AgirNoEscritorio escritorio={agindo && q.data ? q.data.escritorio : null} aoFechar={() => setAgindo(false)} />
+      {q.data && <AgirNaLicenca key={`${q.data.escritorio.id}-${naLicenca}`} ficha={q.data} aberto={naLicenca} aoFechar={() => setNaLicenca(false)} />}
     </MolduraDaPlataforma>
   );
 }
 
-function Ficha({ f, aoAgir }: { f: FichaDoEscritorio; aoAgir: () => void }) {
+function Ficha({ f, aoAgir, aoMudarALicenca }: { f: FichaCompleta; aoAgir: () => void; aoMudarALicenca: () => void }) {
   const e = f.escritorio;
   const t = f.totais;
   const passos = f.marcos.filter((m) => m.em).length;
@@ -72,13 +75,20 @@ function Ficha({ f, aoAgir }: { f: FichaDoEscritorio; aoAgir: () => void }) {
             <Selo urgencia={SELO[e.situacao]}>{ROTULO_DA_SITUACAO[e.situacao]}</Selo>
             {e.emAvaliacao && <Selo urgencia="prazo">Em avaliação</Selo>}
             {e.demonstracao && <Selo urgencia="prazo">Demonstração</Selo>}
+            {f.licenca.marca && <Selo urgencia="prazo">{ROTULO_DA_MARCA[f.licenca.marca]}</Selo>}
+            {f.licenca.uso.estado !== "ok" && <Selo urgencia={f.licenca.uso.estado === "passou" ? "vencido" : "hoje"}>{f.licenca.uso.estado === "passou" ? "Passou do limite" : "Perto do limite"}</Selo>}
           </>
         }
         sobre={`${e.slug} · cadastro em ${diaCompleto(diaDoInstante(e.criadoEm))} · ${andamento(e)}`}
         acoes={
-          <Botao variante="primaria" onClick={aoAgir}>
-            Agir
-          </Botao>
+          <>
+            <Botao onClick={aoMudarALicenca} disabled={e.demonstracao || e.encerrado}>
+              Licença
+            </Botao>
+            <Botao variante="primaria" onClick={aoAgir}>
+              Agir
+            </Botao>
+          </>
         }
       />
 
@@ -171,6 +181,8 @@ function Ficha({ f, aoAgir }: { f: FichaDoEscritorio; aoAgir: () => void }) {
         </div>
 
         <div className="dc-pilha">
+          <PainelDaLicenca f={f} aoAgir={aoMudarALicenca} />
+          <NotasDaEquipe organizationId={e.id} notas={f.notas} hoje={hojeEm("America/Sao_Paulo")} />
           <Painel titulo="Primeiros passos" acao={<span className="dc-nota">{passos} de {f.marcos.length}</span>} corpo={false}>
             <ol className="dc-passos">
               {f.marcos.map((m) => (
@@ -190,7 +202,7 @@ function Ficha({ f, aoAgir }: { f: FichaDoEscritorio; aoAgir: () => void }) {
                 ["Cadastro", diaCompleto(diaDoInstante(e.criadoEm))],
                 ...(e.testeAte ? ([["Fim do teste", diaCompleto(e.testeAte)]] as [string, string][]) : []),
                 ...(e.assinouEm ? ([["Assinou em", diaCompleto(diaDoInstante(e.assinouEm))]] as [string, string][]) : []),
-                ["Mensalidade", e.valorMensalCentavos ? reais(e.valorMensalCentavos) : "—"],
+                ["Mensalidade assinada", e.valorMensalCentavos ? reais(e.valorMensalCentavos) : "—"],
                 ...(e.diasDeAtraso !== null ? ([["Atraso", plural(e.diasDeAtraso, "dia", "dias")]] as [string, string][]) : []),
                 ...(e.cancelamentoPedidoEm ? ([["Cancelou em", diaCompleto(diaDoInstante(e.cancelamentoPedidoEm))]] as [string, string][]) : []),
                 ...(e.acessoAte ? ([["Acesso até", diaCompleto(e.acessoAte)]] as [string, string][]) : []),

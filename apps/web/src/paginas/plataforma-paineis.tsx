@@ -6,7 +6,9 @@ import {
   GRUPOS_DE_FUNCIONALIDADE,
   ROTULO_DA_ATENCAO,
   ROTULO_DA_SITUACAO,
+  type AjusteDaPlataforma,
   type CustoDaIaDaPlataforma,
+  type RecusasDaIa,
   type PessoaDaPlataforma,
   type PessoasDaPlataforma,
   type UsoDaPlataforma,
@@ -18,6 +20,7 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { Colunas, Kpi, Kpis, Linha, Medidor, percentual, plural, reais, reaisCurtos, reaisRedondos, SELO, usd, usdCurto } from "@/componentes/plataforma";
+import { AjustesEditaveis } from "@/componentes/plataforma-licenca";
 import { Botao, Campo, CampoDeBusca, Carregando, Chip, Faixa, Painel, Segmentos, Selo, Vazio } from "@/componentes/ui";
 import { apiPlataforma, mensagemDoErro } from "@/lib/api";
 import { papelLabel } from "@/lib/auth";
@@ -145,7 +148,7 @@ export function VisaoGeral({ irPara }: { irPara: (a: AbaDaPlataforma) => void })
 
 /* ---------------- Pessoas ---------------- */
 
-type FiltroDePessoas = "todas" | "ativas" | "sumidas" | "sem_email" | "sem_2fa" | "termos";
+type FiltroDePessoas = "todas" | "ativas" | "sumidas" | "sem_email" | "sem_2fa" | "termos" | "suspensas";
 
 const FILTROS_DE_PESSOAS: { id: FiltroDePessoas; rotulo: string; vale: (p: PessoaDaPlataforma, hoje: string) => boolean }[] = [
   { id: "todas", rotulo: "Todas", vale: () => true },
@@ -154,6 +157,7 @@ const FILTROS_DE_PESSOAS: { id: FiltroDePessoas; rotulo: string; vale: (p: Pesso
   { id: "sem_email", rotulo: "E-mail não confirmado", vale: (p) => !p.emailConfirmado },
   { id: "sem_2fa", rotulo: "Sem duas etapas", vale: (p) => !p.doisFatores },
   { id: "termos", rotulo: "Termos antigos", vale: (p) => !p.termosEmDia },
+  { id: "suspensas", rotulo: "Suspensas", vale: (p) => p.suspensa },
 ];
 
 const diasAte = (dia: string) => {
@@ -239,6 +243,7 @@ export function Pessoas() {
                     </td>
                     <td>
                       <span className="flex flex-wrap gap-1">
+                        {p.suspensa && <Selo urgencia="vencido">Suspensa</Selo>}
                         {!p.emailConfirmado && <Selo urgencia="hoje">E-mail sem confirmar</Selo>}
                         {p.doisFatores ? <Selo urgencia="cumprido">Duas etapas</Selo> : <Selo urgencia="prazo">Só senha</Selo>}
                       </span>
@@ -278,12 +283,22 @@ export function Pessoas() {
   );
 }
 
-type AcaoNaPessoa = "encerrar_sessoes" | "nova_senha" | "confirmar_email";
+type AcaoNaPessoa = "encerrar_sessoes" | "nova_senha" | "confirmar_email" | "desligar_2fa" | "suspender" | "reativar";
 
-const ACOES_NA_PESSOA: { id: AcaoNaPessoa; rotulo: string; ajuda: string; feito: string; vale: (p: PessoaDaPlataforma) => boolean }[] = [
-  { id: "nova_senha", rotulo: "Mandar link de nova senha", ajuda: "A pessoa recebe por e-mail o link para criar outra senha. A senha de agora continua valendo até ela trocar.", feito: "Link de nova senha enviado", vale: () => true },
-  { id: "confirmar_email", rotulo: "Reenviar a confirmação do e-mail", ajuda: "Chega um e-mail novo com o link de confirmar.", feito: "Confirmação reenviada", vale: (p) => !p.emailConfirmado },
+const ACOES_NA_PESSOA: { id: AcaoNaPessoa; rotulo: string; ajuda: string; feito: string; motivo?: string; vale: (p: PessoaDaPlataforma) => boolean }[] = [
+  { id: "nova_senha", rotulo: "Mandar link de nova senha", ajuda: "A pessoa recebe por e-mail o link para criar outra senha. A senha de agora continua valendo até ela trocar.", feito: "Link de nova senha enviado", vale: (p) => !p.suspensa },
+  { id: "confirmar_email", rotulo: "Reenviar a confirmação do e-mail", ajuda: "Chega um e-mail novo com o link de confirmar.", feito: "Confirmação reenviada", vale: (p) => !p.emailConfirmado && !p.suspensa },
   { id: "encerrar_sessoes", rotulo: "Encerrar as sessões", ajuda: "Sai de todos os aparelhos: a pessoa precisa entrar de novo com a senha. Use se o celular foi perdido ou a conta parece invadida.", feito: "Sessões encerradas", vale: (p) => p.sessoesAbertas > 0 },
+  {
+    id: "desligar_2fa",
+    rotulo: "Desligar a verificação em duas etapas",
+    ajuda: "Para quem perdeu o celular com o aplicativo. Só faça depois de conferir a identidade fora do Decreta (videochamada com documento, ligação para o número do cadastro). A pessoa entra só com a senha e liga de novo em Minha conta.",
+    feito: "Verificação em duas etapas desligada",
+    motivo: "Como a identidade foi conferida",
+    vale: (p) => p.doisFatores,
+  },
+  { id: "suspender", rotulo: "Suspender a pessoa", ajuda: "Por abuso (robô no chat, conta compartilhada fora do combinado). As sessões caem e ela não entra mais, até alguém reativar. O resto do escritório continua normal.", feito: "Pessoa suspensa", motivo: "Motivo da suspensão", vale: (p) => !p.suspensa },
+  { id: "reativar", rotulo: "Reativar a pessoa", ajuda: "A pessoa volta a entrar com a senha de sempre.", feito: "Pessoa reativada", vale: (p) => p.suspensa },
 ];
 
 function AgirNaPessoa({ pessoa, aoFechar }: { pessoa: PessoaDaPlataforma | null; aoFechar: () => void }) {
@@ -318,7 +333,7 @@ function AgirNaPessoa({ pessoa, aoFechar }: { pessoa: PessoaDaPlataforma | null;
           <Botao variante="fantasma" onClick={fechar}>
             Cancelar
           </Botao>
-          <Botao variante={escolhida?.id === "encerrar_sessoes" ? "perigo" : "primaria"} onClick={() => agir.mutate()} ocupado={agir.isPending} disabled={!escolhida}>
+          <Botao variante={escolhida?.id === "encerrar_sessoes" || escolhida?.id === "suspender" || escolhida?.id === "desligar_2fa" ? "perigo" : "primaria"} onClick={() => agir.mutate()} ocupado={agir.isPending} disabled={!escolhida || (!!escolhida.motivo && !motivo.trim())}>
             Confirmar
           </Botao>
         </>
@@ -334,8 +349,8 @@ function AgirNaPessoa({ pessoa, aoFechar }: { pessoa: PessoaDaPlataforma | null;
             ))}
           </select>
         </Campo>
-        <Campo rotulo="Motivo (opcional)" htmlFor="pl-motivo-pessoa" ajuda="Fica na auditoria.">
-          <input id="pl-motivo-pessoa" value={motivo} maxLength={300} onChange={(ev) => setMotivo(ev.target.value)} placeholder="Ex.: pediu por WhatsApp, esqueceu a senha" />
+        <Campo rotulo={escolhida?.motivo ?? "Motivo (opcional)"} htmlFor="pl-motivo-pessoa" ajuda={escolhida?.motivo ? "Obrigatório. Fica na auditoria." : "Fica na auditoria."}>
+          <input id="pl-motivo-pessoa" value={motivo} maxLength={300} onChange={(ev) => setMotivo(ev.target.value)} placeholder={escolhida?.id === "desligar_2fa" ? "Ex.: videochamada com a OAB em mãos" : escolhida?.id === "suspender" ? "Ex.: robô mandando mensagens no chat" : "Ex.: pediu por WhatsApp, esqueceu a senha"} />
         </Campo>
       </div>
     </Dialogo>
@@ -426,7 +441,7 @@ export function Uso() {
 
 export function CustoDaIa() {
   const [dias, setDias] = useState<Periodo>("30");
-  const q = useQuery({ queryKey: ["plataforma", "ia", dias], queryFn: () => apiPlataforma<CustoDaIaDaPlataforma>(`/ia?dias=${dias}`), retry: false });
+  const q = useQuery({ queryKey: ["plataforma", "ia", dias], queryFn: () => apiPlataforma<CustoDaIaDaPlataforma & { recusas: RecusasDaIa; ajustes: AjusteDaPlataforma[] }>(`/ia?dias=${dias}`), retry: false });
   const c = q.data;
   return (
     <>
@@ -530,8 +545,50 @@ export function CustoDaIa() {
               )}
             </Painel>
           </div>
+          <div className="dc-colunas dc-colunas--meio">
+            <RecusasDaIaNoPeriodo r={c.recusas} />
+            <AjustesEditaveis titulo="Limites da IA e cotação" ajustes={c.ajustes} />
+          </div>
         </>
       )}
     </>
+  );
+}
+
+/** As vezes em que um teto barrou um pedido à IA: quem bate no teto toda hora talvez precise de um plano maior. */
+function RecusasDaIaNoPeriodo({ r }: { r: RecusasDaIa }) {
+  return (
+    <Painel titulo="Pedidos barrados por um teto" acao={<span className="dc-nota">{plural(r.total, "recusa", "recusas")} no período</span>} corpo={false}>
+      {r.total ? (
+        <>
+          <Colunas rotulo="Recusas da IA por dia" formatar={(v) => plural(v, "recusa", "recusas")} formatarEixo={(v) => String(v)} inteiro altura={120} pontos={r.dias.map((d) => ({ chave: d.dia, eixo: diaCurto(d.dia), titulo: `${diaDaSemana(d.dia).replace("-feira", "")}, ${diaCompleto(d.dia)}`, valor: d.total }))} />
+          <div className="dc-linhas border-t border-[var(--superficie-2)]">
+            {r.porMotivo.map((m) => (
+              <Linha key={m.codigo} rotulo={m.rotulo} valor={numero(m.total)} />
+            ))}
+          </div>
+          <div className="dc-linhas border-t border-[var(--superficie-2)]">
+            {r.porEscritorio.slice(0, 8).map((e) => (
+              <div key={e.organizationId} className="dc-linhas__item items-center">
+                {e.demonstracao ? (
+                  <span className="dc-celula min-w-0 flex-1">
+                    <span className="dc-celula__1">{e.nome}</span>
+                    <span className="dc-celula__2">Demonstração</span>
+                  </span>
+                ) : (
+                  <Link to="/plataforma/escritorios/$id" params={{ id: e.organizationId }} className="dc-celula min-w-0 flex-1 no-underline">
+                    <span className="dc-celula__1">{e.nome}</span>
+                    <span className="dc-celula__2">{e.motivos.join(", ")}</span>
+                  </Link>
+                )}
+                <span className="dc-num flex-none dc-t-corpo font-medium">{numero(e.total)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <Vazio titulo="Nenhum pedido barrado">Quando um teto (da pessoa, do escritório, do site ou do gateway) barra um pedido, ele aparece aqui, sem o texto do pedido.</Vazio>
+      )}
+    </Painel>
   );
 }
