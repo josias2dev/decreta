@@ -13,7 +13,7 @@
  * `estadoDaAssinatura`). Atraso só conta de quem já pagou ao menos uma vez: quem nunca pagou segue o fim do teste.
  * Cortesia, só leitura e bloqueio são decisões da equipe do Decreta: o pagamento não as desfaz.
  */
-import { avisoDaAssinatura, fimDoPeriodoPago, formatarDia, hojeEm, janelaDoAvisoDoAtraso, janelaDoAvisoDoTeste, PLANO, ROTULO_DA_SITUACAO, somarDias, type AvisoDaAssinatura, type Dia, type EstadoDaAssinatura, type SituacaoDoEscritorio, type TipoDeAvisoDaAssinatura } from "@decreta/core";
+import { avisoDaAssinatura, fimDoPeriodoPago, formatarDia, hojeEm, janelaDoAvisoDoAtraso, janelaDoAvisoDoTeste, ROTULO_DA_SITUACAO, somarDias, TESTE_DIAS_PADRAO, type AvisoDaAssinatura, type DescontoDoEscritorio, type Dia, type EstadoDaAssinatura, type SituacaoDoEscritorio, type TipoDeAvisoDaAssinatura } from "@decreta/core";
 import { avisosEnviados, eventosDeCobranca, faturas, member, organization, user, withTenant, type Database, type Tx } from "@decreta/db";
 import { and, desc, eq, inArray, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { createHash, timingSafeEqual } from "node:crypto";
@@ -22,6 +22,8 @@ import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import type { Mailer } from "../email.ts";
 import { ErroDoAsaas, type ClienteAsaas, type ConfigDaNfse } from "./asaas.ts";
 import { estadoDoEscritorio } from "./assinatura.ts";
+import { licencaDoEscritorio, usarCupom, type LicencaCompleta } from "./planos.ts";
+import { RecusaDaPlataforma } from "./plataforma.ts";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
@@ -262,6 +264,8 @@ async function aplicarFatura(tx: Tx, org: LinhaDoEscritorio, evento: string, p: 
   const mudancas: Partial<typeof organization.$inferInsert> = {};
   if (adota) {
     mudancas.asaasAssinaturaId = p.subscription;
+    // O valor com que a assinatura nasceu: o do link (ou o da primeira cobrança). A rotina compara com o preço de hoje.
+    mudancas.asaasAssinaturaValorCentavos = org.asaasLinkValorCentavos ?? valores.valorCentavos;
     // O link já virou assinatura: o escritório assina de novo com um link novo.
     if (org.asaasLinkId) Object.assign(mudancas, { asaasLinkId: null, asaasLinkUrl: null, asaasLinkValorCentavos: null });
   }
@@ -306,7 +310,7 @@ async function registrarCancelamento(tx: Tx, organizationId: string, agora: Date
   if (!org.assinouEm) {
     // Nunca pagou: não há período pago nem cancelamento, só uma assinatura que não foi para a frente.
     await tx.update(faturas).set({ situacao: "removida" }).where(and(eq(faturas.organizationId, org.id), inArray(faturas.situacao, ["pendente", "atrasada"])));
-    await tx.update(organization).set({ asaasAssinaturaId: null, asaasAssinaturasEncerradas: encerradas, nfseConfiguradaEm: null }).where(eq(organization.id, org.id));
+    await tx.update(organization).set({ asaasAssinaturaId: null, asaasAssinaturaValorCentavos: null, asaasAssinaturasEncerradas: encerradas, nfseConfiguradaEm: null }).where(eq(organization.id, org.id));
     return null;
   }
   const [ultima] = await tx.select({ vencimento: faturas.vencimento }).from(faturas).where(and(eq(faturas.organizationId, org.id), eq(faturas.situacao, "paga"))).orderBy(desc(faturas.vencimento)).limit(1);
@@ -320,6 +324,7 @@ async function registrarCancelamento(tx: Tx, organizationId: string, agora: Date
       inadimplenteDesde: null,
       // A assinatura cancelada não existe mais: qualquer assinatura que aparecer depois é nova.
       asaasAssinaturaId: null,
+      asaasAssinaturaValorCentavos: null,
       asaasAssinaturasEncerradas: encerradas,
       nfseConfiguradaEm: null,
       ...(org.situacao === "inadimplente" ? { situacao: "ativo" as const } : {}),
@@ -381,13 +386,15 @@ export interface DepsDoPlano {
   cobrancaAtiva: boolean;
   telas: string;
   log: Log;
+  /** A duração do teste (o ajuste do painel), só para a tela dizer quantos dias são. */
+  testeDias?: number;
 }
 
-function motivoDeNaoPoderAssinar(deps: Pick<DepsDoPlano, "asaas" | "cobrancaAtiva">, o: LinhaDoEscritorio, e: EstadoDaAssinatura): { codigo: string; mensagem: string } | null {
+function motivoDeNaoPoderAssinar(deps: Pick<DepsDoPlano, "asaas" | "cobrancaAtiva">, o: LinhaDoEscritorio, e: EstadoDaAssinatura, mensalidade: number | null): { codigo: string; mensagem: string } | null {
   if (!deps.cobrancaAtiva) return { codigo: "cobranca_desligada", mensagem: "A cobrança ainda não foi aberta. Por enquanto nada é cobrado." };
   if (o.situacao === "cortesia") return { codigo: "cortesia", mensagem: "Este escritório tem acesso por cortesia, sem cobrança. Se quiser assinar, fale com a equipe do Decreta." };
   if (e.motivo === "manual") return { codigo: "restricao_da_equipe", mensagem: "O escritório está com uma restrição da equipe do Decreta. Fale com a equipe para resolver." };
-  if (PLANO.valorMensalCentavos === null) return { codigo: "valor_nao_definido", mensagem: "O valor do plano ainda não foi definido. Fale com a equipe do Decreta para assinar." };
+  if (mensalidade === null) return { codigo: "valor_nao_definido", mensagem: "O valor do plano ainda não foi definido. Fale com a equipe do Decreta para assinar." };
   if (!deps.asaas) return { codigo: "cobranca_nao_configurada", mensagem: "A cobrança ainda não está configurada neste servidor. Fale com a equipe do Decreta." };
   if (o.asaasAssinaturaId) return { codigo: "ja_assina", mensagem: "O escritório já tem uma assinatura em andamento. Para pagar, abra a fatura na lista de faturas; para começar de novo, cancele a assinatura." };
   return null;
@@ -397,13 +404,15 @@ function motivoDeNaoPoderAssinar(deps: Pick<DepsDoPlano, "asaas" | "cobrancaAtiv
 export async function iniciarAssinatura(deps: DepsDoPlano, organizationId: string, agora = new Date()): Promise<{ url: string }> {
   const [o] = await deps.db.select().from(organization).where(eq(organization.id, organizationId));
   if (!o) throw new RecusaDaCobranca(409, "nao_encontrado", "Escritório não encontrado.");
-  const motivo = motivoDeNaoPoderAssinar(deps, o, estadoDoEscritorio(o, deps.cobrancaAtiva, agora));
+  const licenca = await licencaDoEscritorio(deps.db, organizationId, agora);
+  const motivo = motivoDeNaoPoderAssinar(deps, o, estadoDoEscritorio(o, deps.cobrancaAtiva, agora), licenca?.preco.mensalidadeCentavos ?? null);
   if (motivo) throw new RecusaDaCobranca(motivo.codigo === "cobranca_nao_configurada" ? 503 : 409, motivo.codigo, motivo.mensagem);
-  const valor = PLANO.valorMensalCentavos!;
+  // O valor de hoje: o do plano (ou o combinado), menos o desconto que ainda vale. Quando o desconto acaba, a rotina acerta a assinatura no Asaas.
+  const valor = licenca!.preco.mensalidadeCentavos!;
   if (o.asaasLinkId && o.asaasLinkUrl && o.asaasLinkValorCentavos === valor) return { url: o.asaasLinkUrl };
   try {
     const link = await deps.asaas!.criarLinkDeAssinatura({
-      nome: `${PLANO.nome} · Decreta`,
+      nome: `${licenca!.plano.nome} · Decreta`,
       descricao: `Mensalidade do Decreta para ${o.name}. Cancele quando quiser, no próprio app.`,
       valorCentavos: valor,
       referencia: o.id,
@@ -465,20 +474,26 @@ export interface FaturaDaTela {
   pagaEm: Dia | null;
 }
 
-export async function planoDoEscritorio(deps: Pick<DepsDoPlano, "db" | "asaas" | "cobrancaAtiva">, organizationId: string, agora = new Date()) {
+export async function planoDoEscritorio(deps: Pick<DepsDoPlano, "db" | "asaas" | "cobrancaAtiva" | "testeDias">, organizationId: string, agora = new Date()) {
   const [o] = await deps.db.select().from(organization).where(eq(organization.id, organizationId));
   if (!o) return null;
   const hoje = hojeEm(o.timezone, agora);
   const estado = estadoDoEscritorio(o, deps.cobrancaAtiva, agora);
   const lista = await withTenant(deps.db, organizationId, (tx) => tx.select().from(faturas).where(ne(faturas.situacao, "removida")).orderBy(desc(faturas.vencimento)).limit(24));
   const aberta = [...lista].filter((f) => f.situacao === "atrasada" || f.situacao === "pendente").sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0];
-  const naoPodeAssinar = motivoDeNaoPoderAssinar(deps, o, estado);
+  const licenca = await licencaDoEscritorio(deps.db, organizationId, agora);
+  const mensalidade = licenca?.preco.mensalidadeCentavos ?? null;
+  const naoPodeAssinar = motivoDeNaoPoderAssinar(deps, o, estado, mensalidade);
   /** Tem uma assinatura viva no Asaas, tenha ela já cobrado ou não. */
   const assinante = !!o.asaasAssinaturaId;
   const aviso: AvisoDaAssinatura | null = deps.cobrancaAtiva ? avisoDaAssinatura(estado) : null;
   return {
     cobrancaAtiva: deps.cobrancaAtiva,
-    plano: { nome: PLANO.nome, testeDias: PLANO.testeDias, valorMensalCentavos: PLANO.valorMensalCentavos },
+    plano: { nome: licenca?.plano.nome ?? "Escritório", testeDias: deps.testeDias ?? TESTE_DIAS_PADRAO, valorMensalCentavos: mensalidade },
+    /** O preço de hoje (com o desconto, se ainda vale) e o uso contra os limites do plano. */
+    licenca: licenca ? licencaParaATela(licenca) : null,
+    /** O escritório pode digitar um cupom: a cobrança está aberta, ele não é cortesia nem demonstração e não tem desconto valendo. */
+    aceitaCupom: deps.cobrancaAtiva && o.situacao !== "cortesia" && o.slug !== SLUG_DA_DEMONSTRACAO && !licenca?.desconto,
     situacao: estado.situacao,
     rotulo: ROTULO_DA_SITUACAO[estado.situacao],
     situacaoGravada: o.situacao,
@@ -559,4 +574,80 @@ export async function enviarAvisosDaAssinatura(deps: { db: Database; mailer: Mai
     }
   }
   return { enviados };
+}
+
+/** O que a tela do Plano mostra da licença: o preço, o desconto, as funcionalidades fora do plano e o uso contra os limites. Nada da equipe (marca, tetos) vai. */
+export function licencaParaATela(l: LicencaCompleta) {
+  return {
+    preco: l.preco,
+    desconto: l.desconto ? { tipo: l.desconto.tipo, valor: l.desconto.valor, ate: l.desconto.ate } : null,
+    funcionalidades: l.plano.funcionalidades,
+    uso: l.uso,
+  };
+}
+
+/* ---------------- O preço que muda depois de assinar ---------------- */
+
+/**
+ * O preço de hoje mudou (outro plano, pessoas a mais, valor combinado, desconto que começou ou acabou) e a assinatura viva
+ * no Asaas cobra outro valor: acerta lá a partir da próxima fatura, sem cobrança proporcional (as já geradas não mudam).
+ * Devolve o que mudou, ou `null` se não havia o que acertar. Sem o Asaas ou sem a cobrança, não faz nada.
+ */
+export async function acertarValorNoAsaas(deps: { db: Database; asaas: ClienteAsaas | null; cobrancaAtiva: boolean; log: Log }, organizationId: string, agora = new Date()): Promise<{ de: number | null; para: number } | null> {
+  if (!deps.cobrancaAtiva || !deps.asaas) return null;
+  const [o] = await deps.db.select().from(organization).where(eq(organization.id, organizationId));
+  if (!o?.asaasAssinaturaId || o.encerradoEm || o.cancelamentoPedidoEm) return null;
+  const licenca = await licencaDoEscritorio(deps.db, organizationId, agora);
+  const para = licenca?.preco.mensalidadeCentavos ?? null;
+  const de = o.asaasAssinaturaValorCentavos ?? o.valorMensalCentavos;
+  if (para === null || para === de) return null;
+  await deps.asaas.atualizarValorDaAssinatura(o.asaasAssinaturaId, para);
+  await deps.db.update(organization).set({ asaasAssinaturaValorCentavos: para }).where(and(eq(organization.id, o.id), eq(organization.asaasAssinaturaId, o.asaasAssinaturaId)));
+  deps.log("valor da assinatura acertado no Asaas", { organizationId, de, para });
+  return { de, para };
+}
+
+/** Toda manhã: o desconto que acabou ontem (ou o plano que a equipe mudou) chega ao valor da assinatura no Asaas. */
+export async function acertarValoresNoAsaas(deps: { db: Database; asaas: ClienteAsaas | null; cobrancaAtiva: boolean; log: Log }, agora = new Date()): Promise<{ acertados: number }> {
+  if (!deps.cobrancaAtiva || !deps.asaas) return { acertados: 0 };
+  const vivos = await deps.db
+    .select({ id: organization.id })
+    .from(organization)
+    .where(and(ne(organization.slug, SLUG_DA_DEMONSTRACAO), isNull(organization.encerradoEm), isNull(organization.cancelamentoPedidoEm), isNotNull(organization.asaasAssinaturaId)));
+  let acertados = 0;
+  for (const { id } of vivos) {
+    try {
+      if (await acertarValorNoAsaas(deps, id, agora)) acertados++;
+    } catch (err) {
+      deps.log("não deu para acertar o valor da assinatura no Asaas", { organizationId: id, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+  return { acertados };
+}
+
+/* ---------------- O cupom digitado pelo escritório ---------------- */
+
+/**
+ * O sócio digita o cupom na tela do Plano: o desconto vale a partir de hoje, pelo número de mensalidades do cupom. Só com a
+ * cobrança aberta (sem ela nada é cobrado, e o desconto passaria sem ser usado), fora da cortesia e da demonstração, e sem
+ * outro desconto valendo. Se o escritório já assina, o valor no Asaas muda a partir da próxima fatura.
+ */
+export async function aplicarCupomDoEscritorio(deps: { db: Database; asaas: ClienteAsaas | null; cobrancaAtiva: boolean; log: Log }, organizationId: string, codigo: string, agora = new Date()): Promise<DescontoDoEscritorio> {
+  if (!deps.cobrancaAtiva) throw new RecusaDaCobranca(409, "cobranca_desligada", "A cobrança ainda não foi aberta: por enquanto nada é cobrado, e o cupom fica para depois.");
+  const desconto = await deps.db.transaction(async (tx) => {
+    const [o] = await tx.select().from(organization).where(eq(organization.id, organizationId)).for("update");
+    if (!o) throw new RecusaDaCobranca(409, "nao_encontrado", "Escritório não encontrado.");
+    if (o.slug === SLUG_DA_DEMONSTRACAO) throw new RecusaDaCobranca(409, "demonstracao", "A demonstração é de todos e não tem plano.");
+    if (o.situacao === "cortesia") throw new RecusaDaCobranca(409, "cortesia", "Este escritório tem acesso por cortesia, sem cobrança.");
+    const hoje = hojeEm(o.timezone, agora);
+    if (o.desconto && o.desconto.ate >= hoje) throw new RecusaDaCobranca(409, "ja_tem_desconto", `O escritório já tem um desconto até ${formatarDia(o.desconto.ate)}.`);
+    const d = await usarCupom(tx, codigo, hoje).catch((err: unknown) => {
+      if (err instanceof RecusaDaPlataforma) throw new RecusaDaCobranca(409, "cupom_recusado", err.message);
+      throw err;
+    });
+    await tx.update(organization).set({ desconto: d }).where(eq(organization.id, o.id));
+    return d;
+  });
+  await acertarValorNoAsaas(deps, organizationId, agora).catch((err: unknown) => deps.log("o cupom entrou, mas o valor no Asaas não foi acertado agora: a rotina da manhã tenta de novo", { organizationId, error: err instanceof Error ? err.message : String(err) }));
+  return desconto;
 }

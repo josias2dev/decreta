@@ -1,0 +1,61 @@
+/*
+ * O painel da plataforma (/plataforma): os números do negócio em quadros, os gráficos de colunas de uma série só
+ * (o título do painel diz o que é, então não há legenda) e o medidor da adoção. A cor de dado é o acento; o texto
+ * fica sempre nas tintas.
+ */
+
+/* Os números do topo: rótulo, número e uma linha de apoio. */
+.dc-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-lg); overflow: hidden; }
+.dc-kpi { display: flex; flex-direction: column; gap: var(--space-half); min-width: 0; padding: var(--space-3) var(--respiro-painel); box-shadow: -1px 0 0 var(--borda), 0 -1px 0 var(--borda); }
+.dc-kpi__rotulo { font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-kpi__n { font: 600 var(--texto-numero)/var(--linha-numero) var(--font-sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--tinta); white-space: nowrap; }
+.dc-kpi__sub { font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-3); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-kpi--alerta .dc-kpi__n { color: var(--hoje); }
+.dc-kpi--vencido .dc-kpi__n { color: var(--vencido); }
+
+/* Colunas: barras finas presas na base, ponta arredondada, grade recessiva e a dica ao passar o mouse. */
+.dc-colunas-grafico { padding: var(--space-3) var(--respiro-painel) var(--space-2); outline: none; }
+.dc-colunas-grafico:focus-visible { box-shadow: inset 0 0 0 2px var(--foco); border-radius: var(--radius-lg); }
+.dc-colunas-grafico__area { position: relative; }
+.dc-colunas-grafico svg { display: block; overflow: visible; }
+.dc-colunas-grafico__grade { stroke: var(--superficie-2); stroke-width: 1; }
+.dc-colunas-grafico__base { stroke: var(--borda-forte); stroke-width: 1; }
+.dc-colunas-grafico__eixo { font: 400 var(--texto-legenda) var(--font-sans); fill: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.dc-colunas-grafico__barra { fill: var(--acento); transition: opacity var(--transicao); }
+.dc-colunas-grafico.is-ativo .dc-colunas-grafico__barra:not(.is-on) { opacity: 0.4; }
+.dc-colunas-grafico__alvo { fill: transparent; cursor: default; }
+.dc-colunas-grafico__dica { position: absolute; z-index: 2; pointer-events: none; padding: var(--space-1-half) var(--space-2-half); background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--radius-md); box-shadow: var(--sombra-flutuante); white-space: nowrap; }
+.dc-colunas-grafico__dica-titulo { display: block; font: 500 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); }
+.dc-colunas-grafico__dica-valor { display: block; font: 600 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); font-variant-numeric: tabular-nums; }
+.dc-colunas-grafico__dica-detalhe { display: block; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+
+/* A adoção de cada funcionalidade: um traço que enche até a fração. */
+.dc-medidor { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 120px; }
+.dc-medidor__trilho { position: relative; flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--superficie-2); overflow: hidden; }
+.dc-medidor__cheio { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--acento); }
+.dc-medidor__n { flex: none; width: 40px; text-align: right; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+
+/* O que precisa de atenção: a gravidade numa marca à esquerda, o que fazer embaixo. */
+.dc-atencao__marca { flex: none; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--tinta-3); }
+.dc-atencao__marca--alta { background: var(--hoje); }
+
+/* Os primeiros passos do escritório, na ordem. */
+.dc-passos { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--respiro-painel); list-style: none; }
+.dc-passos li { display: flex; align-items: center; gap: var(--space-2-half); font: 400 var(--texto-corpo)/var(--linha-corpo) var(--font-sans); color: var(--tinta); }
+.dc-passos li.is-falta { color: var(--tinta-3); }
+.dc-passos__icone { flex: none; color: var(--cumprido); }
+.dc-passos li.is-falta .dc-passos__icone { color: var(--borda-forte); }
+.dc-passos__quando { margin-left: auto; font: 400 var(--texto-meta)/var(--linha-meta) var(--font-sans); color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+
+/* O uso na ficha do escritório: duas colunas de linhas. */
+.dc-uso-da-ficha { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dc-uso-da-ficha > * { border-top: 1px solid var(--superficie-2); }
+.dc-uso-da-ficha > :nth-child(-n + 2) { border-top: 0; }
+.dc-uso-da-ficha > :nth-child(odd) { border-right: 1px solid var(--superficie-2); }
+
+/* No celular e em janela estreita, os pares de painéis viram uma coluna só. */
+@media (max-width: 900px) {
+  .dc-plataforma .dc-colunas--meio, .dc-plataforma .dc-uso-da-ficha { grid-template-columns: minmax(0, 1fr); }
+  .dc-plataforma .dc-uso-da-ficha > :nth-child(2) { border-top: 1px solid var(--superficie-2); }
+  .dc-plataforma .dc-uso-da-ficha > :nth-child(odd) { border-right: 0; }
+}

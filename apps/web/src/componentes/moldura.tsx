@@ -92,8 +92,8 @@ export const MENU: { titulo: string; itens: ItemDoMenu[] }[] = [
   },
 ];
 
-/** Os itens do menu que esta pessoa vê: o Financeiro só para os sócios e quem eles liberaram. */
-export const itensVisiveis = (itens: ItemDoMenu[], eu: Eu) => itens.filter((i) => !i.soComFinanceiro || !!eu.usuario.financeiro);
+/** Os itens do menu que esta pessoa vê: o Financeiro só para os sócios e quem eles liberaram, e só se o plano do escritório o inclui. */
+export const itensVisiveis = (itens: ItemDoMenu[], eu: Eu) => itens.filter((i) => !i.soComFinanceiro || (!!eu.usuario.financeiro && eu.plano?.financeiro !== false));
 
 const NAV_CELULAR: { to: Destino | "/mais"; rotulo: string; icone: LucideIcon }[] = [
   { to: "/hoje", rotulo: "Hoje", icone: Sun },

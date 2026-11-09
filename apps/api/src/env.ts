@@ -110,6 +110,10 @@ const schema = z.object({
   WHATSAPP_SUPORTE: z.string().default("suporte@decreta.site"),
   /** E-mails dos operadores da plataforma (o painel /plataforma), separados por vírgula. Cada um precisa ter a conta criada pela equipe: o cadastro aberto e o convite recusam esses e-mails. */
   PLATAFORMA_EMAILS: z.string().default(""),
+  /** Reais por dólar, para o custo da IA e a margem no painel da plataforma. */
+  PLATAFORMA_COTACAO_USD: z.coerce.number().positive().default(5.5),
+  /** Abre o painel da plataforma sem 2FA. Só para a máquina de quem desenvolve: em produção, fica vazio. */
+  PLATAFORMA_SEM_2FA: interruptor,
 }).superRefine((env, ctx) => {
   // O token do aviso do Asaas é o que separa um pagamento de uma mentira: longo, e nunca a própria chave de API.
   if (env.ASAAS_WEBHOOK_TOKEN && env.ASAAS_WEBHOOK_TOKEN.length < 24) ctx.addIssue({ code: "custom", path: ["ASAAS_WEBHOOK_TOKEN"], message: "use um token de pelo menos 24 caracteres (openssl rand -hex 32)" });

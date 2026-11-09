@@ -7,7 +7,7 @@
  * Tudo isto só vale com `COBRANCA_ATIVA`. Desligada, o acesso é sempre total e nenhum
  * aviso aparece: o Decreta age como agia antes da cobrança.
  */
-import { estadoDaAssinatura, hojeEm, PLANO, somarDias, type Acesso, type Dia, type EstadoDaAssinatura, type FichaDaAssinatura, type SituacaoDoEscritorio } from "@decreta/core";
+import { estadoDaAssinatura, hojeEm, somarDias, TESTE_DIAS_PADRAO, type Acesso, type Dia, type EstadoDaAssinatura, type FichaDaAssinatura, type SituacaoDoEscritorio } from "@decreta/core";
 import { organization, type Database } from "@decreta/db";
 import { eq } from "drizzle-orm";
 
@@ -52,11 +52,11 @@ export async function temAcessoTotal(db: Database, organizationId: string, cobra
 
 /**
  * Como um escritório novo começa. Com a cobrança ligada, o cadastro aberto abre um teste de
- * `PLANO.testeDias` dias, sem cartão. Sem a cobrança, e em tudo que a equipe cria (o script,
- * a demonstração), nasce cortesia: nunca é travado por uma regra que ainda não existia.
+ * `testeDias` dias (o ajuste do painel; 14 sem ninguém mudar), sem cartão. Sem a cobrança, e em tudo que a
+ * equipe cria (o script, a demonstração), nasce cortesia: nunca é travado por uma regra que ainda não existia.
  */
-export function comoNasce(cobrancaAtiva: boolean, cadastroAberto: boolean, hoje: Dia = hojeEm()): { situacao: SituacaoDoEscritorio; testeAte: Dia | null } {
-  if (cobrancaAtiva && cadastroAberto) return { situacao: "teste", testeAte: somarDias(hoje, PLANO.testeDias) };
+export function comoNasce(cobrancaAtiva: boolean, cadastroAberto: boolean, hoje: Dia = hojeEm(), testeDias = TESTE_DIAS_PADRAO): { situacao: SituacaoDoEscritorio; testeAte: Dia | null } {
+  if (cobrancaAtiva && cadastroAberto) return { situacao: "teste", testeAte: somarDias(hoje, testeDias) };
   return { situacao: "cortesia", testeAte: null };
 }
 
@@ -66,7 +66,7 @@ export function comoNasce(cobrancaAtiva: boolean, cadastroAberto: boolean, hoje:
 const SEMPRE_PERMITIDO: RegExp[] = [
   /^GET \/eu$/,
   /^GET \/plano$/,
-  /^POST \/plano\/(assinar|cancelar)$/,
+  /^POST \/plano\/(assinar|cancelar|cupom)$/,
   /^(GET|POST) \/escritorio\/exportacoes$/,
   /^GET \/escritorio\/exportacoes\/[^/]+\/partes\/\d+$/,
   /^POST \/escritorio\/encerrar$/,

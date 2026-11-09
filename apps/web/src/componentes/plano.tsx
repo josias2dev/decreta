@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { LINK_DO_CONTATO } from "@/componentes/pagina-legal";
-import { Botao, Carregando, Faixa, Painel, Selo, Vazio } from "@/componentes/ui";
+import { Botao, Campo, Carregando, Faixa, Painel, Selo, Vazio } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
 import { diaCompleto } from "@/lib/formato";
 import type { FaturaDoPlano, Plano } from "@/lib/tipos";
@@ -69,7 +69,10 @@ export function PlanoDoEscritorio({ celular }: { celular?: boolean }) {
   const p = q.data;
   return (
     <div className={celular ? "flex flex-col gap-6" : "dc-colunas dc-colunas--meio"}>
-      <PainelDoPlano p={p} />
+      <div className="dc-pilha">
+        <PainelDoPlano p={p} />
+        <UsoDoPlano p={p} />
+      </div>
       <div className="dc-pilha">
         <Faturas p={p} />
         <FormaDePagamento p={p} />
@@ -103,6 +106,8 @@ function PainelDoPlano({ p }: { p: Plano }) {
   });
   const grave = p.aviso?.nivel === "grave";
   const preco = p.plano.valorMensalCentavos;
+  const desconto = p.licenca?.desconto ?? null;
+  const comDesconto = desconto && p.licenca?.preco.mensalidadeCentavos !== null && p.licenca!.preco.descontoCentavos > 0 ? p.licenca!.preco : null;
   return (
     <Painel titulo={`Plano ${p.plano.nome}`} acao={<span className="dc-nota">{p.cobrancaAtiva ? p.rotulo : "Cobrança ainda não aberta"}</span>}>
       <div className="dc-form">
@@ -127,6 +132,14 @@ function PainelDoPlano({ p }: { p: Plano }) {
             Cancelar leva dois cliques, aqui mesmo, e vale até o fim do período pago. Nada é apagado por falta de pagamento.
           </p>
         )}
+        {comDesconto && desconto && (
+          <Faixa tipo="nota">
+            <span className="flex-1">
+              Desconto de {desconto.tipo === "percentual" ? `${desconto.valor}%` : reais(desconto.valor)} até <strong>{diaCompleto(desconto.ate)}</strong>: a mensalidade fica em {reais(comDesconto.mensalidadeCentavos!)}.
+            </span>
+          </Faixa>
+        )}
+        {p.aceitaCupom && <CampoDoCupom />}
 
         {p.podeAssinar ? (
           <Botao className="md:self-start" variante="primaria" onClick={() => assinar.mutate()} ocupado={assinar.isPending}>
@@ -169,6 +182,77 @@ function PainelDoPlano({ p }: { p: Plano }) {
       >
         <p className="dc-nota m-0">Quando o período pago acabar, a busca de publicações no DJEN e o resumo no WhatsApp param, e o escritório não salva mais nada novo. Os dados ficam guardados e dá para levar uma cópia deles.</p>
       </Dialogo>
+    </Painel>
+  );
+}
+
+/** O cupom de desconto que a equipe do Decreta deu (parceria, indicação): vale a partir de hoje. */
+function CampoDoCupom() {
+  const qc = useQueryClient();
+  const avisar = useAviso();
+  const [aberto, setAberto] = useState(false);
+  const [codigo, setCodigo] = useState("");
+  const aplicar = useMutation({
+    mutationFn: () => api<{ desconto: { ate: string } }>("/plano/cupom", { json: { codigo: codigo.trim() } }),
+    onSuccess: (r) => {
+      void qc.invalidateQueries({ queryKey: planoQuery.queryKey });
+      setAberto(false);
+      setCodigo("");
+      avisar(`Cupom aplicado. O desconto vale até ${diaCompleto(r.desconto.ate)}.`);
+    },
+    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
+  });
+  if (!aberto)
+    return (
+      <Botao className="md:self-start" variante="fantasma" pequeno onClick={() => setAberto(true)}>
+        Tenho um cupom
+      </Botao>
+    );
+  return (
+    <form
+      className="flex flex-wrap items-end gap-2"
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        if (codigo.trim().length >= 3) aplicar.mutate();
+      }}
+    >
+      <div className="min-w-0 flex-1">
+        <Campo rotulo="Cupom" htmlFor="plano-cupom">
+          <input id="plano-cupom" value={codigo} maxLength={40} autoComplete="off" autoCapitalize="characters" onChange={(ev) => setCodigo(ev.target.value)} placeholder="Ex.: PARCEIRO10" />
+        </Campo>
+      </div>
+      <Botao type="submit" ocupado={aplicar.isPending} disabled={codigo.trim().length < 3}>
+        Aplicar
+      </Botao>
+      <Botao variante="fantasma" onClick={() => setAberto(false)}>
+        Agora não
+      </Botao>
+    </form>
+  );
+}
+
+const NUMERO = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+
+/** O uso do escritório contra os limites do plano. Passar de um limite só para o que gera custo novo (a IA e o WhatsApp). */
+function UsoDoPlano({ p }: { p: Plano }) {
+  const itens = (p.licenca?.uso.itens ?? []).filter((i) => i.limite !== null);
+  if (!itens.length) return null;
+  return (
+    <Painel titulo="Uso do plano" acao={p.licenca!.uso.alertas > 0 ? <Selo urgencia={p.licenca!.uso.estado === "passou" ? "vencido" : "hoje"}>{p.licenca!.uso.estado === "passou" ? "Passou do limite" : "Perto do limite"}</Selo> : <span className="dc-nota">Dentro do plano</span>} corpo={false}>
+      <div className="dc-linhas">
+        {itens.map((i) => (
+          <div key={i.chave} className="dc-linhas__item items-center">
+            <span className="dc-celula min-w-0 flex-1">
+              <span className="dc-t-corpo">{i.rotulo}</span>
+              <span className="dc-celula__2">
+                {i.unidade === "US$" ? `US$ ${NUMERO.format(i.usado)} de US$ ${NUMERO.format(i.limite!)}` : `${NUMERO.format(i.usado)} de ${NUMERO.format(i.limite!)} ${i.unidade}`}
+              </span>
+            </span>
+            {i.estado !== "ok" && <Selo urgencia={i.estado === "passou" ? "vencido" : "hoje"}>{i.estado === "passou" ? "Passou" : "80%"}</Selo>}
+          </div>
+        ))}
+      </div>
+      {p.licenca!.uso.alertas > 0 && <p className="dc-nota m-0 px-4 pb-3">Passar de um limite não trava o trabalho. Só o que gera custo novo para: a IA e as mensagens de WhatsApp do dia. Para aumentar, fale com a equipe do Decreta.</p>}
     </Painel>
   );
 }

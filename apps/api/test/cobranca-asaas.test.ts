@@ -3,7 +3,7 @@
  * assinar (o link do Asaas) e cancelar (vale até o fim do período pago). Contra um Asaas de mentira
  * (`asaas-falso.ts`): o que não foi testado contra o Asaas de verdade está dito no relatório da onda 3.
  */
-import { fimDoPeriodoPago, hojeEm, PLANO, somarDias } from "@decreta/core";
+import { fimDoPeriodoPago, hojeEm, somarDias } from "@decreta/core";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@decreta/db/testing";
 import { SLUG_DA_DEMONSTRACAO } from "../src/demonstracao/slug.ts";
@@ -21,11 +21,10 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas", () => {
   beforeAll(async () => {
     t = await createTestDatabase();
     m = montarApi(t, { ativa: true });
-    PLANO.valorMensalCentavos = 9900;
+    await t.owner`update planos set mensal_centavos = 9900 where padrao`;
   });
 
   afterAll(async () => {
-    PLANO.valorMensalCentavos = null;
     await t?.drop();
   });
 
@@ -225,7 +224,7 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas", () => {
     });
 
     test("sem o valor do plano decidido a cobrança não abre: avisa, e o Asaas nem é chamado", async () => {
-      PLANO.valorMensalCentavos = null;
+      await t.owner`update planos set mensal_centavos = null where padrao`;
       try {
         const antes = m.asaas.chamadas.length;
         const plano = await m.json(m.com(cookie, "/plano"));
@@ -236,7 +235,7 @@ describe.skipIf(!hasTestDatabase)("cobrança pelo Asaas", () => {
         expect((await m.json(r)).erro).toBe("valor_nao_definido");
         expect(m.asaas.chamadas.length).toBe(antes);
       } finally {
-        PLANO.valorMensalCentavos = 9900;
+        await t.owner`update planos set mensal_centavos = 9900 where padrao`;
       }
     });
 

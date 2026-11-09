@@ -8,8 +8,9 @@
  * saber qual é o escritório ativo. O isolamento por escritório começa no
  * domínio (ver `dominio.ts`).
  */
+import type { DescontoDoEscritorio, FuncionalidadesDoPlano, LimitesDoPlano, MarcaDoEscritorio, TetosDaIaDoEscritorio } from "@decreta/core";
 import { sql } from "drizzle-orm";
-import { boolean, date, index, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, date, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** A situação do escritório na assinatura (a mesma lista de `SITUACOES_DO_ESCRITORIO` em @decreta/core; um teste confere). Todo escritório que já existia nasce cortesia. */
 export const situacaoDoEscritorio = pgEnum("situacao_do_escritorio", ["teste", "ativo", "inadimplente", "so_leitura", "bloqueado", "cancelado", "cortesia"]);
@@ -25,6 +26,8 @@ export const user = pgTable("user", {
   /** A versão dos Termos de Uso e da Política de Privacidade (`VERSAO_DOS_TERMOS`) que a pessoa aceitou ao criar a conta, e quando. Nulo nas contas anteriores ao aceite. */
   termosVersao: text("termos_versao"),
   termosAceitosEm: timestamp("termos_aceitos_em", { withTimezone: true }),
+  /** Suspensa pela equipe do Decreta (abuso): não entra em escritório nenhum até ser reativada. O resto do escritório segue. */
+  suspensaEm: timestamp("suspensa_em", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -99,6 +102,38 @@ export const verification = pgTable(
   (t) => [index("verification_identifier_idx").on(t.identifier)],
 );
 
+/**
+ * Os planos do Decreta, editados no painel da plataforma (ver `@decreta/core/plano.ts`). Sem RLS, como a
+ * `organization`: o login e a moldura das telas leem o plano antes de saber o escritório, e nada aqui é de um
+ * escritório. Só o painel grava, e nunca muda uma versão: mudar o preço cria a versão seguinte (`substituidoEm`
+ * na anterior), e quem já assina continua na versão em que assinou.
+ */
+export const planos = pgTable(
+  "planos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    codigo: text("codigo").notNull(),
+    versao: integer("versao").notNull(),
+    nome: text("nome").notNull(),
+    mensalCentavos: integer("mensal_centavos"),
+    anualCentavos: integer("anual_centavos"),
+    pessoasIncluidas: integer("pessoas_incluidas"),
+    pessoaExtraCentavos: integer("pessoa_extra_centavos"),
+    limites: jsonb("limites").$type<LimitesDoPlano>().notNull().default({}),
+    funcionalidades: jsonb("funcionalidades").$type<FuncionalidadesDoPlano>().notNull().default({}),
+    padrao: boolean("padrao").notNull().default(false),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    /** O e-mail do operador. Nulo no plano que a migração criou. */
+    criadoPor: text("criado_por"),
+    substituidoEm: timestamp("substituido_em", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("planos_codigo_versao_idx").on(t.codigo, t.versao),
+    // Um plano padrão só, entre as versões vivas.
+    uniqueIndex("planos_um_padrao_idx").on(t.padrao).where(sql`${t.padrao} and ${t.substituidoEm} is null`),
+  ],
+);
+
 /** O tenant: um escritório de advocacia. */
 export const organization = pgTable(
   "organization",
@@ -144,6 +179,21 @@ export const organization = pgTable(
     asaasAssinaturasEncerradas: text("asaas_assinaturas_encerradas").array().notNull().default(sql`'{}'::text[]`),
     /** Quando a emissão automática de NFS-e foi configurada na assinatura do Asaas (só com `NFSE_ATIVA`). */
     nfseConfiguradaEm: timestamp("nfse_configurada_em", { withTimezone: true }),
+    /** O valor que a assinatura viva cobra no Asaas, para a rotina saber quando o plano ou o desconto mudaram o preço. */
+    asaasAssinaturaValorCentavos: integer("asaas_assinatura_valor_centavos"),
+
+    /* A licença: plano + pessoas a mais + o que a equipe combinou. Muda só pelo painel da plataforma. */
+    /** A versão do plano. Nula: o plano padrão. */
+    planoId: uuid("plano_id").references(() => planos.id, { onDelete: "restrict" }),
+    pessoasExtras: integer("pessoas_extras").notNull().default(0),
+    /** O valor combinado com a equipe, no lugar do preço do plano. */
+    valorCombinadoCentavos: integer("valor_combinado_centavos"),
+    /** O desconto por um número de meses (dado pela equipe ou por um cupom). */
+    desconto: jsonb("desconto").$type<DescontoDoEscritorio>(),
+    /** Piloto, parceiro ou indicação: só para a equipe. */
+    marca: text("marca").$type<MarcaDoEscritorio>(),
+    /** Os tetos de IA próprios do escritório, acima ou abaixo do padrão. */
+    tetosIa: jsonb("tetos_ia").$type<TetosDaIaDoEscritorio>(),
   },
   (t) => [index("organization_asaas_assinatura_idx").on(t.asaasAssinaturaId), index("organization_asaas_link_idx").on(t.asaasLinkId), index("organization_asaas_cliente_idx").on(t.asaasClienteId)],
 );

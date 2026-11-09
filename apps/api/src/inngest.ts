@@ -36,7 +36,8 @@ import type { Pedido } from "./rotas/base.ts";
 import { enviarWhatsapp, horaDoResumo, resumoDaManha, type Wameow } from "./servicos/avisos.ts";
 import { guardarLeisDaTabela, sincronizarTemasDoStj } from "./servicos/acervo.ts";
 import { colunasDaAssinatura, estadoDoEscritorio, temAcessoTotal } from "./servicos/assinatura.ts";
-import { enviarAvisosDaAssinatura, reconciliarAssinaturas } from "./servicos/cobranca.ts";
+import { acertarValoresNoAsaas, enviarAvisosDaAssinatura, reconciliarAssinaturas } from "./servicos/cobranca.ts";
+import { whatsappQueResta } from "./servicos/planos.ts";
 import { atualizarDoDataJud, capturarCadernos, capturarDjen, certidaoDaPublicacao, conferirDataJudDoEscritorio, diasDoCaderno, periodoDaCaptura, processosParaAtualizar, type DepsDaCaptura } from "./servicos/captura.ts";
 import { WHATSAPP_EM_AVALIACAO } from "./servicos/em-avaliacao.ts";
 import type { ClienteAsaas } from "./servicos/asaas.ts";
@@ -44,6 +45,7 @@ import { apagarEscritoriosEncerrados } from "./servicos/encerramento.ts";
 import { apagarExportacoesVencidas, marcarExportacaoFalhou, prepararExportacao } from "./servicos/exportacao.ts";
 import { painelDoDia } from "./servicos/hoje.ts";
 import { executarPrimeiraBusca, LEITURAS_NA_HORA } from "./servicos/primeira-busca.ts";
+import { tirarFotoDaPlataforma } from "./servicos/painel-da-plataforma.ts";
 import { cruzarRadar, sincronizarPrecedentesDoBnp } from "./servicos/radar.ts";
 import { pessoasDoEscritorio } from "./servicos/pessoas.ts";
 import { lerDocumentoComIa } from "./servicos/leitura.ts";
@@ -401,6 +403,8 @@ export function createFunctions(deps: DepsDasRotinas) {
             const pessoas = await pessoasDoEscritorio(db, tx, org.id);
             const ja = new Set((await tx.select({ userId: avisosEnviados.userId }).from(avisosEnviados).where(and(eq(avisosEnviados.tipo, "manha"), eq(avisosEnviados.dia, hoje)))).map((x) => x.userId));
             const painel = await painelDoDia(db, tx, org.id, hoje, org.timezone, { iaLigada: !!deps.ia });
+            // O limite de WhatsApp por dia do plano: passou, o resumo não sai hoje (fica gravado, para não insistir).
+            let resta = await whatsappQueResta(db, tx, org.id, hoje);
             let n = 0;
             for (const p of pessoas.values()) {
               if (!p.avisoManha || ja.has(p.id)) continue;
@@ -428,7 +432,11 @@ export function createFunctions(deps: DepsDasRotinas) {
               if (texto && org.emAvaliacao && !WHATSAPP_EM_AVALIACAO.permitir(org.id)) continue;
               let ok = true;
               let erro: string | null = null;
-              if (texto) {
+              if (texto && resta !== null && resta <= 0) {
+                ok = false;
+                erro = "limite_do_plano";
+              } else if (texto) {
+                if (resta !== null) resta--;
                 try {
                   await enviarWhatsapp(wameow, p.whatsapp, texto);
                   n++;
@@ -569,6 +577,8 @@ export function createFunctions(deps: DepsDasRotinas) {
     async ({ step }) => {
       if (!cobrancaAtiva) return { desligado: true };
       const { acertados } = await step.run("acertar", () => reconciliarAssinaturas({ db, log }));
+      // O valor de cada assinatura no Asaas: o desconto que acabou e o plano que mudou entram na próxima fatura.
+      await step.run("valores", () => acertarValoresNoAsaas({ db, asaas: deps.asaas ?? null, cobrancaAtiva, log }));
       if (!deps.mailer) return { acertados, emails: "desligado" };
       const mailer = deps.mailer;
       const { enviados } = await step.run("avisar", () => enviarAvisosDaAssinatura({ db, mailer, telas: deps.telas, log }));
@@ -576,6 +586,12 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
+  // A foto do dia do painel da plataforma: os totais de hoje (MRR, escritórios por situação), para o histórico mês a mês.
+  const fotoDaPlataformaFn = inngest.createFunction(
+    { id: "foto-da-plataforma", triggers: [{ cron: "TZ=America/Sao_Paulo 50 23 * * *" }], retries: 3, onFailure: async ({ error }) => reporter.error(error, { funcao: "foto-da-plataforma" }) },
+    async ({ step }) => step.run("foto", () => tirarFotoDaPlataforma(db)),
+  );
+
   const doWhatsapp = agente ? rotinasDoWhatsapp(inngest, { agente, reporter, escritorios: () => escritoriosAtivos(db, cobrancaAtiva) }) : [];
-  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn, avisosDoPlanoFn, ...doWhatsapp];
+  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn, avisosDoPlanoFn, fotoDaPlataformaFn, ...doWhatsapp];
 }

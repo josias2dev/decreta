@@ -1,4 +1,3 @@
-import { PLANO } from "@decreta/core";
 import { createDatabase } from "@decreta/db";
 import { armazenamentoDoEnv } from "@decreta/documentos";
 import { createGatewayIa } from "@decreta/ia";
@@ -16,7 +15,9 @@ import { rotasDoMcp } from "./rotas/mcp.ts";
 import { createRotas } from "./rotas/index.ts";
 import { rotasDaPlataforma } from "./rotas/plataforma.ts";
 import { startSentry } from "./sentry.ts";
+import { Ajustes } from "./servicos/ajustes.ts";
 import { criarClienteAsaas } from "./servicos/asaas.ts";
+import { planoPadrao } from "./servicos/planos.ts";
 import { emailsDaPlataforma } from "./servicos/plataforma.ts";
 import { limitesDoEnv } from "./servicos/uso-ia.ts";
 import type { Canal } from "./whatsapp/canal.ts";
@@ -51,6 +52,10 @@ const plataformaEmails = emailsDaPlataforma(env.PLATAFORMA_EMAILS);
 const mailer = env.RESEND_API_KEY ? createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM }) : createLogMailer(log);
 const telas = env.WEB_ORIGIN.replace(/\/$/, "");
 const limites = limitesDoEnv(env);
+// O que o dono muda no painel (o teste, a cotação e os limites da IA) por cima do .env: os ajustes escrevem nestes mesmos objetos.
+const configDoPainel = { cotacaoUsd: env.PLATAFORMA_COTACAO_USD, tetos: { siteUsd: limites.tetoSiteUsd, avaliacaoUsd: limites.demonstracao.tetoUsd } };
+const ajustes = new Ajustes({ limites, painel: configDoPainel });
+await ajustes.carregar(db, log).catch((err: unknown) => log("os ajustes da plataforma não foram lidos: vale o padrão do .env", { error: err instanceof Error ? err.message : String(err) }));
 
 // O WhatsApp oficial (a Meta): liga só com tudo preenchido. Pela metade, avisa no log e fica desligado.
 const metaPreenchida = [env.META_PHONE_NUMBER_ID, env.META_ACCESS_TOKEN, env.META_APP_SECRET, env.META_VERIFY_TOKEN, env.WHATSAPP_NUMERO].filter(Boolean).length;
@@ -107,6 +112,7 @@ const rotas = createRotas({
   },
   log,
   limites,
+  ajustes,
   cobranca,
   plataformaEmails,
   cofre: criarCofre(segredoDoCofre(env, { producao: process.env.NODE_ENV === "production", log })),
@@ -127,9 +133,22 @@ const app = createApp({
   envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log, cobrancaAtiva: env.COBRANCA_ATIVA }),
   mcp: rotasDoMcp({ db, log, cobrancaAtiva: env.COBRANCA_ATIVA }),
   avisoDoAsaas: rotasDoAvisoDoAsaas({ db, log }),
-  plataforma: rotasDaPlataforma({ db, auth, emails: plataformaEmails, log, whatsapp: { agente: agenteDe, whatsapp } }),
+  plataforma: rotasDaPlataforma({
+    db,
+    auth,
+    emails: plataformaEmails,
+    log,
+    config: configDoPainel,
+    ajustes,
+    cobranca: { ativa: env.COBRANCA_ATIVA, asaas, nfse: !!nfse },
+    exigirDoisFatores: !env.PLATAFORMA_SEM_2FA,
+    emailLigado: mailer.enabled,
+    telas,
+    whatsapp: { agente: agenteDe, whatsapp },
+  }),
   whatsapp: whatsapp ? rotasDoWebhook({ agente: agenteDe(whatsapp.canal, "agente"), whatsapp, enfileirar: async (p) => { await inngest.send(eventoDoWhatsapp(p)); } }) : undefined,
   plataformaEmails,
+  ajustes,
   cobranca: { ...cobranca, token: env.ASAAS_WEBHOOK_TOKEN, nfse },
   inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao, mailer, cobrancaAtiva: env.COBRANCA_ATIVA, asaas, whatsapp: whatsapp ? { canal: whatsapp.canal, suporte: whatsapp.suporte } : null }) }),
   log,
@@ -141,7 +160,8 @@ export default { port: env.PORT, hostname: env.HOST, fetch: app.fetch, idleTimeo
 log("api no ar", { host: env.HOST, port: env.PORT, ia: !!ia, whatsapp: !!wameow, whatsappOficial: !!whatsapp, datajud: !!env.DATAJUD_API_KEY, arquivos: env.ARQUIVOS, telas: env.WEB_DIST || null, cobranca: env.COBRANCA_ATIVA, asaas: !!asaas, operadores: plataformaEmails.size });
 if (env.COBRANCA_ATIVA) {
   // Ligada sem o necessário: o teste corre e o escritório vira só leitura no fim, mas ninguém consegue assinar. Melhor avisar alto no log.
-  if (PLANO.valorMensalCentavos === null) log("COBRANCA_ATIVA ligada, mas o valor do plano não foi definido (PLANO em packages/core/src/plano.ts): ninguém consegue assinar");
+  const padrao = await planoPadrao(db).catch(() => null);
+  if (padrao && padrao.mensalCentavos === null) log("COBRANCA_ATIVA ligada, mas o plano padrão não tem preço (Planos, no painel da plataforma): ninguém consegue assinar");
   if (!asaas) log("COBRANCA_ATIVA ligada, mas falta ASAAS_API_KEY: ninguém consegue assinar");
   if (!env.ASAAS_WEBHOOK_TOKEN) log("COBRANCA_ATIVA ligada, mas falta ASAAS_WEBHOOK_TOKEN: os avisos de pagamento do Asaas são recusados e o escritório não vira ativo ao pagar");
 }

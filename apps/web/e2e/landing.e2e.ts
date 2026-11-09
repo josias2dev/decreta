@@ -221,6 +221,12 @@ test.describe("a demonstração pública", () => {
     await expect(page.getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro");
   });
 
+  test("o painel da plataforma não existe na demonstração pública: só na prévia da equipe", async ({ page }) => {
+    await page.goto("/demonstracao/app.html#/plataforma");
+    await expect(page.getByRole("heading", { level: 1, name: "Página não encontrada" })).toBeVisible();
+    await expect(page.getByText("Moraes & Teixeira Advocacia")).toHaveCount(0);
+  });
+
   test("nenhum dado de gente de verdade nas amostras: só os e-mails de exemplo da demonstração", () => {
     const pasta = new URL("./amostras/", import.meta.url);
     const emails = new Set<string>();

@@ -1,4 +1,4 @@
-import { ehEventoDoSite, VERSAO_DOS_TERMOS } from "@decreta/core";
+import { ehEventoDoSite, trocarPrecoDaLanding, VERSAO_DOS_TERMOS, type PlanoDaLanding } from "@decreta/core";
 import { invitation, organization, user, type Database } from "@decreta/db";
 import { eq, sql } from "drizzle-orm";
 import { Hono, type Context } from "hono";
@@ -16,10 +16,12 @@ import { registrarEvento, registrarEventoSemEscritorio } from "./eventos.ts";
 import { ipDoPedido, limitador, limitarPorIp } from "./limitador.ts";
 import type { createRotas } from "./rotas/index.ts";
 import type { Reporter } from "./sentry.ts";
+import type { Ajustes } from "./servicos/ajustes.ts";
 import type { ClienteAsaas, ConfigDaNfse } from "./servicos/asaas.ts";
 import { comoNasce } from "./servicos/assinatura.ts";
 import { AvisoInvalido, tokenConfere, tratarAviso } from "./servicos/cobranca.ts";
 import { montarCobertura, type Cobertura } from "./servicos/cobertura.ts";
+import { planoPadrao } from "./servicos/planos.ts";
 
 export interface AppDeps {
   db: Database;
@@ -39,6 +41,8 @@ export interface AppDeps {
   plataforma?: Hono<any>;
   /** Os e-mails dos operadores: o cadastro aberto recusa esses e-mails, para ninguém abrir uma conta com o e-mail de um operador. */
   plataformaEmails?: ReadonlySet<string>;
+  /** Os ajustes do painel da plataforma: a duração do teste de quem se cadastra. Sem eles, 14 dias. */
+  ajustes?: Ajustes;
   /**
    * A cobrança do Decreta (o plano de cada escritório): os avisos (webhooks) do Asaas em `/api/cobranca/asaas`, com o token que o Asaas manda. Sem token, a rota
    * responde 404. `ativa` liga o teste de 14 dias para os escritórios que se cadastram daqui em diante.
@@ -87,7 +91,7 @@ export function createApp(deps: AppDeps) {
     app.use("/api/cadastro", csrf({ origin: env.WEB_ORIGIN }));
     // Cadastro aberto: poucos escritórios por hora de cada endereço, contra quem cria contas em série.
     app.use("/api/cadastro", limitarPorIp({ janelaMs: 60 * 60_000, maximo: 10 }, ipDoPedido));
-    app.post("/api/cadastro", bodyLimit({ maxSize: TETO_DO_CADASTRO_BYTES, onError: (c) => c.json({ erro: "muito_grande", detalhe: "Os dados passaram do tamanho aceito." }, 413) }), (c) => cadastrar(c, db, auth, env, log, { ativa: !!deps.cobranca?.ativa, operadores: deps.plataformaEmails ?? new Set() }));
+    app.post("/api/cadastro", bodyLimit({ maxSize: TETO_DO_CADASTRO_BYTES, onError: (c) => c.json({ erro: "muito_grande", detalhe: "Os dados passaram do tamanho aceito." }, 413) }), (c) => cadastrar(c, db, auth, env, log, { ativa: !!deps.cobranca?.ativa, operadores: deps.plataformaEmails ?? new Set(), testeDias: deps.ajustes?.testeDias }));
   }
 
   // Rotas sem login: poucos pedidos por minuto de cada endereço, contra quem tenta adivinhar um segredo ou token.
@@ -170,7 +174,7 @@ export function createApp(deps: AppDeps) {
     app.route("/api/app", deps.rotas);
   }
 
-  if (env.WEB_DIST) servirTelas(app, env.WEB_DIST);
+  if (env.WEB_DIST) servirTelas(app, env.WEB_DIST, precoDaLanding(db, log));
 
   app.onError((err, c) => {
     if (err instanceof HTTPException) return err.getResponse();
@@ -205,7 +209,7 @@ const CADASTRO = z.object({
  * conta nasce pelo `criarEscritorio`, não pelo sign-up do Better Auth, que
  * continua fechado a quem não tem convite.
  */
-async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: NonNullable<AppDeps["log"]>, cobranca: { ativa: boolean; operadores: ReadonlySet<string> }) {
+async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: NonNullable<AppDeps["log"]>, cobranca: { ativa: boolean; operadores: ReadonlySet<string>; testeDias?: number }) {
   const r = CADASTRO.safeParse(await c.req.json().catch(() => null));
   if (!r.success) return c.json({ erro: "dados_invalidos", detalhe: r.error.issues.map((i) => i.message).join(" ") }, 400);
   const b = r.data;
@@ -215,7 +219,7 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
 
   const slug = await slugUnico(db, b.escritorio);
   // Com a cobrança ligada, o escritório novo começa um teste de 14 dias, sem cartão; desligada, nasce cortesia e nunca é travado.
-  const assinatura = comoNasce(cobranca.ativa, true);
+  const assinatura = comoNasce(cobranca.ativa, true, undefined, cobranca.testeDias);
   const { organizationId, userId } = await criarEscritorio(db, auth, { nome: b.escritorio, slug, cadastroAberto: true, assinatura, dono: { email: b.email, nome: b.nome, senha: b.senha, termosVersao: b.termos } });
   await registrar(db, { organizationId, userId, nome: b.nome, acao: "escritorio.criado", detalhes: { escritorio: b.escritorio, slug, termos: b.termos }, ip: ipDoPedido(c) }, log);
   await registrarEvento(db, "cadastro_concluido", organizationId, log);
@@ -236,19 +240,45 @@ async function cadastrar(c: Context, db: Database, auth: Auth, env: Env, log: No
 }
 
 /**
+ * O preço da landing vem do plano padrão do painel da plataforma, guardado por um minuto: mudar o valor no
+ * painel muda a landing sem build. Se o banco falhar, a landing sai como o build a deixou.
+ */
+function precoDaLanding(db: Database, log: (msg: string, extra?: Record<string, unknown>) => void): () => Promise<PlanoDaLanding | null> {
+  let guardado: { plano: PlanoDaLanding; ate: number } | null = null;
+  return async () => {
+    if (guardado && guardado.ate > Date.now()) return guardado.plano;
+    try {
+      const plano = await planoPadrao(db);
+      guardado = { plano: { nome: plano.nome, valorMensalCentavos: plano.mensalCentavos }, ate: Date.now() + 60_000 };
+      return guardado.plano;
+    } catch (err) {
+      log("preço da landing sem o banco", { error: (err as Error).message });
+      return null;
+    }
+  };
+}
+
+/**
  * Telas compiladas na mesma origem da API: um endereço só, sem CORS, e o
  * cookie de sessão vale direto. O que está em /assets tem hash no nome e fica
  * em cache para sempre; as demais rotas caem no index.html (rotas do SPA). A
  * landing (`/`) e a demonstração são páginas estáticas à parte.
  */
-function servirTelas(app: Hono, dir: string) {
+function servirTelas(app: Hono, dir: string, preco: () => Promise<PlanoDaLanding | null>) {
   const raiz = resolve(dir);
   const index = join(raiz, "index.html");
-  const pagina = (arquivo: string) => new Response(Bun.file(join(raiz, arquivo)), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+  const html = { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" };
+  const pagina = (arquivo: string) => new Response(Bun.file(join(raiz, arquivo)), { headers: html });
+  let landing: string | null = null;
   app.get("*", async (c) => {
     const path = c.req.path;
     if (path.startsWith("/api/")) return c.notFound();
-    if (path === "/") return pagina("landing.html");
+    if (path === "/") {
+      const plano = await preco();
+      if (!plano) return pagina("landing.html");
+      landing ??= await Bun.file(join(raiz, "landing.html")).text();
+      return new Response(trocarPrecoDaLanding(landing, plano), { headers: html });
+    }
     if (path === "/demonstracao" || path === "/demonstracao/") return pagina("demonstracao/index.html");
     let alvo: string;
     try {

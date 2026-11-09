@@ -36,7 +36,7 @@ import { ClienteSemIa, contextoParaIa, semIa } from "../servicos/contexto.ts";
 import { cortado } from "../servicos/assistente.ts";
 import { citacoesDoTexto } from "../servicos/jurisprudencia.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
-import { AVISOS, quantoResta, SEM_LIMITES, usoDoDia } from "../servicos/uso-ia.ts";
+import { AVISOS, quantoResta, registrarRecusa, SEM_LIMITES, tetosDoEscritorio, usoDoDia } from "../servicos/uso-ia.ts";
 import { comLimiteDaIa, corpo, ehSocio, falha, iaDaRota, id, semAcentoNoBanco, temAcessoFinanceiro, tenant, termoSemAcento, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 /** O nome de cada ação da IA como a equipe reconhece. */
@@ -245,8 +245,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
 
   /** Quanto a pessoa ainda tem de IA hoje: as mensagens do chat, o teto do dia e o aviso de que falta pouco. */
   app.get("/ia/uso", async (c) => {
-    const uso = await usoDoDia(db, { organizationId: c.get("orgId"), userId: c.get("userId") });
-    return c.json(quantoResta(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), emAvaliacao: c.get("emAvaliacao") }));
+    const [uso, tetos] = await Promise.all([usoDoDia(db, { organizationId: c.get("orgId"), userId: c.get("userId") }), tetosDoEscritorio(db, c.get("orgId"))]);
+    return c.json(quantoResta(deps.limites ?? SEM_LIMITES, uso, { demonstracao: c.get("demonstracao"), emAvaliacao: c.get("emAvaliacao"), tetos }));
   });
 
   /* ---------------- Retorno sobre a IA ---------------- */
@@ -623,6 +623,7 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
           if (!c.req.raw.signal.aborted) {
             deps.log("conversa com a IA caiu", { metodo: b.modo, error: err instanceof Error ? err.message : String(err) });
             teto = ehTetoDoGateway(err);
+            if (teto) await registrarRecusa(deps, { organizationId: c.get("orgId"), userId: c.get("userId") }, "gateway");
             aviso = teto ? AVISOS.gateway : escrito.trim() ? "[A resposta parou no meio. Pergunte de novo.]" : "Não consegui responder agora. Tente de novo em instantes.";
           }
         }

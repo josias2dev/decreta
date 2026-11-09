@@ -14,13 +14,14 @@ import { readEnv } from "../src/env.ts";
 import { criarEscritorio, type EscritorioNovo } from "../src/escritorio-novo.ts";
 import { createRotas } from "../src/rotas/index.ts";
 import { rotasDaPlataforma } from "../src/rotas/plataforma.ts";
+import { Ajustes } from "../src/servicos/ajustes.ts";
 import { criarClienteAsaas, type ConfigDaNfse } from "../src/servicos/asaas.ts";
 import { emailsDaPlataforma } from "../src/servicos/plataforma.ts";
 import { asaasFalso, CHAVE_DO_ASAAS, TOKEN_DO_ASAAS } from "./asaas-falso.ts";
 
 export const SENHA = "senha-bem-longa-123";
 
-export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; token?: string; asaas?: ReturnType<typeof asaasFalso>; nfse?: ConfigDaNfse; log?: (msg: string, extra?: Record<string, unknown>) => void }) {
+export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?: string; doisFatores?: boolean; emailLigado?: boolean; token?: string; asaas?: ReturnType<typeof asaasFalso>; nfse?: ConfigDaNfse; log?: (msg: string, extra?: Record<string, unknown>) => void }) {
   const env = readEnv({
     DATABASE_URL: "postgres://unused@localhost/unused",
     BETTER_AUTH_SECRET: randomBytes(32).toString("hex"),
@@ -34,6 +35,9 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
   const cliente = criarClienteAsaas({ apiKey: CHAVE_DO_ASAAS, ambiente: "sandbox", fetch: asaas.fetch });
   const operadores = emailsDaPlataforma(env.PLATAFORMA_EMAILS);
   const enfileiradas: unknown[] = [];
+  // Os ajustes do painel são um só, como na API de verdade: o que o operador muda vale para o cadastro e para o Plano.
+  const config = { cotacaoUsd: 5, tetos: { siteUsd: 4, avaliacaoUsd: 0.5 } };
+  const ajustes = new Ajustes({ painel: config });
   const rotas = createRotas({
     db: t.db,
     auth,
@@ -47,15 +51,17 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
     log: opcoes.log ?? (() => {}),
     cobranca: { ativa: opcoes.ativa, asaas: cliente },
     plataformaEmails: operadores,
+    ajustes,
   });
   const app = createApp({
     db: t.db,
     env,
     auth,
     rotas,
-    plataforma: rotasDaPlataforma({ db: t.db, auth, emails: operadores, log: () => {} }),
+    plataforma: rotasDaPlataforma({ db: t.db, auth, emails: operadores, log: () => {}, exigirDoisFatores: opcoes.doisFatores ?? false, emailLigado: opcoes.emailLigado ?? false, telas: "https://decreta.local", config, ajustes, cobranca: { ativa: opcoes.ativa, asaas: cliente, nfse: !!opcoes.nfse } }),
     plataformaEmails: operadores,
     cobranca: { ativa: opcoes.ativa, token: opcoes.token === undefined ? TOKEN_DO_ASAAS : opcoes.token, asaas: cliente, nfse: opcoes.nfse ?? null },
+    ajustes,
     log: opcoes.log ?? (() => {}),
   });
 
@@ -78,7 +84,7 @@ export function montarApi(t: TestDatabase, opcoes: { ativa: boolean; operadores?
     app.request("/api/cobranca/asaas", { method: "POST", headers: { "content-type": "application/json", ...(token ? { "asaas-access-token": token } : {}), ...(ip ? { "x-forwarded-for": ip } : {}) }, body: JSON.stringify(corpo) });
   const novo = (e: Omit<EscritorioNovo, "dono"> & { email: string; pessoa: string }) => criarEscritorio(t.db, auth, { nome: e.nome, slug: e.slug, cadastroAberto: e.cadastroAberto, assinatura: e.assinatura, dono: { email: e.email, nome: e.pessoa, senha: SENHA } });
 
-  return { env, app, auth, mailer, asaas, enfileiradas, json, com, daPlataforma, entrar, aviso, novo };
+  return { env, app, auth, mailer, asaas, enfileiradas, json, com, daPlataforma, entrar, aviso, novo, ajustes, cliente };
 }
 
 /** Muda a assinatura do escritório direto no banco (como dono): o cenário do teste. */

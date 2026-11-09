@@ -868,6 +868,23 @@ export const usoIa = pgTable(
   (t) => [index("uso_ia_dia_idx").on(t.em), index("uso_ia_pessoa_idx").on(t.organizationId, t.userId, t.em), tenantPolicy("uso_ia")],
 ).enableRLS();
 
+/**
+ * Cada vez que a IA foi recusada por um limite (o motivo, nunca o pedido). O painel da plataforma soma por motivo
+ * e escritório: é como se sabe se um teto está baixo demais ou se alguém abusa.
+ */
+export const recusasDaIa = pgTable(
+  "recusas_da_ia",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: organizationId(),
+    userId: pessoa("user_id"),
+    /** `minuto`, `mensagens_do_dia`, `pessoa`, `site`, `escritorio_dia`, `escritorio_mes`, `demonstracao`, `em_avaliacao`, `simultaneos` ou `gateway`. */
+    motivo: text("motivo").notNull(),
+    em: timestamp("em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("recusas_da_ia_em_idx").on(t.em), tenantPolicy("recusas_da_ia")],
+).enableRLS();
+
 /* ------------------------------------------------------------------ */
 /* Atendimento, novos negócios e alvarás                               */
 /* ------------------------------------------------------------------ */

@@ -56,6 +56,10 @@ export function asaasFalso(opcoes: { falharNoCancelamento?: boolean; recusarLink
         if (falso.falharNoCancelamento) return json(500, { errors: [{ code: "internal_error", description: "Erro interno." }] });
         return json(200, { deleted: true, id: assinatura[1] });
       }
+      if (metodo === "POST" && assinatura) {
+        if (typeof corpo?.value !== "number" || corpo.value <= 0) return json(400, { errors: [{ code: "invalid_value", description: "Informe o valor da assinatura." }] });
+        return json(200, { object: "subscription", id: assinatura[1], value: corpo.value, cycle: "MONTHLY", status: "ACTIVE" });
+      }
       if (metodo === "POST" && /^\/v3\/subscriptions\/[^/]+\/invoiceSettings$/.test(caminho)) {
         if (falso.nfseSumiu) return json(404, { errors: [{ code: "not_found", description: "Assinatura não encontrada." }] });
         if (falso.falharNaNfse) return json(400, { errors: [{ code: "invalid_municipal_service", description: "O serviço municipal não foi encontrado." }] });

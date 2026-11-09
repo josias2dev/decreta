@@ -6,7 +6,8 @@
  * Como o escritório assina: o link de pagamento recorrente (`POST /v3/paymentLinks`, tipo
  * `RECURRENT`, ciclo mensal, forma `UNDEFINED`: quem paga escolhe Pix, boleto ou cartão). Quando
  * a pessoa preenche o link, o Asaas cria o cliente e a assinatura e avisa pelo webhook
- * (`servicos/cobranca.ts`). Cancelar é `DELETE /v3/subscriptions/{id}`.
+ * (`servicos/cobranca.ts`). Cancelar é `DELETE /v3/subscriptions/{id}`; mudar o valor (outro plano, um desconto
+ * que acabou) é `POST /v3/subscriptions/{id}` com `updatePendingPayments: false`, que vale da próxima cobrança em diante.
  *
  * A chave vai só no cabeçalho `access_token`, de variável de ambiente. O `fetch` entra de fora,
  * como nos outros serviços externos, para os testes usarem um Asaas de mentira.
@@ -55,6 +56,8 @@ export interface ClienteAsaas {
   removerLink(linkId: string): Promise<void>;
   /** Liga a emissão automática de NFS-e a cada mensalidade paga. */
   configurarNotasFiscais(assinaturaId: string, c: ConfigDaNfse): Promise<void>;
+  /** Muda o valor da assinatura a partir da próxima cobrança (`POST /v3/subscriptions/{id}`, sem mexer nas já geradas). */
+  atualizarValorDaAssinatura(assinaturaId: string, valorCentavos: number): Promise<void>;
 }
 
 export function criarClienteAsaas(opcoes: { apiKey: string; ambiente: "sandbox" | "producao"; fetch?: typeof fetch }): ClienteAsaas {
@@ -100,6 +103,10 @@ export function criarClienteAsaas(opcoes: { apiKey: string; ambiente: "sandbox" 
 
     async cancelarAssinatura(assinaturaId) {
       await chamar("DELETE", `/subscriptions/${encodeURIComponent(assinaturaId)}`);
+    },
+
+    async atualizarValorDaAssinatura(assinaturaId, valorCentavos) {
+      await chamar("POST", `/subscriptions/${encodeURIComponent(assinaturaId)}`, { value: valorCentavos / 100, updatePendingPayments: false });
     },
 
     async configurarNotasFiscais(assinaturaId, c) {

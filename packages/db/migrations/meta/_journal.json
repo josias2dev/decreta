@@ -243,15 +243,22 @@
     {
       "idx": 34,
       "version": "7",
-      "when": 1794251251152,
-      "tag": "0034_whatsapp_oficial",
+      "when": 1793902586500,
+      "tag": "0034_painel_da_plataforma",
       "breakpoints": true
     },
     {
       "idx": 35,
       "version": "7",
-      "when": 1794257127526,
-      "tag": "0035_whatsapp_revisao",
+      "when": 1793906461976,
+      "tag": "0035_planos_e_licencas",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794267925137,
+      "tag": "0036_whatsapp_oficial",
       "breakpoints": true
     }
   ]

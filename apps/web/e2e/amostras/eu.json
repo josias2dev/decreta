@@ -24,6 +24,11 @@
     },
     "hoje": "2026-10-29",
     "ia": false,
+    "plano": {
+      "pecas": true,
+      "financeiro": true,
+      "assinatura": true
+    },
     "equipe": [
       {
         "id": "MYzDlQvtEdBq5QIzTnnPZvYei3Ev5ql6",

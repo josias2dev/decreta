@@ -1,6 +1,6 @@
 {
-  "id": "3d524648-bf06-47fd-9a28-02bb521f9572",
-  "prevId": "02ddfef6-bace-4b16-8905-685dc5759734",
+  "id": "c28a1c14-40f7-47cb-8a0f-659a55b71cca",
+  "prevId": "e63373dd-8429-4e92-927d-1187ea12f67f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -736,6 +736,49 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "asaas_assinatura_valor_centavos": {
+          "name": "asaas_assinatura_valor_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plano_id": {
+          "name": "plano_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pessoas_extras": {
+          "name": "pessoas_extras",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "valor_combinado_centavos": {
+          "name": "valor_combinado_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "desconto": {
+          "name": "desconto",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "marca": {
+          "name": "marca",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tetos_ia": {
+          "name": "tetos_ia",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -785,7 +828,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "organization_plano_id_planos_id_fk": {
+          "name": "organization_plano_id_planos_id_fk",
+          "tableFrom": "organization",
+          "tableTo": "planos",
+          "columnsFrom": [
+            "plano_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "organization_slug_unique": {
@@ -796,6 +853,146 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.planos": {
+      "name": "planos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "versao": {
+          "name": "versao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mensal_centavos": {
+          "name": "mensal_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anual_centavos": {
+          "name": "anual_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pessoas_incluidas": {
+          "name": "pessoas_incluidas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pessoa_extra_centavos": {
+          "name": "pessoa_extra_centavos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limites": {
+          "name": "limites",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "funcionalidades": {
+          "name": "funcionalidades",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "padrao": {
+          "name": "padrao",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "criado_por": {
+          "name": "criado_por",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "substituido_em": {
+          "name": "substituido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "planos_codigo_versao_idx": {
+          "name": "planos_codigo_versao_idx",
+          "columns": [
+            {
+              "expression": "codigo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "versao",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "planos_um_padrao_idx": {
+          "name": "planos_um_padrao_idx",
+          "columns": [
+            {
+              "expression": "padrao",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"planos\".\"padrao\" and \"planos\".\"substituido_em\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1058,6 +1255,12 @@
         },
         "termos_aceitos_em": {
           "name": "termos_aceitos_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suspensa_em": {
+          "name": "suspensa_em",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -3092,13 +3295,6 @@
           "notNull": true,
           "default": "'pergunte'"
         },
-        "canal": {
-          "name": "canal",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'tela'"
-        },
         "processo_id": {
           "name": "processo_id",
           "type": "uuid",
@@ -3524,20 +3720,6 @@
         },
         "aviso_manha": {
           "name": "aviso_manha",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "aviso_quinze_horas": {
-          "name": "aviso_quinze_horas",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "aviso_prazo_curto": {
-          "name": "aviso_prazo_curto",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -6314,6 +6496,105 @@
       "policies": {
         "radar_precedentes_tenant_isolation": {
           "name": "radar_precedentes_tenant_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "app_user"
+          ],
+          "using": "organization_id = current_setting('app.org_id', true)",
+          "withCheck": "organization_id = current_setting('app.org_id', true)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.recusas_da_ia": {
+      "name": "recusas_da_ia",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "em": {
+          "name": "em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "recusas_da_ia_em_idx": {
+          "name": "recusas_da_ia_em_idx",
+          "columns": [
+            {
+              "expression": "em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "recusas_da_ia_organization_id_organization_id_fk": {
+          "name": "recusas_da_ia_organization_id_organization_id_fk",
+          "tableFrom": "recusas_da_ia",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "recusas_da_ia_user_id_user_id_fk": {
+          "name": "recusas_da_ia_user_id_user_id_fk",
+          "tableFrom": "recusas_da_ia",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "recusas_da_ia_tenant_isolation": {
+          "name": "recusas_da_ia_tenant_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
           "to": [
@@ -9919,17 +10200,10 @@
       "checkConstraints": {},
       "isRLSEnabled": true
     },
-    "public.propostas": {
-      "name": "propostas",
+    "public.acessos": {
+      "name": "acessos",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
         "organization_id": {
           "name": "organization_id",
           "type": "text",
@@ -9942,63 +10216,20 @@
           "primaryKey": false,
           "notNull": true
         },
-        "tipo": {
-          "name": "tipo",
+        "dia": {
+          "name": "dia",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aparelho": {
+          "name": "aparelho",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "argumentos": {
-          "name": "argumentos",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "texto": {
-          "name": "texto",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "impressao": {
-          "name": "impressao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "situacao": {
-          "name": "situacao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pendente'"
-        },
-        "expira_em": {
-          "name": "expira_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "decidida_em": {
-          "name": "decidida_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "resultado": {
-          "name": "resultado",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "wamid": {
-          "name": "wamid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
+        "primeiro_em": {
+          "name": "primeiro_em",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -10006,29 +10237,11 @@
         }
       },
       "indexes": {
-        "propostas_pessoa_idx": {
-          "name": "propostas_pessoa_idx",
+        "acessos_dia_idx": {
+          "name": "acessos_dia_idx",
           "columns": [
             {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "situacao",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
+              "expression": "dia",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10041,9 +10254,9 @@
         }
       },
       "foreignKeys": {
-        "propostas_organization_id_organization_id_fk": {
-          "name": "propostas_organization_id_organization_id_fk",
-          "tableFrom": "propostas",
+        "acessos_organization_id_organization_id_fk": {
+          "name": "acessos_organization_id_organization_id_fk",
+          "tableFrom": "acessos",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
@@ -10054,9 +10267,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "propostas_user_id_user_id_fk": {
-          "name": "propostas_user_id_user_id_fk",
-          "tableFrom": "propostas",
+        "acessos_user_id_user_id_fk": {
+          "name": "acessos_user_id_user_id_fk",
+          "tableFrom": "acessos",
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
@@ -10068,11 +10281,20 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "acessos_organization_id_user_id_dia_pk": {
+          "name": "acessos_organization_id_user_id_dia_pk",
+          "columns": [
+            "organization_id",
+            "user_id",
+            "dia"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {
-        "propostas_tenant_isolation": {
-          "name": "propostas_tenant_isolation",
+        "acessos_tenant_isolation": {
+          "name": "acessos_tenant_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
           "to": [
@@ -10085,8 +10307,57 @@
       "checkConstraints": {},
       "isRLSEnabled": true
     },
-    "public.whatsapp_codigos": {
-      "name": "whatsapp_codigos",
+    "public.ajustes_da_plataforma": {
+      "name": "ajustes_da_plataforma",
+      "schema": "",
+      "columns": {
+        "chave": {
+          "name": "chave",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "valor": {
+          "name": "valor",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mudado_por": {
+          "name": "mudado_por",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mudado_em": {
+          "name": "mudado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "ajustes_da_plataforma_fora_de_escritorio": {
+          "name": "ajustes_da_plataforma_fora_de_escritorio",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "app_user"
+          ],
+          "using": "coalesce(current_setting('app.org_id', true), '') = ''",
+          "withCheck": "coalesce(current_setting('app.org_id', true), '') = ''"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.cupons": {
+      "name": "cupons",
       "schema": "",
       "columns": {
         "id": {
@@ -10096,135 +10367,120 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "hash": {
-          "name": "hash",
+        "codigo": {
+          "name": "codigo",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "tipo": {
+          "name": "tipo",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
+        "valor": {
+          "name": "valor",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "expira_em": {
-          "name": "expira_em",
-          "type": "timestamp with time zone",
+        "meses": {
+          "name": "meses",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "usado_em": {
-          "name": "usado_em",
-          "type": "timestamp with time zone",
+        "valido_ate": {
+          "name": "valido_ate",
+          "type": "date",
           "primaryKey": false,
           "notNull": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "whatsapp_codigos_hash_uq": {
-          "name": "whatsapp_codigos_hash_uq",
-          "columns": [
-            {
-              "expression": "hash",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "whatsapp_codigos_user_idx": {
-          "name": "whatsapp_codigos_user_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "whatsapp_codigos_user_id_user_id_fk": {
-          "name": "whatsapp_codigos_user_id_user_id_fk",
-          "tableFrom": "whatsapp_codigos",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "whatsapp_codigos_organization_id_organization_id_fk": {
-          "name": "whatsapp_codigos_organization_id_organization_id_fk",
-          "tableFrom": "whatsapp_codigos",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.whatsapp_desconhecidos": {
-      "name": "whatsapp_desconhecidos",
-      "schema": "",
-      "columns": {
-        "hash": {
-          "name": "hash",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "respondido_em": {
-          "name": "respondido_em",
-          "type": "timestamp with time zone",
+        "limite_de_usos": {
+          "name": "limite_de_usos",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "mensagens": {
-          "name": "mensagens",
+        "usos": {
+          "name": "usos",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "updated_at": {
-          "name": "updated_at",
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_por": {
+          "name": "criado_por",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "desativado_em": {
+          "name": "desativado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "cupons_codigo_unique": {
+          "name": "cupons_codigo_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "codigo"
+          ]
+        }
+      },
+      "policies": {
+        "cupons_fora_de_escritorio": {
+          "name": "cupons_fora_de_escritorio",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "app_user"
+          ],
+          "using": "coalesce(current_setting('app.org_id', true), '') = ''",
+          "withCheck": "coalesce(current_setting('app.org_id', true), '') = ''"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.fotos_da_plataforma": {
+      "name": "fotos_da_plataforma",
+      "schema": "",
+      "columns": {
+        "dia": {
+          "name": "dia",
+          "type": "date",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "numeros": {
+          "name": "numeros",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tirada_em": {
+          "name": "tirada_em",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -10237,10 +10493,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
-    "public.whatsapp_mensagens": {
-      "name": "whatsapp_mensagens",
+    "public.notas_da_plataforma": {
+      "name": "notas_da_plataforma",
       "schema": "",
       "columns": {
         "id": {
@@ -10256,32 +10512,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "wamid": {
-          "name": "wamid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "chave": {
-          "name": "chave",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "direcao": {
-          "name": "direcao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tipo": {
-          "name": "tipo",
+        "operador": {
+          "name": "operador",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -10290,71 +10522,34 @@
           "name": "texto",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
-        },
-        "detalhes": {
-          "name": "detalhes",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "situacao": {
-          "name": "situacao",
-          "type": "text",
-          "primaryKey": false,
           "notNull": true
         },
-        "erro": {
-          "name": "erro",
+        "contato": {
+          "name": "contato",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "origem": {
-          "name": "origem",
+        "proximo_passo": {
+          "name": "proximo_passo",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "conversa_id": {
-          "name": "conversa_id",
-          "type": "uuid",
+        "retorno_em": {
+          "name": "retorno_em",
+          "type": "date",
           "primaryKey": false,
           "notNull": false
         },
-        "responde": {
-          "name": "responde",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "categoria": {
-          "name": "categoria",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revisao": {
-          "name": "revisao",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "duracao_ms": {
-          "name": "duracao_ms",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
+        "retorno_feito_em": {
+          "name": "retorno_feito_em",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": false
         },
-        "updated_at": {
-          "name": "updated_at",
+        "criada_em": {
+          "name": "criada_em",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -10362,23 +10557,8 @@
         }
       },
       "indexes": {
-        "whatsapp_mensagens_wamid_uq": {
-          "name": "whatsapp_mensagens_wamid_uq",
-          "columns": [
-            {
-              "expression": "wamid",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "whatsapp_mensagens_chave_uq": {
-          "name": "whatsapp_mensagens_chave_uq",
+        "notas_da_plataforma_org_idx": {
+          "name": "notas_da_plataforma_org_idx",
           "columns": [
             {
               "expression": "organization_id",
@@ -10387,34 +10567,7 @@
               "nulls": "last"
             },
             {
-              "expression": "chave",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "whatsapp_mensagens_pessoa_idx": {
-          "name": "whatsapp_mensagens_pessoa_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
+              "expression": "criada_em",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10427,9 +10580,9 @@
         }
       },
       "foreignKeys": {
-        "whatsapp_mensagens_organization_id_organization_id_fk": {
-          "name": "whatsapp_mensagens_organization_id_organization_id_fk",
-          "tableFrom": "whatsapp_mensagens",
+        "notas_da_plataforma_organization_id_organization_id_fk": {
+          "name": "notas_da_plataforma_organization_id_organization_id_fk",
+          "tableFrom": "notas_da_plataforma",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
@@ -10438,207 +10591,25 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "whatsapp_mensagens_user_id_user_id_fk": {
-          "name": "whatsapp_mensagens_user_id_user_id_fk",
-          "tableFrom": "whatsapp_mensagens",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "whatsapp_mensagens_conversa_id_conversas_id_fk": {
-          "name": "whatsapp_mensagens_conversa_id_conversas_id_fk",
-          "tableFrom": "whatsapp_mensagens",
-          "tableTo": "conversas",
-          "columnsFrom": [
-            "conversa_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {
-        "whatsapp_mensagens_tenant_isolation": {
-          "name": "whatsapp_mensagens_tenant_isolation",
+        "notas_da_plataforma_fora_de_escritorio": {
+          "name": "notas_da_plataforma_fora_de_escritorio",
           "as": "PERMISSIVE",
           "for": "ALL",
           "to": [
             "app_user"
           ],
-          "using": "organization_id = current_setting('app.org_id', true)",
-          "withCheck": "organization_id = current_setting('app.org_id', true)"
+          "using": "coalesce(current_setting('app.org_id', true), '') = ''",
+          "withCheck": "coalesce(current_setting('app.org_id', true), '') = ''"
         }
       },
       "checkConstraints": {},
       "isRLSEnabled": true
-    },
-    "public.whatsapp_vinculos": {
-      "name": "whatsapp_vinculos",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "telefone": {
-          "name": "telefone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "bsuid": {
-          "name": "bsuid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "verificado_em": {
-          "name": "verificado_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "renovar_ate": {
-          "name": "renovar_ate",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ultima_entrada_em": {
-          "name": "ultima_entrada_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "pausado_em": {
-          "name": "pausado_em",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "whatsapp_vinculos_user_uq": {
-          "name": "whatsapp_vinculos_user_uq",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "whatsapp_vinculos_telefone_uq": {
-          "name": "whatsapp_vinculos_telefone_uq",
-          "columns": [
-            {
-              "expression": "telefone",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "whatsapp_vinculos_bsuid_uq": {
-          "name": "whatsapp_vinculos_bsuid_uq",
-          "columns": [
-            {
-              "expression": "bsuid",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "whatsapp_vinculos_user_id_user_id_fk": {
-          "name": "whatsapp_vinculos_user_id_user_id_fk",
-          "tableFrom": "whatsapp_vinculos",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "whatsapp_vinculos_organization_id_organization_id_fk": {
-          "name": "whatsapp_vinculos_organization_id_organization_id_fk",
-          "tableFrom": "whatsapp_vinculos",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
     }
   },
   "enums": {

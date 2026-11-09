@@ -48,6 +48,8 @@ CREATE TABLE "whatsapp_mensagens" (
 	"conversa_id" uuid,
 	"responde" text,
 	"categoria" text,
+	"revisao" text,
+	"duracao_ms" integer,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );

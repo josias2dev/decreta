@@ -1,5 +1,5 @@
 /** O que a API das telas devolve (apps/api/src/rotas). */
-import type { AchadoDaAuditoria, AvisoDaConferencia, ContaAberta, EstrategiaDaPeca, FatoDaPeca, ParteDoCadastro, PrazoInterno } from "@decreta/core";
+import type { AchadoDaAuditoria, AvisoDaConferencia, ContaAberta, EstrategiaDaPeca, FatoDaPeca, FuncionalidadeDoPlano, FuncionalidadesDoPlano, LicencaDoEscritorio, ParteDoCadastro, PrazoInterno, PrecoDoEscritorio } from "@decreta/core";
 
 export interface Pessoa {
   id: string;
@@ -27,6 +27,8 @@ export interface Eu {
   assinatura?: { situacao: SituacaoDoEscritorio; acesso: AcessoDoEscritorio; aviso: AvisoDoPlano | null };
   /** Só para o operador da plataforma: o menu mostra o link do painel. */
   plataforma?: true;
+  /** O que o plano do escritório inclui: o menu esconde o que ficou de fora. Ausente (API antiga): tudo incluído. */
+  plano?: Record<FuncionalidadeDoPlano, boolean>;
 }
 
 export type SituacaoDoEscritorio = "teste" | "ativo" | "inadimplente" | "so_leitura" | "bloqueado" | "cancelado" | "cortesia";
@@ -74,30 +76,14 @@ export interface Plano {
   /** A página da fatura aberta no Asaas, onde se escolhe Pix, boleto ou cartão. */
   trocarFormaEm: string | null;
   aviso: AvisoDoPlano | null;
+  /** O preço de hoje (com desconto), o que o plano inclui e o uso contra os limites. */
+  licenca: { preco: PrecoDoEscritorio; desconto: { tipo: "percentual" | "valor"; valor: number; ate: string } | null; funcionalidades: FuncionalidadesDoPlano; uso: LicencaDoEscritorio } | null;
+  /** O sócio pode digitar um cupom de desconto. */
+  aceitaCupom: boolean;
 }
 
-/** Um escritório na lista da plataforma: a conta e os totais, nunca o que é dele. */
-export interface EscritorioDaPlataforma {
-  id: string;
-  nome: string;
-  slug: string;
-  demonstracao: boolean;
-  encerrado: boolean;
-  emAvaliacao: boolean;
-  situacao: SituacaoDoEscritorio;
-  situacaoGravada: SituacaoDoEscritorio;
-  criadoEm: string;
-  testeAte: string | null;
-  diasRestantesDoTeste: number | null;
-  diasDeAtraso: number | null;
-  acessoAte: string | null;
-  assinouEm: string | null;
-  cancelamentoPedidoEm: string | null;
-  valorMensalCentavos: number | null;
-  pessoas: number;
-  processos: number;
-  iaMesUsd: number;
-}
+/** Um escritório na lista da plataforma e o que a equipe fez nele: as contas são as de @decreta/core. */
+export type { AcaoRegistrada as AcaoDaPlataforma, EscritorioDaPlataforma } from "@decreta/core";
 
 export interface IndicadoresDaPlataforma {
   periodo: { de: string; ate: string; dias: number };
@@ -109,18 +95,6 @@ export interface IndicadoresDaPlataforma {
   inadimplencia: { escritorios: number; mrrCentavos: number };
   funil: { nome: string; rotulo: string; total: number; doAnterior: number | null }[];
 }
-
-export interface AcaoDaPlataforma {
-  id: string;
-  operador: string;
-  acao: string;
-  organizationId: string | null;
-  escritorio: string | null;
-  detalhes: Record<string, unknown>;
-  em: string;
-}
-
-export type NomeDaAcaoDaPlataforma = "liberar" | "estender_teste" | "so_leitura" | "bloquear" | "cortesia" | "reativar";
 
 export interface Analise<C = Record<string, unknown>> {
   id: string;

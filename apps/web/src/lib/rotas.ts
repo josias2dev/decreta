@@ -5,6 +5,10 @@ export type VistaDaAgenda = (typeof VISTAS_DA_AGENDA)[number];
 export type AbaDoProcesso = "resumo" | "movimentacoes" | "prazos" | "documentos" | "honorarios" | "calculos" | "chat";
 export const ABAS_DO_PROCESSO: readonly AbaDoProcesso[] = ["resumo", "movimentacoes", "prazos", "documentos", "honorarios", "calculos", "chat"];
 
+/** As abas do painel da plataforma; a Visão geral é a de quando o endereço não diz. */
+export const ABAS_DA_PLATAFORMA = ["visao", "escritorios", "planos", "faturas", "pessoas", "uso", "ia", "conversao", "acoes", "whatsapp", "laboratorio"] as const;
+export type AbaDaPlataforma = (typeof ABAS_DA_PLATAFORMA)[number];
+
 export type AbaDaConfiguracao = "escritorio" | "pecas" | "avisos" | "calendario" | "financeiro" | "ia" | "plano" | "registro" | "dados";
 /** As abas a que um endereço abre direto (o Asaas devolve a pessoa para `?aba=plano`; a caixa de Publicações, sem busca, manda para `?aba=avisos`). */
 export const ABAS_DO_ENDERECO: readonly AbaDaConfiguracao[] = ["plano", "dados", "avisos"];

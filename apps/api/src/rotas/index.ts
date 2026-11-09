@@ -3,10 +3,11 @@
  * escritório ativo do qual a pessoa é membro; esse escritório é o tenant de
  * tudo que a rota lê ou grava.
  */
-import { avisoDaAssinatura, hojeEm, somarDias } from "@decreta/core";
-import { alvaras, clientes, equipe, escritorios, negocios, organization, prazos, processos, publicacoes, type Tx } from "@decreta/db";
+import { avisoDaAssinatura, avisoForaDoPlano, FUNCIONALIDADES_DO_PLANO, funcionalidadeDaRota, funcionalidadeLiberada, hojeEm, somarDias, type FuncionalidadesDoPlano } from "@decreta/core";
+import { alvaras, clientes, equipe, escritorios, negocios, organization, planos, prazos, processos, publicacoes, type Tx } from "@decreta/db";
 import { and, asc, eq, ilike, inArray, isNull, like, lte, or, sql, type SQL } from "drizzle-orm";
 import { Hono } from "hono";
+import { registrarAcesso } from "../acessos.ts";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { acessoLiberado, colunasDaAssinatura, estadoDoEscritorio, recusaDeAcesso } from "../servicos/assinatura.ts";
 import { AVISO_DO_ENCERRAMENTO } from "../servicos/encerramento.ts";
@@ -54,7 +55,11 @@ export function createRotas(deps: DepsDasRotas) {
     // O escritório ativo fica gravado na sessão; confere que o vínculo ainda existe.
     const papel = await ehMembro(db, orgId, sessao.user.id);
     if (!papel) return c.json({ erro: "sem_escritorio" }, 403);
-    const [org] = await db.select({ nome: organization.name, slug: organization.slug, emAvaliacao: organization.emAvaliacao, encerradoEm: organization.encerradoEm, ...colunasDaAssinatura }).from(organization).where(eq(organization.id, orgId));
+    const [org] = await db
+      .select({ nome: organization.name, slug: organization.slug, emAvaliacao: organization.emAvaliacao, encerradoEm: organization.encerradoEm, funcionalidades: planos.funcionalidades, ...colunasDaAssinatura })
+      .from(organization)
+      .leftJoin(planos, eq(planos.id, organization.planoId))
+      .where(eq(organization.id, orgId));
     // Escritório encerrado: ninguém mais usa, mesmo com a sessão ainda de pé.
     if (org?.encerradoEm) return c.json({ erro: "escritorio_encerrado", detalhe: AVISO_DO_ENCERRAMENTO }, 403);
     // Sem a cobrança ligada, o acesso é sempre total. Com ela, o escritório sem acesso total só lê (e paga, leva os dados e encerra) ou, bloqueado, só paga e leva os dados.
@@ -63,6 +68,11 @@ export function createRotas(deps: DepsDasRotas) {
       const recusa = recusaDeAcesso(assinatura);
       return c.json({ erro: recusa.erro, detalhe: recusa.detalhe }, recusa.status);
     }
+    // O que o plano deixa de fora para de gravar (a demonstração mostra tudo).
+    const funcionalidades: FuncionalidadesDoPlano = org?.slug === SLUG_DA_DEMONSTRACAO ? {} : (org?.funcionalidades ?? {});
+    const fora = funcionalidadeDaRota(c.req.method, c.req.path.replace(/^\/api\/app/, ""));
+    if (fora && !funcionalidadeLiberada({ funcionalidades }, fora)) return c.json({ erro: "fora_do_plano", detalhe: avisoForaDoPlano(fora) }, 403);
+    c.set("funcionalidades", funcionalidades);
     c.set("orgId", orgId);
     c.set("orgNome", org?.nome ?? "");
     c.set("demonstracao", org?.slug === SLUG_DA_DEMONSTRACAO);
@@ -75,6 +85,7 @@ export function createRotas(deps: DepsDasRotas) {
     c.set("emailConfirmado", sessao.user.emailVerified || !deps.mailer.enabled);
     c.set("userNome", sessao.user.name || sessao.user.email);
     c.set("papel", papel);
+    await registrarAcesso(db, { organizationId: orgId, userId: sessao.user.id, userAgent: c.req.header("user-agent") }, deps.log);
     await next();
   });
 
@@ -113,6 +124,8 @@ export function createRotas(deps: DepsDasRotas) {
         ...(ehOperador(deps.plataformaEmails ?? new Set(), c.get("userEmail")) ? { plataforma: true } : {}),
         hoje,
         ia: deps.ia !== null,
+        // O que o plano do escritório inclui: o menu esconde o que ficou de fora.
+        plano: Object.fromEntries(FUNCIONALIDADES_DO_PLANO.map((f) => [f, funcionalidadeLiberada({ funcionalidades: c.get("funcionalidades") }, f)])),
         equipe: [...pessoas.values()].map((p) => ({ id: p.id, nome: p.nome, apelido: p.apelido, iniciais: p.iniciais, foto: p.foto, cargo: p.cargo, papel: p.papel })),
         menu: { prazos: prazosSemana, prazosHoje, publicacoes: pubsNovas, processos: nProcessos, clientes: nClientes, negocios: nNegocios, alvaras: nAlvaras, financeiro: emAtraso },
       });

@@ -1,10 +1,14 @@
 /**
- * O plano da landing lê o `PLANO` do core. O valor ainda não foi decidido: com
- * `null`, a única ação é perguntar à equipe; com um número, mostra o número e a
- * única ação passa a ser criar a conta, e nada mais precisa mudar. Os dias de teste
- * do plano (`testeDias`) ainda não aparecem aqui porque o teste com prazo só existe
- * quando a cobrança (onda 3) entrar: a landing diz só o que o produto faz hoje.
+ * A seção de preço da landing. O build escreve a do plano inicial (sem preço) entre
+ * as marcas `<!--PRECO-->` e `<!--/PRECO-->`, e o servidor troca pela do plano padrão
+ * do painel da plataforma a cada visita (apps/api/src/app.ts): o valor muda no painel,
+ * sem build. Com `null`, a única ação é perguntar à equipe; com um número, mostra o
+ * número e a única ação passa a ser criar a conta. Os dias de teste ainda não aparecem
+ * porque o teste com prazo só vale quando a cobrança ligar: a landing diz só o que o
+ * produto faz hoje.
  */
+import { EMPRESA } from "./legal.ts";
+
 export interface PlanoDaLanding {
   nome: string;
   valorMensalCentavos: number | null;
@@ -20,6 +24,19 @@ const ok = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="curr
 const BOTAO = 'class="dc-btn dc-btn--primaria lp-btn dc-btn--bloco"';
 
 const NO_PLANO = ["Publicações do DJEN três vezes por dia", "Prazos contados em dias úteis", "Briefing, resumo e Perguntar com IA", "Peças em Word no timbre do escritório", "Resumo da manhã no WhatsApp", "Verificação em duas etapas", "Processos, clientes e agenda", "Alvarás e novos negócios", "Honorários e prestação de contas", "IA nos campos de texto, com prévia"];
+
+/** O WhatsApp da equipe, com a mensagem pronta. */
+export const CONTATO_DA_LANDING = `https://wa.me/${EMPRESA.contato.whatsapp}?text=${encodeURIComponent("Olá! Quero conhecer o Decreta para o meu escritório.")}`;
+
+export const MARCAS_DO_PRECO = { inicio: "<!--PRECO-->", fim: "<!--/PRECO-->" } as const;
+
+/** Troca a seção de preço de uma landing já montada (entre as marcas). Sem as marcas, devolve como veio. */
+export function trocarPrecoDaLanding(html: string, plano: PlanoDaLanding, contato = CONTATO_DA_LANDING): string {
+  const inicio = html.indexOf(MARCAS_DO_PRECO.inicio);
+  const fim = html.indexOf(MARCAS_DO_PRECO.fim, inicio);
+  if (inicio < 0 || fim < 0) return html;
+  return html.slice(0, inicio + MARCAS_DO_PRECO.inicio.length) + htmlDoPreco(plano, contato) + html.slice(fim);
+}
 
 export function htmlDoPreco(plano: PlanoDaLanding, contato: string): string {
   const [valor, acao] =

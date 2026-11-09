@@ -120,8 +120,11 @@ describe.skipIf(!hasTestDatabase)("painel da plataforma", () => {
       expect(texto).not.toContain("5004321");
       expect(texto).not.toContain("Seguradora");
       expect(Object.keys(linha).sort()).toEqual(
-        ["acessoAte", "assinouEm", "cancelamentoPedidoEm", "criadoEm", "demonstracao", "diasDeAtraso", "diasRestantesDoTeste", "emAvaliacao", "encerrado", "id", "iaMesUsd", "nome", "pessoas", "processos", "slug", "situacao", "situacaoGravada", "testeAte", "valorMensalCentavos"].sort(),
+        ["acessoAte", "assinouEm", "cancelamentoPedidoEm", "comDesconto", "criadoEm", "demonstracao", "diasDeAtraso", "diasRestantesDoTeste", "emAvaliacao", "encerrado", "id", "iaMesUsd", "limites", "marca", "mensalidadeCentavos", "nome", "pessoas", "plano", "processos", "slug", "situacao", "situacaoGravada", "testeAte", "valorMensalCentavos"].sort(),
       );
+      // A licença na lista: o plano em que está e o estado dos limites, sem limite nenhum no plano inicial.
+      expect(linha.plano).toMatchObject({ nome: "Escritório", versao: 1, antigo: false });
+      expect(linha.limites).toEqual({ estado: "ok", alertas: 0, rotulos: [] });
     });
 
     test("o escritório de outro aparece só para o operador: o sócio nunca vê a lista nem o plano do vizinho", async () => {

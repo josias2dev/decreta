@@ -16,7 +16,7 @@ import { verificarCitacoes } from "../servicos/acervo.ts";
 import { materialDoCampo } from "../servicos/campos-com-ia.ts";
 import { ClienteSemIa, semIa } from "../servicos/contexto.ts";
 import { procedenciaDe } from "../servicos/procedencia.ts";
-import { AVISOS, LimiteDaIa } from "../servicos/uso-ia.ts";
+import { AVISOS, LimiteDaIa, registrarRecusa } from "../servicos/uso-ia.ts";
 import { comLimiteDaIa, corpo, falha, iaDaRota, id, temAcessoFinanceiro, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 /** Um pouco mais que o maior campo das telas (a mensagem ao cliente vai até 3.000). */
@@ -52,7 +52,10 @@ export function rotasDosCamposComIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
 
   /** Falha da IA: o teto do dia diz que é o teto; o resto fica anotado, e a tela avisa que o campo continua igual. */
   const falhaDaIa = async (c: C, campo: string, modo: string, dono: { processoId: string | null; clienteId: string | null }, chamadas: ChamadaDaIa[], err: unknown): Promise<never> => {
-    if (ehTetoDoGateway(err)) throw new LimiteDaIa(AVISOS.gateway);
+    if (ehTetoDoGateway(err)) {
+      await registrarRecusa(deps, { organizationId: c.get("orgId"), userId: c.get("userId") }, "gateway");
+      throw new LimiteDaIa(AVISOS.gateway);
+    }
     // A pessoa cancelou ou fechou a tela: não é falha, e ninguém espera a resposta.
     if (c.req.raw.signal.aborted) falha(503, "ia_cancelada");
     const erro = (err instanceof Error ? err.message : String(err)).slice(0, 500);

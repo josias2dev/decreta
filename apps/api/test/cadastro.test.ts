@@ -38,7 +38,7 @@ describe("escritório em avaliação", () => {
 
   test("a IA para no teto menor, e só para quem está em avaliação", () => {
     const limites = { ...SEM_LIMITES, demonstracao: { mensagensPorDia: 0, tetoUsd: 0.5 } };
-    const uso = { mensagensNoMinuto: 0, mensagensHoje: 0, gastoPessoaUsd: 0.5, gastoEscritorioUsd: 0.5, gastoSiteUsd: 0.5 };
+    const uso = { mensagensNoMinuto: 0, mensagensHoje: 0, gastoPessoaUsd: 0.5, gastoEscritorioUsd: 0.5, gastoEscritorioMesUsd: 0.5, gastoSiteUsd: 0.5 };
     expect(motivoParaBarrar(limites, uso, { demonstracao: false, emAvaliacao: true, mensagem: false })).toBe(AVISOS.emAvaliacao);
     expect(motivoParaBarrar(limites, uso, { demonstracao: false, emAvaliacao: false, mensagem: false })).toBeNull();
   });

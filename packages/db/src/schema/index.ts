@@ -8,4 +8,5 @@ export * from "./exportacoes.ts";
 export * from "./financeiro.ts";
 export * from "./observacoes.ts";
 export * from "./textos-da-ia.ts";
+export * from "./plataforma.ts";
 export * from "./whatsapp.ts";

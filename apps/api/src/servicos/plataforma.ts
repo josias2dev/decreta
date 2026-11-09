@@ -10,20 +10,30 @@
 import {
   diaDoInstante,
   estadoDaAssinatura,
+  fimDoDesconto,
+  formatarDia,
   hojeEm,
   montarFunil,
-  PLANO,
   somarDias,
+  TESTE_DIAS_PADRAO,
+  type DescontoDoEscritorio,
+  type MarcaDoEscritorio,
+  type TetosDaIaDoEscritorio,
   type Dia,
+  type AcaoRegistrada,
+  type EscritorioDaPlataforma,
   type EtapaDoFunil,
   type SituacaoDoEscritorio,
 } from "@decreta/core";
-import { auditoriaDaPlataforma, faturas, organization, withTenant, type Database } from "@decreta/db";
+import { auditoriaDaPlataforma, faturas, organization, planos, withTenant, type Database } from "@decreta/db";
 import { eq, sql } from "drizzle-orm";
 import { SLUG_DA_DEMONSTRACAO } from "../demonstracao/slug.ts";
 import { contarEventos } from "../eventos.ts";
+import type { ClienteAsaas } from "./asaas.ts";
 import { fichaDaLinha } from "./assinatura.ts";
-import { mudancasPelasFaturas } from "./cobranca.ts";
+import { acertarValorNoAsaas, mudancasPelasFaturas } from "./cobranca.ts";
+import { cancelarAssinaturaAoEncerrar, encerrarEscritorio } from "./encerramento.ts";
+import { usarCupom } from "./planos.ts";
 
 type Log = (msg: string, extra?: Record<string, unknown>) => void;
 
@@ -41,29 +51,7 @@ export const ehOperador = (emails: ReadonlySet<string>, email: string | null | u
 
 /* ---------------- A lista ---------------- */
 
-export interface EscritorioDaPlataforma {
-  id: string;
-  nome: string;
-  slug: string;
-  demonstracao: boolean;
-  encerrado: boolean;
-  emAvaliacao: boolean;
-  /** A situação de hoje (a gravada, corrigida pelas datas). */
-  situacao: SituacaoDoEscritorio;
-  situacaoGravada: SituacaoDoEscritorio;
-  criadoEm: string;
-  /** O fim do teste: o último dia. */
-  testeAte: Dia | null;
-  diasRestantesDoTeste: number | null;
-  diasDeAtraso: number | null;
-  acessoAte: Dia | null;
-  assinouEm: string | null;
-  cancelamentoPedidoEm: string | null;
-  valorMensalCentavos: number | null;
-  pessoas: number;
-  processos: number;
-  iaMesUsd: number;
-}
+export type { EscritorioDaPlataforma };
 
 type LinhaCrua = {
   id: string;
@@ -171,15 +159,7 @@ export async function indicadoresDaPlataforma(db: Database, dias: number, agora 
 
 /* ---------------- A auditoria ---------------- */
 
-export interface AcaoDaPlataforma {
-  id: string;
-  operador: string;
-  acao: string;
-  organizationId: string | null;
-  escritorio: string | null;
-  detalhes: Record<string, unknown>;
-  em: string;
-}
+export type AcaoDaPlataforma = AcaoRegistrada;
 
 export async function auditoriaDaPlataformaRecente(db: Database, limite = 100): Promise<AcaoDaPlataforma[]> {
   const linhas = await db.execute<{ id: string; operador: string; acao: string; organization_id: string | null; escritorio: string | null; detalhes: Record<string, unknown>; em: string }>(
@@ -223,7 +203,7 @@ export interface PedidoDeAcao {
  *  - cortesia: acesso total e sem cobrança, até reativar;
  *  - reativar: desfaz a restrição ou a cortesia. Quem assina volta a ser ativo; quem não assina abre um teste novo.
  */
-export async function agirNoEscritorio(deps: { db: Database; log?: Log; agora?: Date }, p: PedidoDeAcao): Promise<{ antes: SituacaoDoEscritorio; depois: SituacaoDoEscritorio }> {
+export async function agirNoEscritorio(deps: { db: Database; log?: Log; agora?: Date; testeDias?: number }, p: PedidoDeAcao): Promise<{ antes: SituacaoDoEscritorio; depois: SituacaoDoEscritorio }> {
   const agora = deps.agora ?? new Date();
   return withTenant(deps.db, p.organizationId, async (tx) => {
     // A linha fica trancada até o fim: um aviso do Asaas que chega no mesmo instante espera a ação e a lê depois.
@@ -271,7 +251,7 @@ export async function agirNoEscritorio(deps: { db: Database; log?: Log; agora?: 
           const m = mudancasPelasFaturas({ situacao: "ativo", assinouEm: o.assinouEm }, dela, hoje, agora);
           mudancas = { situacao: m.situacao ?? "ativo", inadimplenteDesde: m.inadimplenteDesde ?? null };
         } else {
-          const testeAte = o.testeAte && o.testeAte >= hoje ? o.testeAte : somarDias(hoje, PLANO.testeDias);
+          const testeAte = o.testeAte && o.testeAte >= hoje ? o.testeAte : somarDias(hoje, deps.testeDias ?? TESTE_DIAS_PADRAO);
           mudancas = { situacao: "teste", testeAte };
           detalhes.testeAte = testeAte;
         }
@@ -286,3 +266,154 @@ export async function agirNoEscritorio(deps: { db: Database; log?: Log; agora?: 
     return { antes, depois };
   });
 }
+
+/* ---------------- As ações na licença ---------------- */
+
+export const ACOES_NA_LICENCA = ["licenca", "desconto", "tirar_desconto", "cupom", "tetos_ia", "estender_acesso", "marcar", "novo_link", "encerrar"] as const;
+export type AcaoNaLicenca = (typeof ACOES_NA_LICENCA)[number];
+
+export const DIAS_DE_ACESSO_MAXIMO = 90;
+export const MESES_DE_DESCONTO_MAXIMO = 36;
+
+export type PedidoNaLicenca = { operador: string; organizationId: string; motivo?: string | null } & (
+  | { acao: "licenca"; planoId: string; pessoasExtras: number; valorCombinadoCentavos: number | null }
+  | { acao: "desconto"; tipo: "percentual" | "valor"; valor: number; meses: number }
+  | { acao: "tirar_desconto" }
+  | { acao: "cupom"; codigo: string }
+  | { acao: "tetos_ia"; tetos: TetosDaIaDoEscritorio }
+  | { acao: "estender_acesso"; dias: number }
+  | { acao: "marcar"; marca: MarcaDoEscritorio | null }
+  | { acao: "novo_link" }
+  | { acao: "encerrar"; confirmacao: string }
+);
+
+export interface DepsDaLicenca {
+  db: Database;
+  asaas: ClienteAsaas | null;
+  cobrancaAtiva: boolean;
+  log: Log;
+  agora?: Date;
+}
+
+/** As ações que mudam o preço: depois delas, a assinatura viva no Asaas passa a cobrar o valor novo a partir da próxima fatura. */
+const MUDAM_O_PRECO = new Set<AcaoNaLicenca>(["licenca", "desconto", "tirar_desconto", "cupom"]);
+
+/**
+ * O que a equipe muda na licença de um escritório, sempre na auditoria e com o motivo:
+ *  - licenca: o plano (a versão viva, ou a mesma em que ele está), as pessoas a mais e o valor combinado no lugar do preço;
+ *  - desconto / tirar_desconto: um desconto por um número de mensalidades, a partir de hoje;
+ *  - cupom: o desconto de um cupom, gastando um uso dele;
+ *  - tetos_ia: os tetos de IA próprios do escritório (do dia, do mês e as mensagens por pessoa), acima ou abaixo do padrão;
+ *  - estender_acesso: quem cancelou ganha mais dias de acesso completo, como gesto comercial;
+ *  - marcar: piloto, parceiro ou indicação (só para a equipe);
+ *  - novo_link: tira do ar o link de pagamento guardado, para o próximo "Assinar" gerar outro com o preço de hoje;
+ *  - encerrar: a pedido do escritório, com o nome dele digitado; os dados somem 30 dias depois, como quando o sócio encerra.
+ * A licença fica na `organization` (sem RLS) e os cupons só existem fora de um escritório: a transação aqui não entra em nenhum.
+ */
+export async function agirNaLicenca(deps: DepsDaLicenca, p: PedidoNaLicenca): Promise<{ detalhes: Record<string, unknown>; valorNoAsaas?: { de: number | null; para: number } | null }> {
+  const agora = deps.agora ?? new Date();
+  const motivo = p.motivo?.trim() || null;
+  const feito = await deps.db.transaction(async (tx) => {
+    const [o] = await tx.select().from(organization).where(eq(organization.id, p.organizationId)).for("update");
+    if (!o) throw new RecusaDaPlataforma(404, "Escritório não encontrado.");
+    if (o.slug === SLUG_DA_DEMONSTRACAO) throw new RecusaDaPlataforma(409, "A demonstração é de todos e não muda por aqui.");
+    if (o.encerradoEm) throw new RecusaDaPlataforma(409, "O escritório foi encerrado.");
+    const hoje = hojeEm(o.timezone, agora);
+    const detalhes: Record<string, unknown> = { motivo };
+    let mudancas: Partial<typeof organization.$inferInsert> = {};
+    const depois: { removerLink?: string; encerrar?: boolean } = {};
+
+    switch (p.acao) {
+      case "licenca": {
+        const [alvo] = await tx.select().from(planos).where(eq(planos.id, p.planoId));
+        if (!alvo) throw new RecusaDaPlataforma(404, "Plano não encontrado.");
+        if (alvo.substituidoEm && alvo.id !== o.planoId) throw new RecusaDaPlataforma(409, "Esta versão do plano já foi substituída. Escolha a versão mais nova.");
+        if (!Number.isInteger(p.pessoasExtras) || p.pessoasExtras < 0 || p.pessoasExtras > 500) throw new RecusaDaPlataforma(422, "Pessoas a mais: de 0 a 500.");
+        if (p.valorCombinadoCentavos !== null && (!Number.isInteger(p.valorCombinadoCentavos) || p.valorCombinadoCentavos < 0)) throw new RecusaDaPlataforma(422, "Valor combinado inválido.");
+        mudancas = { planoId: alvo.id, pessoasExtras: p.pessoasExtras, valorCombinadoCentavos: p.valorCombinadoCentavos };
+        Object.assign(detalhes, { de: { planoId: o.planoId, pessoasExtras: o.pessoasExtras, valorCombinadoCentavos: o.valorCombinadoCentavos }, para: { plano: `${alvo.nome} (versão ${alvo.versao})`, planoId: alvo.id, pessoasExtras: p.pessoasExtras, valorCombinadoCentavos: p.valorCombinadoCentavos } });
+        break;
+      }
+      case "desconto": {
+        if (!Number.isInteger(p.meses) || p.meses < 1 || p.meses > MESES_DE_DESCONTO_MAXIMO) throw new RecusaDaPlataforma(422, `O desconto vale de 1 a ${MESES_DE_DESCONTO_MAXIMO} meses.`);
+        if (!Number.isInteger(p.valor) || p.valor < 1 || (p.tipo === "percentual" && p.valor > 100)) throw new RecusaDaPlataforma(422, p.tipo === "percentual" ? "O percentual vai de 1 a 100." : "Valor do desconto inválido.");
+        const desconto: DescontoDoEscritorio = { tipo: p.tipo, valor: p.valor, ate: fimDoDesconto(hoje, p.meses), cupom: null };
+        mudancas = { desconto };
+        Object.assign(detalhes, { de: o.desconto, para: desconto, meses: p.meses });
+        break;
+      }
+      case "tirar_desconto":
+        if (!o.desconto || o.desconto.ate < hoje) throw new RecusaDaPlataforma(409, "O escritório não tem desconto valendo.");
+        mudancas = { desconto: null };
+        detalhes.de = o.desconto;
+        break;
+      case "cupom": {
+        const desconto = await usarCupom(tx, p.codigo, hoje);
+        mudancas = { desconto };
+        Object.assign(detalhes, { de: o.desconto, para: desconto });
+        break;
+      }
+      case "tetos_ia": {
+        const limpar = (v: number | null | undefined) => (v === undefined || v === null ? null : v);
+        for (const v of [p.tetos.diaUsd, p.tetos.mesUsd, p.tetos.mensagensPorDia]) if (v !== undefined && v !== null && (!Number.isFinite(v) || v < 0)) throw new RecusaDaPlataforma(422, "Os tetos são números de zero para cima (zero: sem teto).");
+        const tetos: TetosDaIaDoEscritorio = { diaUsd: limpar(p.tetos.diaUsd), mesUsd: limpar(p.tetos.mesUsd), mensagensPorDia: limpar(p.tetos.mensagensPorDia) };
+        const vazio = tetos.diaUsd === null && tetos.mesUsd === null && tetos.mensagensPorDia === null;
+        mudancas = { tetosIa: vazio ? null : tetos };
+        Object.assign(detalhes, { de: o.tetosIa, para: vazio ? null : tetos });
+        break;
+      }
+      case "estender_acesso": {
+        if (!o.cancelamentoPedidoEm || !o.acessoAte) throw new RecusaDaPlataforma(409, "Só se estende o acesso de quem cancelou a assinatura.");
+        if (!Number.isInteger(p.dias) || p.dias < 1 || p.dias > DIAS_DE_ACESSO_MAXIMO) throw new RecusaDaPlataforma(422, `Estender de 1 a ${DIAS_DE_ACESSO_MAXIMO} dias.`);
+        const base = o.acessoAte > hoje ? o.acessoAte : hoje;
+        mudancas = { acessoAte: somarDias(base, p.dias) };
+        Object.assign(detalhes, { dias: p.dias, de: o.acessoAte, para: mudancas.acessoAte });
+        break;
+      }
+      case "marcar":
+        if (p.marca === o.marca) throw new RecusaDaPlataforma(409, "O escritório já está assim.");
+        mudancas = { marca: p.marca };
+        Object.assign(detalhes, { de: o.marca, para: p.marca });
+        break;
+      case "novo_link":
+        if (!o.asaasLinkId) throw new RecusaDaPlataforma(409, "O escritório não tem link de pagamento guardado. O próximo \"Assinar\" já gera um novo.");
+        if (!deps.asaas) throw new RecusaDaPlataforma(409, "A cobrança não está configurada neste servidor.");
+        depois.removerLink = o.asaasLinkId;
+        detalhes.link = o.asaasLinkId;
+        break;
+      case "encerrar":
+        if (!motivo) throw new RecusaDaPlataforma(422, "Diga o motivo: quem pediu e por onde.");
+        if (p.confirmacao.trim().toLocaleLowerCase("pt-BR") !== o.name.trim().toLocaleLowerCase("pt-BR")) throw new RecusaDaPlataforma(422, "Digite o nome do escritório igual ao da ficha para confirmar.");
+        depois.encerrar = true;
+        break;
+    }
+
+    if (Object.keys(mudancas).length) await tx.update(organization).set(mudancas).where(eq(organization.id, o.id));
+    await tx.insert(auditoriaDaPlataforma).values({ operador: p.operador, acao: `plataforma.${p.acao}`, organizationId: o.id, detalhes });
+    return { detalhes, depois, nome: o.name, hoje };
+  });
+
+  // Fora da transação: as chamadas ao Asaas e o encerramento, que tem as próprias transações e registros.
+  if (feito.depois.removerLink && deps.asaas) {
+    await deps.asaas.removerLink(feito.depois.removerLink);
+    await deps.db.update(organization).set({ asaasLinkId: null, asaasLinkUrl: null, asaasLinkValorCentavos: null }).where(eq(organization.id, p.organizationId));
+  }
+  if (feito.depois.encerrar) {
+    const quem = { organizationId: p.organizationId, userId: null, nome: `Equipe do Decreta (${p.operador})`, ip: null };
+    const { apagarEm } = await encerrarEscritorio(deps.db, { ...quem, log: deps.log, agora });
+    await cancelarAssinaturaAoEncerrar({ db: deps.db, asaas: deps.asaas, log: deps.log }, quem);
+    feito.detalhes.apagarEm = apagarEm.toISOString();
+  }
+  let valorNoAsaas: { de: number | null; para: number } | null = null;
+  if (MUDAM_O_PRECO.has(p.acao)) {
+    valorNoAsaas = await acertarValorNoAsaas(deps, p.organizationId, agora).catch((err: unknown) => {
+      deps.log("a licença mudou, mas o valor no Asaas não foi acertado agora: a rotina da manhã tenta de novo", { organizationId: p.organizationId, error: err instanceof Error ? err.message : String(err) });
+      return null;
+    });
+  }
+  deps.log("ação da plataforma na licença", { operador: p.operador, acao: p.acao, organizationId: p.organizationId });
+  return { detalhes: feito.detalhes, valorNoAsaas };
+}
+
+/** O desconto em palavras, para a auditoria e a ficha: "20% até 04/02/2027". */
+export const descontoEmPalavras = (d: DescontoDoEscritorio) => `${d.tipo === "percentual" ? `${d.valor}%` : `R$ ${(d.valor / 100).toFixed(2).replace(".", ",")}`} até ${formatarDia(d.ate)}`;
