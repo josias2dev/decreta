@@ -7,6 +7,7 @@ import { useAviso } from "@/componentes/avisos";
 import { ConectorMcp } from "@/componentes/conector-mcp";
 import { Dialogo } from "@/componentes/dialogo";
 import { UsoDaIaHoje } from "@/componentes/limite-da-ia";
+import { WhatsappDoDecreta } from "@/componentes/whatsapp";
 import { sessaoQuery, useSair } from "@/componentes/menu-da-conta";
 import { Pagina, TelaCelular } from "@/componentes/moldura";
 import { Botao, Cabecalho, Campo, Carregando, Faixa, Painel, Segmentos } from "@/componentes/ui";
@@ -32,6 +33,7 @@ export function ContaPage() {
     <div className={celular ? "flex flex-col gap-6" : "dc-colunas dc-colunas--meio"}>
       <div className="dc-pilha">
         <Perfil />
+        <WhatsappDoDecreta />
         {demonstracao ? (
           <Painel titulo="Senha">
             <Faixa tipo="aviso">Esta é a conta de demonstração: todo mundo entra com ela, então a senha e a verificação em duas etapas não mudam. Toda madrugada os dados voltam ao começo.</Faixa>
@@ -97,10 +99,11 @@ function Perfil() {
   const eu = useQuery(euQuery);
   const equipe = useQuery(equipeQuery);
   const eu_ = equipe.data?.pessoas.find((p) => p.id === eu.data?.usuario.id);
-  const [f, setF] = useState<{ apelido: string; cargo: string; whatsapp: string; avisoManha: boolean } | null>(null);
-  const valores = f ?? (eu_ ? { apelido: eu_.apelido, cargo: eu_.cargo ?? "", whatsapp: telefone(eu_.whatsapp), avisoManha: eu_.avisoManha } : null);
+  // O resumo da manhã liga e desliga no painel do WhatsApp, com os outros avisos.
+  const [f, setF] = useState<{ apelido: string; cargo: string; whatsapp: string } | null>(null);
+  const valores = f ?? (eu_ ? { apelido: eu_.apelido, cargo: eu_.cargo ?? "", whatsapp: telefone(eu_.whatsapp) } : null);
   const salvar = useMutation({
-    mutationFn: () => api(`/equipe/${eu_!.id}`, { method: "PUT", json: { apelido: valores!.apelido.trim() || null, cargo: valores!.cargo.trim() || null, whatsapp: valores!.whatsapp.trim() || null, avisoManha: valores!.avisoManha } }),
+    mutationFn: () => api(`/equipe/${eu_!.id}`, { method: "PUT", json: { apelido: valores!.apelido.trim() || null, cargo: valores!.cargo.trim() || null, whatsapp: valores!.whatsapp.trim() || null } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["equipe"] });
       void qc.invalidateQueries({ queryKey: ["eu"] });
@@ -123,10 +126,6 @@ function Perfil() {
         <Campo rotulo="WhatsApp" htmlFor="pf-zap" ajuda={eu_.oab ? `${eu_.oab} · o DJEN é buscado por esta OAB` : "Peça a um sócio para cadastrar a sua OAB na Equipe"}>
           <input id="pf-zap" inputMode="tel" value={valores.whatsapp} onChange={(e) => setF({ ...valores, whatsapp: e.target.value })} placeholder="(47) 99123-4567" />
         </Campo>
-        <label className="dc-opcao">
-          <input type="checkbox" className="dc-checa" checked={valores.avisoManha} onChange={(e) => setF({ ...valores, avisoManha: e.target.checked })} />
-          Receber de manhã, no WhatsApp, o que vence no dia
-        </label>
         {salvar.error && <Faixa tipo="erro">{mensagemDoErro(salvar.error)}</Faixa>}
         <Botao className="md:self-start" variante="primaria" onClick={() => salvar.mutate()} ocupado={salvar.isPending} disabled={!f}>
           Salvar perfil

@@ -52,6 +52,7 @@ try {
   await guardar("hoje", "/hoje");
   await guardar("usoDaIa", "/ia/uso");
   await guardar("plano", "/plano");
+  await guardar("whatsapp", "/whatsapp");
   const prazos = await get("/prazos?quando=abertos");
   amostras["prazos"] = { path: "/prazos?quando=abertos", corpo: prazos };
   const marina = prazos.itens.find((i: Item) => i.tipo === "Manifestação sobre laudo pericial" && i.processo.titulo.startsWith("Marina"));

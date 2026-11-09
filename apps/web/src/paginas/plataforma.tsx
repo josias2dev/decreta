@@ -12,6 +12,7 @@ import { useAviso, Avisos } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
 import { IrParaEntrar, Pagina } from "@/componentes/moldura";
 import { NaoEncontrada } from "@/componentes/nao-encontrada";
+import { ConversasDoWhatsapp, Laboratorio } from "@/componentes/whatsapp-na-plataforma";
 import { Abas, Botao, Campo, CampoDeBusca, Carregando, Chip, Cabecalho, Faixa, Painel, Segmentos, Selo, Vazio } from "@/componentes/ui";
 import { ApiError, apiPlataforma, mensagemDoErro } from "@/lib/api";
 import { euQuery } from "@/lib/consultas";
@@ -19,7 +20,7 @@ import { diaCompleto, diaCurto, diaDoInstante, hora, numero } from "@/lib/format
 import type { AcaoDaPlataforma, EscritorioDaPlataforma, IndicadoresDaPlataforma, NomeDaAcaoDaPlataforma, SituacaoDoEscritorio } from "@/lib/tipos";
 import { cn } from "@/lib/util";
 
-type Aba = "escritorios" | "indicadores" | "acoes";
+type Aba = "escritorios" | "indicadores" | "acoes" | "whatsapp" | "laboratorio";
 
 const reais = (centavos: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
 const usd = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD" }).format(v);
@@ -78,10 +79,12 @@ export function PlataformaPage() {
                   { id: "escritorios", rotulo: "Escritórios", n: lista.data?.escritorios.filter((e) => !e.demonstracao && !e.encerrado).length },
                   { id: "indicadores", rotulo: "Indicadores" },
                   { id: "acoes", rotulo: "Ações registradas" },
+                  { id: "whatsapp", rotulo: "WhatsApp" },
+                  { id: "laboratorio", rotulo: "Laboratório" },
                 ]}
               />
             </div>
-            {lista.isError ? <Faixa tipo="erro">Não deu para carregar a plataforma agora. Tente de novo em instantes.</Faixa> : aba === "escritorios" ? <Escritorios lista={lista.data?.escritorios} /> : aba === "indicadores" ? <Indicadores /> : <Acoes />}
+            {lista.isError ? <Faixa tipo="erro">Não deu para carregar a plataforma agora. Tente de novo em instantes.</Faixa> : aba === "escritorios" ? <Escritorios lista={lista.data?.escritorios} /> : aba === "indicadores" ? <Indicadores /> : aba === "whatsapp" ? <ConversasDoWhatsapp /> : aba === "laboratorio" ? <Laboratorio /> : <Acoes />}
           </Pagina>
         </div>
       </div>

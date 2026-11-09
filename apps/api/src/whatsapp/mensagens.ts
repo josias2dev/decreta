@@ -10,7 +10,7 @@
  */
 import { organization, whatsappMensagens, withTenant, type Database, type OrigemDaMensagem, type SituacaoDaMensagem, type Tx } from "@decreta/db";
 import { and, asc, eq, gte, inArray, isNull, lt, sql } from "drizzle-orm";
-import { FalhaNoCanal, FORA_DA_JANELA, textoDaSaida, type Canal, type Conteudo, type Entrada, type Saida } from "./canal.ts";
+import { FalhaNoCanal, FORA_DA_JANELA, MODELOS, textoDaSaida, type Canal, type Conteudo, type Entrada, type Saida } from "./canal.ts";
 import { fecharJanela } from "./vinculo.ts";
 
 export type Log = (msg: string, extra?: Record<string, unknown>) => void;
@@ -58,15 +58,16 @@ function comRodape(s: Saida, escritorio: string | undefined): Saida {
 function detalhesDaSaida(s: Saida): Record<string, unknown> | null {
   switch (s.tipo) {
     case "botoes":
-      return { botoes: s.botoes };
+      return { botoes: s.botoes, ...(s.rodape ? { rodape: s.rodape } : {}) };
     case "lista":
-      return { botao: s.botao, itens: s.itens };
+      return { botao: s.botao, itens: s.itens, ...(s.rodape ? { rodape: s.rodape } : {}) };
     case "link":
-      return { rotulo: s.rotulo, url: s.url };
+      return { rotulo: s.rotulo, url: s.url, ...(s.rodape ? { rodape: s.rodape } : {}) };
     case "documento":
       return { nome: s.nome, mime: s.mime, tamanho: s.bytes.byteLength };
     case "modelo":
-      return { modelo: s.nome, parametros: s.parametros, botoes: s.botoes ?? [] };
+      // Os títulos dos botões são os do modelo aprovado: a conversa no painel mostra como a pessoa viu.
+      return { modelo: s.nome, parametros: s.parametros, botoes: s.botoes ?? [], titulos: MODELOS[s.nome].botoes };
     default:
       return null;
   }

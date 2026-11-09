@@ -1,0 +1,14 @@
+{
+  "path": "/whatsapp",
+  "corpo": {
+    "servidor": false,
+    "numero": null,
+    "vinculo": null,
+    "avisos": {
+      "manha": true,
+      "quinzeHoras": true,
+      "prazoCurto": true
+    },
+    "demonstracao": true
+  }
+}

@@ -242,7 +242,7 @@ function AbaAvisos({ e, socio }: { e: Escritorio; socio: boolean }) {
         <div className="dc-form">
           <Interruptor
             rotulo="Mandar o resumo de manhã"
-            ajuda="Cada pessoa com WhatsApp no perfil recebe o que vence no dia, as audiências e as publicações novas."
+            ajuda="Cada pessoa recebe o que vence no dia, as audiências e as publicações novas, no WhatsApp que ligou em Minha conta (ou no número do perfil). Cada uma escolhe os próprios avisos lá."
             ligado={e.avisos.manha}
             aoMudar={(manha) => salvar.mutate({ avisos: { manha, hora: horaDoAviso } })}
             desligado={!socio}
