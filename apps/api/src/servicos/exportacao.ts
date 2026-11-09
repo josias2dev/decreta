@@ -31,6 +31,7 @@ import {
   member,
   mensagensCliente,
   mensagensIa,
+  whatsappMensagens,
   modelos,
   movimentacoes,
   negocios,
@@ -108,6 +109,8 @@ const PLANILHAS: Planilha[] = [
   { arquivo: "textos_da_ia", tabela: textosDaIa },
   { arquivo: "conversas", tabela: conversas },
   { arquivo: "mensagens_da_ia", tabela: mensagensIa },
+  // As conversas com o Decreta no WhatsApp: o texto já sai em 30 dias; a chave é só para não mandar duas vezes.
+  { arquivo: "mensagens_do_whatsapp", tabela: whatsappMensagens, fora: ["chave"] },
   { arquivo: "retornos_sobre_a_ia", tabela: retornosIa },
   { arquivo: "atendimentos", tabela: atendimentos },
   { arquivo: "novos_negocios", tabela: negocios },
@@ -147,6 +150,9 @@ export const NAO_EXPORTADAS: Record<string, string> = {
   auditoria_da_plataforma: "o que a equipe do Decreta fez na conta, para a segurança da plataforma; só ela lê",
   member: "a equipe sai na planilha equipe",
   invitation: "convites pendentes, que o escritório pode refazer",
+  propostas: "opções dos botões do WhatsApp, que valem por horas; o que foi decidido está no registro de atividades",
+  whatsapp_vinculos: "o vínculo de cada pessoa com o número do Decreta (o telefone verificado e a validade), que se refaz na tela",
+  whatsapp_codigos: "códigos de uso único para ligar o WhatsApp, que valem 10 minutos",
 };
 
 export function tabelasExportadas(): string[] {

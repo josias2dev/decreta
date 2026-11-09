@@ -12,7 +12,8 @@ import { semIa } from "../servicos/contexto.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { baseLegalVeioDaIa, contaDaPublicacao, contarParaProcesso, IaDesligada, sugerirPrazoDaPublicacao, type SugestaoNaTela } from "../servicos/prazos.ts";
 import { lerSentencaDaPublicacao } from "../servicos/sentencas.ts";
-import { comLimiteDaIa, corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
+import { confirmarPelaPublicacao, depoisDaDecisao, publicacaoSemPrazo } from "../servicos/decisoes-do-prazo.ts";
+import { atorDaRota, comLimiteDaIa, corpo, depsDaDecisao, falha, id, ip, marcarEvento, naRota, pedirRascunho, tenant, type Ambiente, type DepsDasRotas } from "./base.ts";
 import { leituraParada, tituloDaPublicacao } from "../servicos/publicacoes.ts";
 
 const SITUACOES = ["nova", "pendente", "lida", "vinculada"] as const;
@@ -227,42 +228,9 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.post("/publicacoes/:id/confirmar", async (c) => {
     const pubId = id(c);
     const b = await corpo(c, confirmacao);
-    const r = await tenant(c, deps, async (tx) => {
-      const [pub] = await tx.select().from(publicacoes).where(eq(publicacoes.id, pubId));
-      if (!pub) falha(404, "nao_encontrado");
-      const processoId = b.processoId ?? pub.processoId;
-      if (!processoId) falha(422, "sem_processo", "Vincule a publicação a um processo antes de confirmar o prazo.");
-      const [proc] = await tx.select({ responsavelId: processos.responsavelId }).from(processos).where(eq(processos.id, processoId));
-      if (!proc) falha(404, "processo_nao_encontrado");
-      const conta = await contarParaProcesso(tx, c.get("orgId"), processoId, { publicacao: pub.publicadaEm, intimacaoNoSistema: b.intimadoNoSistemaEm, dias: b.dias, contagem: b.contagem });
-      const [existente] = await tx.select().from(prazos).where(eq(prazos.publicacaoId, pub.id));
-      const valores = {
-        processoId,
-        tipo: b.tipo,
-        fundamento: b.fundamento ?? null,
-        fundamentoDaIa: baseLegalVeioDaIa(b.fundamento ?? null, b.fundamentoDaIa, existente),
-        dias: b.dias,
-        contagem: b.contagem,
-        publicadoEm: pub.publicadaEm,
-        intimadoNoSistemaEm: b.intimadoNoSistemaEm ?? null,
-        inicio: conta.inicio,
-        fim: b.fimManual ?? conta.fim,
-        fimDigitado: !!b.fimManual,
-        desconsiderados: b.fimManual ? [] : conta.desconsiderados,
-        responsavelId: b.responsavelId === undefined ? (existente?.responsavelId ?? proc.responsavelId) : b.responsavelId,
-        confirmadoPor: c.get("userId"),
-        confirmadoEm: new Date(),
-        observacoes: b.fimManual ? `Data final digitada à mão (a conta dava ${formatarDiaCurto(conta.fim)}).` : (existente?.observacoes ?? null),
-      };
-      const prazoId = existente
-        ? (await tx.update(prazos).set(valores).where(eq(prazos.id, existente.id)).returning({ id: prazos.id }))[0]!.id
-        : (await tx.insert(prazos).values({ organizationId: c.get("orgId"), publicacaoId: pub.id, origem: "ia", ...valores }).returning({ id: prazos.id }))[0]!.id;
-      await tx.update(publicacoes).set({ situacao: "vinculada", processoId, tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, pub.id));
-      return { prazoId, fim: valores.fim };
-    });
-    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "prazo.confirmado", detalhes: { prazoId: r.prazoId, publicacaoId: pubId, fim: r.fim }, ip: ip(c) }, deps.log);
-    await marcarEvento(c, deps, "primeiro_prazo_confirmado");
-    await pedirRascunho(c, deps, r.prazoId);
+    const ator = atorDaRota(c);
+    const r = await naRota(tenant(c, deps, (tx) => confirmarPelaPublicacao(tx, ator, pubId, b)));
+    await depoisDaDecisao(depsDaDecisao(deps), ator, "prazo.confirmado", { prazoId: r.prazoId, publicacaoId: pubId, fim: r.fim }, { confirmou: r.prazoId });
     return c.json(r);
   });
 
@@ -309,13 +277,9 @@ export function rotasDasPublicacoes(app: Hono<Ambiente>, deps: DepsDasRotas) {
   /** Não gera prazo: vai para Lidas, e o prazo sugerido (não confirmado) some. */
   app.post("/publicacoes/:id/sem-prazo", async (c) => {
     const pubId = id(c);
-    await tenant(c, deps, async (tx) => {
-      const [pub] = await tx.select({ id: publicacoes.id }).from(publicacoes).where(eq(publicacoes.id, pubId));
-      if (!pub) falha(404, "nao_encontrado");
-      await tx.delete(prazos).where(and(eq(prazos.publicacaoId, pubId), sql`${prazos.confirmadoEm} is null`));
-      await tx.update(publicacoes).set({ situacao: "lida", tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, pubId));
-    });
-    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: "publicacao.sem_prazo", detalhes: { publicacaoId: pubId }, ip: ip(c) }, deps.log);
+    const ator = atorDaRota(c);
+    await naRota(tenant(c, deps, (tx) => publicacaoSemPrazo(tx, ator, pubId)));
+    await depoisDaDecisao(depsDaDecisao(deps), ator, "publicacao.sem_prazo", { publicacaoId: pubId });
     return c.json({ ok: true });
   });
 

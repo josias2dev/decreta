@@ -15,7 +15,9 @@ import { registrarEvento } from "../eventos.ts";
 import { ipDoPedido } from "../limitador.ts";
 import type { ClienteAsaas } from "../servicos/asaas.ts";
 import type { DepsDaCaptura } from "../servicos/captura.ts";
+import { ErroDaDecisao, type Ator, type DepsDaDecisao } from "../servicos/decisoes-do-prazo.ts";
 import type { Wameow } from "../servicos/avisos.ts";
+import type { WhatsappDoServidor } from "../whatsapp/rotas.ts";
 import { AVISOS, iaMedida, LimiteDaIa, motivoParaBarrar, registrarMensagem, reservarVez, SEM_LIMITES, usoDoDia, type LimitesDaIa } from "../servicos/uso-ia.ts";
 
 export type Vars = {
@@ -80,6 +82,8 @@ export interface DepsDasRotas {
   cofre?: Cofre;
   /** O `fetch` dos pedidos ao Asaas e à ZapSign dos escritórios (os testes põem um servidor de mentira no lugar). */
   fetchDosProvedores?: typeof fetch;
+  /** O WhatsApp oficial do Decreta (a Meta), quando ligado no servidor: ligar o WhatsApp de cada pessoa. */
+  whatsapp?: WhatsappDoServidor | null;
   /** O endereço público da API, de onde o Asaas manda os avisos de pagamento dos honorários (BETTER_AUTH_URL). */
   enderecoDaApi?: string;
 }
@@ -206,6 +210,26 @@ export async function exigirFinanceiro(c: C, deps: { db: Database }): Promise<vo
 
 export function ip(c: C): string | null {
   return ipDoPedido(c);
+}
+
+/** Quem decide, na rota: a pessoa logada, no escritório ativo, pela tela. */
+export function atorDaRota(c: C): Ator {
+  return { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), ip: ipDoPedido(c), demonstracao: c.get("demonstracao"), canal: "tela" };
+}
+
+/** O que vem depois de decidir, com o rascunho da peça pedido pela fila das rotinas. */
+export function depsDaDecisao(deps: DepsDasRotas): DepsDaDecisao {
+  return { db: deps.db, log: deps.log, pedirRascunho: (organizationId, prazoId) => deps.enfileirar({ nome: "prazo.confirmado", organizationId, prazoId }) };
+}
+
+/** A decisão recusada (não achou, sem processo) vira a resposta de erro da rota. */
+export async function naRota<T>(p: Promise<T>): Promise<T> {
+  try {
+    return await p;
+  } catch (err) {
+    if (err instanceof ErroDaDecisao) falha(err.status, err.erro, err.detalhe);
+    throw err;
+  }
 }
 
 const COM_ACENTO = "áàâãäéèêëíìîïóòôõöúùûüçñ";

@@ -20,6 +20,7 @@ import {
   RecusaDaPlataforma,
 } from "../servicos/plataforma.ts";
 import type { Database } from "@decreta/db";
+import { rotasDoWhatsappNaPlataforma } from "../whatsapp/rotas.ts";
 
 const ACAO = z.object({
   acao: z.enum(ACOES_DA_PLATAFORMA),
@@ -27,7 +28,7 @@ const ACAO = z.object({
   motivo: z.string().trim().max(300).nullish(),
 });
 
-export function rotasDaPlataforma(deps: { db: Database; auth: Auth; emails: ReadonlySet<string>; log: (msg: string, extra?: Record<string, unknown>) => void }) {
+export function rotasDaPlataforma(deps: { db: Database; auth: Auth; emails: ReadonlySet<string>; log: (msg: string, extra?: Record<string, unknown>) => void; whatsapp?: Parameters<typeof rotasDoWhatsappNaPlataforma>[1] }) {
   const app = new Hono<{ Variables: { operador: string } }>();
 
   app.use("*", async (c, next) => {
@@ -60,6 +61,9 @@ export function rotasDaPlataforma(deps: { db: Database; auth: Auth; emails: Read
       throw err;
     }
   });
+
+  // As conversas do WhatsApp e o Laboratório: o conteúdo só abre com motivo, e o Laboratório só fala com a demonstração.
+  if (deps.whatsapp) rotasDoWhatsappNaPlataforma(app, deps.whatsapp);
 
   return app;
 }

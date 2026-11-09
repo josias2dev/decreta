@@ -345,7 +345,8 @@ export function rotasDaIa(app: Hono<Ambiente>, deps: DepsDasRotas) {
   /* ---------------- Perguntar: as conversas de cada pessoa ---------------- */
 
   /** Só a pessoa vê as próprias conversas (o RLS separa os escritórios; aqui, as pessoas). */
-  const daPessoa = (c: C) => eq(conversas.userId, c.get("userId"));
+  // Só as conversas da tela: as do WhatsApp e do Laboratório têm o próprio lugar (o WhatsApp da pessoa e o painel da plataforma).
+  const daPessoa = (c: C) => and(eq(conversas.userId, c.get("userId")), eq(conversas.canal, "tela"));
 
   app.get("/ia/conversas", async (c) => {
     const busca = (c.req.query("busca") ?? "").trim().slice(0, 100);

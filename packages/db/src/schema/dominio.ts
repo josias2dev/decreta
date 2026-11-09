@@ -138,6 +138,10 @@ export const equipe = pgTable(
     /** WhatsApp para o resumo da manhã, 55 + DDD + número. */
     whatsapp: text("whatsapp"),
     avisoManha: boolean("aviso_manha").notNull().default(true),
+    /** WhatsApp oficial: às 15h, o que vence hoje e ainda está aberto (só sai quando existe). */
+    avisoQuinzeHoras: boolean("aviso_quinze_horas").notNull().default(true),
+    /** WhatsApp oficial: publicação cuja sugestão vence em até 2 dias úteis avisa na hora, sem esperar o resumo. */
+    avisoPrazoCurto: boolean("aviso_prazo_curto").notNull().default(true),
     /** Vê e mexe no Financeiro (honorários, cobrança e a prestação de contas do alvará). Os sócios têm sempre; quem não é sócio só com esta marca. */
     financeiro: boolean("financeiro").notNull().default(false),
     createdAt: createdAt(),
@@ -756,6 +760,8 @@ export const conversas = pgTable(
     /** "Prazos desta semana": a IA dá o nome depois da primeira resposta; a pessoa pode trocar. */
     titulo: text("titulo").notNull(),
     modo: modoConversa("modo").notNull().default("pergunte"),
+    /** Onde a conversa acontece: a tela do Perguntar, o WhatsApp oficial ou o Laboratório da plataforma. O histórico da tela mostra só as da tela. */
+    canal: text("canal").$type<"tela" | "whatsapp" | "laboratorio">().notNull().default("tela"),
     processoId: uuid("processo_id").references(() => processos.id, { onDelete: "set null" }),
     fixada: boolean("fixada").notNull().default(false),
     createdAt: createdAt(),

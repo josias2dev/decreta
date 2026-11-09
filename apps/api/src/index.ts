@@ -19,6 +19,11 @@ import { startSentry } from "./sentry.ts";
 import { criarClienteAsaas } from "./servicos/asaas.ts";
 import { emailsDaPlataforma } from "./servicos/plataforma.ts";
 import { limitesDoEnv } from "./servicos/uso-ia.ts";
+import type { Canal } from "./whatsapp/canal.ts";
+import { canalDaMeta } from "./whatsapp/meta.ts";
+import { eventoDoWhatsapp } from "./whatsapp/rotinas.ts";
+import { rotasDoWebhook, type WhatsappDoServidor } from "./whatsapp/rotas.ts";
+import type { DepsDoAgente } from "./whatsapp/tipos.ts";
 
 const env = readEnv();
 const log = (msg: string, extra?: Record<string, unknown>) => console.log(JSON.stringify({ msg, ...extra }));
@@ -46,6 +51,37 @@ const plataformaEmails = emailsDaPlataforma(env.PLATAFORMA_EMAILS);
 const mailer = env.RESEND_API_KEY ? createResendMailer({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM }) : createLogMailer(log);
 const telas = env.WEB_ORIGIN.replace(/\/$/, "");
 const limites = limitesDoEnv(env);
+
+// O WhatsApp oficial (a Meta): liga só com tudo preenchido. Pela metade, avisa no log e fica desligado.
+const metaPreenchida = [env.META_PHONE_NUMBER_ID, env.META_ACCESS_TOKEN, env.META_APP_SECRET, env.META_VERIFY_TOKEN, env.WHATSAPP_NUMERO].filter(Boolean).length;
+if (metaPreenchida && metaPreenchida < 5) log("WhatsApp oficial pela metade: faltam variáveis (META_PHONE_NUMBER_ID, META_ACCESS_TOKEN, META_APP_SECRET, META_VERIFY_TOKEN, WHATSAPP_NUMERO). Fica desligado.");
+const whatsapp: WhatsappDoServidor | null =
+  metaPreenchida === 5
+    ? {
+        canal: canalDaMeta({ phoneNumberId: env.META_PHONE_NUMBER_ID, accessToken: env.META_ACCESS_TOKEN, appSecret: env.META_APP_SECRET, verifyToken: env.META_VERIFY_TOKEN, versao: env.META_API_VERSION }),
+        numero: env.WHATSAPP_NUMERO.replace(/\D/g, ""),
+        phoneNumberId: env.META_PHONE_NUMBER_ID,
+        appSecret: env.META_APP_SECRET,
+        verifyToken: env.META_VERIFY_TOKEN,
+        suporte: env.WHATSAPP_SUPORTE,
+      }
+    : null;
+/** O agente com um canal: o da Meta no WhatsApp de verdade, o da memória no Laboratório. */
+const agenteDe = (canal: Canal, origem: DepsDoAgente["origem"]): DepsDoAgente => ({
+  db,
+  canal,
+  log,
+  ia,
+  arquivos,
+  telas,
+  suporte: env.WHATSAPP_SUPORTE,
+  cobrancaAtiva: env.COBRANCA_ATIVA,
+  limites,
+  origem,
+  pedirRascunho: async (organizationId, prazoId) => {
+    await inngest.send(eventoDoPedido({ nome: "prazo.confirmado", organizationId, prazoId }));
+  },
+});
 
 const auth = createAuth(db, env, {
   mailer,
@@ -75,6 +111,7 @@ const rotas = createRotas({
   plataformaEmails,
   cofre: criarCofre(segredoDoCofre(env, { producao: process.env.NODE_ENV === "production", log })),
   enderecoDaApi: env.BETTER_AUTH_URL,
+  whatsapp,
 });
 
 const enfileirarPedido = async (p: Parameters<typeof eventoDoPedido>[0]) => {
@@ -90,17 +127,18 @@ const app = createApp({
   envio: rotasDoEnvioPeloCliente({ db, ia, arquivos, maxArquivoBytes: env.ARQUIVO_MAX_MB * 1e6, enfileirar: enfileirarPedido, log, cobrancaAtiva: env.COBRANCA_ATIVA }),
   mcp: rotasDoMcp({ db, log, cobrancaAtiva: env.COBRANCA_ATIVA }),
   avisoDoAsaas: rotasDoAvisoDoAsaas({ db, log }),
-  plataforma: rotasDaPlataforma({ db, auth, emails: plataformaEmails, log }),
+  plataforma: rotasDaPlataforma({ db, auth, emails: plataformaEmails, log, whatsapp: { agente: agenteDe, whatsapp } }),
+  whatsapp: whatsapp ? rotasDoWebhook({ agente: agenteDe(whatsapp.canal, "agente"), whatsapp, enfileirar: async (p) => { await inngest.send(eventoDoWhatsapp(p)); } }) : undefined,
   plataformaEmails,
   cobranca: { ...cobranca, token: env.ASAAS_WEBHOOK_TOKEN, nfse },
-  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao, mailer, cobrancaAtiva: env.COBRANCA_ATIVA, asaas }) }),
+  inngestHandler: serve({ client: inngest, functions: createFunctions({ db, ia, captura, arquivos, wameow, telas, log, reporter, limites, observacao, mailer, cobrancaAtiva: env.COBRANCA_ATIVA, asaas, whatsapp: whatsapp ? { canal: whatsapp.canal, suporte: whatsapp.suporte } : null }) }),
   log,
   reporter,
 });
 
 // A peça e o chat chegam aos poucos e podem levar mais de um minuto; o Bun corta conexão ociosa em 10 s por padrão.
 export default { port: env.PORT, hostname: env.HOST, fetch: app.fetch, idleTimeout: 180, maxRequestBodySize: env.ARQUIVO_MAX_MB * 1e6 + 1e6 };
-log("api no ar", { host: env.HOST, port: env.PORT, ia: !!ia, whatsapp: !!wameow, datajud: !!env.DATAJUD_API_KEY, arquivos: env.ARQUIVOS, telas: env.WEB_DIST || null, cobranca: env.COBRANCA_ATIVA, asaas: !!asaas, operadores: plataformaEmails.size });
+log("api no ar", { host: env.HOST, port: env.PORT, ia: !!ia, whatsapp: !!wameow, whatsappOficial: !!whatsapp, datajud: !!env.DATAJUD_API_KEY, arquivos: env.ARQUIVOS, telas: env.WEB_DIST || null, cobranca: env.COBRANCA_ATIVA, asaas: !!asaas, operadores: plataformaEmails.size });
 if (env.COBRANCA_ATIVA) {
   // Ligada sem o necessário: o teste corre e o escritório vira só leitura no fim, mas ninguém consegue assinar. Melhor avisar alto no log.
   if (PLANO.valorMensalCentavos === null) log("COBRANCA_ATIVA ligada, mas o valor do plano não foi definido (PLANO em packages/core/src/plano.ts): ninguém consegue assinar");

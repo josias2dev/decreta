@@ -9,3 +9,4 @@ export { ajustarPeca, ligarFatosDaPeca, materialDasFontes, papelDosJulgados, pro
 export * from "./procedencia.ts";
 export * from "./uso.ts";
 export * from "./jurisprudencia.ts";
+export * from "./whatsapp.ts";

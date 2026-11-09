@@ -239,6 +239,20 @@
       "when": 1793703986604,
       "tag": "0033_base_legal_da_ia",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794251251152,
+      "tag": "0034_whatsapp_oficial",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794257127526,
+      "tag": "0035_whatsapp_revisao",
+      "breakpoints": true
     }
   ]
 }

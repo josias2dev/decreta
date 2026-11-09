@@ -56,6 +56,12 @@ import { gerarLembretesDoDia } from "./servicos/regua.ts";
 import { lerSentencaSozinha } from "./servicos/sentencas.ts";
 import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
 import { silentReporter, type Reporter } from "./sentry.ts";
+import type { Canal } from "./whatsapp/canal.ts";
+import { avisarResumo } from "./whatsapp/avisos.ts";
+import { enviarParaPessoa } from "./whatsapp/mensagens.ts";
+import { rotinasDoWhatsapp, whatsappPrazoCurto } from "./whatsapp/rotinas.ts";
+import type { DepsDoAgente } from "./whatsapp/tipos.ts";
+import { pessoaDoUsuario } from "./whatsapp/vinculo.ts";
 
 export const inngest = new Inngest({ id: "decreta" });
 
@@ -93,6 +99,8 @@ export function eventoDoPedido(p: Pedido) {
 export interface DepsDasRotinas {
   db: Database;
   ia: Ia | null;
+  /** O WhatsApp oficial (a Meta): o canal e o contato do suporte. Sem ele, o resumo sai pelo wameow e o agente não responde. */
+  whatsapp?: { canal: Canal; suporte: string } | null;
   captura: DepsDaCaptura;
   arquivos: Armazenamento;
   wameow?: Wameow;
@@ -150,6 +158,10 @@ export function createFunctions(deps: DepsDasRotinas) {
   /** A IA que grava o gasto no escritório da rotina. */
   const iaDo = (organizationId: string, origem: QuemUsa["origem"]) => (deps.ia ? iaMedida(deps, deps.ia, { organizationId, userId: null, origem }, limites.preco) : null);
   const { db, log } = deps;
+  /** O agente do WhatsApp, com o canal da Meta: só existe com o WhatsApp oficial ligado. */
+  const agente: DepsDoAgente | null = deps.whatsapp
+    ? { db, canal: deps.whatsapp.canal, log, ia: deps.ia, arquivos: deps.arquivos, telas: deps.telas, suporte: deps.whatsapp.suporte, cobrancaAtiva: !!deps.cobrancaAtiva, limites, origem: "agente", pedirRascunho: async (organizationId, prazoId) => { await inngest.send(prazoConfirmado.create({ organizationId, prazoId })); } }
+    : null;
   const reporter = deps.reporter ?? silentReporter;
   const cobrancaAtiva = !!deps.cobrancaAtiva;
   /** O que a leitura da IA no fundo diz quando o escritório não tem acesso total; nulo quando tem. */
@@ -243,6 +255,8 @@ export function createFunctions(deps: DepsDasRotinas) {
       if (observacao && (situacao === "pronto" || situacao === "recusa")) {
         await step.run("observar", () => observarPrazo({ db, log, preco: limites.preco }, observacao, event.data.organizationId, event.data.publicacaoId));
       }
+      // Sugestão que vence em até 2 dias úteis: o WhatsApp avisa na hora (a rotina confere se é depois do resumo da manhã).
+      if (agente && situacao === "pronto") await step.sendEvent("prazo-curto", whatsappPrazoCurto.create({ organizationId: event.data.organizationId, publicacaoId: event.data.publicacaoId }));
       return situacao;
     },
   );
@@ -372,7 +386,7 @@ export function createFunctions(deps: DepsDasRotinas) {
     { id: "resumo-da-manha", triggers: [{ cron: "TZ=America/Sao_Paulo */15 6-10 * * 1-5" }], concurrency: { limit: 1 }, onFailure: async ({ error }) => reporter.error(error, { funcao: "resumo-da-manha" }) },
     async ({ step }) => {
       const wameow = deps.wameow;
-      if (!wameow) return { desligado: true };
+      if (!wameow && !agente) return { desligado: true };
       const orgs = await step.run("escritorios", () => escritoriosAtivos(db, cobrancaAtiva));
       let enviados = 0;
       for (const org of orgs) {
@@ -389,7 +403,27 @@ export function createFunctions(deps: DepsDasRotinas) {
             const painel = await painelDoDia(db, tx, org.id, hoje, org.timezone, { iaLigada: !!deps.ia });
             let n = 0;
             for (const p of pessoas.values()) {
-              if (!p.whatsapp || !p.avisoManha || ja.has(p.id)) continue;
+              if (!p.avisoManha || ja.has(p.id)) continue;
+              // Com o WhatsApp oficial ligado pela pessoa, o resumo sai por ele (com os botões); sem, pelo wameow, como antes.
+              const oficial = agente ? await pessoaDoUsuario(db, p.id, { cobrancaAtiva, organizationId: org.id }) : null;
+              if (agente && oficial && !oficial.pausado) {
+                if (org.emAvaliacao && !WHATSAPP_EM_AVALIACAO.permitir(org.id)) continue;
+                let ok = true;
+                let erro: string | null = null;
+                try {
+                  const saiu = oficial.vencido
+                    ? !!(await enviarParaPessoa(agente, oficial, { tipo: "modelo", nome: "renovar_vinculo", parametros: [] }, { origem: "aviso", chave: `renovar:${hoje}` }))
+                    : await avisarResumo(agente, oficial, painel);
+                  if (saiu) n++;
+                } catch (err) {
+                  ok = false;
+                  erro = err instanceof Error ? err.message.slice(0, 300) : String(err);
+                  log("resumo da manhã não saiu pelo WhatsApp oficial", { organizationId: org.id, userId: p.id, error: erro });
+                }
+                await tx.insert(avisosEnviados).values({ organizationId: org.id, userId: p.id, tipo: "manha", dia: hoje, ok, erro }).onConflictDoNothing();
+                continue;
+              }
+              if (!wameow || !p.whatsapp) continue;
               const texto = resumoDaManha(painel, p, deps.telas);
               if (texto && org.emAvaliacao && !WHATSAPP_EM_AVALIACAO.permitir(org.id)) continue;
               let ok = true;
@@ -542,5 +576,6 @@ export function createFunctions(deps: DepsDasRotinas) {
     },
   );
 
-  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn, avisosDoPlanoFn];
+  const doWhatsapp = agente ? rotinasDoWhatsapp(inngest, { agente, reporter, escritorios: () => escritoriosAtivos(db, cobrancaAtiva) }) : [];
+  return [capturarCadernosFn, agendarCaptura, capturar, primeiraBusca, sugerir, relerFn, guardarCertidao, sentenca, lerDocumento, agendarDataJud, datajudEscritorio, atualizarProcesso, resumoDaManhaFn, temasDoStjFn, rascunhoFn, radarFn, exportarFn, limparCopiasFn, apagarEncerradosFn, lembretesFn, avisosDoPlanoFn, ...doWhatsapp];
 }

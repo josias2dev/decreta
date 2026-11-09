@@ -54,6 +54,7 @@ export const METODOS = [
   "papel-do-julgado",
   "campo-texto",
   "base-legal",
+  "whatsapp",
 ] as const;
 export type MetodoIa = (typeof METODOS)[number];
 
@@ -82,6 +83,7 @@ const ALIAS: Record<MetodoIa, keyof ModelosDoGateway> = {
   "papel-do-julgado": "juridico",
   "campo-texto": "juridico",
   "base-legal": "juridico",
+  whatsapp: "juridico",
 };
 
 /**
@@ -106,6 +108,7 @@ const NO_GATEWAY: Partial<Record<MetodoIa, MetodoIa>> = {
   "papel-do-julgado": "jurisprudencia",
   "campo-texto": "briefing-prazo",
   "base-legal": "jurisprudencia",
+  whatsapp: "perguntar",
 };
 
 /** O teto do dia não passa em segundos: a AI SDK não deve pedir de novo (a pessoa esperava o aviso uns 2 s a mais). */
@@ -180,6 +183,7 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
   "papel-do-julgado": "medium",
   "campo-texto": "medium",
   "base-legal": "medium",
+  whatsapp: "medium",
 };
 
 /**
@@ -190,7 +194,7 @@ const ESFORCO: Record<MetodoIa, Esforco> = {
  */
 function usaCache(metodo: MetodoIa, options: LanguageModelV4CallOptions): boolean {
   if (metodo === "chat-processo") return true;
-  return (metodo === "perguntar" || metodo === "jurisprudencia") && !!options.tools?.length;
+  return (metodo === "perguntar" || metodo === "jurisprudencia" || metodo === "whatsapp") && !!options.tools?.length;
 }
 
 /** Os Claude 5 que aceitam a reserva da própria Anthropic quando um filtro de segurança recusa o pedido (o Haiku 5.5 não tem). */

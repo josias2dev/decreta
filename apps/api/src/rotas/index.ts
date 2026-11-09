@@ -38,6 +38,8 @@ import { rotasDosProcessos } from "./processos.ts";
 import { rotasDasPublicacoes } from "./publicacoes.ts";
 import { rotasDoPlano } from "./plano.ts";
 import { rotasDoRadar } from "./radar.ts";
+import { rotasDoWhatsappNoApp } from "../whatsapp/rotas.ts";
+import { renovarPeloUso } from "../whatsapp/vinculo.ts";
 
 export function createRotas(deps: DepsDasRotas) {
   const { db, auth } = deps;
@@ -79,6 +81,8 @@ export function createRotas(deps: DepsDasRotas) {
   /** Quem está logado, em qual escritório, a equipe e os números do menu. */
   app.get("/eu", async (c) => {
     const hoje = hojeEm(c.get("timezone"));
+    // A tela pede isto ao abrir: quem usa o Decreta logado continua com o WhatsApp ligado.
+    await renovarPeloUso(db, c.get("userId")).catch((err) => deps.log("a renovação do WhatsApp pelo uso falhou", { userId: c.get("userId"), error: err instanceof Error ? err.message : String(err) }));
     return tenant(c, deps, async (tx) => {
       const pessoas = await pessoasDoEscritorio(db, tx, c.get("orgId"));
       const conta = (q: Promise<{ n: number }[]>) => q.then((r) => r[0]?.n ?? 0);
@@ -178,5 +182,6 @@ export function createRotas(deps: DepsDasRotas) {
   rotasDaPrestacao(app, deps);
   rotasDasAssinaturas(app, deps);
   rotasDoPlano(app, deps);
+  rotasDoWhatsappNoApp(app, deps);
   return app;
 }

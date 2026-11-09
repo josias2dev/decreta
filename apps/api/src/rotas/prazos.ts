@@ -11,7 +11,8 @@ import { carregarContexto } from "../servicos/contexto.ts";
 import { quandoDoPrazo } from "../servicos/hoje.ts";
 import { pessoasDoEscritorio, resumir } from "../servicos/pessoas.ts";
 import { antecedenciaDoInterno, baseLegalVeioDaIa, conferenciaDoPrazo, contaDoPrazo, contagemNaTela, contaParaAbrir, contarParaProcesso } from "../servicos/prazos.ts";
-import { corpo, falha, id, ip, marcarEvento, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
+import { ajustarPrazo, depoisDaDecisao, mudarPrazo, type AcaoNoPrazo } from "../servicos/decisoes-do-prazo.ts";
+import { atorDaRota, corpo, depsDaDecisao, falha, id, ip, naRota, pedirRascunho, tenant, type Ambiente, type C, type DepsDasRotas } from "./base.ts";
 
 const QUANDO = ["hoje", "semana", "vencidos", "abertos", "cumpridos"] as const;
 type Quando = (typeof QUANDO)[number];
@@ -311,75 +312,28 @@ export function rotasDosPrazos(app: Hono<Ambiente>, deps: DepsDasRotas) {
   app.put("/prazos/:id", async (c) => {
     const prazoId = id(c);
     const b = await corpo(c, ajuste);
-    const soABase = await tenant(c, deps, async (tx) => {
-      const [p] = await tx.select().from(prazos).where(eq(prazos.id, prazoId));
-      if (!p) falha(404, "nao_encontrado");
-      const dias = b.dias ?? p.dias;
-      const contagem = b.contagem ?? p.contagem;
-      const publicadoEm = b.publicadoEm ?? p.publicadoEm;
-      const intimadoNoSistemaEm = b.intimadoNoSistemaEm === undefined ? p.intimadoNoSistemaEm : b.intimadoNoSistemaEm;
-      const fundamento = b.fundamento === undefined ? p.fundamento : b.fundamento;
-      const fundamentoDaIa = baseLegalVeioDaIa(fundamento, b.fundamentoDaIa, p);
-      // A data digitada à mão fica quando a conta não mudou e ninguém mandou outra: trocar o responsável não refaz o prazo.
-      const contaIgual = dias === p.dias && contagem === p.contagem && publicadoEm === p.publicadoEm && intimadoNoSistemaEm === p.intimadoNoSistemaEm;
-      const fimIgual = b.fimManual === undefined || (b.fimManual === null ? !p.fimDigitado : p.fimDigitado && b.fimManual === p.fim);
-      const restoIgual = contaIgual && fimIgual && (b.tipo ?? p.tipo) === p.tipo && (b.responsavelId === undefined || b.responsavelId === p.responsavelId) && (b.observacoes === undefined || b.observacoes === p.observacoes);
-      if (!b.confirmar && restoIgual && (fundamento !== p.fundamento || fundamentoDaIa !== p.fundamentoDaIa)) {
-        await tx.update(prazos).set({ fundamento, fundamentoDaIa }).where(eq(prazos.id, prazoId));
-        return true;
-      }
-      const r = await contarParaProcesso(tx, c.get("orgId"), p.processoId, { publicacao: publicadoEm, intimacaoNoSistema: intimadoNoSistemaEm, dias, contagem });
-      const manterManual = b.fimManual === undefined && p.fimDigitado && contaIgual;
-      await tx
-        .update(prazos)
-        .set({
-          tipo: b.tipo ?? p.tipo,
-          fundamento,
-          fundamentoDaIa,
-          dias,
-          contagem,
-          publicadoEm,
-          intimadoNoSistemaEm,
-          inicio: r.inicio,
-          fim: manterManual ? p.fim : (b.fimManual ?? r.fim),
-          fimDigitado: manterManual || !!b.fimManual,
-          desconsiderados: manterManual ? p.desconsiderados : b.fimManual ? [] : r.desconsiderados,
-          responsavelId: b.responsavelId === undefined ? p.responsavelId : b.responsavelId,
-          observacoes: b.fimManual && !manterManual ? [b.observacoes ?? p.observacoes, `Data final digitada à mão (a conta dava ${formatarDia(r.fim)}).`].filter(Boolean).join(" ") : b.observacoes === undefined ? p.observacoes : b.observacoes,
-          confirmadoPor: c.get("userId"),
-          confirmadoEm: new Date(),
-        })
-        .where(eq(prazos.id, prazoId));
-      if (p.publicacaoId) await tx.update(publicacoes).set({ situacao: "vinculada", tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, p.publicacaoId));
-      return false;
-    });
-    await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao: soABase ? "prazo.base_legal" : "prazo.ajustado", detalhes: { prazoId, ...b }, ip: ip(c) }, deps.log);
+    const ator = atorDaRota(c);
+    const { soABase } = await naRota(tenant(c, deps, (tx) => ajustarPrazo(tx, ator, prazoId, b)));
+    await depoisDaDecisao(depsDaDecisao(deps), ator, soABase ? "prazo.base_legal" : "prazo.ajustado", { prazoId, ...b });
+    // O ajuste confirma, mas o marco do funil é só o "Confirmar" (como antes): aqui vai só o rascunho.
     if (!soABase) await pedirRascunho(c, deps, prazoId);
     return c.json({ ok: true });
   });
 
-  const mudar = (caminho: string, acao: string, fazer: (p: typeof prazos.$inferSelect, c: C, motivo: string | null) => Partial<typeof prazos.$inferInsert>) =>
+  const mudar = (caminho: AcaoNoPrazo, acao: string) =>
     app.post(`/prazos/:id/${caminho}`, async (c) => {
       const prazoId = id(c);
       const motivo = caminho === "descartar" ? ((await c.req.json().catch(() => ({}))) as { motivo?: string }).motivo?.slice(0, 500) || null : null;
-      await tenant(c, deps, async (tx) => {
-        const [p] = await tx.select().from(prazos).where(eq(prazos.id, prazoId));
-        if (!p) falha(404, "nao_encontrado");
-        await tx.update(prazos).set(fazer(p, c, motivo)).where(eq(prazos.id, prazoId));
-        if (caminho === "confirmar" && p.publicacaoId) await tx.update(publicacoes).set({ situacao: "vinculada", tratadaPor: c.get("userId"), tratadaEm: new Date() }).where(eq(publicacoes.id, p.publicacaoId));
-      });
-      await registrar(db, { organizationId: c.get("orgId"), userId: c.get("userId"), nome: c.get("userNome"), acao, detalhes: { prazoId, motivo }, ip: ip(c) }, deps.log);
-      if (caminho === "confirmar") {
-        await marcarEvento(c, deps, "primeiro_prazo_confirmado");
-        await pedirRascunho(c, deps, prazoId);
-      }
+      const ator = atorDaRota(c);
+      await naRota(tenant(c, deps, (tx) => mudarPrazo(tx, ator, prazoId, caminho, { motivo })));
+      await depoisDaDecisao(depsDaDecisao(deps), ator, acao, { prazoId, motivo }, caminho === "confirmar" ? { confirmou: prazoId } : {});
       return c.json({ ok: true });
     });
 
-  mudar("confirmar", "prazo.confirmado", (_p, c) => ({ confirmadoPor: c.get("userId"), confirmadoEm: new Date() }));
-  mudar("cumprir", "prazo.cumprido", (p, c) => ({ situacao: "cumprido", cumpridoPor: c.get("userId"), cumpridoEm: new Date(), confirmadoPor: p.confirmadoPor ?? c.get("userId"), confirmadoEm: p.confirmadoEm ?? new Date() }));
-  mudar("reabrir", "prazo.reaberto", () => ({ situacao: "aberto", cumpridoPor: null, cumpridoEm: null, motivoDescarte: null }));
-  mudar("descartar", "prazo.descartado", (_p, _c, motivo) => ({ situacao: "descartado", motivoDescarte: motivo }));
+  mudar("confirmar", "prazo.confirmado");
+  mudar("cumprir", "prazo.cumprido");
+  mudar("reabrir", "prazo.reaberto");
+  mudar("descartar", "prazo.descartado");
 
   /** Definir responsável de vários de uma vez (a barra de seleção da lista). */
   app.post("/prazos/responsavel", async (c) => {

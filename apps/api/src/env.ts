@@ -91,6 +91,23 @@ const schema = z.object({
   NFSE_SERVICO_NOME: z.string().default(""),
   NFSE_ISS_PERCENTUAL: z.coerce.number().min(0).default(0),
   NFSE_ISS_RETIDO: interruptor,
+  /**
+   * WhatsApp oficial (Meta Cloud API): o agente do Decreta. Sem os quatro primeiros e o número, fica desligado
+   * (a tela de Configurações diz isso) e o resumo da manhã continua pelo wameow, para quem tem.
+   * O webhook a cadastrar na Meta é `<BETTER_AUTH_URL>/api/whatsapp/webhook`.
+   */
+  META_PHONE_NUMBER_ID: z.string().default(""),
+  /** Token do usuário de sistema da Meta (não expira). */
+  META_ACCESS_TOKEN: z.string().default(""),
+  /** Assina o corpo de cada aviso (`X-Hub-Signature-256`): sem ele, nada que chega é lido. */
+  META_APP_SECRET: z.string().default(""),
+  /** O `hub.verify_token` do cadastro do webhook. */
+  META_VERIFY_TOKEN: z.string().default(""),
+  META_API_VERSION: z.string().default("v23.0"),
+  /** O número do Decreta no WhatsApp, só dígitos (55 + DDD + número): o link de ligar e o aviso da tela. */
+  WHATSAPP_NUMERO: z.string().default(""),
+  /** Como falar com uma pessoa da equipe do Decreta (a Meta exige o caminho para um humano). */
+  WHATSAPP_SUPORTE: z.string().default("suporte@decreta.site"),
   /** E-mails dos operadores da plataforma (o painel /plataforma), separados por vírgula. Cada um precisa ter a conta criada pela equipe: o cadastro aberto e o convite recusam esses e-mails. */
   PLATAFORMA_EMAILS: z.string().default(""),
 }).superRefine((env, ctx) => {

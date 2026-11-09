@@ -33,6 +33,8 @@ export interface AppDeps {
   mcp?: Hono;
   /** O aviso de pagamento do Asaas de cada escritório (`/api/cobranca/asaas/<escritório>`), com o segredo do aviso no lugar da sessão: são os honorários, na conta de cada escritório. */
   avisoDoAsaas?: Hono;
+  /** O webhook do WhatsApp oficial (`/api/whatsapp`), com a assinatura da Meta no lugar da sessão. */
+  whatsapp?: Hono;
   /** O painel da plataforma (`/api/plataforma`), só para operadores (ver `rotas/plataforma.ts`). */
   plataforma?: Hono<any>;
   /** Os e-mails dos operadores: o cadastro aberto recusa esses e-mails, para ninguém abrir uma conta com o e-mail de um operador. */
@@ -130,12 +132,13 @@ export function createApp(deps: AppDeps) {
   });
 
   if (deps.envio) app.route("/api/envio", deps.envio);
+  if (deps.whatsapp) app.route("/api/whatsapp", deps.whatsapp);
   if (deps.mcp) app.route("/api/mcp", deps.mcp);
   // O Asaas manda os avisos em rajada, de poucos endereços: só a tentativa com o segredo errado é limitada por endereço (dentro da rota).
   if (deps.avisoDoAsaas) app.route("/api/cobranca/asaas", deps.avisoDoAsaas);
 
   if (deps.plataforma) {
-    app.use("/api/plataforma/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "OPTIONS"] }));
+    app.use("/api/plataforma/*", cors({ origin: env.WEB_ORIGIN, credentials: true, allowMethods: ["GET", "POST", "DELETE", "OPTIONS"] }));
     app.use("/api/plataforma/*", csrf({ origin: env.WEB_ORIGIN }));
     app.use("/api/plataforma/*", limitarPorIp({ janelaMs: 60_000, maximo: 120 }, ipDoPedido));
     app.route("/api/plataforma", deps.plataforma);

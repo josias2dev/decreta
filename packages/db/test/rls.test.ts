@@ -67,7 +67,8 @@ describe.skipIf(!hasTestDatabase)("isolamento por escritório (RLS)", () => {
       select c.relname, c.relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relkind = 'r' and exists (
         select 1 from information_schema.columns k where k.table_name = c.relname and k.column_name = 'organization_id'
-      ) and c.relname not in ('member', 'invitation')`;
+      ) and c.relname not in ('member', 'invitation', 'whatsapp_vinculos', 'whatsapp_codigos')`;
+    // O vínculo e o código do WhatsApp são lidos antes de se saber o escritório (a mensagem chega com o telefone): ficam fora, como `member`.
     expect(rows.length).toBeGreaterThan(15);
     expect(rows.filter((r) => !r.relrowsecurity).map((r) => r.relname)).toEqual([]);
   });
