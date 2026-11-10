@@ -4,7 +4,7 @@
  * pela API da tela. Nenhum usa IA.
  */
 import { afterAll, beforeAll, describe, expect, setSystemTime, test } from "bun:test";
-import { prazos } from "@decreta/db";
+import { prazos, processos } from "@decreta/db";
 import { hasTestDatabase } from "@decreta/db/testing";
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { painelDoDia } from "../src/servicos/hoje.ts";
@@ -179,11 +179,33 @@ describe.skipIf(!hasTestDatabase)("avisos do agente do WhatsApp", () => {
     expect(saiu).toEqual([]);
   });
 
-  test("prazo curto com a janela fechada: o modelo com a data", async () => {
+  /** O processo do prazo sugerido nesta publicação. */
+  async function processoDo(publicacaoId: string) {
+    const [p] = await c.noEscritorio((tx) => tx.select({ id: processos.id, cnj: processos.cnj }).from(prazos).innerJoin(processos, eq(processos.id, prazos.processoId)).where(eq(prazos.publicacaoId, publicacaoId)));
+    return p!;
+  }
+
+  // O número do processo deixa claro para a Meta que o aviso é de um item da conta (utilidade), não propaganda.
+  test("prazo curto com a janela fechada: o modelo com o número do processo e a data", async () => {
     const { publicacaoId } = await sugeridoDe("tiago", "2026-11-12");
+    const { cnj } = await processoDo(publicacaoId);
+    expect(cnj).toBeTruthy();
     const tiago = { ...(await c.pessoa("tiago")), janelaAberta: false };
     const { saiu } = await durante(() => avisarPrazoCurto(c.agente, [tiago], c.organizationId, publicacaoId));
-    expect(saiu.map((m) => m.saida)).toEqual([expect.objectContaining({ tipo: "modelo", nome: "prazo_curto", parametros: ["12/11"] })]);
+    expect(saiu.map((m) => m.saida)).toEqual([expect.objectContaining({ tipo: "modelo", nome: "prazo_sugerido", parametros: [cnj, "12/11"] })]);
+  });
+
+  test("prazo curto de processo sem número: o modelo diz que é sem número (a Meta não aceita variável vazia)", async () => {
+    const { publicacaoId } = await sugeridoDe("beatriz", "2026-11-12");
+    const { id, cnj } = await processoDo(publicacaoId);
+    await c.noEscritorio((tx) => tx.update(processos).set({ cnj: null }).where(eq(processos.id, id)));
+    try {
+      const beatriz = { ...(await c.pessoa("beatriz")), janelaAberta: false };
+      const { saiu } = await durante(() => avisarPrazoCurto(c.agente, [beatriz], c.organizationId, publicacaoId));
+      expect(saiu.map((m) => m.saida)).toEqual([expect.objectContaining({ tipo: "modelo", nome: "prazo_sugerido", parametros: ["sem número", "12/11"] })]);
+    } finally {
+      await c.noEscritorio((tx) => tx.update(processos).set({ cnj }).where(eq(processos.id, id)));
+    }
   });
 
   test("prazo que vence depois de 2 dias úteis não avisa na hora: espera o resumo", async () => {

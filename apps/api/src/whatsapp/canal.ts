@@ -51,7 +51,8 @@ export type Saida =
 export const MODELOS = {
   resumo_do_dia: { texto: "Bom dia, {{1}}. Hoje no Decreta: {{2}}. Toque abaixo para ver o dia.", botoes: ["Ver o dia", "Conferir agora"] },
   vence_hoje: { texto: "Aviso do Decreta: prazos que vencem hoje e ainda estão abertos: {{1}}. Toque abaixo para ver.", botoes: ["Ver os prazos"] },
-  prazo_curto: { texto: "Aviso do Decreta: chegou uma publicação com prazo sugerido para {{1}}. Toque abaixo para conferir.", botoes: ["Conferir"] },
+  // Com o número do processo: o texto genérico ("chegou uma publicação") a Meta classificou como marketing.
+  prazo_sugerido: { texto: "Aviso do Decreta: a publicação do processo {{1}} tem prazo sugerido até {{2}}, ainda não conferido. Toque abaixo para conferir.", botoes: ["Conferir"] },
   renovar_vinculo: { texto: "Aviso do Decreta: o seu WhatsApp ficou 30 dias sem uso do app e precisa ser renovado para continuar recebendo os detalhes. Abra o Decreta para renovar.", botoes: [] },
 } as const;
 export type NomeDoModelo = keyof typeof MODELOS;

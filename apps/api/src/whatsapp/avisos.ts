@@ -100,7 +100,7 @@ export async function avisarPrazoCurto(deps: DepsDoAgente, pessoas: PessoaNoWhat
   if (!primeira) return 0;
   const hoje = hojeEm(primeira.timezone, agora);
   const prazo = await withTenant(deps.db, organizationId, async (tx) => {
-    const [p] = await tx.select({ id: prazos.id, fim: prazos.fim, confirmadoEm: prazos.confirmadoEm, responsavelId: prazos.responsavelId, titulo: processos.titulo }).from(prazos).innerJoin(processos, eq(processos.id, prazos.processoId)).where(eq(prazos.publicacaoId, publicacaoId));
+    const [p] = await tx.select({ id: prazos.id, fim: prazos.fim, confirmadoEm: prazos.confirmadoEm, responsavelId: prazos.responsavelId, titulo: processos.titulo, cnj: processos.cnj }).from(prazos).innerJoin(processos, eq(processos.id, prazos.processoId)).where(eq(prazos.publicacaoId, publicacaoId));
     return p ?? null;
   });
   if (!prazo || prazo.confirmadoEm) return 0;
@@ -111,7 +111,8 @@ export async function avisarPrazoCurto(deps: DepsDoAgente, pessoas: PessoaNoWhat
     if (!querem.has(pessoa.userId) || (prazo.responsavelId && prazo.responsavelId !== pessoa.userId) || pessoa.vencido || pessoa.pausado) continue;
     const chave = `curto:${publicacaoId}`;
     const origem = deps.origem === "laboratorio" ? "laboratorio" : "aviso";
-    const modelo: Extract<Saida, { tipo: "modelo" }> = { tipo: "modelo", nome: "prazo_curto", parametros: [formatarDiaCurto(prazo.fim)], botoes: ["a:fila"] };
+    // A Meta não aceita variável vazia: o processo extrajudicial vai como "sem número".
+    const modelo: Extract<Saida, { tipo: "modelo" }> = { tipo: "modelo", nome: "prazo_sugerido", parametros: [prazo.cnj || "sem número", formatarDiaCurto(prazo.fim)], botoes: ["a:fila"] };
     const saiu = pessoa.janelaAberta
       ? await withTenant(deps.db, organizationId, async (tx) => {
           // O item é o desta publicação, não o primeiro da fila: o aviso fala dele.
