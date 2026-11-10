@@ -103,7 +103,7 @@ export function canalDaMeta(config: ConfigDaMeta): Canal {
           ...(s.parametros.length ? [{ type: "body", parameters: s.parametros.map((text) => ({ type: "text", text })) }] : []),
           ...(s.botoes ?? []).map((payload, i) => ({ type: "button", sub_type: "quick_reply", index: String(i), parameters: [{ type: "payload", payload }] })),
         ];
-        // Modelo sem variável e sem botão (o renovar_vinculo) vai sem `components`.
+        // Modelo sem variável e sem botão vai sem `components`.
         return { type: "template", template: { name: s.nome, language: { code: "pt_BR" }, ...(componentes.length ? { components: componentes } : {}) } };
       }
     }

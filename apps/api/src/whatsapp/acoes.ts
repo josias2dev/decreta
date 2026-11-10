@@ -2,7 +2,7 @@
  * O toque num botão ou num item de lista, tratado pelo código (sem IA). Os ids:
  *
  *   p:<proposta>            executa a proposta congelada (ver `propostas.ts`)
- *   a:dia                   o resumo de hoje, inteiro (o botão do modelo "resumo_do_dia")
+ *   a:dia                   o resumo de hoje, inteiro (o botão do modelo "agenda_do_dia")
  *   a:fila                  a fila de publicações desde o começo
  *   a:vence                 o que vence hoje e está aberto (o botão do modelo "vence_hoje")
  *   a:prazo:<prazo>         o cartão de um prazo, com "Já protocolei" (a linha da lista das 15h)

@@ -47,13 +47,15 @@ export type Saida =
   /** Modelo aprovado pela Meta (fora da janela de 24 h). `botoes`: o que volta no toque de cada botão de resposta rápida, na ordem do modelo. */
   | { tipo: "modelo"; nome: NomeDoModelo; parametros: string[]; botoes?: string[] };
 
-/** Os modelos de utilidade, em pt_BR, cadastrados na conta da Meta com estes nomes e estes textos. */
+/**
+ * Os modelos de utilidade, em pt_BR, cadastrados na conta da Meta com estes nomes e estes textos. Cada um fala de um
+ * item da conta (a data, o processo): o texto genérico, sem isso, a Meta classificou como marketing (09/11/2026).
+ */
 export const MODELOS = {
-  resumo_do_dia: { texto: "Bom dia, {{1}}. Hoje no Decreta: {{2}}. Toque abaixo para ver o dia.", botoes: ["Ver o dia", "Conferir agora"] },
+  agenda_do_dia: { texto: "Aviso do Decreta: o resumo dos seus prazos de {{1}}: {{2}}. Toque abaixo para ver o dia.", botoes: ["Ver o dia", "Conferir agora"] },
   vence_hoje: { texto: "Aviso do Decreta: prazos que vencem hoje e ainda estão abertos: {{1}}. Toque abaixo para ver.", botoes: ["Ver os prazos"] },
-  // Com o número do processo: o texto genérico ("chegou uma publicação") a Meta classificou como marketing.
   prazo_sugerido: { texto: "Aviso do Decreta: a publicação do processo {{1}} tem prazo sugerido até {{2}}, ainda não conferido. Toque abaixo para conferir.", botoes: ["Conferir"] },
-  renovar_vinculo: { texto: "Aviso do Decreta: o seu WhatsApp ficou 30 dias sem uso do app e precisa ser renovado para continuar recebendo os detalhes. Abra o Decreta para renovar.", botoes: [] },
+  vinculo_vencido: { texto: "Aviso do Decreta: o vínculo deste WhatsApp com a sua conta venceu em {{1}}, depois de 30 dias sem abrir o Decreta. Para voltar a receber os avisos de prazo, abra o Decreta.", botoes: [] },
 } as const;
 export type NomeDoModelo = keyof typeof MODELOS;
 

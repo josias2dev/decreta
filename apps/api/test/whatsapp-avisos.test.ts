@@ -8,7 +8,7 @@ import { prazos, processos } from "@decreta/db";
 import { hasTestDatabase } from "@decreta/db/testing";
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { painelDoDia } from "../src/servicos/hoje.ts";
-import { avisarPrazoCurto, avisarResumo, avisarVenceHoje } from "../src/whatsapp/avisos.ts";
+import { avisarPrazoCurto, avisarResumo, avisarVenceHoje, avisarVinculoVencido } from "../src/whatsapp/avisos.ts";
 import { FORA_DA_JANELA } from "../src/whatsapp/canal.ts";
 import { montarCenarioDoWhatsapp, prazoDo, textoDe, titulosDe, type CenarioDoWhatsapp, type Enviada, type Quem } from "./whatsapp-apoio.ts";
 
@@ -53,18 +53,30 @@ describe.skipIf(!hasTestDatabase)("avisos do agente do WhatsApp", () => {
     expect(saiu).toEqual([]);
   });
 
-  test("janela fechada: sai o modelo curto, sem nome de cliente, e o toque traz o dia inteiro", async () => {
+  // Com a data e os prazos da pessoa, sem saudação: o "Bom dia, {{1}}" a Meta classificou como marketing.
+  test("janela fechada: sai o modelo curto, com a data e sem nome de cliente, e o toque traz o dia inteiro", async () => {
     const rafael = { ...(await c.pessoa("rafael")), janelaAberta: false };
     const { saiu } = await durante(async () => avisarResumo(c.agente, rafael, await painel()));
     expect(saiu).toHaveLength(1);
-    expect(saiu[0]!.saida).toMatchObject({ tipo: "modelo", nome: "resumo_do_dia" });
-    expect(textoDe(saiu[0])).toMatch(/^Bom dia, Rafael\. Hoje no Decreta: [a-zà-ú0-9 ,]+\. Toque abaixo para ver o dia\.$/);
+    expect(saiu[0]!.saida).toMatchObject({ tipo: "modelo", nome: "agenda_do_dia" });
+    expect(textoDe(saiu[0])).toMatch(/^Aviso do Decreta: o resumo dos seus prazos de 10\/11: [a-zà-ú0-9 ,]+\. Toque abaixo para ver o dia\.$/);
     expect(textoDe(saiu[0])).not.toContain("Marina");
+    expect(textoDe(saiu[0])).not.toContain("Rafael");
 
     expect(titulosDe(saiu[0])).toEqual(["Ver o dia", "Conferir agora"]);
 
     const dia = await c.toca("rafael", saiu[0], "Ver o dia");
     expect(textoDe(dia[0])).toStartWith("*Souza & Freitas Advocacia · hoje*");
+  });
+
+  test("vínculo vencido: no lugar do resumo sai o modelo com o dia em que venceu, uma vez por dia", async () => {
+    const tiago = { ...(await c.pessoa("tiago")), janelaAberta: false, vencido: true, renovarAte: new Date("2026-11-08T10:00:00-03:00") };
+    const { r, saiu } = await durante(async () => avisarVinculoVencido(c.agente, tiago, HOJE));
+    expect(r).toBe(true);
+    expect(saiu.map((m) => m.saida)).toEqual([expect.objectContaining({ tipo: "modelo", nome: "vinculo_vencido", parametros: ["08/11"] })]);
+    expect(textoDe(saiu[0])).toBe("Aviso do Decreta: o vínculo deste WhatsApp com a sua conta venceu em 08/11, depois de 30 dias sem abrir o Decreta. Para voltar a receber os avisos de prazo, abra o Decreta.");
+    const deNovo = await durante(async () => avisarVinculoVencido(c.agente, tiago, HOJE));
+    expect(deNovo.saiu).toEqual([]);
   });
 
   test("o segundo botão do modelo vai direto à fila: a publicação é conferida em dois toques", async () => {

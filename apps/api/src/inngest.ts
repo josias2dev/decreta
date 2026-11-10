@@ -59,8 +59,7 @@ import { lerSentencaSozinha } from "./servicos/sentencas.ts";
 import { iaMedida, motivoNoFundo, SEM_LIMITES, type LimitesDaIa, type QuemUsa } from "./servicos/uso-ia.ts";
 import { silentReporter, type Reporter } from "./sentry.ts";
 import type { Canal } from "./whatsapp/canal.ts";
-import { avisarResumo } from "./whatsapp/avisos.ts";
-import { enviarParaPessoa } from "./whatsapp/mensagens.ts";
+import { avisarResumo, avisarVinculoVencido } from "./whatsapp/avisos.ts";
 import { rotinasDoWhatsapp, whatsappPrazoCurto } from "./whatsapp/rotinas.ts";
 import type { DepsDoAgente } from "./whatsapp/tipos.ts";
 import { pessoaDoUsuario } from "./whatsapp/vinculo.ts";
@@ -416,7 +415,7 @@ export function createFunctions(deps: DepsDasRotinas) {
                 let erro: string | null = null;
                 try {
                   const saiu = oficial.vencido
-                    ? !!(await enviarParaPessoa(agente, oficial, { tipo: "modelo", nome: "renovar_vinculo", parametros: [] }, { origem: "aviso", chave: `renovar:${hoje}` }))
+                    ? await avisarVinculoVencido(agente, oficial, hoje)
                     : await avisarResumo(agente, oficial, painel);
                   if (saiu) n++;
                 } catch (err) {

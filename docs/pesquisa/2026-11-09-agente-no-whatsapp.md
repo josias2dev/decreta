@@ -719,16 +719,16 @@ São modelos de utilidade, em pt_BR:
 
 | Modelo | Texto | Botão |
 |---|---|---|
-| `resumo_do_dia` | "Bom dia, {{1}}. Hoje no Decreta: {{2}}. Toque abaixo para ver o dia." | Ver o dia; **[N]** Conferir agora (4.10) |
+| `agenda_do_dia` **[N]** | "Aviso do Decreta: o resumo dos seus prazos de {{1}}: {{2}}. Toque abaixo para ver o dia." ({{1}} é a data) | Ver o dia; Conferir agora (4.10) |
 | `vence_hoje` | "Aviso do Decreta: prazos que vencem hoje e ainda estão abertos: {{1}}. Toque abaixo para ver." | Ver os prazos |
 | `prazo_sugerido` **[N]** | "Aviso do Decreta: a publicação do processo {{1}} tem prazo sugerido até {{2}}, ainda não conferido. Toque abaixo para conferir." ({{1}} é o número CNJ, ou "sem número") | Conferir |
-| `renovar_vinculo` **[N]** | "Aviso do Decreta: o seu WhatsApp ficou 30 dias sem uso do app e precisa ser renovado para continuar recebendo os detalhes. Abra o Decreta para renovar." | — |
-| `novidade` **[N]** | "Aviso do Decreta: há uma novidade em um processo seu: {{1}}. Toque abaixo para ver." | Ver |
+| `vinculo_vencido` **[N]** | "Aviso do Decreta: o vínculo deste WhatsApp com a sua conta venceu em {{1}}, depois de 30 dias sem abrir o Decreta. Para voltar a receber os avisos de prazo, abra o Decreta." | — |
+| `andamento_do_processo` **[N]** | "Aviso do Decreta: o processo {{1}} teve um andamento: {{2}}. Toque abaixo para ver." ({{1}} é o número CNJ) | Ver |
 | `aberto_na_equipe` **[N]** | "Aviso do Decreta: prazos da equipe que vencem hoje e ainda estão abertos: {{1}}. Toque abaixo para ver." | Ver os prazos |
 
-O {{1}} do modelo `novidade` fica, por exemplo, "sentença lida", "rascunho da peça pronto" ou "audiência amanhã às 14h".
+O {{2}} do modelo `andamento_do_processo` fica, por exemplo, "sentença lida", "rascunho da peça pronto" ou "audiência amanhã às 14h".
 
-**[N] Na Meta, em 09/11/2026:** dos seis enviados, a Meta passou para marketing o `prazo_curto` ("chegou uma publicação com prazo sugerido para {{1}}"), o `novidade` e o `renovar_vinculo`. O texto genérico, sem um item da conta, parece propaganda para o classificador. O `prazo_curto` foi apagado e virou o `prazo_sugerido`, com o número do processo; o nome apagado só volta a valer depois de 30 dias.
+**[N] Na Meta, em 09 e 10/11/2026:** dos seis enviados, a Meta passou para marketing o `prazo_curto` ("chegou uma publicação com prazo sugerido para {{1}}"), o `resumo_do_dia` ("Bom dia, {{1}}. Hoje no Decreta: {{2}}"), o `novidade` ("há uma novidade em um processo seu") e o `renovar_vinculo` (sem data). O texto genérico, sem um item da conta, parece propaganda para o classificador. Os quatro foram apagados e trocados pelos de cima, com a data ou o número do processo; um nome apagado só volta a valer depois de 30 dias.
 
 ### 4.9 A trava da resposta [N]
 

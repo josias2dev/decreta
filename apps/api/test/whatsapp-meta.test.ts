@@ -158,14 +158,14 @@ describe("enviar", () => {
   });
 
   test("modelo com parâmetros e botão: body com as variáveis (quebra de linha vira espaço) e o payload no quick_reply", async () => {
-    expect(await corpoEnviado({ tipo: "modelo", nome: "resumo_do_dia", parametros: ["Marina", "2 prazos\ne 1 audiência"], botoes: ["a:dia"] })).toEqual({
+    expect(await corpoEnviado({ tipo: "modelo", nome: "agenda_do_dia", parametros: ["10/11", "2 prazos\ne 1 audiência"], botoes: ["a:dia"] })).toEqual({
       ...envelope,
       type: "template",
       template: {
-        name: "resumo_do_dia",
+        name: "agenda_do_dia",
         language: { code: "pt_BR" },
         components: [
-          { type: "body", parameters: [{ type: "text", text: "Marina" }, { type: "text", text: "2 prazos e 1 audiência" }] },
+          { type: "body", parameters: [{ type: "text", text: "10/11" }, { type: "text", text: "2 prazos e 1 audiência" }] },
           { type: "button", sub_type: "quick_reply", index: "0", parameters: [{ type: "payload", payload: "a:dia" }] },
         ],
       },
@@ -178,7 +178,7 @@ describe("enviar", () => {
       language: { code: "pt_BR" },
       components: [{ type: "body", parameters: [{ type: "text", text: "3 prazos" }] }],
     });
-    expect((await corpoEnviado({ tipo: "modelo", nome: "renovar_vinculo", parametros: [] })).template).toEqual({ name: "renovar_vinculo", language: { code: "pt_BR" } });
+    expect((await corpoEnviado({ tipo: "modelo", nome: "vinculo_vencido", parametros: [] })).template).toEqual({ name: "vinculo_vencido", language: { code: "pt_BR" } });
   });
 
   test("documento: sobe o arquivo em /media antes e manda a mensagem com o id dele", async () => {

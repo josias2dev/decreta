@@ -3,7 +3,8 @@
  * a fila, montados pelo código.
  *
  * - O resumo da manhã: com a janela de 24 h aberta, o dia inteiro; fechada, o modelo curto
- *   "resumo_do_dia" com o botão "Ver o dia" (o toque abre a janela e traz o dia inteiro).
+ *   "agenda_do_dia" com o botão "Ver o dia" (o toque abre a janela e traz o dia inteiro). Com o vínculo
+ *   vencido, no lugar do resumo sai o "vinculo_vencido".
  * - Às 15h, o que vence hoje e ainda está aberto: a rede de segurança do prazo esquecido. Só sai quando existe.
  * - A publicação cuja sugestão vence em até 2 dias úteis, na hora (depois do resumo da manhã: a das
  *   04:30 já vai no resumo).
@@ -53,6 +54,13 @@ function avisoDoVinculo(pessoa: PessoaNoWhatsapp, agora: Date): string | null {
   return `Para continuar recebendo por aqui, abra o Decreta até ${formatarDiaCurto(hojeEm(pessoa.timezone, pessoa.renovarAte))}.`;
 }
 
+/** O vínculo venceu (30 dias sem abrir o app): no lugar do resumo sai só o aviso, com o dia em que venceu, uma vez por dia. */
+export async function avisarVinculoVencido(deps: DepsDoAgente, pessoa: PessoaNoWhatsapp, hoje: string): Promise<boolean> {
+  const venceu = formatarDiaCurto(hojeEm(pessoa.timezone, pessoa.renovarAte));
+  const origem = deps.origem === "laboratorio" ? "laboratorio" : "aviso";
+  return !!(await enviarParaPessoa(deps, pessoa, { tipo: "modelo", nome: "vinculo_vencido", parametros: [venceu] }, { origem, chave: `renovar:${hoje}` }));
+}
+
 /** O resumo da manhã de uma pessoa. Devolve se saiu alguma coisa. */
 export async function avisarResumo(deps: DepsDoAgente, pessoa: PessoaNoWhatsapp, painel: PainelDoDia): Promise<boolean> {
   const dia = resumoDaManha(painel, { id: pessoa.userId, apelido: pessoa.apelido }, deps.telas);
@@ -60,7 +68,7 @@ export async function avisarResumo(deps: DepsDoAgente, pessoa: PessoaNoWhatsapp,
   const corpo = [dia, avisoDoVinculo(pessoa, agoraDe(deps))].filter(Boolean).join("\n\n");
   const chave = `resumo:${painel.hoje}`;
   const origem = deps.origem === "laboratorio" ? "laboratorio" : "aviso";
-  const modelo: Extract<Saida, { tipo: "modelo" }> = { tipo: "modelo", nome: "resumo_do_dia", parametros: [pessoa.apelido, contagemDoDia(painel, pessoa.userId)], botoes: ["a:dia", "a:fila"] };
+  const modelo: Extract<Saida, { tipo: "modelo" }> = { tipo: "modelo", nome: "agenda_do_dia", parametros: [formatarDiaCurto(painel.hoje), contagemDoDia(painel, pessoa.userId)], botoes: ["a:dia", "a:fila"] };
   if (!pessoa.janelaAberta) return !!(await enviarParaPessoa(deps, pessoa, modelo, { origem, chave }));
   const saiu = await enviarParaPessoa(deps, pessoa, { tipo: "texto", texto: corpo }, { origem, chave, modeloSeFechada: modelo });
   if (!saiu || saiu.saida.tipo === "modelo" || pessoa.acesso !== "total") return !!saiu;
