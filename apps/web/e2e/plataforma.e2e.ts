@@ -6,6 +6,7 @@
  * e2e/apoio.ts.
  */
 import { readFileSync } from "node:fs";
+import { montarLicencaCompleta, PLANO_INICIAL } from "@decreta/core";
 import { expect, test, type Page } from "@playwright/test";
 import { abrir, amostras, ApiFalsa, sobraNaLateral } from "./apoio";
 
@@ -31,6 +32,11 @@ const escritorio = (o: Record<string, unknown>) => ({
   pessoas: 3,
   processos: 41,
   iaMesUsd: 0.84,
+  plano: { id: "p1000000-0000-4000-8000-000000000001", nome: "Essencial", versao: 1, antigo: false },
+  marca: null,
+  mensalidadeCentavos: null,
+  comDesconto: false,
+  limites: { estado: "ok", alertas: 0, rotulos: [] },
   ...o,
 });
 
@@ -166,6 +172,8 @@ const IA = {
     { metodo: "sugerir-prazo", rotulo: "Sugerir prazo", usd: 5, chamadas: 300, mensagens: 0 },
   ],
   porEscritorio: [{ organizationId: "a0000000-0000-4000-8000-000000000001", nome: "Souza & Mendes Advocacia", situacao: "ativo", demonstracao: false, usd: 8.2, centavos: 4510, valorMensalCentavos: 9900, sobreAMensalidade: 0.4556 }],
+  recusas: { total: 0, porMotivo: [], porEscritorio: [], dias: [] },
+  ajustes: [],
 };
 
 const FICHA = {
@@ -186,6 +194,15 @@ const FICHA = {
   ia: { totalUsd: 0.1, hojeUsd: 0.02, dias: Array.from({ length: 30 }, (_, i) => ({ dia: dia(29 - i), usd: i === 29 ? 0.02 : 0 })), porMetodo: [{ metodo: "perguntar", rotulo: "Perguntar", usd: 0.1 }] },
   captura: { ultimaEm: null, errosNaSemana: 0, ultimoErro: null },
   acoes: [AUDITORIA.itens[0]],
+  licenca: montarLicencaCompleta(
+    { ...PLANO_INICIAL, id: "p1000000-0000-4000-8000-000000000001", versao: 1, padrao: true, criadoEm: "2026-10-01T12:00:00.000Z", criadoPor: null, substituidoEm: null },
+    { planoId: "p1000000-0000-4000-8000-000000000001", pessoasExtras: 0, valorCombinadoCentavos: null, desconto: null, marca: null, tetosIa: null },
+    { pessoas: 1, processos: 7, oabs: 0, iaMesUsd: 0.1, arquivosBytes: 3_400_000, whatsappHoje: 0 },
+    "2026-10-29",
+  ),
+  notas: [],
+  planos: [{ id: "p1000000-0000-4000-8000-000000000001", nome: "Escritório", versao: 1, mensalCentavos: null, vivo: true }],
+  cobranca: { linkGuardado: false, assinaturaViva: false },
 };
 
 /** O operador: o /eu traz `plataforma` e a API do painel responde. */
@@ -397,8 +414,8 @@ test("pessoas: os filtros, sem a demonstração, e encerrar as sessões vai para
   await page.getByRole("button", { name: /^Todas/ }).click();
   await page.getByRole("button", { name: "Agir em Renata Duarte" }).click();
   const dialogo = page.getByRole("dialog", { name: "Agir em Renata Duarte" });
-  // Com o e-mail confirmado, reenviar a confirmação não aparece.
-  expect(await dialogo.getByLabel("Ação").locator("option").allTextContents()).toEqual(["Mandar link de nova senha", "Encerrar as sessões"]);
+  // Com o e-mail confirmado, reenviar a confirmação não aparece; com as duas etapas ligadas, desligá-las aparece.
+  expect(await dialogo.getByLabel("Ação").locator("option").allTextContents()).toEqual(["Mandar link de nova senha", "Encerrar as sessões", "Desligar a verificação em duas etapas", "Suspender a pessoa"]);
   await dialogo.getByLabel("Ação").selectOption("encerrar_sessoes");
   await dialogo.getByLabel("Motivo (opcional)").fill("perdeu o celular");
   await dialogo.getByRole("button", { name: "Confirmar" }).click();
