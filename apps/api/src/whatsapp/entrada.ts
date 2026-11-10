@@ -2,23 +2,24 @@
  * O que chega da Meta, do webhook até a resposta.
  *
  *   webhook ── status ──► atualiza a mensagem que saiu (entregue, lida, falhou)
- *           └─ mensagem ─► quem é? ── ninguém ── código "DECRETA ..." ──► liga o WhatsApp
- *                                  │           └─ outro ──► resposta fixa, no máximo 1 vez em 30 dias
+ *           └─ mensagem ─► quem é? ── ninguém ──► resposta fixa, no máximo 1 vez em 30 dias
  *                                  └─ pessoa ── grava (a mesma mensagem duas vezes entra uma) ──►
+ *                                               primeira desde que ligou ──► boas-vindas (um oi para aí)
  *                                               toque  ──► evento whatsapp.decisao (na hora)
  *                                               texto, áudio, arquivo ──► evento whatsapp.mensagem (junta a rajada)
+ *
+ * Ligar é pela tela (`vinculo.ts`): o código chega no WhatsApp e a pessoa o digita no Decreta.
  *
  * O webhook só grava e enfileira: a IA e a resposta rodam nas rotinas (Inngest), uma por pessoa por vez.
  */
 import { withTenant } from "@decreta/db";
 import { sql } from "drizzle-orm";
-import { registrar } from "../auditoria.ts";
 import { tratarEscolha } from "./acoes.ts";
 import type { Entrada, Saida } from "./canal.ts";
 import { atualizarStatus, enviarParaPessoa, marcarEntradas, marcarParaRevisao, registrarEntrada } from "./mensagens.ts";
 import { responderTurno, type Turno } from "./turno.ts";
 import { agoraDe, type DepsDoAgente } from "./tipos.ts";
-import { codigoNaMensagem, ligarPeloCodigo, pessoaDoUsuario, quemE, registrarEntradaNoVinculo, responderAoDesconhecido, type PessoaNoWhatsapp } from "./vinculo.ts";
+import { marcarBoasVindas, pessoaDoUsuario, quemE, registrarEntradaNoVinculo, responderAoDesconhecido, type PessoaNoWhatsapp } from "./vinculo.ts";
 
 /** `responde`: a mensagem que tinha o botão tocado (a resposta a cita). */
 export type PedidoDoWhatsapp = { tipo: "mensagem"; organizationId: string; userId: string } | { tipo: "decisao"; organizationId: string; userId: string; entradaId: string; escolha: string; responde: string | null };
@@ -26,13 +27,8 @@ export type PedidoDoWhatsapp = { tipo: "mensagem"; organizationId: string; userI
 export const RESPOSTA_AO_DESCONHECIDO =
   "Este número é do Decreta, o sistema de escritórios de advocacia. Se você é cliente de um escritório, fale com o seu advogado pelo número dele. O Decreta nunca pede Pix nem códigos.";
 
-const RESPOSTA_DO_CODIGO: Record<"invalido" | "vencido" | "numero_de_outra_pessoa" | "sem_telefone" | "fora_do_escritorio", string> = {
-  invalido: "Este código não vale. Gere outro em Configurações > WhatsApp, no Decreta.",
-  vencido: "Este código passou dos 10 minutos. Gere outro em Configurações > WhatsApp, no Decreta.",
-  numero_de_outra_pessoa: "Este WhatsApp já está ligado à conta de outra pessoa no Decreta. Quem tem a conta desliga em Configurações > WhatsApp.",
-  sem_telefone: "Não deu para ler o número deste WhatsApp. Tente de novo pelo link do Decreta.",
-  fora_do_escritorio: "Você não faz mais parte do escritório deste código.",
-};
+/** Só um cumprimento ("oi", "olá, bom dia!"): as boas-vindas bastam como resposta, sem IA. */
+const SO_CUMPRIMENTO = /^\s*((oi+|ol[áa]|opa|e a[íi]|bom dia|boa tarde|boa noite)[\s,.!]*)+(decreta)?[\s,.!]*$/i;
 
 /**
  * Manda as respostas de um turno ou de um toque, cada uma com a sua chave (a rotina que repete não manda
@@ -66,15 +62,13 @@ async function receberMensagem(deps: DepsDoAgente, m: Extract<Entrada, { tipo: "
   const remetente = { telefone: m.de.telefone, bsuid: m.de.bsuid };
   const pessoa = await quemE(deps.db, remetente, { cobrancaAtiva: deps.cobrancaAtiva, agora });
   if (!pessoa) {
-    const codigo = m.conteudo.tipo === "texto" ? codigoNaMensagem(m.conteudo.texto) : null;
-    if (codigo) return ligar(deps, m, codigo);
-    // Sem vínculo e sem código: a resposta fixa, sem IA, e o número não fica guardado.
+    // Sem vínculo: a resposta fixa, sem IA, e o número não fica guardado.
     if (m.de.telefone && (await responderAoDesconhecido(deps.db, m.de.telefone, agora))) {
       await deps.canal.enviar({ telefone: m.de.telefone, bsuid: m.de.bsuid }, { tipo: "texto", texto: RESPOSTA_AO_DESCONHECIDO }).catch((err) => deps.log("whatsapp: a resposta ao desconhecido não saiu", { error: err instanceof Error ? err.message : String(err) }));
     }
     return;
   }
-  await registrarEntradaNoVinculo(deps.db, pessoa.vinculoId, agora);
+  await registrarEntradaNoVinculo(deps.db, pessoa.vinculoId, agora, pessoa.bsuid ? null : m.de.bsuid);
   const { id, novo } = await registrarEntrada(deps.db, pessoa, m);
   if (!novo) return;
   // A reação não tem resposta (cada mensagem custa); o 👎 marca a resposta reagida para a equipe rever.
@@ -95,6 +89,13 @@ async function receberMensagem(deps: DepsDoAgente, m: Extract<Entrada, { tipo: "
     await withTenant(deps.db, pessoa.organizationId, (tx) => marcarEntradas(tx, [id], "ignorada"));
     return;
   }
+  if (pessoa.boasVindasPendente && (await marcarBoasVindas(deps.db, pessoa.vinculoId, agora))) {
+    await darBoasVindas(deps, aberta, id);
+    if (m.conteudo.tipo === "texto" && SO_CUMPRIMENTO.test(m.conteudo.texto)) {
+      await withTenant(deps.db, pessoa.organizationId, (tx) => marcarEntradas(tx, [id], "respondida"));
+      return;
+    }
+  }
   // A escolha que volta para a IA ("e:", a lista de processos) é uma mensagem: entra no turno, com a rajada.
   if (m.conteudo.tipo === "escolha" && m.conteudo.id.startsWith("e:")) {
     await enfileirar({ tipo: "mensagem", organizationId: pessoa.organizationId, userId: pessoa.userId });
@@ -110,26 +111,17 @@ async function receberMensagem(deps: DepsDoAgente, m: Extract<Entrada, { tipo: "
   await enfileirar({ tipo: "mensagem", organizationId: pessoa.organizationId, userId: pessoa.userId });
 }
 
-async function ligar(deps: DepsDoAgente, m: Extract<Entrada, { tipo: "mensagem" }>, codigo: string): Promise<void> {
-  const r = await ligarPeloCodigo(deps.db, codigo, { telefone: m.de.telefone, bsuid: m.de.bsuid }, agoraDe(deps));
-  const para = { telefone: m.de.telefone ?? "", bsuid: m.de.bsuid };
-  if (!r.ok) {
-    await deps.canal.enviar(para, { tipo: "texto", texto: RESPOSTA_DO_CODIGO[r.motivo] }).catch(() => {});
-    return;
-  }
-  const pessoa = await pessoaDoUsuario(deps.db, r.userId, { cobrancaAtiva: deps.cobrancaAtiva, agora: agoraDe(deps) });
-  if (!pessoa) return;
-  await registrarEntrada(deps.db, pessoa, m, { situacao: "respondida" });
-  await registrar(deps.db, { organizationId: r.organizationId, userId: r.userId, nome: pessoa.nome, acao: "whatsapp.ligado", detalhes: { trocouDeNumero: r.trocouDeNumero }, ip: null }, deps.log);
+/** A primeira mensagem desde que ligou pela tela: o que dá para fazer por aqui. */
+async function darBoasVindas(deps: DepsDoAgente, pessoa: PessoaNoWhatsapp, entradaId: string): Promise<void> {
   await enviarParaPessoa(
     deps,
-    { ...pessoa, janelaAberta: true },
+    pessoa,
     {
       tipo: "botoes",
-      texto: `Ligado ao Decreta de ${r.escritorio}. Por aqui chegam o resumo da manhã, o que vence no dia e as publicações para conferir; e dá para perguntar ("o que vence amanhã?") e pedir documentos ("me manda a procuração da Marina").${pessoa.demonstracao ? "\n\nEste é o escritório de demonstração: os dados são inventados e voltam ao começo toda madrugada." : ""}\n\nO WhatsApp continua ligado enquanto você usa o Decreta; depois de 30 dias sem abrir o app, ele para, por segurança. Para desligar, escreva "sair".`,
+      texto: `Ligado ao Decreta de ${pessoa.escritorio}. Por aqui chegam o resumo da manhã, o que vence no dia e as publicações para conferir; e dá para perguntar ("o que vence amanhã?") e pedir documentos ("me manda a procuração da Marina").${pessoa.demonstracao ? "\n\nEste é o escritório de demonstração: os dados são inventados e voltam ao começo toda madrugada." : ""}\n\nO WhatsApp continua ligado enquanto você usa o Decreta; depois de 30 dias sem abrir o app, ele para, por segurança. Para desligar, escreva "sair".`,
       botoes: [{ id: "a:dia", titulo: "Ver o meu dia" }],
     },
-    { origem: "agente", chave: `ligado:${m.wamid}` },
+    { origem: "agente", chave: `ligado:${entradaId}` },
   );
 }
 

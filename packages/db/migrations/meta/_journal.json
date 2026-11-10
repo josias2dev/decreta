@@ -260,6 +260,13 @@
       "when": 1794267925137,
       "tag": "0036_whatsapp_oficial",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794316101294,
+      "tag": "0037_whatsapp_codigo_no_numero",
+      "breakpoints": true
     }
   ]
 }

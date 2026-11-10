@@ -181,6 +181,17 @@ describe("enviar", () => {
     expect((await corpoEnviado({ tipo: "modelo", nome: "vinculo_vencido", parametros: [] })).template).toEqual({ name: "vinculo_vencido", language: { code: "pt_BR" } });
   });
 
+  test("modelo de código: o código vai no corpo e no botão de copiar", async () => {
+    expect((await corpoEnviado({ tipo: "modelo", nome: "codigo_do_whatsapp", parametros: ["482913"] })).template).toEqual({
+      name: "codigo_do_whatsapp",
+      language: { code: "pt_BR" },
+      components: [
+        { type: "body", parameters: [{ type: "text", text: "482913" }] },
+        { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: "482913" }] },
+      ],
+    });
+  });
+
   test("documento: sobe o arquivo em /media antes e manda a mensagem com o id dele", async () => {
     const g = graph([{ corpo: { id: "1166846181421424" } }, aceita("wamid.doc")]);
     const bytes = new Uint8Array([37, 80, 68, 70, 45, 49, 46, 55]);

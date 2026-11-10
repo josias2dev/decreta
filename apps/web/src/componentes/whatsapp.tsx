@@ -2,22 +2,20 @@
  * O WhatsApp do Decreta, na conta de cada pessoa: ligar o próprio WhatsApp ao número oficial do Decreta,
  * ver como está e escolher os avisos.
  *
- * Ligar: a tela pede um código (vale 10 minutos, uma vez) e mostra o QR e o link que abrem o WhatsApp
- * com a mensagem "DECRETA K7Q2-9XMP" já escrita. A pessoa manda do próprio WhatsApp; isso prova que o
- * número é dela. A tela pergunta a cada 3 segundos se já ligou.
+ * Ligar: a pessoa digita o número (o do perfil já vem escrito), o código de 6 dígitos chega no WhatsApp
+ * dele e ela o digita aqui. Isso prova que o número é dela. O código vale 10 minutos, uma vez, e para
+ * depois de 5 erros. A conversa começa quando ela manda a primeira mensagem, que traz as boas-vindas.
  *
  * O vínculo se renova sozinho quando a pessoa abre o Decreta; depois de 30 dias sem abrir, para.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle } from "lucide-react";
-import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAviso } from "@/componentes/avisos";
 import { Dialogo } from "@/componentes/dialogo";
-import { Botao, Carregando, Dados, Faixa, Interruptor, Painel } from "@/componentes/ui";
+import { Botao, Campo, Carregando, Dados, Faixa, Interruptor, Painel } from "@/componentes/ui";
 import { api, mensagemDoErro } from "@/lib/api";
-import { useCelular } from "@/lib/celular";
-import { diaCompleto, diaDoInstante } from "@/lib/formato";
+import { diaCompleto, diaDoInstante, telefone } from "@/lib/formato";
 
 interface AvisosDoWhatsapp {
   manha: boolean;
@@ -31,17 +29,19 @@ interface WhatsappDaPessoa {
   numero: string | null;
   vinculo: { ligado: true; telefone: string; verificadoEm: string; renovarAte: string; pausado: boolean; outroEscritorio: boolean } | null;
   avisos: AvisosDoWhatsapp;
+  /** O número do perfil (55 + DDD + número), que já vem escrito para ligar. */
+  perfil: string | null;
   demonstracao: boolean;
 }
 
-interface Codigo {
-  codigo: string;
-  link: string;
+/** Para onde o código foi (o meio do número escondido) e até quando vale. */
+interface CodigoPedido {
+  telefone: string;
   expiraEm: string;
 }
 
 const CHAVE = ["whatsapp"] as const;
-const PERGUNTA_A_CADA_MS = 3000;
+const DIGITOS = 6;
 
 export function WhatsappDoDecreta() {
   const q = useQuery({ queryKey: CHAVE, queryFn: () => api<WhatsappDaPessoa>("/whatsapp") });
@@ -57,9 +57,9 @@ export function WhatsappDoDecreta() {
           {!w.servidor ? (
             <p className="dc-nota m-0">O WhatsApp oficial do Decreta ainda não foi ligado neste servidor. O resumo da manhã continua saindo pelo número do seu perfil.</p>
           ) : w.vinculo ? (
-            <Ligado vinculo={w.vinculo} />
+            <Ligado vinculo={w.vinculo} numero={w.numero} />
           ) : (
-            <Ligar />
+            <Ligar perfil={w.perfil} />
           )}
           {w.servidor && w.demonstracao && <p className="dc-nota m-0">Na demonstração, o WhatsApp responde com os dados inventados deste escritório, que voltam ao começo toda madrugada.</p>}
           <Avisos avisos={w.avisos} oficial={w.servidor && !!w.vinculo} />
@@ -69,83 +69,107 @@ export function WhatsappDoDecreta() {
   );
 }
 
-/** Ainda não ligado: o que chega pelo WhatsApp e o código para ligar. */
-function Ligar() {
+/** Ainda não ligado: o número, o código que chega no WhatsApp e o código digitado aqui. */
+function Ligar({ perfil }: { perfil: string | null }) {
   const qc = useQueryClient();
   const avisar = useAviso();
-  const celular = useCelular();
-  const [codigo, setCodigo] = useState<(Codigo & { qr: string | null }) | null>(null);
+  const [numero, setNumero] = useState(() => telefone(perfil));
+  const [pedido, setPedido] = useState<CodigoPedido | null>(null);
+  const [codigo, setCodigo] = useState("");
   const [agora, setAgora] = useState(() => Date.now());
-  const gerar = useMutation({
-    mutationFn: () => api<Codigo>("/whatsapp/codigo", { method: "POST" }),
-    onSuccess: async (c) => {
-      const qr = celular ? null : await QRCode.toDataURL(c.link, { margin: 1, width: 192 });
+  const pedir = useMutation({
+    mutationFn: () => api<CodigoPedido>("/whatsapp/codigo", { method: "POST", json: { telefone: numero } }),
+    onSuccess: (p) => {
       // O relógio da contagem parte de agora, e não de quando a tela abriu.
       setAgora(Date.now());
-      setCodigo({ ...c, qr });
+      setPedido(p);
+      setCodigo("");
+      confirmar.reset();
     },
-    onError: (err) => avisar(mensagemDoErro(err), { erro: true }),
   });
-  const vencido = !!codigo && agora >= new Date(codigo.expiraEm).getTime();
-  // Enquanto o código vale, pergunta se a mensagem já chegou: ligou, a tela troca para "Ligado".
-  const ligou = useQuery({
-    queryKey: CHAVE,
-    queryFn: () => api<WhatsappDaPessoa>("/whatsapp"),
-    enabled: !!codigo && !vencido,
-    refetchInterval: PERGUNTA_A_CADA_MS,
+  const confirmar = useMutation({
+    mutationFn: () => api("/whatsapp/confirmar", { method: "POST", json: { codigo } }),
+    onSuccess: () => {
+      avisar("WhatsApp ligado. Mande um oi para o Decreta por lá para começar.");
+      void qc.invalidateQueries({ queryKey: CHAVE });
+      // O número verificado vai para o perfil.
+      void qc.invalidateQueries({ queryKey: ["equipe"] });
+    },
   });
   useEffect(() => {
-    if (!codigo) return;
+    if (!pedido) return;
     const id = window.setInterval(() => setAgora(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [codigo]);
-  useEffect(() => {
-    if (codigo && ligou.data?.vinculo) {
-      avisar("WhatsApp ligado. O resumo de amanhã já chega por lá.");
-      void qc.invalidateQueries({ queryKey: CHAVE });
-    }
-  }, [codigo, ligou.data?.vinculo, avisar, qc]);
+  }, [pedido]);
 
-  if (!codigo || vencido) {
+  const mandar = (e: FormEvent) => {
+    e.preventDefault();
+    pedir.mutate();
+  };
+  const ligar = (e: FormEvent) => {
+    e.preventDefault();
+    if (codigo.length === DIGITOS) confirmar.mutate();
+  };
+
+  if (!pedido) {
     return (
-      <>
+      <form className="dc-form" onSubmit={mandar}>
         <p className="dc-nota m-0">
           Pelo WhatsApp chegam o resumo da manhã, o que vence no dia e as publicações para conferir, com botões para confirmar o prazo ali mesmo. Também dá para perguntar ("o que vence amanhã?") e pedir documentos ("me manda a procuração da Marina").
         </p>
-        {vencido && <Faixa tipo="aviso">O código passou dos 10 minutos. Gere outro.</Faixa>}
+        <Campo rotulo="Seu WhatsApp" htmlFor="wa-numero" ajuda="Chega um código de 6 dígitos neste número, pelo WhatsApp.">
+          <input id="wa-numero" inputMode="tel" autoComplete="tel" value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="(47) 99123-4567" required />
+        </Campo>
+        {pedir.error && <Faixa tipo="erro">{mensagemDoErro(pedir.error)}</Faixa>}
         <div>
-          <Botao variante="primaria" onClick={() => gerar.mutate()} ocupado={gerar.isPending}>
-            <MessageCircle /> {vencido ? "Gerar outro código" : "Ligar o meu WhatsApp"}
+          <Botao type="submit" variante="primaria" ocupado={pedir.isPending} disabled={!numero.trim()}>
+            <MessageCircle /> Mandar código
           </Botao>
         </div>
-      </>
+      </form>
     );
   }
 
-  const falta = Math.max(0, Math.ceil((new Date(codigo.expiraEm).getTime() - agora) / 60_000));
+  const vencido = agora >= new Date(pedido.expiraEm).getTime();
+  const falta = Math.max(0, Math.ceil((new Date(pedido.expiraEm).getTime() - agora) / 60_000));
   return (
-    <div className="flex flex-col gap-3" aria-live="polite">
+    <form className="dc-form" onSubmit={ligar} aria-live="polite">
       <p className="dc-nota m-0">
-        {celular ? "Toque no botão: o WhatsApp abre com a mensagem pronta. Mande como está." : "Leia o QR com a câmera do celular: o WhatsApp abre com a mensagem pronta. Mande como está."}
+        Mandamos um código para <span className="dc-num">{pedido.telefone}</span> pelo WhatsApp. Digite aqui os 6 dígitos.
       </p>
-      {codigo.qr && <img src={codigo.qr} alt="QR que abre o WhatsApp com o código" width={192} height={192} className="rounded-md bg-white p-2" />}
+      <Campo rotulo="Código" htmlFor="wa-codigo">
+        <input
+          id="wa-codigo"
+          className="dc-num"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={DIGITOS}
+          value={codigo}
+          onChange={(e) => setCodigo(e.target.value.replace(/\D/g, "").slice(0, DIGITOS))}
+          placeholder="123456"
+          autoFocus
+          disabled={vencido}
+        />
+      </Campo>
+      {vencido ? <Faixa tipo="aviso">O código passou dos 10 minutos. Peça outro.</Faixa> : confirmar.error ? <Faixa tipo="erro">{mensagemDoErro(confirmar.error)}</Faixa> : <p className="dc-nota m-0">Vale {falta === 1 ? "mais 1 minuto" : `mais ${falta} minutos`}, uma vez só.</p>}
+      {pedir.error && <Faixa tipo="erro">{mensagemDoErro(pedir.error)}</Faixa>}
       <div className="flex flex-wrap items-center gap-3">
-        <a className="dc-btn dc-btn--primaria dc-btn--md" href={codigo.link} target="_blank" rel="noopener noreferrer">
-          <MessageCircle /> Abrir o WhatsApp
-        </a>
-        <span className="dc-num" aria-label="Código para ligar">
-          {codigo.codigo}
-        </span>
+        <Botao type="submit" variante="primaria" ocupado={confirmar.isPending} disabled={vencido || codigo.length !== DIGITOS}>
+          Ligar o WhatsApp
+        </Botao>
+        <Botao variante="fantasma" onClick={() => pedir.mutate()} ocupado={pedir.isPending}>
+          Mandar outro código
+        </Botao>
+        <Botao variante="fantasma" onClick={() => setPedido(null)}>
+          Trocar o número
+        </Botao>
       </div>
-      <p className="dc-nota m-0">
-        Vale {falta === 1 ? "mais 1 minuto" : `mais ${falta} minutos`}, uma vez só. Esta tela muda sozinha quando a mensagem chegar.
-      </p>
-    </div>
+    </form>
   );
 }
 
-/** Já ligado: o número, até quando vale, e desligar. */
-function Ligado({ vinculo }: { vinculo: NonNullable<WhatsappDaPessoa["vinculo"]> }) {
+/** Já ligado: o número, até quando vale, abrir a conversa e desligar. `numero`: o do Decreta, só dígitos. */
+function Ligado({ vinculo, numero }: { vinculo: NonNullable<WhatsappDaPessoa["vinculo"]>; numero: string | null }) {
   const qc = useQueryClient();
   const avisar = useAviso();
   const [confirmar, setConfirmar] = useState(false);
@@ -170,7 +194,12 @@ function Ligado({ vinculo }: { vinculo: NonNullable<WhatsappDaPessoa["vinculo"]>
       {vinculo.pausado && <Faixa tipo="nota">A equipe do Decreta está atendendo esta conversa: as respostas automáticas estão pausadas.</Faixa>}
       {vinculo.outroEscritorio && <p className="dc-nota m-0">As perguntas pelo WhatsApp são sobre outro escritório seu. Para trocar, escreva "trocar de escritório" no WhatsApp.</p>}
       <p className="dc-nota m-0">Ligue a confirmação em duas etapas do próprio WhatsApp (Configurações &gt; Conta): quem toma o seu WhatsApp leva junto o acesso ao Decreta.</p>
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
+        {numero && (
+          <a className="dc-btn dc-btn--secundaria dc-btn--md" href={`https://wa.me/${numero}?text=${encodeURIComponent("Oi")}`} target="_blank" rel="noopener noreferrer">
+            <MessageCircle /> Abrir a conversa
+          </a>
+        )}
         <Botao variante="fantasma" onClick={() => setConfirmar(true)}>
           Desligar o WhatsApp
         </Botao>
@@ -179,7 +208,7 @@ function Ligado({ vinculo }: { vinculo: NonNullable<WhatsappDaPessoa["vinculo"]>
         aberto={confirmar}
         aoFechar={() => setConfirmar(false)}
         titulo="Desligar o WhatsApp"
-        descricao="O resumo, os avisos e as perguntas param de chegar por lá. Para ligar de novo, é só gerar outro código aqui."
+        descricao="O resumo, os avisos e as perguntas param de chegar por lá. Para ligar de novo, é só pedir outro código aqui."
         acoes={
           <>
             <Botao onClick={() => setConfirmar(false)}>Voltar</Botao>

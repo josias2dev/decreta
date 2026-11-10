@@ -7,7 +7,7 @@
  * leva, nem quando a Meta o devolve no texto do erro.
  */
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { dentroDosLimites, FalhaNoCanal, type Canal, type Conteudo, type Entrada, type Saida } from "./canal.ts";
+import { dentroDosLimites, FalhaNoCanal, MODELOS, type Canal, type Conteudo, type Entrada, type Saida } from "./canal.ts";
 
 export interface ConfigDaMeta {
   phoneNumberId: string;
@@ -102,6 +102,8 @@ export function canalDaMeta(config: ConfigDaMeta): Canal {
         const componentes = [
           ...(s.parametros.length ? [{ type: "body", parameters: s.parametros.map((text) => ({ type: "text", text })) }] : []),
           ...(s.botoes ?? []).map((payload, i) => ({ type: "button", sub_type: "quick_reply", index: String(i), parameters: [{ type: "payload", payload }] })),
+          // O botão de copiar do modelo de autenticação é de link: leva o mesmo código do corpo.
+          ...("copiarCodigo" in MODELOS[s.nome] ? [{ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: s.parametros[0] ?? "" }] }] : []),
         ];
         // Modelo sem variável e sem botão vai sem `components`.
         return { type: "template", template: { name: s.nome, language: { code: "pt_BR" }, ...(componentes.length ? { components: componentes } : {}) } };

@@ -6,24 +6,26 @@
  * - `/api/app/whatsapp/*` (a pessoa logada): ligar, renovar e desligar o WhatsApp, e os avisos dela.
  * - `/api/plataforma/whatsapp/*` e `/api/plataforma/laboratorio/*` (os operadores): as conversas e o Laboratório.
  */
+import { telefoneWhatsapp } from "@decreta/core";
 import { equipe, propostas, prazos, processos, publicacoes, withTenant } from "@decreta/db";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import { registrar } from "../auditoria.ts";
+import { limitador } from "../limitador.ts";
 import { corpo, falha, tenant, type Ambiente, type DepsDasRotas } from "../rotas/base.ts";
-import { canalEmMemoria, type Canal } from "./canal.ts";
+import { canalEmMemoria, FalhaNoCanal, type Canal } from "./canal.ts";
 import { receberDoWebhook, type PedidoDoWhatsapp } from "./entrada.ts";
 import { assinaturaConfere, lerWebhook, respostaDoDesafio } from "./meta.ts";
 import { abrirConversa, conteudoDaConversa, conversaDoLaboratorio, conversasDaPlataforma, escreverComoSuporte, limparLaboratorio, noLaboratorio, pausarConversa, pessoaDoLaboratorio, pessoasDoLaboratorio, RecusaDoPainel, escritorioDoLaboratorio } from "./painel.ts";
 import type { DepsDoAgente } from "./tipos.ts";
-import { desligarVinculo, estadoDoVinculo, gerarCodigo, linkDoCodigo, renovarVinculo } from "./vinculo.ts";
+import { confirmarCodigo, desligarVinculo, estadoDoVinculo, gerarCodigo, renovarVinculo, telefoneEscondido } from "./vinculo.ts";
 
 /** O WhatsApp oficial ligado no servidor: o canal da Meta e o que a tela precisa para ligar. */
 export interface WhatsappDoServidor {
   canal: Canal;
-  /** O número do Decreta, só dígitos (55 + DDD + número): o link do código e o aviso da tela. */
+  /** O número do Decreta, só dígitos (55 + DDD + número): o link que abre a conversa. */
   numero: string;
   phoneNumberId: string;
   appSecret: string;
@@ -57,28 +59,85 @@ export function rotasDoWebhook(deps: { agente: DepsDoAgente; whatsapp: WhatsappD
   return app;
 }
 
+/**
+ * Cada código que sai custa e chega no WhatsApp de alguém: até 5 por hora por pessoa, 5 por dia para o mesmo
+ * número e 100 por hora no servidor inteiro (a rede de segurança de quem abre contas para mandar código a
+ * terceiros). E até 10 códigos digitados por hora por pessoa: pedir um código novo não zera os palpites.
+ */
+const HORA_MS = 60 * 60_000;
+const CODIGOS_POR_PESSOA = { janelaMs: HORA_MS, maximo: 5 };
+const CODIGOS_POR_NUMERO = { janelaMs: 24 * HORA_MS, maximo: 5 };
+const CODIGOS_NO_SERVIDOR = { janelaMs: HORA_MS, maximo: 100 };
+const PALPITES_POR_PESSOA = { janelaMs: HORA_MS, maximo: 10 };
+const NUMERO = z.object({ telefone: z.string().max(40) });
+const CODIGO = z.object({ codigo: z.string().max(20) });
+
+const RECUSA_DO_CODIGO = {
+  sem_codigo: [404, "Peça um código primeiro."],
+  vencido: [410, "O código passou dos 10 minutos. Peça outro."],
+  tentativas: [429, "Código errado 5 vezes. Peça outro."],
+  numero_de_outra_pessoa: [409, "Este WhatsApp já está ligado à conta de outra pessoa no Decreta. Quem tem a conta desliga em Minha conta."],
+} as const;
+
 const AVISOS = z.object({ manha: z.boolean().optional(), quinzeHoras: z.boolean().optional(), prazoCurto: z.boolean().optional() });
 
 /** Ligar, renovar e desligar o WhatsApp da pessoa logada, e os avisos dela. Sem o WhatsApp oficial no servidor, a tela diz que ainda não está ligado. */
 export function rotasDoWhatsappNoApp(app: Hono<Ambiente>, deps: DepsDasRotas & { whatsapp?: WhatsappDoServidor | null }) {
   app.get("/whatsapp", async (c) => {
     const estado = await estadoDoVinculo(deps.db, c.get("userId"));
-    const [e] = await tenant(c, deps, (tx) => tx.select({ manha: equipe.avisoManha, quinzeHoras: equipe.avisoQuinzeHoras, prazoCurto: equipe.avisoPrazoCurto }).from(equipe).where(eq(equipe.userId, c.get("userId"))));
+    const [e] = await tenant(c, deps, (tx) => tx.select({ manha: equipe.avisoManha, quinzeHoras: equipe.avisoQuinzeHoras, prazoCurto: equipe.avisoPrazoCurto, whatsapp: equipe.whatsapp }).from(equipe).where(eq(equipe.userId, c.get("userId"))));
+    const { whatsapp: perfil = null, ...avisos } = e ?? { manha: true, quinzeHoras: true, prazoCurto: true };
     return c.json({
       servidor: !!deps.whatsapp,
       numero: deps.whatsapp?.numero ?? null,
       vinculo: estado.ligado ? { ...estado, outroEscritorio: estado.organizationId !== c.get("orgId") } : null,
-      avisos: e ?? { manha: true, quinzeHoras: true, prazoCurto: true },
+      avisos,
+      /** O número do perfil: a tela já o traz escrito para ligar. */
+      perfil,
       demonstracao: c.get("demonstracao"),
     });
   });
 
-  /** Um código novo (10 minutos, uma vez): a tela mostra o link e o QR que abrem o WhatsApp com ele escrito. */
+  const porPessoa = limitador(CODIGOS_POR_PESSOA);
+  const porNumero = limitador(CODIGOS_POR_NUMERO);
+  const noServidor = limitador(CODIGOS_NO_SERVIDOR);
+  const palpites = limitador(PALPITES_POR_PESSOA);
+
+  /** O código de 6 dígitos para o número que a pessoa digitou: chega no WhatsApp dele, vale 10 minutos e uma vez. */
   app.post("/whatsapp/codigo", async (c) => {
     if (!deps.whatsapp) falha(503, "whatsapp_desligado", "O WhatsApp oficial do Decreta ainda não foi ligado neste servidor.");
+    const telefone = telefoneWhatsapp((await corpo(c, NUMERO)).telefone);
+    if (!telefone) falha(422, "whatsapp_invalido", "Confira o número: DDD e número, como (47) 99123-4567.");
+    if (!porPessoa.permitir(c.get("userId")) || !porNumero.permitir(telefone)) falha(429, "muitos_codigos", "Já saíram códigos demais para você ou para este número. Espere um pouco e peça de novo.");
+    if (!noServidor.permitir("todos")) {
+      deps.log("whatsapp: o teto de códigos por hora do servidor foi atingido", {});
+      falha(429, "muitos_codigos", "Muitos pedidos de código agora. Tente de novo em alguns minutos.");
+    }
     // Na demonstração também liga, para testar o agente: as respostas avisam que os dados são inventados.
-    const { codigo, expiraEm } = await gerarCodigo(deps.db, { userId: c.get("userId"), organizationId: c.get("orgId") });
-    return c.json({ codigo: `DECRETA ${codigo.slice(0, 4)}-${codigo.slice(4)}`, link: linkDoCodigo(deps.whatsapp.numero, codigo), expiraEm: expiraEm.toISOString() });
+    const r = await gerarCodigo(deps.db, { userId: c.get("userId"), organizationId: c.get("orgId") }, telefone);
+    if (!r.ok) falha(RECUSA_DO_CODIGO[r.motivo][0], r.motivo, RECUSA_DO_CODIGO[r.motivo][1]);
+    try {
+      await deps.whatsapp.canal.enviar({ telefone }, { tipo: "modelo", nome: "codigo_do_whatsapp", parametros: [r.codigo] });
+    } catch (err) {
+      deps.log("whatsapp: o código não saiu", { error: err instanceof Error ? err.message : String(err), codigo: err instanceof FalhaNoCanal ? err.codigo : null });
+      falha(502, "codigo_nao_saiu", "O WhatsApp não aceitou mandar o código para este número. Confira o número e tente de novo.");
+    }
+    return c.json({ telefone: telefoneEscondido(telefone), expiraEm: r.expiraEm.toISOString() });
+  });
+
+  app.post("/whatsapp/confirmar", async (c) => {
+    const digitado = (await corpo(c, CODIGO)).codigo.replace(/\D/g, "");
+    // O que nem tem 6 dígitos não gasta tentativa.
+    if (digitado.length !== 6) falha(422, "codigo_invalido", "O código tem 6 dígitos.");
+    if (!palpites.permitir(c.get("userId"))) falha(429, "muitas_tentativas", "Tentativas demais na última hora. Espere um pouco e peça outro código.");
+    const r = await confirmarCodigo(deps.db, c.get("userId"), digitado);
+    if (!r.ok) {
+      if (r.motivo === "errado") falha(422, "codigo_errado", `Código errado. ${r.restam === 1 ? "Resta 1 tentativa" : `Restam ${r.restam} tentativas`}.`);
+      const [status, detalhe] = RECUSA_DO_CODIGO[r.motivo];
+      falha(status, r.motivo, detalhe);
+    }
+    await registrar(deps.db, { organizationId: r.organizationId, userId: c.get("userId"), nome: c.get("userNome"), acao: "whatsapp.ligado", detalhes: { trocouDeNumero: r.trocouDeNumero }, ip: null }, deps.log);
+    return c.json(await estadoDoVinculo(deps.db, c.get("userId")));
   });
 
   app.post("/whatsapp/renovar", async (c) => {

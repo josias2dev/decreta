@@ -212,6 +212,7 @@ export async function pessoaDoLaboratorio(db: Database, userId: string, janelaAb
     janelaAberta,
     pausado: false,
     vencido: false,
+    boasVindasPendente: false,
     renovarAte: new Date(Date.now() + 365 * 24 * 60 * 60_000),
   };
 }

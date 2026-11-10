@@ -1,9 +1,10 @@
 /**
  * O agente do Decreta no WhatsApp oficial (ver `apps/api/src/whatsapp`).
  *
- * - `whatsapp_vinculos`: o WhatsApp de cada pessoa, provado pelo código que ela mandou do próprio
- *   número. Sem RLS, como `member`: a mensagem chega antes de se saber o escritório.
- * - `whatsapp_codigos`: os códigos de ligar, só o hash, com validade curta e uso único. Sem RLS.
+ * - `whatsapp_vinculos`: o WhatsApp de cada pessoa, provado pelo código que chegou no número e que ela
+ *   digitou na tela. Sem RLS, como `member`: a mensagem chega antes de se saber o escritório.
+ * - `whatsapp_codigos`: os códigos de ligar, só o hash, com o número para onde foram, validade curta,
+ *   uso único e até 5 tentativas. Sem RLS.
  * - `whatsapp_desconhecidos`: números sem vínculo que escreveram (o hash), para a resposta fixa
  *   sair no máximo uma vez a cada 30 dias. Sem RLS e sem o número.
  * - `whatsapp_mensagens`: o que entrou e saiu, com o status de entrega. Tem RLS; o status que a Meta
@@ -44,6 +45,8 @@ export const whatsappVinculos = pgTable(
     ultimaEntradaEm: timestamp("ultima_entrada_em", { withTimezone: true }),
     /** A equipe do Decreta pausou o agente (suporte assumiu a conversa): chega, mas a IA não responde. */
     pausadoEm: timestamp("pausado_em", { withTimezone: true }),
+    /** Quando saíram as boas-vindas. Nulo: ligou pela tela e ainda não escreveu (a primeira mensagem as traz). */
+    boasVindasEm: timestamp("boas_vindas_em", { withTimezone: true }),
     createdAt: criadoEm(),
     updatedAt: mudadoEm(),
   },
@@ -54,8 +57,12 @@ export const whatsappCodigos = pgTable(
   "whatsapp_codigos",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    /** sha256 do código, sem o "DECRETA" e sem o hífen. */
+    /** sha256 da pessoa e do código ("<userId>:<6 dígitos>"): o mesmo código pode sair para duas pessoas. */
     hash: text("hash").notNull(),
+    /** Para onde o código foi (55 + DDD + número): é este número que fica ligado. */
+    telefone: text("telefone").notNull(),
+    /** Os erros de digitação: na quinta, o código para de valer. */
+    tentativas: integer("tentativas").notNull().default(0),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),

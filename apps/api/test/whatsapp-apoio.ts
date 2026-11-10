@@ -43,6 +43,8 @@ export const titulosDe = (m: Enviada | undefined) => botoesDe(m).map((b) => b.ti
 export const textoDe = (m: Enviada | undefined) => (m ? textoDaSaida(m.saida) : "");
 /** O prazo de que a mensagem fala, pelo link dele. */
 export const prazoDo = (m: Enviada | undefined) => /\/prazos\/([0-9a-f-]{36})/.exec(textoDe(m))?.[1] ?? "";
+/** O código de 6 dígitos que o modelo de autenticação levou para o número. */
+export const codigoQueChegou = (m: Enviada | undefined) => (m?.saida.tipo === "modelo" && m.saida.nome === "codigo_do_whatsapp" ? m.saida.parametros[0] : undefined);
 
 export interface CenarioDoWhatsapp {
   t: TestDatabase;
@@ -145,8 +147,14 @@ export async function montarCenarioDoWhatsapp(hoje: string, opcoes: { demonstrac
       cookies[quem] = await entrar(EMAILS[quem]);
     },
     async ligar(quem) {
-      const r = await c.json(c.call("/whatsapp/codigo", { method: "POST" }, quem));
-      return c.escreve(quem, r.codigo);
+      // Como na tela: o número, o código que chega no WhatsApp e o código digitado. O "oi" abre a janela e traz as boas-vindas.
+      const antes = canal.enviadas.length;
+      const pedido = await c.call("/whatsapp/codigo", { method: "POST", json: { telefone: TELEFONES[quem] } }, quem);
+      const codigo = codigoQueChegou(canal.enviadas[antes]);
+      if (pedido.status !== 200 || !codigo) throw new Error(`o código não chegou para ${quem}: ${pedido.status} ${await pedido.text()}`);
+      const confirmado = await c.call("/whatsapp/confirmar", { method: "POST", json: { codigo } }, quem);
+      if (confirmado.status !== 200) throw new Error(`o código de ${quem} não ligou: ${confirmado.status} ${await confirmado.text()}`);
+      return c.escreve(quem, "oi");
     },
     async pessoa(quem) {
       const p = await pessoaDoUsuario(t.db, ids[quem], { cobrancaAtiva: c.agente.cobrancaAtiva, organizationId });

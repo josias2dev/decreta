@@ -640,10 +640,13 @@ A ideia é ter interface pequena e muito comportamento atrás.
 
 ### 4.5 Identidade e permissões
 
-**Ligar o WhatsApp:**
-- em Configurações > WhatsApp, um botão ou QR leva a `wa.me/<número>?text=DECRETA K7Q2-9XMP`;
-- o código vale 10 minutos, é de uso único e tem teto global de tentativas;
-- o webhook grava o vínculo com o telefone e o BSUID (se a pessoa usar nome de usuário, o telefone pode não vir **[F]**);
+**Ligar o WhatsApp [N] (10/11/2026: era a pessoa mandar "DECRETA K7Q2-9XMP" do celular):**
+- em Minha conta › WhatsApp do Decreta, a pessoa digita o número (o do perfil já vem escrito);
+- o código de 6 dígitos chega no WhatsApp pelo modelo de autenticação `codigo_do_whatsapp`, com o botão "Copiar código", e ela o digita na tela;
+- o código vale 10 minutos, é de uso único e para depois de 5 erros; cada pessoa e cada número recebem até 5 códigos por hora;
+- o vínculo nasce com o telefone; o BSUID vem na primeira mensagem dela (se a pessoa usar nome de usuário, o telefone pode não vir **[F]**);
+- ligar não abre a janela de 24 h: a primeira mensagem dela abre e traz as boas-vindas (um "oi" para aí, sem IA);
+- o número verificado vai para o perfil;
 - a tela mostra "Ligado ao +55 47 9····-1234" e sugere ligar a verificação em duas etapas do WhatsApp.
 
 **Troca para quem hoje recebe pelo wameow:**

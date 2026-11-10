@@ -56,6 +56,8 @@ export const MODELOS = {
   vence_hoje: { texto: "Aviso do Decreta: prazos que vencem hoje e ainda estão abertos: {{1}}. Toque abaixo para ver.", botoes: ["Ver os prazos"] },
   prazo_sugerido: { texto: "Aviso do Decreta: a publicação do processo {{1}} tem prazo sugerido até {{2}}, ainda não conferido. Toque abaixo para conferir.", botoes: ["Conferir"] },
   vinculo_vencido: { texto: "Aviso do Decreta: o vínculo deste WhatsApp com a sua conta venceu em {{1}}, depois de 30 dias sem abrir o Decreta. Para voltar a receber os avisos de prazo, abra o Decreta.", botoes: [] },
+  /** De autenticação (o texto é o da Meta): o código de ligar o WhatsApp, com o botão "Copiar código", que leva o mesmo código. */
+  codigo_do_whatsapp: { texto: "Seu código de verificação é *{{1}}*. Para sua segurança, não o compartilhe.", botoes: [], copiarCodigo: true },
 } as const;
 export type NomeDoModelo = keyof typeof MODELOS;
 

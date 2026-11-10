@@ -9,7 +9,7 @@ import { hasTestDatabase } from "@decreta/db/testing";
 import { eq } from "drizzle-orm";
 import { SO_LEITURA } from "../src/whatsapp/acoes.ts";
 import { RESPOSTA_AO_DESCONHECIDO } from "../src/whatsapp/entrada.ts";
-import { botoesDe, montarCenarioDoWhatsapp, NUMERO_DO_DECRETA, prazoDo, TELEFONES, textoDe, titulosDe, type CenarioDoWhatsapp, type Enviada } from "./whatsapp-apoio.ts";
+import { botoesDe, codigoQueChegou, montarCenarioDoWhatsapp, NUMERO_DO_DECRETA, prazoDo, TELEFONES, textoDe, titulosDe, type CenarioDoWhatsapp, type Enviada, type Quem } from "./whatsapp-apoio.ts";
 
 const AGORA = new Date("2026-11-10T07:35:00-03:00");
 const DESCONHECIDO = "5511988887777";
@@ -44,36 +44,109 @@ describe.skipIf(!hasTestDatabase)("agente do WhatsApp: da mensagem à resposta",
 
   let ligado: Enviada | undefined;
   let codigoUsado = "";
+  const pedirCodigo = (telefone: string, quem: Quem = "beatriz") => c.call("/whatsapp/codigo", { method: "POST", json: { telefone } }, quem);
+  const confirmar = (codigo: string, quem: Quem = "beatriz") => c.call("/whatsapp/confirmar", { method: "POST", json: { codigo } }, quem);
+  /** Pede o código e devolve o que chegou no WhatsApp do número. */
+  async function codigoPedido(telefone: string, quem: Quem): Promise<string> {
+    const antes = c.canal.enviadas.length;
+    expect((await pedirCodigo(telefone, quem)).status).toBe(200);
+    const codigo = codigoQueChegou(c.canal.enviadas[antes]);
+    if (!codigo) throw new Error("o código não chegou");
+    return codigo;
+  }
 
-  test("a pessoa liga o WhatsApp mandando o código que a tela deu", async () => {
+  test("a pessoa digita o número, o código chega no WhatsApp dela e ela digita o código na tela", async () => {
     const antes = await c.json(c.call("/whatsapp"));
     expect(antes).toMatchObject({ servidor: true, numero: NUMERO_DO_DECRETA, vinculo: null });
-    const r = await c.json(c.call("/whatsapp/codigo", { method: "POST" }));
-    expect(r.codigo).toMatch(/^DECRETA [2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$/);
-    expect(r.link).toStartWith(`https://wa.me/${NUMERO_DO_DECRETA}?text=DECRETA`);
-    codigoUsado = r.codigo;
+    const n = c.canal.enviadas.length;
+    const r = await pedirCodigo("(47) 99123-0001");
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ telefone: "+55 47 9····-0001" });
+    const saiu = c.canal.enviadas.slice(n);
+    expect(saiu).toHaveLength(1);
+    expect(saiu[0]!.para.telefone).toBe(TELEFONES.beatriz);
+    // O modelo de autenticação da Meta, com o botão de copiar o código.
+    expect(saiu[0]!.saida).toMatchObject({ tipo: "modelo", nome: "codigo_do_whatsapp" });
+    codigoUsado = codigoQueChegou(saiu[0]) ?? "";
+    expect(codigoUsado).toMatch(/^\d{6}$/);
 
-    const resposta = await c.escreve("beatriz", r.codigo);
+    expect((await confirmar(codigoUsado)).status).toBe(200);
+    const depois = await c.json(c.call("/whatsapp"));
+    expect(depois.vinculo).toMatchObject({ ligado: true, telefone: "+55 47 9····-0001", vencido: false });
+    // O número que provou ser dela vai para o perfil.
+    expect(depois.perfil).toBe(TELEFONES.beatriz);
+  });
+
+  test("o primeiro oi depois de ligar traz as boas-vindas, sem IA", async () => {
+    const resposta = await c.escreve("beatriz", "Oi!");
     expect(resposta).toHaveLength(1);
     ligado = resposta[0];
     expect(textoDe(ligado)).toStartWith("Ligado ao Decreta de Souza & Freitas Advocacia.");
     expect(titulosDe(ligado)).toEqual(["Ver o meu dia"]);
-    const depois = await c.json(c.call("/whatsapp"));
-    expect(depois.vinculo).toMatchObject({ ligado: true, telefone: "+55 47 9····-0001", vencido: false });
+    expect(c.ia.chamadas).toEqual([]);
   });
 
   test("o código vale uma vez só", async () => {
-    expect((await c.escreve("rafael", codigoUsado)).map(textoDe)).toEqual(["Este código não vale. Gere outro em Configurações > WhatsApp, no Decreta."]);
+    const r = await confirmar(codigoUsado);
+    expect(r.status).toBe(404);
+    expect(((await r.json()) as { detalhe: string }).detalhe).toBe("Peça um código primeiro.");
   });
 
   test("o código vence em 10 minutos", async () => {
-    const r = await c.json(c.call("/whatsapp/codigo", { method: "POST" }, "rafael"));
+    const codigo = await codigoPedido(TELEFONES.rafael, "rafael");
     setSystemTime(new Date(AGORA.getTime() + 11 * 60_000));
     try {
-      expect((await c.escreve("rafael", r.codigo)).map(textoDe)).toEqual(["Este código passou dos 10 minutos. Gere outro em Configurações > WhatsApp, no Decreta."]);
+      const r = await confirmar(codigo, "rafael");
+      expect(r.status).toBe(410);
+      expect(((await r.json()) as { detalhe: string }).detalhe).toBe("O código passou dos 10 minutos. Peça outro.");
     } finally {
       setSystemTime(AGORA);
     }
+    expect((await c.json(c.call("/whatsapp", {}, "rafael"))).vinculo).toBeNull();
+  });
+
+  test("código errado conta: depois da quinta vez, nem o certo vale", async () => {
+    const codigo = await codigoPedido(TELEFONES.tiago, "tiago");
+    const errado = codigo === "000000" ? "111111" : "000000";
+    // O que nem tem 6 dígitos não gasta tentativa.
+    const curto = await confirmar("12345", "tiago");
+    expect(curto.status).toBe(422);
+    expect(((await curto.json()) as { detalhe: string }).detalhe).toBe("O código tem 6 dígitos.");
+    for (const restam of [4, 3, 2, 1]) {
+      const r = await confirmar(errado, "tiago");
+      expect(r.status).toBe(422);
+      expect(((await r.json()) as { detalhe: string }).detalhe).toBe(`Código errado. ${restam === 1 ? "Resta 1 tentativa" : `Restam ${restam} tentativas`}.`);
+    }
+    const quinta = await confirmar(errado, "tiago");
+    expect(quinta.status).toBe(429);
+    expect(((await quinta.json()) as { detalhe: string }).detalhe).toBe("Código errado 5 vezes. Peça outro.");
+    expect((await confirmar(codigo, "tiago")).status).toBe(429);
+    expect((await c.json(c.call("/whatsapp", {}, "tiago"))).vinculo).toBeNull();
+  });
+
+  test("a primeira mensagem que não é um oi traz as boas-vindas e a resposta", async () => {
+    expect((await confirmar(await codigoPedido(TELEFONES.tiago, "tiago"), "tiago")).status).toBe(200);
+    c.ia.respostas.whatsapp = ["Hoje, 10/11, nada seu vence."];
+    const r = await c.escreve("tiago", "o que vence hoje?");
+    expect(r.map(textoDe)).toEqual([expect.stringMatching(/^Ligado ao Decreta de Souza & Freitas Advocacia\./), "Hoje, 10/11, nada seu vence."]);
+  });
+
+  test("o número de outra pessoa e o número que não existe não recebem código", async () => {
+    const antes = c.canal.enviadas.length;
+    const deOutra = await pedirCodigo(TELEFONES.beatriz, "rafael");
+    expect(deOutra.status).toBe(409);
+    expect(((await deOutra.json()) as { detalhe: string }).detalhe).toBe("Este WhatsApp já está ligado à conta de outra pessoa no Decreta. Quem tem a conta desliga em Minha conta.");
+    const invalido = await pedirCodigo("123", "rafael");
+    expect(invalido.status).toBe(422);
+    expect(c.canal.enviadas.length).toBe(antes);
+  });
+
+  test("cada pessoa pede até 5 códigos por hora: o sexto não sai", async () => {
+    for (let i = 0; i < 5; i++) expect((await pedirCodigo(TELEFONES.camila, "camila")).status).toBe(200);
+    const antes = c.canal.enviadas.length;
+    const sexto = await pedirCodigo(TELEFONES.camila, "camila");
+    expect(sexto.status).toBe(429);
+    expect(c.canal.enviadas.length).toBe(antes);
   });
 
   test("a mesma mensagem entregue duas vezes é respondida uma vez", async () => {
