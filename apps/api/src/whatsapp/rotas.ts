@@ -76,7 +76,7 @@ export function rotasDoWhatsappNoApp(app: Hono<Ambiente>, deps: DepsDasRotas & {
   /** Um código novo (10 minutos, uma vez): a tela mostra o link e o QR que abrem o WhatsApp com ele escrito. */
   app.post("/whatsapp/codigo", async (c) => {
     if (!deps.whatsapp) falha(503, "whatsapp_desligado", "O WhatsApp oficial do Decreta ainda não foi ligado neste servidor.");
-    if (c.get("demonstracao")) falha(403, "demonstracao", "Na demonstração o WhatsApp não liga: os dados são inventados.");
+    // Na demonstração também liga, para testar o agente: as respostas avisam que os dados são inventados.
     const { codigo, expiraEm } = await gerarCodigo(deps.db, { userId: c.get("userId"), organizationId: c.get("orgId") });
     return c.json({ codigo: `DECRETA ${codigo.slice(0, 4)}-${codigo.slice(4)}`, link: linkDoCodigo(deps.whatsapp.numero, codigo), expiraEm: expiraEm.toISOString() });
   });

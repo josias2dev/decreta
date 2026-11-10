@@ -58,11 +58,10 @@ export function WhatsappDoDecreta() {
             <p className="dc-nota m-0">O WhatsApp oficial do Decreta ainda não foi ligado neste servidor. O resumo da manhã continua saindo pelo número do seu perfil.</p>
           ) : w.vinculo ? (
             <Ligado vinculo={w.vinculo} />
-          ) : w.demonstracao ? (
-            <Faixa tipo="aviso">Na demonstração o WhatsApp não liga: os dados são inventados.</Faixa>
           ) : (
             <Ligar />
           )}
+          {w.servidor && w.demonstracao && <p className="dc-nota m-0">Na demonstração, o WhatsApp responde com os dados inventados deste escritório, que voltam ao começo toda madrugada.</p>}
           <Avisos avisos={w.avisos} oficial={w.servidor && !!w.vinculo} />
         </div>
       )}

@@ -74,16 +74,20 @@ export interface CenarioDoWhatsapp {
   noEscritorio<T>(fn: (tx: Tx) => Promise<T>): Promise<T>;
   /** Liga a cobrança e deixa o escritório só para leitura enquanto `fn` roda. */
   soLeitura<T>(fn: () => Promise<T>): Promise<T>;
+  /** Para renovar a demonstração no meio do teste. */
+  auth: ReturnType<typeof createAuth>;
+  arquivos: ReturnType<typeof armazenamentoEmMemoria>;
   drop(): Promise<void>;
 }
 
-export async function montarCenarioDoWhatsapp(hoje: string): Promise<CenarioDoWhatsapp> {
+/** Com `demonstracao`, o escritório fica com o slug da demonstração (o agente avisa que os dados são inventados). */
+export async function montarCenarioDoWhatsapp(hoje: string, opcoes: { demonstracao?: boolean } = {}): Promise<CenarioDoWhatsapp> {
   const env = readEnv({ DATABASE_URL: "postgres://unused@localhost/unused", BETTER_AUTH_SECRET: randomBytes(32).toString("hex"), BETTER_AUTH_URL: "http://localhost:8787" });
   const t = await createTestDatabase();
   const auth = createAuth(t.db, env);
   const arquivos = armazenamentoEmMemoria();
   const { organizationId } = await criarDemonstracao(t.db, auth, { hoje, senha: SENHA, arquivos });
-  await t.db.update(organization).set({ slug: "escritorio-do-teste" }).where(eq(organization.id, organizationId));
+  if (!opcoes.demonstracao) await t.db.update(organization).set({ slug: "escritorio-do-teste" }).where(eq(organization.id, organizationId));
   const ia = iaFalsa();
   const canal = canalEmMemoria();
   const rascunhos: string[] = [];
@@ -161,6 +165,8 @@ export async function montarCenarioDoWhatsapp(hoje: string): Promise<CenarioDoWh
         await t.db.update(organization).set({ situacao: antes!.situacao }).where(eq(organization.id, organizationId));
       }
     },
+    auth,
+    arquivos,
     drop: () => t.drop(),
   };
   return c;

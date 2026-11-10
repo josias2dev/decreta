@@ -126,7 +126,7 @@ async function ligar(deps: DepsDoAgente, m: Extract<Entrada, { tipo: "mensagem" 
     { ...pessoa, janelaAberta: true },
     {
       tipo: "botoes",
-      texto: `Ligado ao Decreta de ${r.escritorio}. Por aqui chegam o resumo da manhã, o que vence no dia e as publicações para conferir; e dá para perguntar ("o que vence amanhã?") e pedir documentos ("me manda a procuração da Marina").\n\nO WhatsApp continua ligado enquanto você usa o Decreta; depois de 30 dias sem abrir o app, ele para, por segurança. Para desligar, escreva "sair".`,
+      texto: `Ligado ao Decreta de ${r.escritorio}. Por aqui chegam o resumo da manhã, o que vence no dia e as publicações para conferir; e dá para perguntar ("o que vence amanhã?") e pedir documentos ("me manda a procuração da Marina").${pessoa.demonstracao ? "\n\nEste é o escritório de demonstração: os dados são inventados e voltam ao começo toda madrugada." : ""}\n\nO WhatsApp continua ligado enquanto você usa o Decreta; depois de 30 dias sem abrir o app, ele para, por segurança. Para desligar, escreva "sair".`,
       botoes: [{ id: "a:dia", titulo: "Ver o meu dia" }],
     },
     { origem: "agente", chave: `ligado:${m.wamid}` },

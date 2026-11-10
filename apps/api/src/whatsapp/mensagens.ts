@@ -30,6 +30,8 @@ export interface Para {
   janelaAberta: boolean;
   /** O nome do escritório: vai no rodapé das mensagens com botão que não trazem outro. */
   escritorio?: string;
+  /** O escritório de demonstração: o rodapé diz que é a demonstração. */
+  demonstracao?: boolean;
 }
 
 export type Modelo = Extract<Saida, { tipo: "modelo" }>;
@@ -75,7 +77,7 @@ function detalhesDaSaida(s: Saida): Record<string, unknown> | null {
 
 /** Manda e grava. Devolve o id da Meta, ou nulo quando não saiu (fora da janela sem modelo, recusa da Meta, chave repetida). */
 export async function enviarParaPessoa(deps: DepsDoCanal, para: Para, original: Saida, opcoes: OpcoesDoEnvio): Promise<{ wamid: string; saida: Saida } | null> {
-  const saida = comRodape(original, para.escritorio);
+  const saida = comRodape(original, para.demonstracao && para.escritorio ? `Demonstração · ${para.escritorio}` : para.escritorio);
   const livre = saida.tipo !== "modelo";
   if (livre && !para.janelaAberta) {
     if (!opcoes.modeloSeFechada) {

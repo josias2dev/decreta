@@ -48,6 +48,7 @@ import {
   tarefas,
   twoFactor,
   user,
+  whatsappVinculos,
   withTenant,
   type Database,
 } from "@decreta/db";
@@ -128,6 +129,21 @@ export async function apagarDemonstracao(db: Database, o: { arquivos?: Armazenam
   }
   if (!o.manterPessoas) await db.delete(user).where(or(like(user.email, `%@${DOMINIO_DA_DEMONSTRACAO}`), eq(user.email, LOGIN_DA_DEMONSTRACAO)));
   return org?.id ?? null;
+}
+
+/**
+ * Refaz a demonstração com as datas de `hoje` (o `--renovar` de toda madrugada) sem tirar ninguém: as contas,
+ * as sessões e os WhatsApps ligados ficam. O vínculo do WhatsApp cai junto com o escritório, então volta depois
+ * de recriar, com o mesmo id.
+ */
+export async function renovarDemonstracao(db: Database, auth: Auth, o: Omit<OpcoesDaDemonstracao, "organizationId">): Promise<string> {
+  const [org] = await db.select({ id: organization.id }).from(organization).where(eq(organization.slug, ESCRITORIO.slug));
+  if (!org) throw new Error("a demonstração ainda não existe: crie com bun run demonstracao --senha <senha>");
+  const vinculos = await db.select().from(whatsappVinculos).where(eq(whatsappVinculos.organizationId, org.id));
+  await apagarDemonstracao(db, { arquivos: o.arquivos, manterPessoas: true });
+  await criarDemonstracao(db, auth, { ...o, organizationId: org.id });
+  if (vinculos.length) await db.insert(whatsappVinculos).values(vinculos);
+  return org.id;
 }
 
 const digitos = (base: string, pesos: number[]) => {
